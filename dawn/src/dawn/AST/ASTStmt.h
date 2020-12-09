@@ -555,7 +555,7 @@ public:
 
 class ChainIterationDescr : public IterationDescr {
   ast::NeighborChain chain_;
-  bool includeCenter_;
+  bool includeCenter_ = false;
 
 public:
   ChainIterationDescr(ast::NeighborChain&& chain, bool includeCenter = false);

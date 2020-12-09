@@ -459,7 +459,7 @@ LoopStmt::LoopStmt(std::unique_ptr<StmtData> data, ast::NeighborChain&& chain, b
 }
 LoopStmt::LoopStmt(std::unique_ptr<StmtData> data, ast::NeighborChain&& chain,
                    std::shared_ptr<BlockStmt> body, SourceLocation loc)
-    : LoopStmt(std::move(data), std::move(chain), false, body, loc){};
+    : LoopStmt(std::move(data), std::move(chain), false, body, loc) {}
 LoopStmt::LoopStmt(const LoopStmt& stmt)
     : Stmt(stmt), blockStmt_(std::dynamic_pointer_cast<BlockStmt>(stmt.getBlockStmt()->clone())),
       iterationDescr_(stmt.getIterationDescr().clone()) {}

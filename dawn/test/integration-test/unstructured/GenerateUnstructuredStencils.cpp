@@ -1137,7 +1137,7 @@ int main() {
 
     std::ofstream of("generated/generated_" + stencilName + ".hpp");
     DAWN_ASSERT_MSG(of, "couldn't open output file!\n");
-    auto tu = dawn::codegen::run(stencilInstantiation, dawn::codegen::Backend::CUDAIco);
+    auto tu = dawn::codegen::run(stencilInstantiation, dawn::codegen::Backend::CXXNaiveIco);
     of << dawn::codegen::generate(tu) << std::endl;
   }
 

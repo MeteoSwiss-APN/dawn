@@ -165,6 +165,10 @@ void UnstructuredDimensionChecker::UnstructuredDimensionCheckerImpl::visit(
       dimensionsConsistent_ &=
           getUnstructuredDim(*curDimensions_).getNeighborChain() == config_.currentChain_.value();
     }
+    if(getUnstructuredDim(*curDimensions_).isSparse()) {
+      dimensionsConsistent_ &= getUnstructuredDim(*curDimensions_).getIncludeCenter() ==
+                               config_.parentIterationIncludesCenter_;
+    }
   }
 
   if(fieldAccessExpr->getOffset().hasVerticalIndirection()) {
@@ -443,6 +447,7 @@ void UnstructuredDimensionChecker::UnstructuredDimensionCheckerImpl::visit(
   const auto maybeChainPtr =
       dynamic_cast<const ast::ChainIterationDescr*>(loopStmt->getIterationDescrPtr());
   if(maybeChainPtr) {
+    config_.parentIterationIncludesCenter_ = maybeChainPtr->getIncludeCenter();
     config_.currentChain_ = maybeChainPtr->getChain();
   }
   for(auto it : loopStmt->getChildren()) {
@@ -462,6 +467,7 @@ void UnstructuredDimensionChecker::UnstructuredDimensionCheckerImpl::visit(
       nameToDimensions_, idToNameMap_, idToLocalVariableData_, config_);
 
   config_.parentIsReduction_ = true;
+  config_.parentIterationIncludesCenter_ = reductionExpr->getIncludeCenter();
   reductionExpr->getInit()->accept(init);
   config_.currentChain_ = reductionExpr->getNbhChain();
   UnstructuredDimensionChecker::UnstructuredDimensionCheckerImpl ops(

@@ -34,6 +34,7 @@ private:
     struct UnstructuredDimensionCheckerConfig {
       bool parentIsChainForLoop_ = false;
       bool parentIsReduction_ = false;
+      bool parentIterationIncludesCenter_ = false;
       std::optional<ast::NeighborChain> currentChain_;
       UnstructuredDimensionCheckerConfig() {}
     };

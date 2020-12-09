@@ -819,4 +819,90 @@ TEST(UnstructuredDimensionCheckerTest, ElseBlockVertical) {
   }
 }
 
+TEST(UnstructuredDimensionCheckerTest, DimsWithCenterCorrect) {
+  using namespace dawn::iir;
+  using LocType = dawn::ast::LocationType;
+
+  UnstructuredIIRBuilder b;
+  auto cin_f = b.field("cin_field", LocType::Cells);
+  auto cout_f = b.field("cout_field", LocType::Cells);
+  auto sparse_f = b.field("sparse", {LocType::Cells, LocType::Edges, LocType::Cells},
+                          /*maskK*/ true, /*include_center*/ true);
+
+  auto stencil = b.build(
+      "pass",
+      b.stencil(b.multistage(
+          LoopOrderKind::Parallel,
+          b.stage(LocType::Cells,
+                  b.doMethod(dawn::sir::Interval::Start, dawn::sir::Interval::End,
+                             b.loopStmtChain(b.stmt(b.assignExpr(b.at(sparse_f), b.lit(2.))),
+                                             {LocType::Cells, LocType::Edges, LocType::Cells},
+                                             /*include center*/ true),
+                             b.stmt(b.assignExpr(
+                                 b.at(cout_f),
+                                 b.reduceOverNeighborExpr(
+                                     Op::plus,
+                                     b.binaryExpr(b.at(cin_f, HOffsetType::withOffset, 0),
+                                                  b.at(sparse_f), Op::multiply),
+                                     b.lit(0.), {LocType::Cells, LocType::Edges, LocType::Cells},
+                                     /*include center*/ true))))))));
+  {
+    auto result = UnstructuredDimensionChecker::checkDimensionsConsistency(*stencil->getIIR(),
+                                                                           stencil->getMetaData());
+    EXPECT_EQ(result,
+              UnstructuredDimensionChecker::ConsistencyResult(true, dawn::SourceLocation()));
+  }
+}
+
+TEST(UnstructuredDimensionCheckerTest, DimsWithCenterFailFill) {
+  using namespace dawn::iir;
+  using LocType = dawn::ast::LocationType;
+
+  UnstructuredIIRBuilder b;
+  auto cin_f = b.field("cin_field", LocType::Cells);
+  auto cout_f = b.field("cout_field", LocType::Cells);
+  auto sparse_f = b.field("sparse", {LocType::Cells, LocType::Edges, LocType::Cells},
+                          /*maskK*/ true, /*include_center*/ false);
+
+  EXPECT_DEATH(
+      b.build(
+          "fail",
+          b.stencil(b.multistage(
+              LoopOrderKind::Parallel,
+              b.stage(LocType::Cells,
+                      b.doMethod(dawn::sir::Interval::Start, dawn::sir::Interval::End,
+                                 b.loopStmtChain(b.stmt(b.assignExpr(b.at(sparse_f), b.lit(2.))),
+                                                 {LocType::Cells, LocType::Edges, LocType::Cells},
+                                                 /*include center*/ true)))))),
+      ".*Dimensions consistency check failed.*");
+}
+
+TEST(UnstructuredDimensionCheckerTest, DimsWithCenterFailReduce) {
+  using namespace dawn::iir;
+  using LocType = dawn::ast::LocationType;
+
+  UnstructuredIIRBuilder b;
+  auto cin_f = b.field("cin_field", LocType::Cells);
+  auto cout_f = b.field("cout_field", LocType::Cells);
+  auto sparse_f = b.field("sparse", {LocType::Cells, LocType::Edges, LocType::Cells},
+                          /*maskK*/ true, /*include_center*/ false);
+
+  EXPECT_DEATH(
+      b.build("fail",
+              b.stencil(b.multistage(
+                  LoopOrderKind::Parallel,
+                  b.stage(LocType::Cells,
+                          b.doMethod(
+                              dawn::sir::Interval::Start, dawn::sir::Interval::End,
+                              b.stmt(b.assignExpr(
+                                  b.at(cout_f),
+                                  b.reduceOverNeighborExpr(
+                                      Op::plus,
+                                      b.binaryExpr(b.at(cin_f, HOffsetType::withOffset, 0),
+                                                   b.at(sparse_f), Op::multiply),
+                                      b.lit(0.), {LocType::Cells, LocType::Edges, LocType::Cells},
+                                      /*include center*/ true)))))))),
+      ".*Dimensions consistency check failed.*");
+}
+
 } // namespace

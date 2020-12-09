@@ -299,7 +299,8 @@ TEST_F(IIRSerializerTest, IIRTestsReductionWithCenterSparse) {
   UnstructuredIIRBuilder b;
   auto cin_f = b.field("cin_field", LocType::Cells);
   auto cout_f = b.field("cout_field", LocType::Cells);
-  auto sparse_f = b.field("sparse", {LocType::Cells, LocType::Edges, LocType::Cells});
+  auto sparse_f = b.field("sparse", {LocType::Cells, LocType::Edges, LocType::Cells},
+                          /*maskK*/ true, /*include_center*/ true);
   std::string stencilName = "reductionWithCenterSparse";
 
   auto stencil_instantiation = b.build(
