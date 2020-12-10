@@ -169,4 +169,23 @@ TEST_F(TestPassStageMerger, MergerTestTwoCopiesMixed) {
   runTest("input/StageMergerTestTwoCopiesMixed.iir", 1, {1}, {2}, {1, 1});
 }
 
+TEST_F(TestPassStageMerger, MergerTestUnstrIndependent) {
+  // here, the stage sandwiched in the middle is independent from the stage
+  // on edges above and below. we thus expect the stage merger to pass through
+  // and merge eout1 = .... into eout= = ....
+  //   eout0 = sum_over(Edge > Cell > Edge, ein0[Edge > Cell > Edge])
+  //   cout0 = sum_over(Cell > Edge > Cell, cin0[Cell > Edge > Cell])
+  //   eout1 = sum_over(Edge > Cell > Edge, ein1[Edge > Cell > Edge])
+  runTest("input/StageMergerTestIndependent.iir", 1, {1}, {2}, {1, 1});
+}
+
+TEST_F(TestPassStageMerger, MergerTestUnstrDependent) {
+  // here, the stage sandwiched in the middle has a dependency to the stage below
+  // the stage merger hence must break and not try to merge eout1 = .... into eout= = ....
+  //   eout0 = sum_over(Edge > Cell > Edge, ein0[Edge > Cell > Edge])
+  //   cout0 = sum_over(Cell > Edge > Cell, cin0[Cell > Edge > Cell])
+  //   eout1 = sum_over(Edge > Cell, cout0)
+  runTest("input/StageMergerTestDependent.iir", 1, {1}, {3}, {1, 1, 1});
+}
+
 } // anonymous namespace
