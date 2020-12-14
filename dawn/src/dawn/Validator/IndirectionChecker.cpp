@@ -15,9 +15,8 @@ void IndirectionChecker::IndirectionCheckerImpl::visit(
     return;
   }
 
-  if(lhs_ &&
-     (expr->getOffset().hasVerticalIndirection() || expr->getOffset().verticalShift() != 0)) {
-    // indirections and offsets on lhs (i.e. vertically indirected or offset writes) are prohibited
+  if(lhs_ && expr->getOffset().hasVerticalIndirection()) {
+    // indirections on lhs (i.e. vertically indirected wriste) are prohibited
     indirectionsValid_ = false;
     return;
   }
