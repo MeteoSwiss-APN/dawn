@@ -652,6 +652,9 @@ int FieldDimensions::numSpatialDimensions() const {
 
 int FieldDimensions::rank() const {
   const int spatialDims = numSpatialDimensions();
+  if(isVertical()) {
+    return 1;
+  }
   int rank;
   if(sir::dimension_isa<sir::UnstructuredFieldDimension>(getHorizontalFieldDimension())) {
     rank = spatialDims > 1 ? spatialDims - 1 // The horizontal counts as 1 dimension (dense)
