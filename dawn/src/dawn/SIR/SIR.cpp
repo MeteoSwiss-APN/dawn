@@ -650,6 +650,22 @@ int FieldDimensions::numSpatialDimensions() const {
   }
 }
 
+int FieldDimensions::rank() const {
+  const int spatialDims = numSpatialDimensions();
+  int rank;
+  if(sir::dimension_isa<sir::UnstructuredFieldDimension>(getHorizontalFieldDimension())) {
+    rank = spatialDims > 1 ? spatialDims - 1 // The horizontal counts as 1 dimension (dense)
+                           : spatialDims;
+    // Need to account for sparse dimension, if present
+    if(sir::dimension_cast<sir::UnstructuredFieldDimension const&>(getHorizontalFieldDimension())
+           .isSparse()) {
+      ++rank;
+    }
+  } else { // Cartesian
+    rank = spatialDims;
+  }
+  return rank;
+}
 } // namespace sir
 
 std::ostream& operator<<(std::ostream& os, const SIR& Sir) {
