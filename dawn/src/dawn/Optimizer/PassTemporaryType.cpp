@@ -173,8 +173,8 @@ bool PassTemporaryType::run(const std::shared_ptr<iir::StencilInstantiation>& in
                                                temporary.lifetime_, temporary.type_);
         }
       } else {
-        // If the field is only accessed within the same Do-Method, does not have an extent and is
-        // not argument to a stencil function, we can demote it to a local variable
+        // If the field is only accessed within the same Do-Method, does not have an extent, isn't
+        // sparse and is not argument to a stencil function, we can demote it to a local variable
         // Also solver accesses can not be demoted to local variable
         auto hDims =
             metadata.getFieldIDToDimsMap().at(temporary.accessID_).getHorizontalFieldDimension();
@@ -183,7 +183,7 @@ bool PassTemporaryType::run(const std::shared_ptr<iir::StencilInstantiation>& in
           sparse = sir::dimension_cast<sir::UnstructuredFieldDimension const&>(hDims).isSparse();
         }
         if(temporary.lifetime_.Begin.inSameDoMethod(temporary.lifetime_.End) &&
-           (temporary.extent_.isPointwise() || sparse) &&
+           temporary.extent_.isPointwise() && !sparse &&
            !usedAsArgumentInStencilFun(stencilPtr, accessID) &&
            !instantiation->isIDAccessedMultipleMSs(accessID)) {
 
