@@ -213,13 +213,12 @@ def make_field_dimensions_unstructured(
 
     assert len(locations) >= 1
     dims = FieldDimensions()
-    horizontal_dim = UnstructuredDimension()
-    horizontal_dim.dense_location_type = locations[0]
-    sparse_part = len(locations) > 1
-    if sparse_part:
-        horizontal_dim.sparse_part.extend(locations)
-    horizontal_dim.include_center = include_center
-    dims.unstructured_horizontal_dimension.CopyFrom(horizontal_dim)
+    iter_space = UnstructuredIterationSpace()
+    horizontal_dim = UnstructuredDimension()            
+    iter_space.chain.extend(locations)
+    iter_space.include_center = include_center
+    horizontal_dim.iter_space.CopyFrom(iter_space)
+    dims.unstructured_horizontal_dimension.CopyFrom(horizontal_dim)    
     dims.mask_k = mask_k
     return dims
 
@@ -414,8 +413,10 @@ def make_loop_stmt(block: List[StmtType],  chain: List[LocationTypeValue], inclu
     stmt = LoopStmt()
     stmt.statements.CopyFrom(make_stmt(make_block_stmt(block)))
     loop_descriptor_chain = LoopDescriptorChain()
-    loop_descriptor_chain.chain.extend(chain)
-    loop_descriptor_chain.include_center = include_center
+    iter_space = UnstructuredIterationSpace()
+    iter_space.chain.extend(chain)
+    iter_space.include_center = include_center
+    loop_descriptor_chain.iter_space.CopyFrom(iter_space)
     stmt.loop_descriptor.loop_descriptor_chain.CopyFrom(loop_descriptor_chain)
 
     return stmt
@@ -833,13 +834,15 @@ def make_reduction_over_neighbor_expr(
     :param weights:         Weights on neighbors (required to be of equal type)
     """
     expr = ReductionOverNeighborExpr()
+    iterSpace = UnstructuredIterationSpace()
     expr.op = op
     expr.rhs.CopyFrom(make_expr(rhs))
     expr.init.CopyFrom(make_expr(init))
-    expr.chain.extend(chain)
+    iterSpace.chain.extend(chain)
     if weights is not None and len(weights) != 0:
         expr.weights.extend([make_expr(weight) for weight in weights])
-    expr.include_center = include_center
+    iterSpace.include_center = include_center
+    expr.iter_space.CopyFrom(iterSpace)
     return expr
 
 
@@ -1074,7 +1077,7 @@ class SIRPrinter:
         self._indent += self.indent_size
         self.wrapper.initial_indent = " " * self._indent
         # TODO fix print
-        print("for(" + stmt.loop_descriptor.loop_descriptor_chain.chain + ")")
+        print("for(" + stmt.loop_descriptor.loop_descriptor_chain.iter_space.chain + ")")
         self.visit_block_stmt(stmt.statements.block_stmt)
 
         self._indent -= self.indent_size
@@ -1201,10 +1204,10 @@ class SIRPrinter:
     def visit_unstructured_field(self, field):
         str_ = field.name + "("
         str_ += self.location_type_to_string(
-            field.field_dimensions.unstructured_horizontal_dimension.dense_location_type
+            field.field_dimensions.unstructured_horizontal_dimension.iter_space.chain[0]
         )
         str_ += ", "
-        for location_type in field.field_dimensions.unstructured_horizontal_dimension.sparse_part:
+        for location_type in field.field_dimensions.unstructured_horizontal_dimension.iter_space.chain[1:]:
             str_ += self.location_type_to_string(location_type) + "->"
         str_ += ")"
         return str_

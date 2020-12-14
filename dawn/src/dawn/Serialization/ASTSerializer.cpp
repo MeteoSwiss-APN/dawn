@@ -296,18 +296,18 @@ void setFieldDimensions(dawn::proto::statements::FieldDimensions* protoFieldDime
           dawn::sir::dimension_cast<dawn::sir::UnstructuredFieldDimension const&>(
               fieldDimensions.getHorizontalFieldDimension());
 
-      dawn::proto::statements::UnstructuredDimension* protoUnstructuredDimension =
-          protoFieldDimensions->mutable_unstructured_horizontal_dimension();
+      auto protoIterSpace =
+          protoFieldDimensions->mutable_unstructured_horizontal_dimension()->mutable_iter_space();
 
       if(unstructuredDimension.isSparse()) {
         for(auto locType : unstructuredDimension.getNeighborChain()) {
-          protoUnstructuredDimension->add_sparse_part(
-              getProtoLocationTypeFromLocationType(locType));
+          protoIterSpace->add_chain(getProtoLocationTypeFromLocationType(locType));
         }
+      } else {
+        protoIterSpace->add_chain(
+            getProtoLocationTypeFromLocationType(unstructuredDimension.getDenseLocationType()));
       }
-      protoUnstructuredDimension->set_dense_location_type(
-          getProtoLocationTypeFromLocationType(unstructuredDimension.getDenseLocationType()));
-      protoUnstructuredDimension->set_include_center(unstructuredDimension.getIncludeCenter());
+      protoIterSpace->set_include_center(unstructuredDimension.getIncludeCenter());
     }
   }
 }
@@ -367,11 +367,12 @@ void ProtoStmtBuilder::visit(const std::shared_ptr<LoopStmt>& stmt) {
   const auto* descrPtr = stmt->getIterationDescrPtr();
   const auto maybeChainPtr = dynamic_cast<const ChainIterationDescr*>(descrPtr);
   if(maybeChainPtr) {
-    auto protoChainDescr = protoStmt->mutable_loop_descriptor()->mutable_loop_descriptor_chain();
+    auto protoChainDescrIterSpace =
+        protoStmt->mutable_loop_descriptor()->mutable_loop_descriptor_chain()->mutable_iter_space();
     for(auto loc : maybeChainPtr->getChain()) {
-      protoChainDescr->add_chain(getProtoLocationTypeFromLocationType(loc));
+      protoChainDescrIterSpace->add_chain(getProtoLocationTypeFromLocationType(loc));
     }
-    protoChainDescr->set_include_center(maybeChainPtr->getIncludeCenter());
+    protoChainDescrIterSpace->set_include_center(maybeChainPtr->getIncludeCenter());
   } else {
     dawn_unreachable("Loop descriptor not implemented.");
   }
@@ -722,10 +723,11 @@ void ProtoStmtBuilder::visit(const std::shared_ptr<ReductionOverNeighborExpr>& e
 
   protoExpr->set_op(expr->getOp());
 
-  auto protoChain = protoExpr->mutable_chain();
+  auto protoIterSpace = protoExpr->mutable_iter_space();
   for(const auto& loc : expr->getNbhChain()) {
-    protoChain->Add(getProtoLocationTypeFromLocationType(loc));
+    protoIterSpace->add_chain(getProtoLocationTypeFromLocationType(loc));
   }
+  protoIterSpace->set_include_center(expr->getIncludeCenter());
 
   currentExprProto_.push(protoExpr->mutable_rhs());
   expr->getRhs()->accept(*this);
@@ -742,8 +744,6 @@ void ProtoStmtBuilder::visit(const std::shared_ptr<ReductionOverNeighborExpr>& e
       currentExprProto_.pop();
     }
   }
-
-  protoExpr->set_include_center(expr->getIncludeCenter());
 }
 
 void setAST(proto::statements::AST* astProto, const AST* ast) {
@@ -773,34 +773,17 @@ makeFieldDimensions(const proto::statements::FieldDimensions& protoFieldDimensio
     const auto& protoUnstructuredDimension =
         protoFieldDimensions.unstructured_horizontal_dimension();
 
-    if(protoUnstructuredDimension.sparse_part_size() != 0) { // sparse
-
-      // Check that first element of neighbor chain corresponds to dense location type
-      DAWN_ASSERT_MSG(protoUnstructuredDimension.sparse_part(0) ==
-                          protoUnstructuredDimension.dense_location_type(),
-                      "First element of neighbor chain and dense location type don't match in "
-                      "serialized FieldDimensions message.");
-
-      NeighborChain neighborChain;
-      for(int i = 0; i < protoUnstructuredDimension.sparse_part_size(); ++i) {
-        neighborChain.push_back(
-            getLocationTypeFromProtoLocationType(protoUnstructuredDimension.sparse_part(i)));
-      }
-
-      return sir::FieldDimensions(
-          sir::HorizontalFieldDimension(dawn::ast::unstructured, neighborChain,
-                                        protoUnstructuredDimension.include_center()),
-          protoFieldDimensions.mask_k());
-
-    } else { // dense
-
-      return sir::FieldDimensions(
-          sir::HorizontalFieldDimension(dawn::ast::unstructured,
-                                        getLocationTypeFromProtoLocationType(
-                                            protoUnstructuredDimension.dense_location_type()),
-                                        protoUnstructuredDimension.include_center()),
-          protoFieldDimensions.mask_k());
+    NeighborChain neighborChain;
+    for(int i = 0; i < protoUnstructuredDimension.iter_space().chain_size(); ++i) {
+      neighborChain.push_back(
+          getLocationTypeFromProtoLocationType(protoUnstructuredDimension.iter_space().chain(i)));
     }
+
+    return sir::FieldDimensions(
+        sir::HorizontalFieldDimension(dawn::ast::unstructured, neighborChain,
+                                      protoUnstructuredDimension.iter_space().include_center()),
+        protoFieldDimensions.mask_k());
+
   } else {
     return sir::FieldDimensions(protoFieldDimensions.mask_k());
   }
@@ -1050,15 +1033,15 @@ std::shared_ptr<Expr> makeExpr(const proto::statements::Expr& expressionProto,
     auto weights = exprProto.weights();
 
     ast::NeighborChain chain;
-    for(int i = 0; i < exprProto.chain_size(); ++i) {
-      chain.push_back(getLocationTypeFromProtoLocationType(exprProto.chain(i)));
+    for(int i = 0; i < exprProto.iter_space().chain_size(); ++i) {
+      chain.push_back(getLocationTypeFromProtoLocationType(exprProto.iter_space().chain(i)));
     }
 
     if(weights.empty()) {
       auto expr = std::make_shared<ReductionOverNeighborExpr>(
           exprProto.op(), makeExpr(exprProto.rhs(), dataType, maxID),
-          makeExpr(exprProto.init(), dataType, maxID), chain, exprProto.include_center(),
-          makeLocation(exprProto));
+          makeExpr(exprProto.init(), dataType, maxID), chain,
+          exprProto.iter_space().include_center(), makeLocation(exprProto));
       return expr;
     } else {
       std::vector<std::shared_ptr<ast::Expr>> deserializedWeights;
@@ -1068,7 +1051,7 @@ std::shared_ptr<Expr> makeExpr(const proto::statements::Expr& expressionProto,
       auto expr = std::make_shared<ReductionOverNeighborExpr>(
           exprProto.op(), makeExpr(exprProto.rhs(), dataType, maxID),
           makeExpr(exprProto.init(), dataType, maxID), deserializedWeights, chain,
-          exprProto.include_center(), makeLocation(exprProto));
+          exprProto.iter_space().include_center(), makeLocation(exprProto));
       return expr;
     }
   }
@@ -1102,13 +1085,14 @@ std::shared_ptr<Stmt> makeStmt(const proto::statements::Stmt& statementProto,
     case dawn::proto::statements::LoopDescriptor::kLoopDescriptorChain: {
 
       ast::NeighborChain chain;
-      for(int i = 0; i < stmtProto.loop_descriptor().loop_descriptor_chain().chain_size(); ++i) {
+      for(int i = 0;
+          i < stmtProto.loop_descriptor().loop_descriptor_chain().iter_space().chain_size(); ++i) {
         chain.push_back(getLocationTypeFromProtoLocationType(
-            stmtProto.loop_descriptor().loop_descriptor_chain().chain(i)));
+            stmtProto.loop_descriptor().loop_descriptor_chain().iter_space().chain(i)));
       }
       auto stmt = std::make_shared<LoopStmt>(
           makeData(dataType, stmtProto.data()), std::move(chain),
-          stmtProto.loop_descriptor().loop_descriptor_chain().include_center(),
+          stmtProto.loop_descriptor().loop_descriptor_chain().iter_space().include_center(),
           std::dynamic_pointer_cast<BlockStmt>(blockStmt), makeLocation(stmtProto));
       stmt->setID(stmtProto.id());
       maxID = std::max(std::abs(stmtProto.id()), maxID);

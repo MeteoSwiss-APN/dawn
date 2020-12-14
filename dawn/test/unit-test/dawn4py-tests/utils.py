@@ -312,12 +312,12 @@ def make_unstructured_stencil_sir(name=None):
     body_ast = sir_utils.make_ast(
         [
             sir_utils.make_assignment_stmt(
-                sir_utils.make_field_access_expr("out"),
+                sir_utils.make_unstructured_field_access_expr("out"),
                 sir_utils.make_reduction_over_neighbor_expr(
                     "+",
                     sir_utils.make_literal_access_expr(
                         "1.0", SIR.BuiltinType.Float),
-                    sir_utils.make_field_access_expr("in"),
+                    sir_utils.make_unstructured_field_access_expr("in"),
                     chain=[SIR.LocationType.Value('Edge'), SIR.LocationType.Value('Cell')]
                 ),
                 "=",

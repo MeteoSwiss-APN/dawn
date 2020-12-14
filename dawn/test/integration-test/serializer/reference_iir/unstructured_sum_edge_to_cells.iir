@@ -1,9 +1,9 @@
 {
  "metadata": {
   "accessIDToName": {
+   "4": "cnt",
    "1": "in_field",
-   "2": "out_field",
-   "4": "cnt"
+   "2": "out_field"
   },
   "accessIDToType": {
    "1": 6,
@@ -30,15 +30,23 @@
   "fieldIDtoDimensions": {
    "1": {
     "unstructured_horizontal_dimension": {
-     "dense_location_type": "Edge",
-     "sparse_part": []
+     "iter_space": {
+      "chain": [
+       "Edge"
+      ],
+      "include_center": false
+     }
     },
     "mask_k": 1
    },
    "2": {
     "unstructured_horizontal_dimension": {
-     "dense_location_type": "Cell",
-     "sparse_part": []
+     "iter_space": {
+      "chain": [
+       "Cell"
+      ],
+      "include_center": false
+     }
     },
     "mask_k": 1
    }
@@ -93,6 +101,7 @@
                   "field_access_expr": {
                    "name": "in_field",
                    "vertical_shift": 0,
+                   "vertical_indirection": "",
                    "zero_offset": {},
                    "argument_map": [
                     -1,
@@ -112,7 +121,7 @@
                    "data": {
                     "accessID": 1
                    },
-                   "ID": 38
+                   "ID": 24
                   }
                  },
                  "op": "=",
@@ -129,14 +138,14 @@
                    "data": {
                     "accessID": -20
                    },
-                   "ID": 37
+                   "ID": -22
                   }
                  },
                  "loc": {
                   "Line": -1,
                   "Column": -1
                  },
-                 "ID": 39
+                 "ID": 26
                 }
                },
                "loc": {
@@ -150,7 +159,8 @@
                    "zero_extent": {},
                    "vertical_extent": {
                     "minus": 0,
-                    "plus": 0
+                    "plus": 0,
+                    "undefined": false
                    }
                   }
                  },
@@ -159,13 +169,14 @@
                    "zero_extent": {},
                    "vertical_extent": {
                     "minus": 0,
-                    "plus": 0
+                    "plus": 0,
+                    "undefined": false
                    }
                   }
                  }
                 }
                },
-               "ID": 36
+               "ID": 27
               }
              }
             ],
@@ -174,7 +185,7 @@
              "Column": -1
             },
             "data": {},
-            "ID": 35
+            "ID": 28
            }
           },
           "doMethodID": 29,
@@ -203,6 +214,7 @@
                   "field_access_expr": {
                    "name": "out_field",
                    "vertical_shift": 0,
+                   "vertical_indirection": "",
                    "zero_offset": {},
                    "argument_map": [
                     -1,
@@ -222,7 +234,7 @@
                    "data": {
                     "accessID": 2
                    },
-                   "ID": 45
+                   "ID": 13
                   }
                  },
                  "op": "=",
@@ -233,6 +245,7 @@
                     "field_access_expr": {
                      "name": "in_field",
                      "vertical_shift": 0,
+                     "vertical_indirection": "",
                      "unstructured_offset": {
                       "has_offset": true
                      },
@@ -254,7 +267,7 @@
                      "data": {
                       "accessID": 1
                      },
-                     "ID": 43
+                     "ID": 9
                     }
                    },
                    "init": {
@@ -270,21 +283,24 @@
                      "data": {
                       "accessID": -5
                      },
-                     "ID": 44
+                     "ID": -7
                     }
                    },
                    "weights": [],
-                   "chain": [
-                    "Cell",
-                    "Edge"
-                   ]
+                   "iter_space": {
+                    "chain": [
+                     "Cell",
+                     "Edge"
+                    ],
+                    "include_center": false
+                   }
                   }
                  },
                  "loc": {
                   "Line": -1,
                   "Column": -1
                  },
-                 "ID": 46
+                 "ID": 15
                 }
                },
                "loc": {
@@ -298,7 +314,8 @@
                    "zero_extent": {},
                    "vertical_extent": {
                     "minus": 0,
-                    "plus": 0
+                    "plus": 0,
+                    "undefined": false
                    }
                   }
                  },
@@ -309,20 +326,22 @@
                    },
                    "vertical_extent": {
                     "minus": 0,
-                    "plus": 0
+                    "plus": 0,
+                    "undefined": false
                    }
                   },
                   "-5": {
                    "zero_extent": {},
                    "vertical_extent": {
                     "minus": 0,
-                    "plus": 0
+                    "plus": 0,
+                    "undefined": false
                    }
                   }
                  }
                 }
                },
-               "ID": 41
+               "ID": 16
               }
              }
             ],
@@ -331,7 +350,7 @@
              "Column": -1
             },
             "data": {},
-            "ID": 40
+            "ID": 17
            }
           },
           "doMethodID": 18,

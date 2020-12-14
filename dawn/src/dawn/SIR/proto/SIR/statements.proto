@@ -49,11 +49,7 @@ message CartesianDimension {
 // non-empty.
 // @ingroup sir_proto
 message UnstructuredDimension {
-  dawn.proto.enums.LocationType dense_location_type = 1; // dense location type
-  // neighbor chain encoding sparse part when the field has a sparse dimension
-  repeated dawn.proto.enums.LocationType sparse_part = 2;
-  // is the first element in the chain part of the sparse dimension?
-  bool include_center = 3;
+  UnstructuredIterationSpace iter_space = 1;
 }
 
 // @brief Dimensions spanned by a field
@@ -254,6 +250,11 @@ message Accesses {
   map<int32, Extents> readAccess = 2;
 }
 
+message UnstructuredIterationSpace {
+  repeated dawn.proto.enums.LocationType chain = 1;
+  bool include_center = 2;
+}
+
 /*===------------------------------------------------------------------------------------------===*\
  *     AST
 \*===------------------------------------------------------------------------------------------===*/
@@ -323,8 +324,7 @@ message LoopDescriptorGeneral {
 }
 
 message LoopDescriptorChain {
-  repeated dawn.proto.enums.LocationType chain = 1;
-  bool include_center = 2;
+  UnstructuredIterationSpace iter_space = 1;
 }
 
 message LoopDescriptor {
@@ -714,11 +714,10 @@ message ReductionOverNeighborExpr {
   Expr init = 3; // Initial value of reduction
   repeated Expr weights =
       4; // weights (required to be of equal type, e.g. just floats)
-  repeated dawn.proto.enums.LocationType chain =
+  UnstructuredIterationSpace iter_space =
       5; // Neighbor chain definining the neighbors to reduce from and the
          // location type to reduce to (first element)
-  SourceLocation loc = 6;
-  bool include_center = 7;
+  SourceLocation loc = 6;  
 }
 
 // @brief Abstract syntax tree of the SIR

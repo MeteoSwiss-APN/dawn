@@ -94,7 +94,11 @@
           "name": "in_cell",
           "fieldDimensions": {
             "unstructuredHorizontalDimension": {
-              "denseLocationType": "Cell"
+              "iterSpace": {
+                "chain": [
+                  "Cell"
+                ]
+              }
             },
             "maskK": 1
           }

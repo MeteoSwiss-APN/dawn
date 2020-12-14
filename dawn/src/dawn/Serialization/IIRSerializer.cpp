@@ -238,7 +238,6 @@ void IIRSerializer::serializeMetaData(proto::iir::StencilInstantiation& target,
   for(auto IDToLegalDimension : metaData.fieldIDToInitializedDimensionsMap_) {
     dawn::proto::statements::FieldDimensions protoFieldDimensions;
     setFieldDimensions(&protoFieldDimensions, IDToLegalDimension.second);
-
     protoInitializedDimensionsMap.insert({IDToLegalDimension.first, protoFieldDimensions});
   }
 
