@@ -27,6 +27,7 @@ import os
 import dawn4py
 from dawn4py.serialization import SIR
 from dawn4py.serialization import utils as sir_utils
+from google.protobuf.json_format import MessageToJson, Parse
 
 OUTPUT_NAME = "unstructured_stencil"
 OUTPUT_FILE = f"{OUTPUT_NAME}.cpp"
@@ -41,14 +42,15 @@ def main(args: argparse.Namespace):
     body_ast = sir_utils.make_ast(
         [
             sir_utils.make_assignment_stmt(
-                sir_utils.make_field_access_expr("out"),
+                sir_utils.make_unstructured_field_access_expr("out"),
                 sir_utils.make_reduction_over_neighbor_expr(
                     "+",
+                    sir_utils.make_unstructured_field_access_expr(
+                        "in", horizontal_offset=sir_utils.make_unstructured_offset(False)),
                     sir_utils.make_literal_access_expr(
-                        "1.0", SIR.BuiltinType.Float),
-                    sir_utils.make_field_access_expr("in"),
+                        "1.0", SIR.BuiltinType.Float),                    
                     chain=[SIR.LocationType.Value(
-                        "Edge"), SIR.LocationType.Value("Cell")],
+                        "Cell"), SIR.LocationType.Value("Edge"), SIR.LocationType.Value("Cell")],
                 ),
                 "=",
             )
@@ -76,7 +78,7 @@ def main(args: argparse.Namespace):
                     sir_utils.make_field(
                         "out",
                         sir_utils.make_field_dimensions_unstructured(
-                            [SIR.LocationType.Value("Edge")], 1
+                            [SIR.LocationType.Value("Cell")], 1
                         ),
                     ),
                 ],
@@ -85,9 +87,10 @@ def main(args: argparse.Namespace):
     )
 
     # print the SIR
-    if args.verbose:
-        sir_utils.pprint(sir)
-
+    f = open("unstructured_stencil.sir", "w")
+    f.write(MessageToJson(sir))
+    f.close()
+   
     # compile
     code = dawn4py.compile(sir, backend=dawn4py.CodeGenBackend.CXXNaiveIco)
 
