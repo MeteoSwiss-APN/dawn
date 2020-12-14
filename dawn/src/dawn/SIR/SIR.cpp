@@ -565,31 +565,18 @@ CompareResult Field::comparison(const Field& rhs) const {
   return StencilFunctionArg::comparison(rhs);
 }
 
-bool UnstructuredFieldDimension::chainIsValid() const {
-  for(int chainIdx = 0; chainIdx < neighborChain_.size() - 1; chainIdx++) {
-    if(neighborChain_[chainIdx] == neighborChain_[chainIdx + 1]) {
-      return false;
-    }
-  }
-  return true;
-}
-
-UnstructuredFieldDimension::UnstructuredFieldDimension(const ast::NeighborChain neighborChain,
+UnstructuredFieldDimension::UnstructuredFieldDimension(ast::NeighborChain neighborChain,
                                                        bool includeCenter)
-    : neighborChain_(neighborChain), includeCenter_(includeCenter) {
+    : iterSpace_(std::move(neighborChain), includeCenter) {
   DAWN_ASSERT_MSG(neighborChain.size() > 0, "neighbor chain needs to have at least one member");
-  DAWN_ASSERT_MSG(chainIsValid(), "invalid neighbor chain (repeated element in succession, use "
-                                  "expaneded notation (e.g. C->C becomes C->E->C\n");
-  if(includeCenter_) {
-    DAWN_ASSERT_MSG(neighborChain.front() == neighborChain.back(),
-                    "including center is only allowed if the end "
-                    "location is the same as the starting location");
-  }
+  DAWN_ASSERT_MSG(iterSpace_.chainIsValid(),
+                  "invalid neighbor chain (repeated element in succession, use "
+                  "expaneded notation (e.g. C->C becomes C->E->C\n");
 }
 
 const ast::NeighborChain& UnstructuredFieldDimension::getNeighborChain() const {
   DAWN_ASSERT(isSparse());
-  return neighborChain_;
+  return iterSpace_.Chain;
 }
 
 std::string UnstructuredFieldDimension::toString() const {
@@ -610,8 +597,8 @@ std::string UnstructuredFieldDimension::toString() const {
   };
 
   std::string output = "", separator = "";
-  for(const auto elem : neighborChain_) {
-    if(includeCenter_ && separator == "") {
+  for(const auto elem : iterSpace_.Chain) {
+    if(iterSpace_.IncludeCenter && separator == "") {
       output += separator + "[" + getLocationTypeString(elem) + "]";
     } else {
       output += separator + getLocationTypeString(elem);

@@ -458,28 +458,16 @@ bool LiteralAccessExpr::equals(const Expr* other, bool compareData) const {
 //     ReductionOverNeighborExpr
 //===------------------------------------------------------------------------------------------===//
 
-bool ReductionOverNeighborExpr::chainIsValid() const {
-  for(int chainIdx = 0; chainIdx < chain_.size() - 1; chainIdx++) {
-    if(chain_[chainIdx] == chain_[chainIdx + 1]) {
-      return false;
-    }
-  }
-  return true;
-}
-
 ReductionOverNeighborExpr::ReductionOverNeighborExpr(std::string const& op,
                                                      std::shared_ptr<Expr> const& rhs,
                                                      std::shared_ptr<Expr> const& init,
                                                      std::vector<ast::LocationType> chain,
                                                      bool includeCenter, SourceLocation loc)
-    : Expr(Kind::ReductionOverNeighborExpr, loc), op_(op), chain_(chain),
-      includeCenter_(includeCenter), operands_{rhs, init} {
-  DAWN_ASSERT_MSG(chainIsValid(), "invalid neighbor chain (repeated element in succession, use "
-                                  "expaneded notation (e.g. C->C becomes C->E->C\n");
-  if(includeCenter_) {
-    DAWN_ASSERT_MSG(chain.front() == chain.back(), "including center is only allowed if the end "
-                                                   "location is the same as the starting location");
-  }
+    : Expr(Kind::ReductionOverNeighborExpr, loc), op_(op),
+      iterSpace_(std::move(chain), includeCenter), operands_{rhs, init} {
+  DAWN_ASSERT_MSG(iterSpace_.chainIsValid(),
+                  "invalid neighbor chain (repeated element in succession, use "
+                  "expaneded notation (e.g. C->C becomes C->E->C\n");
 }
 
 ReductionOverNeighborExpr::ReductionOverNeighborExpr(std::string const& op,
@@ -488,30 +476,25 @@ ReductionOverNeighborExpr::ReductionOverNeighborExpr(std::string const& op,
                                                      std::vector<std::shared_ptr<Expr>> weights,
                                                      std::vector<ast::LocationType> chain,
                                                      bool includeCenter, SourceLocation loc)
-    : Expr(Kind::ReductionOverNeighborExpr, loc), op_(op), weights_(weights), chain_(chain),
-      includeCenter_(includeCenter), operands_{rhs, init} {
+    : Expr(Kind::ReductionOverNeighborExpr, loc), op_(op), weights_(weights),
+      iterSpace_(std::move(chain), includeCenter), operands_{rhs, init} {
   DAWN_ASSERT_MSG(weights.size() > 0, "empty weights vector passed!\n");
-  DAWN_ASSERT_MSG(chainIsValid(), "invalid neighbor chain (repeated element in succession, use "
-                                  "expaneded notation (e.g. C->C becomes C->E->C\n");
-  if(includeCenter_) {
-    DAWN_ASSERT_MSG(chain.front() == chain.back(), "including center is only allowed if the end "
-                                                   "location is the same as the starting location");
-  }
+  DAWN_ASSERT_MSG(iterSpace_.chainIsValid(),
+                  "invalid neighbor chain (repeated element in succession, use "
+                  "expaneded notation (e.g. C->C becomes C->E->C\n");
   operands_.insert(operands_.end(), weights.begin(), weights.end());
 }
 
 ReductionOverNeighborExpr::ReductionOverNeighborExpr(ReductionOverNeighborExpr const& expr)
     : Expr(Kind::ReductionOverNeighborExpr, expr.getSourceLocation()), op_(expr.getOp()),
-      weights_(expr.getWeights()), chain_(expr.getNbhChain()),
-      includeCenter_(expr.getIncludeCenter()), operands_(expr.operands_) {}
+      weights_(expr.getWeights()), iterSpace_(expr.iterSpace_), operands_(expr.operands_) {}
 
 ReductionOverNeighborExpr&
 ReductionOverNeighborExpr::operator=(ReductionOverNeighborExpr const& expr) {
   assign(expr);
   op_ = expr.op_;
   operands_ = expr.operands_;
-  chain_ = expr.getNbhChain();
-  includeCenter_ = expr.getIncludeCenter();
+  iterSpace_ = expr.iterSpace_;
   weights_ = expr.getWeights();
   return *this;
 }
@@ -543,7 +526,7 @@ bool ReductionOverNeighborExpr::equals(const Expr* other, bool compareData) cons
 
   return otherPtr && otherPtr->getInit()->equals(getInit().get(), compareData) &&
          otherPtr->getOp() == getOp() && otherPtr->getRhs()->equals(getRhs().get(), compareData) &&
-         otherPtr->getNbhChain() == getNbhChain();
+         otherPtr->iterSpace_ == iterSpace_;
 }
 
 } // namespace ast

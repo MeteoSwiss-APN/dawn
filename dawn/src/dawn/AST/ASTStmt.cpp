@@ -405,8 +405,8 @@ void IfStmt::replaceChildren(std::shared_ptr<Stmt> const& oldStmt,
 IterationDescr::~IterationDescr() {}
 
 ChainIterationDescr::ChainIterationDescr(ast::NeighborChain&& chain, bool includeCenter)
-    : chain_(std::move(chain)), includeCenter_(includeCenter) {}
-ast::NeighborChain ChainIterationDescr::getChain() const { return chain_; }
+    : iterSpace_(std::move(chain), includeCenter) {}
+ast::NeighborChain ChainIterationDescr::getChain() const { return iterSpace_.Chain; }
 std::unique_ptr<IterationDescr> ChainIterationDescr::clone() const {
   return std::make_unique<ChainIterationDescr>(*this);
 }
@@ -426,7 +426,7 @@ std::string ChainIterationDescr::toString() const {
   };
   ss << "{";
   bool first = true;
-  for(const auto it : chain_) {
+  for(const auto it : iterSpace_.Chain) {
     if(!first) {
       ss << ", ";
     }
@@ -437,17 +437,12 @@ std::string ChainIterationDescr::toString() const {
 }
 bool ChainIterationDescr::equals(const IterationDescr* otherPtr) const {
   const ChainIterationDescr* chainPtr = dynamic_cast<const ChainIterationDescr*>(otherPtr);
-  return chainPtr && chain_ == chainPtr->chain_ && includeCenter_ == chainPtr->getIncludeCenter();
+  return chainPtr && iterSpace_ == chainPtr->iterSpace_;
 }
 
 LoopStmt::LoopStmt(std::unique_ptr<StmtData> data, ast::NeighborChain&& chain, bool includeCenter,
                    std::shared_ptr<BlockStmt> body, SourceLocation loc)
     : Stmt(std::move(data), Kind::LoopStmt, loc), blockStmt_(body) {
-  if(includeCenter) {
-    DAWN_ASSERT_MSG(chain.front() == chain.back(),
-                    "including the center is only allowed if the start of the neighbor chain is "
-                    "equal to the end of the neighbor chain!");
-  }
   iterationDescr_ = std::make_unique<ChainIterationDescr>(std::move(chain), includeCenter);
   for(const auto& stmtPtr : body->getStatements()) {
     DAWN_ASSERT_MSG(stmtPtr->getKind() == ast::Stmt::Kind::ExprStmt,

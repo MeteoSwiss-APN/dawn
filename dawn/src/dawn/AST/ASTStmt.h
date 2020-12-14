@@ -15,6 +15,7 @@
 #pragma once
 
 #include "dawn/AST/ASTVisitorHelpers.h"
+#include "dawn/AST/IterationSpace.h"
 #include "dawn/AST/LocationType.h"
 #include "dawn/Support/ArrayRef.h"
 #include "dawn/Support/Assert.h"
@@ -554,13 +555,12 @@ public:
 };
 
 class ChainIterationDescr : public IterationDescr {
-  ast::NeighborChain chain_;
-  bool includeCenter_ = false;
+  ast::UnstructuredIterationSpace iterSpace_;
 
 public:
   ChainIterationDescr(ast::NeighborChain&& chain, bool includeCenter = false);
   ast::NeighborChain getChain() const;
-  bool getIncludeCenter() const { return includeCenter_; }
+  bool getIncludeCenter() const { return iterSpace_.IncludeCenter; }
   std::unique_ptr<IterationDescr> clone() const override;
   std::string toString() const override;
   bool equals(const IterationDescr* otherPtr) const override;
