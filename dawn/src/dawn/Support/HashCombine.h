@@ -18,6 +18,19 @@
 
 #include "dawn/AST/LocationType.h"
 
+namespace std {
+template <>
+struct hash<std::vector<dawn::ast::LocationType>> {
+  size_t operator()(const std::vector<dawn::ast::LocationType>& vec) const {
+    std::size_t seed = vec.size();
+    for(auto& i : vec) {
+      seed ^= (int)i + 0x9e3779b9 + (seed << 6) + (seed >> 2);
+    }
+    return seed;
+  }
+};
+} // namespace std
+
 namespace dawn {
 
 /// @brief Called repeatedly to incrementally create a hash value from several variables
@@ -45,13 +58,6 @@ inline void hash_combine(std::size_t& seed, const T& v, Rest... rest) {
   std::hash<T> hasher;
   seed ^= hasher(v) + 0x9e3779b9 + (seed << 6) + (seed >> 2);
   hash_combine(seed, rest...);
-}
-
-template <>
-inline void hash_combine(std::size_t& seed, std::vector<ast::LocationType> const& vec) {
-  for(auto& i : vec) {
-    seed ^= ((int)i) + 0x9e3779b9 + (seed << 6) + (seed >> 2);
-  }
 }
 
 /// @}

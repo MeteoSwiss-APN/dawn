@@ -96,6 +96,14 @@ public:
     }
   };
 
+  struct IterSpacCompare {
+    std::size_t operator()(const ast::UnstructuredIterationSpace& space) const {
+      std::size_t seed = 0;
+      dawn::hash_combine(seed, space.Chain, space.IncludeCenter);
+      return seed;
+    }
+  };
+
   void visit(const std::shared_ptr<iir::ReductionOverNeighborExpr>& expr) override {
     spaces_.insert(expr->getIterSpace());
     for(auto c : expr->getChildren()) {
@@ -1067,7 +1075,7 @@ std::string CudaIcoCodeGen::generateStencilInstantiation(
   generateAllCudaKernels(ssSW, stencilInstantiation);
 
   CollectIterationSpaces chainCollector;
-  std::set<ast::UnstructuredIterationSpace, CollectIterationSpaces::IterSpaceHash> spaces;
+  std::unordered_set<ast::UnstructuredIterationSpace, CollectIterationSpaces::IterSpaceHash> spaces;
   for(const auto& doMethod : iterateIIROver<iir::DoMethod>(*(stencilInstantiation->getIIR()))) {
     doMethod->getAST().accept(chainCollector);
     spaces.insert(chainCollector.getSpaces().begin(), chainCollector.getSpaces().end());
