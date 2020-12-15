@@ -98,7 +98,7 @@ TEST(IndirectionCheckerTest, Case_Fail2) {
                   b.stage(b.doMethod(
                       dawn::sir::Interval::Start, dawn::sir::Interval::End,
                       b.stmt(b.assignExpr(b.at(out, AccessType::rw,
-                                               ast::Offsets{ast::unstructured, false, 1, "kidx"}),
+                                               ast::Offsets{ast::unstructured, false, 0, "kidx"}),
                                           b.at(in))))))));
 
   auto result = IndirectionChecker::checkIndirections(*stencil->getIIR());

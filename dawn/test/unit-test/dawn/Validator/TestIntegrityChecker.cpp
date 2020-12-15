@@ -117,9 +117,33 @@ TEST(TestIntegrityChecker, OffsetReadsIn2DField) {
         b.stencil(b.multistage(
             LoopOrderKind::Parallel,
             b.stage(b.doMethod(dawn::sir::Interval::Start, dawn::sir::Interval::End,
-                               b.stmt(b.assignExpr(
-                                   b.at(out), b.at(in, AccessType::r,
-                                                   ast::Offsets{ast::unstructured, false, 1}))))))));
+                               b.stmt(b.assignExpr(b.at(out), b.at(in, AccessType::r,
+                                                                   ast::Offsets{ast::unstructured,
+                                                                                false, 1}))))))));
+    FAIL() << "Semantic error not thrown";
+  } catch(SemanticError& error) {
+    SUCCEED();
+  }
+}
+
+TEST(TestIntegrityChecker, WriteVerticallyOffset) {
+  using namespace dawn::iir;
+  using LocType = dawn::ast::LocationType;
+
+  UnstructuredIIRBuilder b;
+  auto in = b.field("in", LocType::Cells);
+  auto out = b.field("out", LocType::Cells);
+
+  // vertically shifted _write_, which is prohibited!
+  try {
+    auto stencil = b.build(
+        "fail",
+        b.stencil(b.multistage(
+            LoopOrderKind::Parallel,
+            b.stage(b.doMethod(dawn::sir::Interval::Start, dawn::sir::Interval::End,
+                               b.stmt(b.assignExpr(b.at(out, AccessType::rw,
+                                                        ast::Offsets{ast::unstructured, false, 1}),
+                                                   b.at(in))))))));
     FAIL() << "Semantic error not thrown";
   } catch(SemanticError& error) {
     SUCCEED();
