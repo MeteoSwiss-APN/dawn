@@ -81,6 +81,15 @@ TEST_F(TestPassTemporaryType, DemoteTest1) {
   runTest("input/DemoteTest01.iir", {"tmp"});
 }
 
+TEST_F(TestPassTemporaryType, DontDemoteSparse) {
+  // sparseF: Field[Edge > Cell > Edge]
+  // with levels_upward:
+  //     with sparse[Edge > Cell > Edge]:
+  //         sparseF = 1
+  //     outF = sum_over(Edge > Cell > Edge, inF[Edge>Cell>Edge]*sparseF)
+  runTest("input/DontDemoteSparse.iir", {});
+}
+
 TEST_F(TestPassTemporaryType, PromoteTest1) {
   /*
     vertical_region(k_start, k_end) {

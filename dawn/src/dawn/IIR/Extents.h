@@ -157,7 +157,7 @@ protected:
   void limitImpl(HorizontalExtentImpl const& other) override;
 
 private:
-  bool hasExtent_;
+  bool hasExtent_ = false;
 };
 
 class HorizontalExtent {
