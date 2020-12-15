@@ -14,6 +14,7 @@
 
 #pragma once
 
+#include "dawn/AST/IterationSpace.h"
 #include "dawn/AST/LocationType.h"
 #include "dawn/IIR/ASTExpr.h"
 #include "dawn/IIR/ASTFwd.h"
@@ -34,8 +35,7 @@ private:
     struct UnstructuredDimensionCheckerConfig {
       bool parentIsChainForLoop_ = false;
       bool parentIsReduction_ = false;
-      bool parentIterationIncludesCenter_ = false;
-      std::optional<ast::NeighborChain> currentChain_;
+      std::optional<ast::UnstructuredIterationSpace> currentIterSpace_;
       UnstructuredDimensionCheckerConfig() {}
     };
 

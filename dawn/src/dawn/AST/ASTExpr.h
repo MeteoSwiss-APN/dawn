@@ -673,6 +673,7 @@ public:
   ast::LocationType getLhsLocation() const { return iterSpace_.Chain.front(); };
   const std::optional<std::vector<std::shared_ptr<Expr>>>& getWeights() const { return weights_; };
   bool getIncludeCenter() const { return iterSpace_.IncludeCenter; };
+  ast::UnstructuredIterationSpace getIterSpace() const { return iterSpace_; }
 
   ExprRangeType getChildren() override;
 

@@ -561,6 +561,7 @@ public:
   ChainIterationDescr(ast::NeighborChain&& chain, bool includeCenter = false);
   ast::NeighborChain getChain() const;
   bool getIncludeCenter() const { return iterSpace_.IncludeCenter; }
+  ast::UnstructuredIterationSpace getIterSpace() const { return iterSpace_; }
   std::unique_ptr<IterationDescr> clone() const override;
   std::string toString() const override;
   bool equals(const IterationDescr* otherPtr) const override;

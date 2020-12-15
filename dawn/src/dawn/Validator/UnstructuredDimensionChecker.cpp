@@ -159,15 +159,15 @@ void UnstructuredDimensionChecker::UnstructuredDimensionCheckerImpl::visit(
   if(!nameToDimensions_.at(fieldName).isVertical()) {
     if(hasOffset && getUnstructuredDim(*curDimensions_).isDense()) {
       dimensionsConsistent_ &= getUnstructuredDim(*curDimensions_).getDenseLocationType() ==
-                               config_.currentChain_->back();
+                               config_.currentIterSpace_->Chain.back();
     }
     if(hasOffset && !getUnstructuredDim(*curDimensions_).isDense()) {
-      dimensionsConsistent_ &=
-          getUnstructuredDim(*curDimensions_).getNeighborChain() == config_.currentChain_.value();
+      dimensionsConsistent_ &= getUnstructuredDim(*curDimensions_).getNeighborChain() ==
+                               config_.currentIterSpace_->Chain;
     }
     if(getUnstructuredDim(*curDimensions_).isSparse()) {
       dimensionsConsistent_ &= getUnstructuredDim(*curDimensions_).getIncludeCenter() ==
-                               config_.parentIterationIncludesCenter_;
+                               config_.currentIterSpace_->IncludeCenter;
     }
   }
 
@@ -268,9 +268,11 @@ void UnstructuredDimensionChecker::UnstructuredDimensionCheckerImpl::checkBinary
   const auto& unstructuredDimLeft = getUnstructuredDim(left);
   const auto& unstructuredDimRight = getUnstructuredDim(right);
 
-  if(config_.currentChain_) {
-    dimensionsConsistent_ &= checkAgainstChain(unstructuredDimLeft, *config_.currentChain_);
-    dimensionsConsistent_ &= checkAgainstChain(unstructuredDimRight, *config_.currentChain_);
+  if(config_.currentIterSpace_) {
+    dimensionsConsistent_ &=
+        checkAgainstChain(unstructuredDimLeft, config_.currentIterSpace_->Chain);
+    dimensionsConsistent_ &=
+        checkAgainstChain(unstructuredDimRight, config_.currentIterSpace_->Chain);
   } else {
     dimensionsConsistent_ &=
         unstructuredDimLeft.isDense() && unstructuredDimRight.isDense() &&
@@ -447,14 +449,13 @@ void UnstructuredDimensionChecker::UnstructuredDimensionCheckerImpl::visit(
   const auto maybeChainPtr =
       dynamic_cast<const ast::ChainIterationDescr*>(loopStmt->getIterationDescrPtr());
   if(maybeChainPtr) {
-    config_.parentIterationIncludesCenter_ = maybeChainPtr->getIncludeCenter();
-    config_.currentChain_ = maybeChainPtr->getChain();
+    config_.currentIterSpace_ = maybeChainPtr->getIterSpace();
   }
   for(auto it : loopStmt->getChildren()) {
     it->accept(*this);
   }
   config_.parentIsChainForLoop_ = false;
-  config_.currentChain_ = std::nullopt;
+  config_.currentIterSpace_ = std::nullopt;
 }
 
 void UnstructuredDimensionChecker::UnstructuredDimensionCheckerImpl::visit(
@@ -466,10 +467,8 @@ void UnstructuredDimensionChecker::UnstructuredDimensionCheckerImpl::visit(
   UnstructuredDimensionChecker::UnstructuredDimensionCheckerImpl init(
       nameToDimensions_, idToNameMap_, idToLocalVariableData_, config_);
 
-  config_.parentIsReduction_ = true;
-  config_.parentIterationIncludesCenter_ = reductionExpr->getIncludeCenter();
+  config_.currentIterSpace_ = reductionExpr->getIterSpace();
   reductionExpr->getInit()->accept(init);
-  config_.currentChain_ = reductionExpr->getNbhChain();
   UnstructuredDimensionChecker::UnstructuredDimensionCheckerImpl ops(
       nameToDimensions_, idToNameMap_, idToLocalVariableData_, config_);
   reductionExpr->getRhs()->accept(ops);
