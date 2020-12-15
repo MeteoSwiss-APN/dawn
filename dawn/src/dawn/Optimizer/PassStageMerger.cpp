@@ -87,8 +87,16 @@ bool PassStageMerger::run(const std::shared_ptr<iir::StencilInstantiation>& sten
 
             // can only merge stages with same location type (for Cartesian they are both
             // std::nullopt)
-            if(candidateStage.getLocationType() != curStage.getLocationType())
-              continue;
+            //
+            // whether or not we need to break or we can continue and considers stages futher
+            // abovedepends if the candidate stage can savely be moved below the current stage
+            if(candidateStage.getLocationType() != curStage.getLocationType()) {
+              if(stageDAG.depends(curStage.getStageID(), candidateStage.getStageID())) {
+                break;
+              } else {
+                continue;
+              }
+            }
 
             // Does the interval of `curDoMethod` overlap with any DoMethod interval in
             // `candidateStage`?

@@ -95,6 +95,13 @@ void IntegrityChecker::visit(const std::shared_ptr<iir::AssignmentExpr>& expr) {
                         expr->getSourceLocation().Line);
   }
 
+  if(iir::FieldAccessExpr::classof(left.get())) {
+    if(dyn_cast<iir::FieldAccessExpr>(left.get())->getOffset().verticalShift() != 0) {
+      throw SemanticError("Attempt to write vertically offset ", metadata_.getFileName(),
+                          expr->getSourceLocation().Line);
+    }
+  }
+
   int oldDim = curDimensions_;
   expr->getLeft()->accept(*this);
   int leftDim = curDimensions_;
@@ -114,15 +121,16 @@ void IntegrityChecker::visit(const std::shared_ptr<iir::AssignmentExpr>& expr) {
     }
   };
 
-  // we leave the unstrucutred world alone for now
+  // we leave the strucutred world alone for now
   if(instantiation_->getIIR()->getGridType() == ast::GridType::Unstructured &&
      !dimensionsCompatible(leftDim, rightDim)) {
     throw SemanticError("trying to assign " + dimToStr(leftDim) + "d field to " +
-                        dimToStr(rightDim) + "d field!");
+                            dimToStr(rightDim) + "d field!",
+                        metadata_.getFileName(), expr->getSourceLocation().Line);
   }
 
   curDimensions_ = oldDim;
-}
+} // namespace dawn
 
 void IntegrityChecker::visit(const std::shared_ptr<iir::FieldAccessExpr>& expr) {
 
