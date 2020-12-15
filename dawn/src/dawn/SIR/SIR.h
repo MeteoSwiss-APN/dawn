@@ -221,6 +221,7 @@ public:
   bool isSparse() const { return iterSpace_.Chain.size() > 1; }
   bool isDense() const { return !isSparse(); }
   bool getIncludeCenter() const { return iterSpace_.IncludeCenter; }
+  ast::UnstructuredIterationSpace getIterSpace() const { return iterSpace_; }
   std::string toString() const;
 };
 

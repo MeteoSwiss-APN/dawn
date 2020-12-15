@@ -17,15 +17,16 @@
 #include <string>
 #include <vector>
 
+#include "dawn/AST/IterationSpace.h"
 #include "dawn/AST/LocationType.h"
 
 namespace dawn {
 namespace codegen {
 namespace cudaico {
 
-std::string chainToTableString(std::vector<dawn::ast::LocationType> locs);
+std::string chainToTableString(const ast::UnstructuredIterationSpace iterSpace);
 
-std::string chainToSparseSizeString(std::vector<dawn::ast::LocationType> locs);
+std::string chainToSparseSizeString(const ast::UnstructuredIterationSpace iterSpace);
 
 std::string chainToDenseSizeStringHostMesh(std::vector<dawn::ast::LocationType> locs);
 

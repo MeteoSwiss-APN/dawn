@@ -41,26 +41,16 @@ void ASTStencilBody::visit(const std::shared_ptr<iir::LoopStmt>& stmt) {
   DAWN_ASSERT_MSG(maybeChainPtr, "general loop concept not implemented yet!\n");
 
   parentIsForLoop_ = true;
-  if(maybeChainPtr->getIncludeCenter()) {
-    parentIterationIncludesCenterPrep_ = true;
-    stmt->getBlockStmt()->accept(*this);
-    parentIterationIncludesCenterPrep_ = false;
-  }
-
-  ss_ << "for (int nbhIter = 0; nbhIter < " << chainToSparseSizeString(maybeChainPtr->getChain())
-      << "; nbhIter++)";
+  ss_ << "for (int nbhIter = 0; nbhIter < "
+      << chainToSparseSizeString(maybeChainPtr->getIterSpace()) << "; nbhIter++)";
 
   ss_ << "{\n";
-  ss_ << "int nbhIdx = " << chainToTableString(maybeChainPtr->getChain()) << "["
-      << "pidx * " << chainToSparseSizeString(maybeChainPtr->getChain()) << " + nbhIter"
+  ss_ << "int nbhIdx = " << chainToTableString(maybeChainPtr->getIterSpace()) << "["
+      << "pidx * (" << chainToSparseSizeString(maybeChainPtr->getIterSpace()) << ") + nbhIter"
       << "];\n";
   ss_ << "if (nbhIdx == DEVICE_MISSING_VALUE) { continue; }";
 
-  if(maybeChainPtr->getIncludeCenter()) {
-    parentIterationIncludesCenterIter_ = true;
-  }
   stmt->getBlockStmt()->accept(*this);
-  parentIterationIncludesCenterIter_ = false;
 
   ss_ << "}\n";
   parentIsForLoop_ = false;
@@ -128,8 +118,7 @@ std::string ASTStencilBody::makeIndexString(const std::shared_ptr<iir::FieldAcce
     if((parentIsReduction_ || parentIsForLoop_) &&
        ast::offset_cast<const ast::UnstructuredOffset&>(expr->getOffset().horizontalOffset())
            .hasOffset()) {
-      return kiterStr + "*" + denseSize +
-             (parentIterationIncludesCenterPrep_ ? "+ pidx" : "+ nbhIdx");
+      return kiterStr + "*" + denseSize + "+ nbhIdx";
     } else {
       return kiterStr + "*" + denseSize + "+ pidx";
     }
@@ -139,10 +128,9 @@ std::string ASTStencilBody::makeIndexString(const std::shared_ptr<iir::FieldAcce
     DAWN_ASSERT_MSG(parentIsForLoop_ || parentIsReduction_,
                     "Sparse Field Access not allowed in this context");
     std::string denseSize = locToDenseSizeStringGpuMesh(unstrDims.getDenseLocationType());
-    std::string sparseSize = chainToSparseSizeString(unstrDims.getNeighborChain());
-    return kiterStr + "*" + denseSize + " * " + sparseSize + " + " +
-           (parentIterationIncludesCenterPrep_ ? "0 * " : "nbhIter * ") + denseSize + " + pidx" +
-           (parentIterationIncludesCenterIter_ ? " + 1" : "");
+    std::string sparseSize = chainToSparseSizeString(unstrDims.getIterSpace());
+    return kiterStr + "*" + denseSize + " * " + sparseSize + " + " + "nbhIter * " + denseSize +
+           " + pidx";
   }
 
   if(isHorizontal && isDense) {
@@ -150,7 +138,7 @@ std::string ASTStencilBody::makeIndexString(const std::shared_ptr<iir::FieldAcce
     if((parentIsReduction_ || parentIsForLoop_) &&
        ast::offset_cast<const ast::UnstructuredOffset&>(expr->getOffset().horizontalOffset())
            .hasOffset()) {
-      return parentIterationIncludesCenterPrep_ ? "pidx" : "nbhIdx";
+      return "nbhIdx";
     } else {
       return "pidx";
     }
@@ -160,9 +148,8 @@ std::string ASTStencilBody::makeIndexString(const std::shared_ptr<iir::FieldAcce
     DAWN_ASSERT_MSG(parentIsForLoop_ || parentIsReduction_,
                     "Sparse Field Access not allowed in this context");
     std::string denseSize = locToDenseSizeStringGpuMesh(unstrDims.getDenseLocationType());
-    std::string sparseSize = chainToSparseSizeString(unstrDims.getNeighborChain());
-    return (parentIterationIncludesCenterPrep_ ? "nbhIter * " : "0 * ") + denseSize + " + pidx" +
-           (parentIterationIncludesCenterIter_ ? " + 1" : "");
+    std::string sparseSize = chainToSparseSizeString(unstrDims.getIterSpace());
+    return "nbhIter * " + denseSize + " + pidx";
   }
 
   DAWN_ASSERT_MSG(false, "Bad Field configuration found in code gen!");
@@ -247,30 +234,19 @@ void ASTStencilBody::visit(const std::shared_ptr<iir::ReductionOverNeighborExpr>
     }
     ss_ << "};\n";
   }
-  if(expr->getIncludeCenter()) {
-    parentIterationIncludesCenterPrep_ = true;
-    ss_ << lhs_name << expr->getOp() + "= ";
-    expr->getRhs()->accept(*this);
-    ss_ << ";\n";
-    parentIterationIncludesCenterPrep_ = false;
-  }
-  ss_ << "for (int nbhIter = 0; nbhIter < " << chainToSparseSizeString(expr->getNbhChain())
+  ss_ << "for (int nbhIter = 0; nbhIter < " << chainToSparseSizeString(expr->getIterSpace())
       << "; nbhIter++)";
 
   ss_ << "{\n";
-  ss_ << "int nbhIdx = " << chainToTableString(expr->getNbhChain()) << "["
-      << "pidx * " << chainToSparseSizeString(expr->getNbhChain()) << " + nbhIter"
+  ss_ << "int nbhIdx = " << chainToTableString(expr->getIterSpace()) << "["
+      << "pidx * " << chainToSparseSizeString(expr->getIterSpace()) << " + nbhIter"
       << "];\n";
   ss_ << "if (nbhIdx == DEVICE_MISSING_VALUE) { continue; }";
   ss_ << lhs_name << " " << expr->getOp() << "=";
   if(weights.has_value()) {
     ss_ << " " << weights_name << "[nbhIter] * ";
   }
-  if(expr->getIncludeCenter()) {
-    parentIterationIncludesCenterIter_ = true;
-  }
   expr->getRhs()->accept(*this);
-  parentIterationIncludesCenterIter_ = false;
   ss_ << ";}\n";
   parentIsReduction_ = false;
 }
