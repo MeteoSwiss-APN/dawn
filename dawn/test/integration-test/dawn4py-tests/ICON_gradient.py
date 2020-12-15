@@ -102,11 +102,9 @@ def main(args: argparse.Namespace):
         ],
     )
 
-    # print the SIR
-    # if args.verbose:
-    f = open(SIR_OUTPUT_FILE, "w")
-    f.write(MessageToJson(sir))
-    f.close()
+    # print the SIR       
+    if args.verbose:
+        print(MessageToJson(sir))
 
     # compile
     code = dawn4py.compile(sir, backend=dawn4py.CodeGenBackend.CUDAIco)

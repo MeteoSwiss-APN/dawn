@@ -19,6 +19,7 @@
    emulating an FD stencil on a FV mesh. This is the version used in operations, since it is expected
    to offer second order convergence"""
 
+import argparse
 import os
 
 import dawn4py
@@ -27,7 +28,7 @@ from dawn4py.serialization import utils as sir_utils
 from google.protobuf.json_format import MessageToJson, Parse
 
 
-def main():
+def main(args: argparse.Namespace):
     stencil_name = "ICON_laplacian_diamond_stencil"
     gen_outputfile = f"{stencil_name}.cpp"
     sir_outputfile = f"{stencil_name}.sir"
@@ -377,10 +378,9 @@ def main():
         ],
     )
 
-    # write SIR to file (for debugging purposes)
-    f = open(sir_outputfile, "w")
-    f.write(MessageToJson(sir))
-    f.close()
+    # print the SIR       
+    if args.verbose:
+        print(MessageToJson(sir))
 
     # compile
     code = dawn4py.compile(sir, backend=dawn4py.CodeGenBackend.CXXNaiveIco)
@@ -392,4 +392,8 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    parser = argparse.ArgumentParser()
+    parser.add_argument(
+        "-v", "--verbose", dest="verbose", action="store_true", default=False, help="Print the generated SIR",
+    )
+    main(parser.parse_args())

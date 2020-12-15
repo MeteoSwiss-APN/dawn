@@ -28,6 +28,7 @@ import dawn4py
 from dawn4py.serialization import SIR
 from dawn4py.serialization import utils as sir_utils
 from dawn4py.serialization import to_json as sir_to_json
+from google.protobuf.json_format import MessageToJson, Parse
 
 OUTPUT_NAME = "vertical_indirection_stencil"
 OUTPUT_FILE = f"{OUTPUT_NAME}.cpp"
@@ -199,9 +200,9 @@ def main(args: argparse.Namespace):
         ],
     )
 
-    # print the SIR
+    # print the SIR       
     if args.verbose:
-        sir_utils.pprint(sir)
+        print(MessageToJson(sir))
 
     # extend default passes by non standard passes that could potentially be affected
     # by indirected vertical reads
