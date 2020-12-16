@@ -1060,11 +1060,11 @@ TEST(AtlasIntegrationTestCompareOutput, iterationSpaceUnstructured) {
   dawn_generated::cxxnaiveico::iterationSpaceUnstructured<atlasInterface::atlasTag> stencil(
       mesh, nb_levels, out_v, in1_v, in2_v);
 
-  stencil.set_splitter_index(dawn::LocationType::Cells, dawn::UnstructuredIterationSpace::Interior,
-                             0, interiorIdx);
-  stencil.set_splitter_index(dawn::LocationType::Cells, dawn::UnstructuredIterationSpace::Halo, 0,
+  stencil.set_splitter_index(dawn::LocationType::Cells, dawn::UnstructuredSubdomain::Interior, 0,
+                             interiorIdx);
+  stencil.set_splitter_index(dawn::LocationType::Cells, dawn::UnstructuredSubdomain::Halo, 0,
                              haloIdx);
-  stencil.set_splitter_index(dawn::LocationType::Cells, dawn::UnstructuredIterationSpace::End, 0,
+  stencil.set_splitter_index(dawn::LocationType::Cells, dawn::UnstructuredSubdomain::End, 0,
                              mesh.cells().size());
   stencil.run();
 

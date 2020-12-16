@@ -61,7 +61,7 @@ std::string chainToSparseSizeString(const ast::UnstructuredIterationSpace iterSp
     }
   }
   if(iterSpace.IncludeCenter) {
-    ss << "SIZE + 1";
+    ss << "ISIZE";
   } else {
     ss << "SIZE";
   }

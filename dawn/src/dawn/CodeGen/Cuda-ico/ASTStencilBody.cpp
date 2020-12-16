@@ -46,7 +46,7 @@ void ASTStencilBody::visit(const std::shared_ptr<iir::LoopStmt>& stmt) {
 
   ss_ << "{\n";
   ss_ << "int nbhIdx = " << chainToTableString(maybeChainPtr->getIterSpace()) << "["
-      << "pidx * (" << chainToSparseSizeString(maybeChainPtr->getIterSpace()) << ") + nbhIter"
+      << "pidx * " << chainToSparseSizeString(maybeChainPtr->getIterSpace()) << " + nbhIter"
       << "];\n";
   ss_ << "if (nbhIdx == DEVICE_MISSING_VALUE) { continue; }";
 

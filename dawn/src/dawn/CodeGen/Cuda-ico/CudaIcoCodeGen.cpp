@@ -161,7 +161,8 @@ void CudaIcoCodeGen::generateGpuMesh(
       gpuMeshFromLibCtor.addStatement(
           "dawn::generateNbhTable<LibTag>(mesh, " + chainToVectorString(space.Chain) + ", " +
           chainToDenseSizeStringHostMesh(space.Chain) + ", " + chainToSparseSizeString(space) +
-          ", " + chainToTableString(space) + ")");
+          ", " + chainToTableString(space) + ", /*include center*/" +
+          std::to_string(space.IncludeCenter) + ")");
     }
   }
   {
@@ -173,7 +174,9 @@ void CudaIcoCodeGen::generateGpuMesh(
     gpuMeshFromGlobalCtor.addStatement("Domain = mesh->Domain");
     for(auto space : spaces) {
       gpuMeshFromGlobalCtor.addStatement(chainToTableString(space) + " = mesh->NeighborTables.at(" +
-                                         chainToVectorString(space.Chain) + ")");
+                                         "std::tuple<std::vector<dawn::LocationType>, bool>{" +
+                                         chainToVectorString(space.Chain) + ", " +
+                                         std::to_string(space.IncludeCenter) + "})");
     }
   }
 }
@@ -1074,11 +1077,11 @@ std::string CudaIcoCodeGen::generateStencilInstantiation(
 
   generateAllCudaKernels(ssSW, stencilInstantiation);
 
-  CollectIterationSpaces chainCollector;
+  CollectIterationSpaces spaceCollector;
   std::unordered_set<ast::UnstructuredIterationSpace, CollectIterationSpaces::IterSpaceHash> spaces;
   for(const auto& doMethod : iterateIIROver<iir::DoMethod>(*(stencilInstantiation->getIIR()))) {
-    doMethod->getAST().accept(chainCollector);
-    spaces.insert(chainCollector.getSpaces().begin(), chainCollector.getSpaces().end());
+    doMethod->getAST().accept(spaceCollector);
+    spaces.insert(spaceCollector.getSpaces().begin(), spaceCollector.getSpaces().end());
   }
   std::stringstream ss;
   bool first = true;
@@ -1090,9 +1093,13 @@ std::string CudaIcoCodeGen::generateStencilInstantiation(
     first = false;
   }
   Class stencilWrapperClass(stencilInstantiation->getName(), ssSW, "typename LibTag");
-  for(auto chain : spaces) {
-    stencilWrapperClass.addMember("static const int", chainToSparseSizeString(chain) + " = " +
-                                                          std::to_string(ICOChainSize(chain)));
+  for(auto space : spaces) {
+    std::string spaceStr = std::to_string(ICOChainSize(space));
+    if(space.IncludeCenter) {
+      spaceStr += "+ 1";
+    }
+    stencilWrapperClass.addMember("static const int",
+                                  chainToSparseSizeString(space) + " = " + spaceStr);
   }
 
   stencilWrapperClass.changeAccessibility("public");

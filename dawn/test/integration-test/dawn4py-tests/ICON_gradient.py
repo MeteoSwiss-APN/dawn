@@ -95,7 +95,7 @@ def main(args: argparse.Namespace):
                         "geofac_grg",
                         sir_utils.make_field_dimensions_unstructured(
                             [SIR.LocationType.Value("Cell"), SIR.LocationType.Value("Edge"), SIR.LocationType.Value("Cell")], 1, include_center = True
-                        ),                       
+                        ),
                     ),
                 ],
             ),
