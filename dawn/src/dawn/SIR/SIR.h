@@ -205,8 +205,6 @@ class UnstructuredFieldDimension : public FieldDimensionImpl {
     auto const& otherUnstructured = dynamic_cast<UnstructuredFieldDimension const&>(other);
     return iterSpace_ == otherUnstructured.iterSpace_;
   }
-
-  bool chainIsValid() const;
   const ast::UnstructuredIterationSpace iterSpace_;
 
 public:

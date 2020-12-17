@@ -92,8 +92,8 @@ public:
 
   // Members
 
-  void set_splitter_index(::dawn::LocationType loc, ::dawn::UnstructuredIterationSpace space, int offset, int index) {
-    m_stencil_68.m_unstructured_domain.set_splitter_index({loc, space, offset}, index);
+  void set_splitter_index(::dawn::LocationType loc, ::dawn::UnstructuredSubdomain subdomain, int offset, int index) {
+    m_stencil_68.m_unstructured_domain.set_splitter_index({loc, subdomain, offset}, index);
   }
 
   ICON_laplacian_stencil(const ::dawn::mesh_t<LibTag> &mesh, int k_size, ::dawn::edge_field_t<LibTag, ::dawn::float_type>& vec, ::dawn::cell_field_t<LibTag, ::dawn::float_type>& div_vec, ::dawn::vertex_field_t<LibTag, ::dawn::float_type>& rot_vec, ::dawn::edge_field_t<LibTag, ::dawn::float_type>& nabla2t1_vec, ::dawn::edge_field_t<LibTag, ::dawn::float_type>& nabla2t2_vec, ::dawn::edge_field_t<LibTag, ::dawn::float_type>& nabla2_vec, ::dawn::edge_field_t<LibTag, ::dawn::float_type>& primal_edge_length, ::dawn::edge_field_t<LibTag, ::dawn::float_type>& dual_edge_length, ::dawn::edge_field_t<LibTag, ::dawn::float_type>& tangent_orientation, ::dawn::sparse_vertex_field_t<LibTag, ::dawn::float_type>& geofac_rot, ::dawn::sparse_cell_field_t<LibTag, ::dawn::float_type>& geofac_div) : m_stencil_68(mesh, k_size,vec,div_vec,rot_vec,nabla2t1_vec,nabla2t2_vec,nabla2_vec,primal_edge_length,dual_edge_length,tangent_orientation,geofac_rot,geofac_div){}

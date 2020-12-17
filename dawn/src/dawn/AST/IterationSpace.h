@@ -28,10 +28,14 @@ struct UnstructuredIterationSpace {
   UnstructuredIterationSpace(std::vector<LocationType>&& chain) : Chain(chain) {}
   UnstructuredIterationSpace(std::vector<LocationType>&& chain, bool includeCenter)
       : Chain(chain), IncludeCenter(includeCenter) {
-    if(includeCenter)
+    if(includeCenter) {
       DAWN_ASSERT_MSG(chain.front() == chain.back(),
                       "including center is only allowed if the end "
                       "location is the same as the starting location");
+    }
+    DAWN_ASSERT_MSG(chain.size() > 0, "neighbor chain needs to have at least one member");
+    DAWN_ASSERT_MSG(chainIsValid(), "invalid neighbor chain (repeated element in succession, use "
+                                    "expaneded notation (e.g. C->C becomes C->E->C\n");
   }
   operator std::vector<LocationType>() const { return Chain; }
 

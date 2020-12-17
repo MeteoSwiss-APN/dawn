@@ -1,14 +1,14 @@
 {
   "metadata": {
     "accessIDToName": {
-      "19": "inF",
       "20": "outF",
-      "21": "sparseF"
+      "21": "sparseF",
+      "19": "inF"
     },
     "accessIDToType": {
+      "20": 6,
       "21": 3,
-      "19": 6,
-      "20": 6
+      "19": 6
     },
     "literalIDToName": {
       "-41": "0.",
@@ -28,26 +28,35 @@
     ],
     "versionedFields": {},
     "fieldIDtoDimensions": {
+      "20": {
+        "unstructuredHorizontalDimension": {
+          "iterSpace": {
+            "chain": [
+              "Edge"
+            ]
+          }
+        },
+        "maskK": 1
+      },
       "21": {
         "unstructuredHorizontalDimension": {
-          "denseLocationType": "Edge",
-          "sparsePart": [
-            "Edge",
-            "Cell",
-            "Edge"
-          ]
+          "iterSpace": {
+            "chain": [
+              "Edge",
+              "Cell",
+              "Edge"
+            ]
+          }
         },
         "maskK": 1
       },
       "19": {
         "unstructuredHorizontalDimension": {
-          "denseLocationType": "Edge"
-        },
-        "maskK": 1
-      },
-      "20": {
-        "unstructuredHorizontalDimension": {
-          "denseLocationType": "Edge"
+          "iterSpace": {
+            "chain": [
+              "Edge"
+            ]
+          }
         },
         "maskK": 1
       }
@@ -181,11 +190,13 @@
                               },
                               "loopDescriptor": {
                                 "loopDescriptorChain": {
-                                  "chain": [
-                                    "Edge",
-                                    "Cell",
-                                    "Edge"
-                                  ]
+                                  "iterSpace": {
+                                    "chain": [
+                                      "Edge",
+                                      "Cell",
+                                      "Edge"
+                                    ]
+                                  }
                                 }
                               },
                               "loc": {
@@ -344,11 +355,13 @@
                                           "ID": 10
                                         }
                                       },
-                                      "chain": [
-                                        "Edge",
-                                        "Cell",
-                                        "Edge"
-                                      ]
+                                      "iterSpace": {
+                                        "chain": [
+                                          "Edge",
+                                          "Cell",
+                                          "Edge"
+                                        ]
+                                      }
                                     }
                                   },
                                   "loc": {
@@ -371,6 +384,10 @@
                                     }
                                   },
                                   "readAccess": {
+                                    "19": {
+                                      "zeroExtent": {},
+                                      "verticalExtent": {}
+                                    },
                                     "21": {
                                       "unstructuredExtent": {
                                         "hasExtent": true
@@ -378,10 +395,6 @@
                                       "verticalExtent": {}
                                     },
                                     "-41": {
-                                      "zeroExtent": {},
-                                      "verticalExtent": {}
-                                    },
-                                    "19": {
                                       "zeroExtent": {},
                                       "verticalExtent": {}
                                     }

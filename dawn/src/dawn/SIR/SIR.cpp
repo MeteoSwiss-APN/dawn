@@ -567,12 +567,7 @@ CompareResult Field::comparison(const Field& rhs) const {
 
 UnstructuredFieldDimension::UnstructuredFieldDimension(ast::NeighborChain neighborChain,
                                                        bool includeCenter)
-    : iterSpace_(std::move(neighborChain), includeCenter) {
-  DAWN_ASSERT_MSG(neighborChain.size() > 0, "neighbor chain needs to have at least one member");
-  DAWN_ASSERT_MSG(iterSpace_.chainIsValid(),
-                  "invalid neighbor chain (repeated element in succession, use "
-                  "expaneded notation (e.g. C->C becomes C->E->C\n");
-}
+    : iterSpace_(std::move(neighborChain), includeCenter) {}
 
 const ast::NeighborChain& UnstructuredFieldDimension::getNeighborChain() const {
   DAWN_ASSERT(isSparse());

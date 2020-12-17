@@ -96,14 +96,6 @@ public:
     }
   };
 
-  struct IterSpacCompare {
-    std::size_t operator()(const ast::UnstructuredIterationSpace& space) const {
-      std::size_t seed = 0;
-      dawn::hash_combine(seed, space.Chain, space.IncludeCenter);
-      return seed;
-    }
-  };
-
   void visit(const std::shared_ptr<iir::ReductionOverNeighborExpr>& expr) override {
     spaces_.insert(expr->getIterSpace());
     for(auto c : expr->getChildren()) {
@@ -155,14 +147,13 @@ void CudaIcoCodeGen::generateGpuMesh(
     gpuMeshFromLibCtor.addStatement("NumEdges = mesh.edges().size()");
     for(auto space : spaces) {
       gpuMeshFromLibCtor.addStatement("gpuErrchk(cudaMalloc((void**)&" + chainToTableString(space) +
-                                      ", sizeof(int) * " +
-                                      chainToDenseSizeStringHostMesh(space.Chain) + "* " +
-                                      chainToSparseSizeString(space) + "))");
+                                      ", sizeof(int) * " + chainToDenseSizeStringHostMesh(space) +
+                                      "* " + chainToSparseSizeString(space) + "))");
       gpuMeshFromLibCtor.addStatement(
-          "dawn::generateNbhTable<LibTag>(mesh, " + chainToVectorString(space.Chain) + ", " +
-          chainToDenseSizeStringHostMesh(space.Chain) + ", " + chainToSparseSizeString(space) +
-          ", " + chainToTableString(space) + ", /*include center*/" +
-          std::to_string(space.IncludeCenter) + ")");
+          "dawn::generateNbhTable<LibTag>(mesh, " + chainToVectorString(space) + ", " +
+          chainToDenseSizeStringHostMesh(space) + ", " + chainToSparseSizeString(space) + ", " +
+          chainToTableString(space) + ", /*include center*/" + std::to_string(space.IncludeCenter) +
+          ")");
     }
   }
   {
@@ -175,7 +166,7 @@ void CudaIcoCodeGen::generateGpuMesh(
     for(auto space : spaces) {
       gpuMeshFromGlobalCtor.addStatement(chainToTableString(space) + " = mesh->NeighborTables.at(" +
                                          "std::tuple<std::vector<dawn::LocationType>, bool>{" +
-                                         chainToVectorString(space.Chain) + ", " +
+                                         chainToVectorString(space) + ", " +
                                          std::to_string(space.IncludeCenter) + "})");
     }
   }
@@ -425,8 +416,7 @@ static void allocTempFields(MemberFunction& ctor, const iir::Stencil& stencil) {
       } else {
         ctor.addStatement("::dawn::allocField(&" + fname + "_, " + "mesh_." +
                           locToDenseSizeStringGpuMesh(hdims.getDenseLocationType()) + ", " +
-                          chainToSparseSizeString(hdims.getIterSpace()) +
-                          (hdims.getIncludeCenter() ? "+1" : "") + ", " + kSizeStr + ")");
+                          chainToSparseSizeString(hdims.getIterSpace()) + ", " + kSizeStr + ")");
       }
     }
   }
