@@ -17,6 +17,7 @@
 #include "LocationType.h"
 
 #include "dawn/Support/Assert.h"
+#include "dawn/Support/Exception.h"
 
 namespace dawn {
 namespace ast {
@@ -28,14 +29,17 @@ struct UnstructuredIterationSpace {
   UnstructuredIterationSpace(std::vector<LocationType>&& chain) : Chain(chain) {}
   UnstructuredIterationSpace(std::vector<LocationType>&& chain, bool includeCenter)
       : Chain(chain), IncludeCenter(includeCenter) {
-    if(includeCenter) {
-      DAWN_ASSERT_MSG(chain.front() == chain.back(),
-                      "including center is only allowed if the end "
-                      "location is the same as the starting location");
+    if(includeCenter && chain.front() != chain.back()) {
+      throw dawn::SyntacticError("including center is only allowed if the end "
+                                 "location is the same as the starting location");
     }
-    DAWN_ASSERT_MSG(chain.size() > 0, "neighbor chain needs to have at least one member");
-    DAWN_ASSERT_MSG(chainIsValid(), "invalid neighbor chain (repeated element in succession, use "
-                                    "expaneded notation (e.g. C->C becomes C->E->C\n");
+    if(chain.size() == 0) {
+      throw dawn::SyntacticError("neighbor chain needs to have at least one member");
+    }
+    if(!chainIsValid()) {
+      throw dawn::SyntacticError("invalid neighbor chain (repeated element in succession, use "
+                                 "expaneded notation (e.g. C->C becomes C->E->C\n");
+    }
   }
   operator std::vector<LocationType>() const { return Chain; }
 
@@ -51,7 +55,7 @@ struct UnstructuredIterationSpace {
   bool operator==(const UnstructuredIterationSpace& other) const {
     return Chain == other.Chain && IncludeCenter == other.IncludeCenter;
   }
-};
+}; // namespace ast
 
 } // namespace ast
 } // namespace dawn
