@@ -1186,18 +1186,13 @@ generateF90InterfaceSI(FortranInterfaceModuleGen& fimGen,
     api.addArg("mesh", FortranInterfaceAPI::InterfaceType::OBJ);
     api.addArg("k_size", FortranInterfaceAPI::InterfaceType::INTEGER);
     for(auto fieldID : stencilInstantiation->getMetaData().getAPIFields()) {
-      const int spatialDims =
-          stencilInstantiation->getMetaData().getFieldDimensions(fieldID).numSpatialDimensions();
-      const int n = spatialDims > 1
-                        ? spatialDims - 1 // The horizontal counts as 1 dimension (dense)
-                        : spatialDims;
 
       api.addArg(
           stencilInstantiation->getMetaData().getNameFromAccessID(fieldID),
           FortranInterfaceAPI::InterfaceType::DOUBLE /* Unfortunately we need to know at codegen
                                                         time whether we have fields in SP/DP */
           ,
-          n);
+          stencilInstantiation->getMetaData().getFieldDimensions(fieldID).rank());
     }
 
     fimGen.addAPI(std::move(api));

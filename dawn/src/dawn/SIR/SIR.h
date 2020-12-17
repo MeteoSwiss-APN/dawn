@@ -318,6 +318,9 @@ public:
   // returns number of dimensions (1-3)
   int numSpatialDimensions() const;
 
+  // returns the rank of the corresponding storage (multidimensional array)
+  int rank() const;
+
 private:
   std::optional<HorizontalFieldDimension> horizontalFieldDimension_;
   bool maskK_;
