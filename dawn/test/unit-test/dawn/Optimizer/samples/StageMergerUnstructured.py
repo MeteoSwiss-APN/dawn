@@ -32,13 +32,13 @@ def two_copies():
     body_ast = sir_utils.make_ast(
         [
             sir_utils.make_assignment_stmt(
-                sir_utils.make_field_access_expr("out_cell_1"),
-                sir_utils.make_field_access_expr("in_cell_1"),
+                sir_utils.make_unstructured_field_access_expr("out_cell_1"),
+                sir_utils.make_unstructured_field_access_expr("in_cell_1"),
                 "=",
             ),
             sir_utils.make_assignment_stmt(
-                sir_utils.make_field_access_expr("out_cell_2"),
-                sir_utils.make_field_access_expr("in_cell_2"),
+                sir_utils.make_unstructured_field_access_expr("out_cell_2"),
+                sir_utils.make_unstructured_field_access_expr("in_cell_2"),
                 "=",
             ),
         ]
@@ -84,10 +84,10 @@ def two_copies():
             ),
         ],
     )
-    sim = dawn4py.lower_and_optimize(sir)
+    sim = dawn4py.lower_and_optimize(sir, dawn4py.default_pass_groups())
     with open(outputfile, mode="w") as f:
-        f.write(sim["generated"])
-    os.rename(outputfile + ".0.iir", "../input/" + outputfile + ".iir")
+        f.write(MessageToJson(sim["generated"]))
+    os.rename(outputfile, "../input/" + outputfile + ".iir")
 
 
 def two_copies_mixed():
@@ -97,13 +97,13 @@ def two_copies_mixed():
     body_ast = sir_utils.make_ast(
         [
             sir_utils.make_assignment_stmt(
-                sir_utils.make_field_access_expr("out_cell"),
-                sir_utils.make_field_access_expr("in_cell"),
+                sir_utils.make_unstructured_field_access_expr("out_cell"),
+                sir_utils.make_unstructured_field_access_expr("in_cell"),
                 "=",
             ),
             sir_utils.make_assignment_stmt(
-                sir_utils.make_field_access_expr("out_edge"),
-                sir_utils.make_field_access_expr("in_edge"),
+                sir_utils.make_unstructured_field_access_expr("out_edge"),
+                sir_utils.make_unstructured_field_access_expr("in_edge"),
                 "=",
             ),
         ]
@@ -149,10 +149,10 @@ def two_copies_mixed():
             ),
         ],
     )
-    sim = dawn4py.lower_and_optimize(sir)
+    sim = dawn4py.lower_and_optimize(sir, dawn4py.default_pass_groups())
     with open(outputfile, mode="w") as f:
-        f.write(sim["generated"])
-    os.rename(outputfile + ".0.iir", "../input/" + outputfile + ".iir")
+        f.write(MessageToJson(sim["generated"]))
+    os.rename(outputfile, "../input/" + outputfile + ".iir")
 
 
 if __name__ == "__main__":

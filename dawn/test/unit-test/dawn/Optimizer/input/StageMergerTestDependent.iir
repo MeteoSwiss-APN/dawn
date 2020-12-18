@@ -1,11 +1,11 @@
 {
  "metadata": {
   "accessIDToName": {
-   "48": "cin0",
-   "49": "eout1",
    "45": "eout0",
    "46": "ein0",
-   "47": "cout0"
+   "47": "cout0",
+   "48": "cin0",
+   "49": "eout1"
   },
   "accessIDToType": {
    "45": 6,
@@ -40,38 +40,58 @@
   },
   "fieldnameToBoundaryCondition": {},
   "fieldIDtoDimensions": {
-   "48": {
-    "unstructured_horizontal_dimension": {
-     "dense_location_type": "Cell",
-     "sparse_part": []
-    },
-    "mask_k": 0
-   },
-   "49": {
-    "unstructured_horizontal_dimension": {
-     "dense_location_type": "Edge",
-     "sparse_part": []
-    },
-    "mask_k": 0
-   },
    "45": {
     "unstructured_horizontal_dimension": {
-     "dense_location_type": "Edge",
-     "sparse_part": []
+     "iter_space": {
+      "chain": [
+       "Edge"
+      ],
+      "include_center": false
+     }
     },
     "mask_k": 0
    },
    "46": {
     "unstructured_horizontal_dimension": {
-     "dense_location_type": "Edge",
-     "sparse_part": []
+     "iter_space": {
+      "chain": [
+       "Edge"
+      ],
+      "include_center": false
+     }
     },
     "mask_k": 0
    },
    "47": {
     "unstructured_horizontal_dimension": {
-     "dense_location_type": "Cell",
-     "sparse_part": []
+     "iter_space": {
+      "chain": [
+       "Cell"
+      ],
+      "include_center": false
+     }
+    },
+    "mask_k": 0
+   },
+   "48": {
+    "unstructured_horizontal_dimension": {
+     "iter_space": {
+      "chain": [
+       "Cell"
+      ],
+      "include_center": false
+     }
+    },
+    "mask_k": 0
+   },
+   "49": {
+    "unstructured_horizontal_dimension": {
+     "iter_space": {
+      "chain": [
+       "Edge"
+      ],
+      "include_center": false
+     }
     },
     "mask_k": 0
    }
@@ -199,11 +219,14 @@
                     }
                    },
                    "weights": [],
-                   "chain": [
-                    "Edge",
-                    "Cell",
-                    "Edge"
-                   ]
+                   "iter_space": {
+                    "chain": [
+                     "Edge",
+                     "Cell",
+                     "Edge"
+                    ],
+                    "include_center": false
+                   }
                   }
                  },
                  "loc": {
@@ -362,11 +385,14 @@
                     }
                    },
                    "weights": [],
-                   "chain": [
-                    "Cell",
-                    "Edge",
-                    "Cell"
-                   ]
+                   "iter_space": {
+                    "chain": [
+                     "Cell",
+                     "Edge",
+                     "Cell"
+                    ],
+                    "include_center": false
+                   }
                   }
                  },
                  "loc": {
@@ -525,10 +551,13 @@
                     }
                    },
                    "weights": [],
-                   "chain": [
-                    "Edge",
-                    "Cell"
-                   ]
+                   "iter_space": {
+                    "chain": [
+                     "Edge",
+                     "Cell"
+                    ],
+                    "include_center": false
+                   }
                   }
                  },
                  "loc": {
@@ -555,18 +584,18 @@
                   }
                  },
                  "readAccess": {
-                  "47": {
-                   "unstructured_extent": {
-                    "has_extent": true
-                   },
+                  "-72": {
+                   "zero_extent": {},
                    "vertical_extent": {
                     "minus": 0,
                     "plus": 0,
                     "undefined": false
                    }
                   },
-                  "-72": {
-                   "zero_extent": {},
+                  "47": {
+                   "unstructured_extent": {
+                    "has_extent": true
+                   },
                    "vertical_extent": {
                     "minus": 0,
                     "plus": 0,
@@ -634,5 +663,5 @@
   ],
   "boundaryConditions": []
  },
- "filename": "tests/stencils/test_reduce.py"
+ "filename": "/home/matthias/workspace/dawn/dawn/test/unit-test/dawn/Optimizer/samples/StageMergerDependent.py"
 }

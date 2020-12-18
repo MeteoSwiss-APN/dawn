@@ -157,7 +157,11 @@
           "name": "in_cell",
           "fieldDimensions": {
             "unstructuredHorizontalDimension": {
-              "denseLocationType": "Cell"
+              "iterSpace": {
+                "chain": [
+                  "Cell"
+                ]
+              }
             },
             "maskK": 1
           }
@@ -166,7 +170,11 @@
           "name": "out_cell",
           "fieldDimensions": {
             "unstructuredHorizontalDimension": {
-              "denseLocationType": "Cell"
+              "iterSpace": {
+                "chain": [
+                  "Cell"
+                ]
+              }
             },
             "maskK": 1
           }
@@ -175,7 +183,11 @@
           "name": "in_edge",
           "fieldDimensions": {
             "unstructuredHorizontalDimension": {
-              "denseLocationType": "Edge"
+              "iterSpace": {
+                "chain": [
+                  "Edge"
+                ]
+              }
             },
             "maskK": 1
           }
@@ -184,7 +196,11 @@
           "name": "out_edge",
           "fieldDimensions": {
             "unstructuredHorizontalDimension": {
-              "denseLocationType": "Edge"
+              "iterSpace": {
+                "chain": [
+                  "Edge"
+                ]
+              }
             },
             "maskK": 1
           }
@@ -193,7 +209,11 @@
           "name": "in_vertex",
           "fieldDimensions": {
             "unstructuredHorizontalDimension": {
-              "denseLocationType": "Vertex"
+              "iterSpace": {
+                "chain": [
+                  "Vertex"
+                ]
+              }
             },
             "maskK": 1
           }
@@ -202,7 +222,11 @@
           "name": "out_vertex",
           "fieldDimensions": {
             "unstructuredHorizontalDimension": {
-              "denseLocationType": "Vertex"
+              "iterSpace": {
+                "chain": [
+                  "Vertex"
+                ]
+              }
             },
             "maskK": 1
           }

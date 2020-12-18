@@ -17,6 +17,8 @@
 #include "defs.hpp"
 #include "extent.hpp"
 
+#include <vector>
+
 namespace dawn {
 
 template <typename T>
@@ -63,9 +65,10 @@ using nbh_table_index_t = decltype(indexType(Tag{}));
 template <typename Tag>
 using mesh_t = decltype(meshType(Tag{}));
 
-// TODO instead of replicating, make the enum in LocationType.h accessible from here (or move it to
-// a more appropriate place)
+// TODO there is currently no convenient way to share code internal to dawn with driver code
+//      leading to reproduciton of some dawn internatls like the following enum and typedef
 enum class LocationType { Cells = 0, Edges, Vertices };
+using UnstructuredIterationSpace = std::tuple<std::vector<LocationType>, bool>;
 
 // generic deref, specialize if needed
 template <typename Tag, typename LocationType>

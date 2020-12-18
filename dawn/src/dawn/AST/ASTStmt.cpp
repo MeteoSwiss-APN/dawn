@@ -404,14 +404,15 @@ void IfStmt::replaceChildren(std::shared_ptr<Stmt> const& oldStmt,
 
 IterationDescr::~IterationDescr() {}
 
-ChainIterationDescr::ChainIterationDescr(ast::NeighborChain&& chain) : chain_(std::move(chain)) {}
-ast::NeighborChain ChainIterationDescr::getChain() const { return chain_; }
+ChainIterationDescr::ChainIterationDescr(ast::NeighborChain&& chain, bool includeCenter)
+    : iterSpace_(std::move(chain), includeCenter) {}
+ast::NeighborChain ChainIterationDescr::getChain() const { return iterSpace_.Chain; }
 std::unique_ptr<IterationDescr> ChainIterationDescr::clone() const {
   return std::make_unique<ChainIterationDescr>(*this);
 }
 std::string ChainIterationDescr::toString() const {
   std::stringstream ss;
-  auto locString = [](ast::LocationType type) {
+  auto locString = [](ast::LocationType type) -> std::string {
     switch(type) {
     case ast::LocationType::Cells:
       return "Cell";
@@ -425,24 +426,24 @@ std::string ChainIterationDescr::toString() const {
   };
   ss << "{";
   bool first = true;
-  for(const auto it : chain_) {
+  for(const auto it : iterSpace_.Chain) {
     if(!first) {
       ss << ", ";
     }
     first = false;
-    ss << locString(it);
+    ss << (first && getIncludeCenter() ? "[" + locString(it) + "]" : locString(it));
   }
   return ss.str();
 }
 bool ChainIterationDescr::equals(const IterationDescr* otherPtr) const {
   const ChainIterationDescr* chainPtr = dynamic_cast<const ChainIterationDescr*>(otherPtr);
-  return chainPtr && chain_ == chainPtr->chain_;
+  return chainPtr && iterSpace_ == chainPtr->iterSpace_;
 }
 
-LoopStmt::LoopStmt(std::unique_ptr<StmtData> data, ast::NeighborChain&& chain,
+LoopStmt::LoopStmt(std::unique_ptr<StmtData> data, ast::NeighborChain&& chain, bool includeCenter,
                    std::shared_ptr<BlockStmt> body, SourceLocation loc)
     : Stmt(std::move(data), Kind::LoopStmt, loc), blockStmt_(body) {
-  iterationDescr_ = std::make_unique<ChainIterationDescr>(std::move(chain));
+  iterationDescr_ = std::make_unique<ChainIterationDescr>(std::move(chain), includeCenter);
   for(const auto& stmtPtr : body->getStatements()) {
     DAWN_ASSERT_MSG(stmtPtr->getKind() == ast::Stmt::Kind::ExprStmt,
                     "only expression statements allowed in loop body");
@@ -451,6 +452,9 @@ LoopStmt::LoopStmt(std::unique_ptr<StmtData> data, ast::NeighborChain&& chain,
                     "only assignments allowed in loop body");
   }
 }
+LoopStmt::LoopStmt(std::unique_ptr<StmtData> data, ast::NeighborChain&& chain,
+                   std::shared_ptr<BlockStmt> body, SourceLocation loc)
+    : LoopStmt(std::move(data), std::move(chain), false, body, loc) {}
 LoopStmt::LoopStmt(const LoopStmt& stmt)
     : Stmt(stmt), blockStmt_(std::dynamic_pointer_cast<BlockStmt>(stmt.getBlockStmt()->clone())),
       iterationDescr_(stmt.getIterationDescr().clone()) {}

@@ -530,18 +530,18 @@ static std::shared_ptr<sir::Expr> makeExpr(const dawn::proto::statements::Expr& 
     }
 
     ast::NeighborChain chain;
-    for(int i = 0; i < exprProto.chain_size(); ++i) {
-      chain.push_back(getLocationTypeFromProtoLocationType(exprProto.chain(i)));
+    for(int i = 0; i < exprProto.iter_space().chain_size(); ++i) {
+      chain.push_back(getLocationTypeFromProtoLocationType(exprProto.iter_space().chain(i)));
     }
 
     if(weights.size() > 0) {
       return std::make_shared<sir::ReductionOverNeighborExpr>(
           exprProto.op(), makeExpr(exprProto.rhs()), makeExpr(exprProto.init()), weights, chain,
-          makeLocation(exprProto));
+          exprProto.iter_space().include_center(), makeLocation(exprProto));
     } else {
       return std::make_shared<sir::ReductionOverNeighborExpr>(
           exprProto.op(), makeExpr(exprProto.rhs()), makeExpr(exprProto.init()), chain,
-          makeLocation(exprProto));
+          exprProto.iter_space().include_center(), makeLocation(exprProto));
     }
   }
   case dawn::proto::statements::Expr::EXPR_NOT_SET:
@@ -571,13 +571,15 @@ static std::shared_ptr<sir::Stmt> makeStmt(const dawn::proto::statements::Stmt& 
     case dawn::proto::statements::LoopDescriptor::kLoopDescriptorChain: {
 
       ast::NeighborChain chain;
-      for(int i = 0; i < stmtProto.loop_descriptor().loop_descriptor_chain().chain_size(); ++i) {
+      for(int i = 0;
+          i < stmtProto.loop_descriptor().loop_descriptor_chain().iter_space().chain_size(); ++i) {
         chain.push_back(getLocationTypeFromProtoLocationType(
-            stmtProto.loop_descriptor().loop_descriptor_chain().chain(i)));
+            stmtProto.loop_descriptor().loop_descriptor_chain().iter_space().chain(i)));
       }
-      auto stmt =
-          sir::makeLoopStmt(std::move(chain), std::dynamic_pointer_cast<ast::BlockStmt>(blockStmt),
-                            makeLocation(stmtProto));
+      auto stmt = sir::makeLoopStmt(
+          std::move(chain),
+          stmtProto.loop_descriptor().loop_descriptor_chain().iter_space().include_center(),
+          std::dynamic_pointer_cast<ast::BlockStmt>(blockStmt), makeLocation(stmtProto));
       return stmt;
     }
     case dawn::proto::statements::LoopDescriptor::kLoopDescriptorGeneral: {

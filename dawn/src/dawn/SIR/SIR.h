@@ -15,6 +15,7 @@
 #pragma once
 
 #include "dawn/AST/GridType.h"
+#include "dawn/AST/IterationSpace.h"
 #include "dawn/AST/Tags.h"
 #include "dawn/SIR/AST.h"
 #include "dawn/Support/Assert.h"
@@ -198,28 +199,27 @@ public:
 /// @ingroup sir
 class UnstructuredFieldDimension : public FieldDimensionImpl {
   std::unique_ptr<FieldDimensionImpl> cloneImpl() const override {
-    return std::make_unique<UnstructuredFieldDimension>(neighborChain_);
+    return std::make_unique<UnstructuredFieldDimension>(iterSpace_.Chain, iterSpace_.IncludeCenter);
   }
   virtual bool equalityImpl(const FieldDimensionImpl& other) const override {
     auto const& otherUnstructured = dynamic_cast<UnstructuredFieldDimension const&>(other);
-    return std::equal(neighborChain_.begin(), neighborChain_.end(),
-                      otherUnstructured.neighborChain_.begin());
+    return iterSpace_ == otherUnstructured.iterSpace_;
   }
-
-  bool chainIsValid() const;
-  const ast::NeighborChain neighborChain_;
+  const ast::UnstructuredIterationSpace iterSpace_;
 
 public:
-  explicit UnstructuredFieldDimension(const ast::NeighborChain neighborChain);
+  explicit UnstructuredFieldDimension(ast::NeighborChain neighborChain, bool includeCenter = false);
   /// @brief Returns the neighbor chain encoding the sparse part (isSparse() must be true!).
   const ast::NeighborChain& getNeighborChain() const;
   /// @brief Returns the dense location (always present)
-  ast::LocationType getDenseLocationType() const { return neighborChain_[0]; }
+  ast::LocationType getDenseLocationType() const { return iterSpace_.Chain[0]; }
   /// @brief Returns the last sparse location type if there is a sparse part, otherwise returns the
   /// dense part.
-  ast::LocationType getLastSparseLocationType() const { return neighborChain_.back(); }
-  bool isSparse() const { return neighborChain_.size() > 1; }
+  ast::LocationType getLastSparseLocationType() const { return iterSpace_.Chain.back(); }
+  bool isSparse() const { return iterSpace_.Chain.size() > 1; }
   bool isDense() const { return !isSparse(); }
+  bool getIncludeCenter() const { return iterSpace_.IncludeCenter; }
+  ast::UnstructuredIterationSpace getIterSpace() const { return iterSpace_; }
   std::string toString() const;
 };
 
@@ -233,11 +233,14 @@ public:
 
   // Construct a Unstructured horizontal field sparse dimension with specified neighbor chain
   // (sparse part). Dense part is the first element of the chain.
-  HorizontalFieldDimension(dawn::ast::unstructured_, ast::NeighborChain neighborChain)
-      : impl_(std::make_unique<UnstructuredFieldDimension>(neighborChain)) {}
+  HorizontalFieldDimension(dawn::ast::unstructured_, ast::NeighborChain neighborChain,
+                           bool includeCenter = false)
+      : impl_(std::make_unique<UnstructuredFieldDimension>(neighborChain, includeCenter)) {}
   // Construct a Unstructured horizontal field dense dimension with specified (dense) location type.
-  HorizontalFieldDimension(dawn::ast::unstructured_, ast::LocationType locationType)
-      : impl_(std::make_unique<UnstructuredFieldDimension>(ast::NeighborChain{locationType})) {}
+  HorizontalFieldDimension(dawn::ast::unstructured_, ast::LocationType locationType,
+                           bool includeCenter = false)
+      : impl_(std::make_unique<UnstructuredFieldDimension>(ast::NeighborChain{locationType},
+                                                           includeCenter)) {}
 
   HorizontalFieldDimension(const HorizontalFieldDimension& other) { *this = other; }
   HorizontalFieldDimension(HorizontalFieldDimension&& other) { *this = other; };

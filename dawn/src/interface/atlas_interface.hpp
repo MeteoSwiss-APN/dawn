@@ -298,7 +298,8 @@ private:
 
 // entry point, kicks off the recursive function above if required
 inline std::vector<int> getNeighbors(atlasTag, atlas::Mesh const& mesh,
-                                     std::vector<dawn::LocationType> chain, int idx) {
+                                     std::vector<dawn::LocationType> chain, int idx,
+                                     bool includeCenter = false) {
 
   // target type is at the end of the chain (we collect all neighbors of this type "along" the
   // chain)
@@ -345,11 +346,12 @@ inline std::vector<int> getNeighbors(atlasTag, atlas::Mesh const& mesh,
   // result set
   std::list<int> result;
 
-  // we want to exclude the original element from the neighborhood obtained we can compare by
-  // the id, but only if targetType = startOfChain, since ids may be duplicated amongst different
-  // element types; e.g. there may be a vertex and an edge with the same id.
+  // we want to exclude the original element from the neighborhood obtained if we don't include the
+  // center. we can compare by the id, but only if targetType = startOfChain, since ids may be
+  // duplicated amongst different element types; e.g. there may be a vertex and an edge with the
+  // same id.
   NotDuplicateOrOrigin<int> pred;
-  if(chain.front() == chain.back()) {
+  if(chain.front() == chain.back() && !includeCenter) {
     pred = NotDuplicateOrOrigin<int>(idx);
   } else {
     pred = NotDuplicateOrOrigin<int>();
@@ -369,10 +371,11 @@ inline std::vector<int> getNeighbors(atlasTag, atlas::Mesh const& mesh,
 
 template <typename Init, typename Op, typename WeightT>
 auto reduce(atlasTag, atlas::Mesh const& m, int idx, Init init,
-            std::vector<dawn::LocationType> chain, Op&& op, std::vector<WeightT>&& weights) {
+            std::vector<dawn::LocationType> chain, Op&& op, std::vector<WeightT>&& weights,
+            bool includeCenter = false) {
   static_assert(std::is_arithmetic<WeightT>::value, "weights need to be of arithmetic type!\n");
   int i = 0;
-  for(auto&& objIdx : getNeighbors(atlasTag{}, m, chain, idx))
+  for(auto&& objIdx : getNeighbors(atlasTag{}, m, chain, idx, includeCenter))
     op(init, objIdx, weights[i++]);
   return init;
 }
@@ -383,8 +386,8 @@ auto reduce(atlasTag, atlas::Mesh const& m, int idx, Init init,
 
 template <typename Init, typename Op>
 auto reduce(atlasTag, atlas::Mesh const& m, int idx, Init init,
-            std::vector<dawn::LocationType> chain, Op&& op) {
-  for(auto&& objIdx : getNeighbors(atlasTag{}, m, chain, idx))
+            std::vector<dawn::LocationType> chain, Op&& op, bool includeCenter = false) {
+  for(auto&& objIdx : getNeighbors(atlasTag{}, m, chain, idx, includeCenter))
     op(init, objIdx);
   return init;
 }

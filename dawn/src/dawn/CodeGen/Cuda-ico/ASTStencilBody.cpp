@@ -40,13 +40,13 @@ void ASTStencilBody::visit(const std::shared_ptr<iir::LoopStmt>& stmt) {
       dynamic_cast<const ast::ChainIterationDescr*>(stmt->getIterationDescrPtr());
   DAWN_ASSERT_MSG(maybeChainPtr, "general loop concept not implemented yet!\n");
 
-  ss_ << "for (int nbhIter = 0; nbhIter < " << chainToSparseSizeString(maybeChainPtr->getChain())
-      << "; nbhIter++)";
   parentIsForLoop_ = true;
+  ss_ << "for (int nbhIter = 0; nbhIter < "
+      << chainToSparseSizeString(maybeChainPtr->getIterSpace()) << "; nbhIter++)";
 
   ss_ << "{\n";
-  ss_ << "int nbhIdx = " << chainToTableString(maybeChainPtr->getChain()) << "["
-      << "pidx * " << chainToSparseSizeString(maybeChainPtr->getChain()) << " + nbhIter"
+  ss_ << "int nbhIdx = " << chainToTableString(maybeChainPtr->getIterSpace()) << "["
+      << "pidx * " << chainToSparseSizeString(maybeChainPtr->getIterSpace()) << " + nbhIter"
       << "];\n";
   ss_ << "if (nbhIdx == DEVICE_MISSING_VALUE) { continue; }";
 
@@ -128,7 +128,7 @@ std::string ASTStencilBody::makeIndexString(const std::shared_ptr<iir::FieldAcce
     DAWN_ASSERT_MSG(parentIsForLoop_ || parentIsReduction_,
                     "Sparse Field Access not allowed in this context");
     std::string denseSize = locToDenseSizeStringGpuMesh(unstrDims.getDenseLocationType());
-    std::string sparseSize = chainToSparseSizeString(unstrDims.getNeighborChain());
+    std::string sparseSize = chainToSparseSizeString(unstrDims.getIterSpace());
     return kiterStr + "*" + denseSize + " * " + sparseSize + " + " + "nbhIter * " + denseSize +
            " + pidx";
   }
@@ -148,7 +148,7 @@ std::string ASTStencilBody::makeIndexString(const std::shared_ptr<iir::FieldAcce
     DAWN_ASSERT_MSG(parentIsForLoop_ || parentIsReduction_,
                     "Sparse Field Access not allowed in this context");
     std::string denseSize = locToDenseSizeStringGpuMesh(unstrDims.getDenseLocationType());
-    std::string sparseSize = chainToSparseSizeString(unstrDims.getNeighborChain());
+    std::string sparseSize = chainToSparseSizeString(unstrDims.getIterSpace());
     return "nbhIter * " + denseSize + " + pidx";
   }
 
@@ -164,10 +164,14 @@ void ASTStencilBody::visit(const std::shared_ptr<iir::FieldAccessExpr>& expr) {
                "]";
   } else {
     auto vertOffset = makeIndexString(std::static_pointer_cast<iir::FieldAccessExpr>(
-                        expr->getOffset().getVerticalIndirectionFieldAsExpr()), "kIter");                    
+                                          expr->getOffset().getVerticalIndirectionFieldAsExpr()),
+                                      "kIter");
     ss_ << expr->getName() + "[" +
-               makeIndexString(expr, "(int)(" + expr->getOffset().getVerticalIndirectionFieldName() + "[" + vertOffset + 
-               "] " + " + " + std::to_string(expr->getOffset().verticalShift()) + ")") + "]"; 
+               makeIndexString(expr, "(int)(" +
+                                         expr->getOffset().getVerticalIndirectionFieldName() + "[" +
+                                         vertOffset + "] " + " + " +
+                                         std::to_string(expr->getOffset().verticalShift()) + ")") +
+               "]";
   }
 }
 
@@ -230,12 +234,12 @@ void ASTStencilBody::visit(const std::shared_ptr<iir::ReductionOverNeighborExpr>
     }
     ss_ << "};\n";
   }
-  ss_ << "for (int nbhIter = 0; nbhIter < " << chainToSparseSizeString(expr->getNbhChain())
+  ss_ << "for (int nbhIter = 0; nbhIter < " << chainToSparseSizeString(expr->getIterSpace())
       << "; nbhIter++)";
 
   ss_ << "{\n";
-  ss_ << "int nbhIdx = " << chainToTableString(expr->getNbhChain()) << "["
-      << "pidx * " << chainToSparseSizeString(expr->getNbhChain()) << " + nbhIter"
+  ss_ << "int nbhIdx = " << chainToTableString(expr->getIterSpace()) << "["
+      << "pidx * " << chainToSparseSizeString(expr->getIterSpace()) << " + nbhIter"
       << "];\n";
   ss_ << "if (nbhIdx == DEVICE_MISSING_VALUE) { continue; }";
   ss_ << lhs_name << " " << expr->getOp() << "=";

@@ -110,25 +110,23 @@ IIRBuilder::build(std::string const& name, std::unique_ptr<iir::Stencil> stencil
   return si_;
 }
 
-std::shared_ptr<iir::Expr>
-IIRBuilder::reduceOverNeighborExpr(Op operation, std::shared_ptr<iir::Expr>&& rhs,
-                                   std::shared_ptr<iir::Expr>&& init,
-                                   const std::vector<ast::LocationType>& chain) {
+std::shared_ptr<iir::Expr> IIRBuilder::reduceOverNeighborExpr(
+    Op operation, std::shared_ptr<iir::Expr>&& rhs, std::shared_ptr<iir::Expr>&& init,
+    const std::vector<ast::LocationType>& chain, bool includeCenter) {
   auto expr = std::make_shared<iir::ReductionOverNeighborExpr>(
       toStr(operation, {Op::multiply, Op::plus, Op::minus, Op::assign, Op::divide}), std::move(rhs),
-      std::move(init), chain);
+      std::move(init), chain, includeCenter);
   expr->setID(si_->nextUID());
   return expr;
 }
 
-std::shared_ptr<iir::Expr>
-IIRBuilder::reduceOverNeighborExpr(Op operation, std::shared_ptr<iir::Expr>&& rhs,
-                                   std::shared_ptr<iir::Expr>&& init,
-                                   const std::vector<ast::LocationType>& chain,
-                                   const std::vector<std::shared_ptr<iir::Expr>>&& weights) {
+std::shared_ptr<iir::Expr> IIRBuilder::reduceOverNeighborExpr(
+    Op operation, std::shared_ptr<iir::Expr>&& rhs, std::shared_ptr<iir::Expr>&& init,
+    const std::vector<ast::LocationType>& chain,
+    const std::vector<std::shared_ptr<iir::Expr>>&& weights, bool includeCenter) {
   auto expr = std::make_shared<iir::ReductionOverNeighborExpr>(
       toStr(operation, {Op::multiply, Op::plus, Op::minus, Op::assign, Op::divide}), std::move(rhs),
-      std::move(init), move(weights), chain);
+      std::move(init), move(weights), chain, includeCenter);
   expr->setID(si_->nextUID());
   return expr;
 }
@@ -222,17 +220,19 @@ std::shared_ptr<iir::Stmt> IIRBuilder::ifStmt(std::shared_ptr<iir::Expr>&& cond,
   return stmt;
 }
 std::shared_ptr<iir::Stmt> IIRBuilder::loopStmtChain(std::shared_ptr<iir::BlockStmt>&& body,
-                                                     std::vector<ast::LocationType>&& chain) {
+                                                     std::vector<ast::LocationType>&& chain,
+                                                     bool includeCenter) {
   DAWN_ASSERT(si_);
-  auto stmt = iir::makeLoopStmt(std::move(chain), std::move(body));
+  auto stmt = iir::makeLoopStmt(std::move(chain), includeCenter, std::move(body));
   return stmt;
 }
 
 std::shared_ptr<iir::Stmt> IIRBuilder::loopStmtChain(std::shared_ptr<iir::Stmt>&& body,
-                                                     std::vector<ast::LocationType>&& chain) {
+                                                     std::vector<ast::LocationType>&& chain,
+                                                     bool includeCenter) {
   DAWN_ASSERT(si_);
   auto bStmt = iir::makeBlockStmt(std::vector<std::shared_ptr<iir::Stmt>>{body});
-  auto stmt = iir::makeLoopStmt(std::move(chain), std::move(bStmt));
+  auto stmt = iir::makeLoopStmt(std::move(chain), includeCenter, std::move(bStmt));
   return stmt;
 }
 
@@ -279,38 +279,45 @@ std::shared_ptr<iir::Expr> CartesianIIRBuilder::at(IIRBuilder::Field const& fiel
 }
 
 IIRBuilder::Field UnstructuredIIRBuilder::field(std::string const& name, ast::LocationType location,
-                                                bool maskK) {
+                                                bool maskK, bool includeCenter) {
   DAWN_ASSERT(si_);
   int id = si_->getMetaData().addField(
       iir::FieldAccessType::APIField, name,
-      sir::FieldDimensions(sir::HorizontalFieldDimension{ast::unstructured, location}, maskK));
+      sir::FieldDimensions(
+          sir::HorizontalFieldDimension{ast::unstructured, location, includeCenter}, maskK));
   return {id, name};
 }
 
 IIRBuilder::Field UnstructuredIIRBuilder::field(std::string const& name,
-                                                ast::NeighborChain sparseChain, bool maskK) {
+                                                ast::NeighborChain sparseChain, bool maskK,
+                                                bool includeCenter) {
   DAWN_ASSERT(si_);
   int id = si_->getMetaData().addField(
       iir::FieldAccessType::APIField, name,
-      sir::FieldDimensions(sir::HorizontalFieldDimension{ast::unstructured, sparseChain}, maskK));
+      sir::FieldDimensions(
+          sir::HorizontalFieldDimension{ast::unstructured, sparseChain, includeCenter}, maskK));
   return {id, name};
 }
 
 IIRBuilder::Field UnstructuredIIRBuilder::tmpField(std::string const& name,
-                                                   ast::LocationType location, bool maskK) {
+                                                   ast::LocationType location, bool maskK,
+                                                   bool includeCenter) {
   DAWN_ASSERT(si_);
   int id = si_->getMetaData().addField(
       iir::FieldAccessType::StencilTemporary, name,
-      sir::FieldDimensions(sir::HorizontalFieldDimension{ast::unstructured, location}, maskK));
+      sir::FieldDimensions(
+          sir::HorizontalFieldDimension{ast::unstructured, location, includeCenter}, maskK));
   return {id, name};
 }
 
 IIRBuilder::Field UnstructuredIIRBuilder::tmpField(std::string const& name,
-                                                   ast::NeighborChain sparseChain, bool maskK) {
+                                                   ast::NeighborChain sparseChain, bool maskK,
+                                                   bool includeCenter) {
   DAWN_ASSERT(si_);
   int id = si_->getMetaData().addField(
       iir::FieldAccessType::StencilTemporary, name,
-      sir::FieldDimensions(sir::HorizontalFieldDimension{ast::unstructured, sparseChain}, maskK));
+      sir::FieldDimensions(
+          sir::HorizontalFieldDimension{ast::unstructured, sparseChain, includeCenter}, maskK));
   return {id, name};
 }
 

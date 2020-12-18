@@ -136,7 +136,8 @@ public:
   std::shared_ptr<iir::Expr> reduceOverNeighborExpr(Op operation, std::shared_ptr<iir::Expr>&& rhs,
                                                     std::shared_ptr<iir::Expr>&& init,
                                                     const std::vector<ast::LocationType>& chain,
-                                                    const std::vector<TWeight>&& weights) {
+                                                    const std::vector<TWeight>&& weights,
+                                                    bool includeCenter = false) {
     static_assert(std::is_arithmetic<TWeight>::value, "weights need to be of arithmetic type!\n");
 
     std::vector<std::shared_ptr<ast::Expr>> vWeights;
@@ -153,15 +154,15 @@ public:
     return expr;
   }
 
-  std::shared_ptr<iir::Expr>
-  reduceOverNeighborExpr(Op operation, std::shared_ptr<iir::Expr>&& rhs,
-                         std::shared_ptr<iir::Expr>&& init,
-                         const std::vector<ast::LocationType>& chain,
-                         const std::vector<std::shared_ptr<iir::Expr>>&& weights);
+  std::shared_ptr<iir::Expr> reduceOverNeighborExpr(
+      Op operation, std::shared_ptr<iir::Expr>&& rhs, std::shared_ptr<iir::Expr>&& init,
+      const std::vector<ast::LocationType>& chain,
+      const std::vector<std::shared_ptr<iir::Expr>>&& weights, bool includeCenter = false);
 
   std::shared_ptr<iir::Expr> reduceOverNeighborExpr(Op operation, std::shared_ptr<iir::Expr>&& rhs,
                                                     std::shared_ptr<iir::Expr>&& init,
-                                                    const std::vector<ast::LocationType>& chain);
+                                                    const std::vector<ast::LocationType>& chain,
+                                                    bool includeCenter = false);
 
   std::shared_ptr<iir::Expr> binaryExpr(std::shared_ptr<iir::Expr>&& lhs,
                                         std::shared_ptr<iir::Expr>&& rhs, Op operation = Op::plus);
@@ -209,10 +210,12 @@ public:
                                     std::shared_ptr<iir::Stmt>&& caseElse = {nullptr});
 
   std::shared_ptr<iir::Stmt> loopStmtChain(std::shared_ptr<iir::BlockStmt>&& body,
-                                           std::vector<ast::LocationType>&& chain);
+                                           std::vector<ast::LocationType>&& chain,
+                                           bool includeCenter = false);
 
   std::shared_ptr<iir::Stmt> loopStmtChain(std::shared_ptr<iir::Stmt>&& body,
-                                           std::vector<ast::LocationType>&& chain);
+                                           std::vector<ast::LocationType>&& chain,
+                                           bool includeCenter = false);
 
   std::shared_ptr<iir::Stmt> declareVar(LocalVar& var_id);
 
@@ -346,11 +349,15 @@ public:
   std::shared_ptr<iir::Expr> at(Field const& field, HOffsetType hOffset, int vOffset);
   std::shared_ptr<iir::Expr> at(Field const& field, AccessType access = AccessType::r);
 
-  Field field(std::string const& name, ast::LocationType denseLocation, bool maskK = true);
-  Field field(std::string const& name, ast::NeighborChain sparseChain, bool maskK = true);
+  Field field(std::string const& name, ast::LocationType denseLocation, bool maskK = true,
+              bool includeCenter = false);
+  Field field(std::string const& name, ast::NeighborChain sparseChain, bool maskK = true,
+              bool includeCenter = false);
 
-  Field tmpField(std::string const& name, ast::LocationType denseLocation, bool maskK = true);
-  Field tmpField(std::string const& name, ast::NeighborChain sparseChain, bool maskK = true);
+  Field tmpField(std::string const& name, ast::LocationType denseLocation, bool maskK = true,
+                 bool includeCenter = false);
+  Field tmpField(std::string const& name, ast::NeighborChain sparseChain, bool maskK = true,
+                 bool includeCenter = false);
 
   Field vertical_field(std::string const& name);
 };

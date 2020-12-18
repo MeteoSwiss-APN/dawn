@@ -121,7 +121,8 @@ void ASTStencilBody::visit(const std::shared_ptr<iir::LoopStmt>& stmt) {
   ss_ << "int " << ASTStencilBody::LoopLinearIndexVarName() << " = 0;";
   ss_ << "for (auto " << ASTStencilBody::LoopNeighborIndexVarName()
       << ": getNeighbors(LibTag{}, m_mesh," << nbhChainToVectorString(maybeChainPtr->getChain())
-      << ", " << ASTStencilBody::StageIndexVarName() << "))";
+      << ", " << ASTStencilBody::StageIndexVarName()
+      << (maybeChainPtr->getIncludeCenter() ? ",/*include center*/ true" : "") << "))";
   parentIsForLoop_ = true;
   currentChain_ = maybeChainPtr->getChain();
   stmt->getBlockStmt()->accept(*this);
@@ -380,9 +381,8 @@ void ASTStencilBody::visit(const std::shared_ptr<iir::ReductionOverNeighborExpr>
     ss_ << "weight * ";
   } else {
     ss_ << ", [&, " + ASTStencilBody::ReductionSparseIndexVarName(reductionDepth_) +
-               " = int(0)](auto& lhs, auto " 
-       << ASTStencilBody::ReductionIndexVarName(reductionDepth_ + 1)
-       << ") mutable { ";
+               " = int(0)](auto& lhs, auto "
+        << ASTStencilBody::ReductionIndexVarName(reductionDepth_ + 1) << ") mutable { ";
     ss_ << "lhs " << expr->getOp() << "= ";
   }
 
@@ -426,6 +426,9 @@ void ASTStencilBody::visit(const std::shared_ptr<iir::ReductionOverNeighborExpr>
     }
 
     ss_ << "})";
+  }
+  if(expr->getIncludeCenter()) {
+    ss_ << ", /*include center*/ true";
   }
   ss_ << ")";
 }

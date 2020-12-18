@@ -565,25 +565,13 @@ CompareResult Field::comparison(const Field& rhs) const {
   return StencilFunctionArg::comparison(rhs);
 }
 
-bool UnstructuredFieldDimension::chainIsValid() const {
-  for(int chainIdx = 0; chainIdx < neighborChain_.size() - 1; chainIdx++) {
-    if(neighborChain_[chainIdx] == neighborChain_[chainIdx + 1]) {
-      return false;
-    }
-  }
-  return true;
-}
-
-UnstructuredFieldDimension::UnstructuredFieldDimension(const ast::NeighborChain neighborChain)
-    : neighborChain_(neighborChain) {
-  DAWN_ASSERT_MSG(neighborChain.size() > 0, "neighbor chain needs to have at least one member");
-  DAWN_ASSERT_MSG(chainIsValid(), "invalid neighbor chain (repeated element in succession, use "
-                                  "expaneded notation (e.g. C->C becomes C->E->C\n");
-}
+UnstructuredFieldDimension::UnstructuredFieldDimension(ast::NeighborChain neighborChain,
+                                                       bool includeCenter)
+    : iterSpace_(std::move(neighborChain), includeCenter) {}
 
 const ast::NeighborChain& UnstructuredFieldDimension::getNeighborChain() const {
   DAWN_ASSERT(isSparse());
-  return neighborChain_;
+  return iterSpace_.Chain;
 }
 
 std::string UnstructuredFieldDimension::toString() const {
@@ -604,8 +592,12 @@ std::string UnstructuredFieldDimension::toString() const {
   };
 
   std::string output = "", separator = "";
-  for(const auto elem : neighborChain_) {
-    output += separator + getLocationTypeString(elem);
+  for(const auto elem : iterSpace_.Chain) {
+    if(iterSpace_.IncludeCenter && separator == "") {
+      output += separator + "[" + getLocationTypeString(elem) + "]";
+    } else {
+      output += separator + getLocationTypeString(elem);
+    }
     separator = "->";
   }
   return output;

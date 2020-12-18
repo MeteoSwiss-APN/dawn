@@ -1060,11 +1060,11 @@ TEST(AtlasIntegrationTestCompareOutput, iterationSpaceUnstructured) {
   dawn_generated::cxxnaiveico::iterationSpaceUnstructured<atlasInterface::atlasTag> stencil(
       mesh, nb_levels, out_v, in1_v, in2_v);
 
-  stencil.set_splitter_index(dawn::LocationType::Cells, dawn::UnstructuredIterationSpace::Interior,
-                             0, interiorIdx);
-  stencil.set_splitter_index(dawn::LocationType::Cells, dawn::UnstructuredIterationSpace::Halo, 0,
+  stencil.set_splitter_index(dawn::LocationType::Cells, dawn::UnstructuredSubdomain::Interior, 0,
+                             interiorIdx);
+  stencil.set_splitter_index(dawn::LocationType::Cells, dawn::UnstructuredSubdomain::Halo, 0,
                              haloIdx);
-  stencil.set_splitter_index(dawn::LocationType::Cells, dawn::UnstructuredIterationSpace::End, 0,
+  stencil.set_splitter_index(dawn::LocationType::Cells, dawn::UnstructuredSubdomain::End, 0,
                              mesh.cells().size());
   stencil.run();
 
@@ -1212,6 +1212,154 @@ TEST(AtlasIntegrationTestCompareOutput, reductionInConditional) {
       } else {
         ASSERT_EQ(out_v(cellIdx), 12);
       }
+    }
+  }
+}
+} // namespace
+
+namespace {
+#include <generated_reductionWithCenter.hpp>
+TEST(AtlasIntegrationTestCompareOutput, reductionWithCenter) {
+  auto mesh = generateEquilatMesh(10, 10);
+  size_t nb_levels = 1;
+
+  auto [cout_F, cout_v] = makeAtlasField("cout", mesh.cells().size(), nb_levels);
+  auto [cin_F, cin_v] = makeAtlasField("cin", mesh.cells().size(), nb_levels);
+
+  // Initialize fields with data
+  initField(cout_v, mesh.cells().size(), nb_levels, .0);
+  initField(cin_v, mesh.cells().size(), nb_levels, 1.0);
+
+  auto isBoundaryEdge = [mesh](const int edgeIdx) -> bool {
+    return mesh.edges().cell_connectivity()(edgeIdx, 0) ==
+               mesh.edges().cell_connectivity().missing_value() ||
+           mesh.edges().cell_connectivity()(edgeIdx, 1) ==
+               mesh.edges().cell_connectivity().missing_value();
+  };
+
+  std::vector<size_t> nnbh_c2c(mesh.cells().size());
+  const auto& conn = mesh.cells().edge_connectivity();
+  for(int cIdx = 0; cIdx < mesh.cells().size(); cIdx++) {
+    int nnbh = 0;
+    for(int nbhIdx = 0; nbhIdx < conn.cols(cIdx); nbhIdx++) {
+      int eIdx = conn(cIdx, nbhIdx);
+      if(eIdx != conn.missing_value()) {
+        nnbh += !isBoundaryEdge(eIdx) ? 1 : 0;
+      }
+    }
+    nnbh_c2c[cIdx] = nnbh;
+  }
+
+  // Run the stencil
+  auto stencil = dawn_generated::cxxnaiveico::reductionWithCenter<atlasInterface::atlasTag>(
+      mesh, static_cast<int>(nb_levels), cin_v, cout_v);
+  stencil.run();
+
+  // Check correctness of the output
+  for(int k = 0; k < nb_levels; k++) {
+    for(int cell_idx = 0; cell_idx < mesh.cells().size(); ++cell_idx) {
+      ASSERT_EQ(cout_v(cell_idx, k), nnbh_c2c[cell_idx] + 1);
+    }
+  }
+}
+} // namespace
+
+namespace {
+#include <generated_reductionWithCenterSparse.hpp>
+TEST(AtlasIntegrationTestCompareOutput, reductionWithCenterSparse) {
+  auto mesh = generateEquilatMesh(10, 10);
+  size_t nb_levels = 1;
+  const int CEC_SIZE = 3;
+  const double sparse_val = 2.;
+
+  auto [cout_F, cout_v] = makeAtlasField("cout", mesh.cells().size(), nb_levels);
+  auto [cin_F, cin_v] = makeAtlasField("cin", mesh.cells().size(), nb_levels);
+  auto [sparse_F, sparse_v] =
+      makeAtlasSparseField("cin", mesh.cells().size(), CEC_SIZE + 1, nb_levels);
+
+  // Initialize fields with data
+  initField(cout_v, mesh.cells().size(), nb_levels, .0);
+  initField(cin_v, mesh.cells().size(), nb_levels, 1.0);
+  initSparseField(sparse_v, mesh.cells().size(), nb_levels, CEC_SIZE + 1, sparse_val);
+
+  auto isBoundaryEdge = [mesh](const int edgeIdx) -> bool {
+    return mesh.edges().cell_connectivity()(edgeIdx, 0) ==
+               mesh.edges().cell_connectivity().missing_value() ||
+           mesh.edges().cell_connectivity()(edgeIdx, 1) ==
+               mesh.edges().cell_connectivity().missing_value();
+  };
+
+  std::vector<size_t> nnbh_c2c(mesh.cells().size());
+  const auto& conn = mesh.cells().edge_connectivity();
+  for(int cIdx = 0; cIdx < mesh.cells().size(); cIdx++) {
+    int nnbh = 0;
+    for(int nbhIdx = 0; nbhIdx < conn.cols(cIdx); nbhIdx++) {
+      int eIdx = conn(cIdx, nbhIdx);
+      if(eIdx != conn.missing_value()) {
+        nnbh += !isBoundaryEdge(eIdx) ? 1 : 0;
+      }
+    }
+    nnbh_c2c[cIdx] = nnbh;
+  }
+
+  // Run the stencil
+  auto stencil = dawn_generated::cxxnaiveico::reductionWithCenterSparse<atlasInterface::atlasTag>(
+      mesh, static_cast<int>(nb_levels), cin_v, cout_v, sparse_v);
+  stencil.run();
+
+  // Check correctness of the output
+  for(int k = 0; k < nb_levels; k++) {
+    for(int cell_idx = 0; cell_idx < mesh.cells().size(); ++cell_idx) {
+      ASSERT_EQ(cout_v(cell_idx, k), sparse_val * nnbh_c2c[cell_idx] + sparse_val);
+    }
+  }
+}
+} // namespace
+
+namespace {
+#include <generated_reductionAndFillWithCenterSparse.hpp>
+TEST(AtlasIntegrationTestCompareOutput, generated_reductionAndFillWithCenterSparse) {
+  auto mesh = generateEquilatMesh(10, 10);
+  size_t nb_levels = 1;
+  const double sparse_val = 2.;
+
+  auto [cout_F, cout_v] = makeAtlasField("cout", mesh.cells().size(), nb_levels);
+  auto [cin_F, cin_v] = makeAtlasField("cin", mesh.cells().size(), nb_levels);
+
+  // Initialize fields with data
+  initField(cout_v, mesh.cells().size(), nb_levels, .0);
+  initField(cin_v, mesh.cells().size(), nb_levels, 1.0);
+
+  auto isBoundaryEdge = [mesh](const int edgeIdx) -> bool {
+    return mesh.edges().cell_connectivity()(edgeIdx, 0) ==
+               mesh.edges().cell_connectivity().missing_value() ||
+           mesh.edges().cell_connectivity()(edgeIdx, 1) ==
+               mesh.edges().cell_connectivity().missing_value();
+  };
+
+  std::vector<size_t> nnbh_c2c(mesh.cells().size());
+  const auto& conn = mesh.cells().edge_connectivity();
+  for(int cIdx = 0; cIdx < mesh.cells().size(); cIdx++) {
+    int nnbh = 0;
+    for(int nbhIdx = 0; nbhIdx < conn.cols(cIdx); nbhIdx++) {
+      int eIdx = conn(cIdx, nbhIdx);
+      if(eIdx != conn.missing_value()) {
+        nnbh += !isBoundaryEdge(eIdx) ? 1 : 0;
+      }
+    }
+    nnbh_c2c[cIdx] = nnbh;
+  }
+
+  // Run the stencil
+  auto stencil =
+      dawn_generated::cxxnaiveico::reductionAndFillWithCenterSparse<atlasInterface::atlasTag>(
+          mesh, static_cast<int>(nb_levels), cin_v, cout_v);
+  stencil.run();
+
+  // Check correctness of the output
+  for(int k = 0; k < nb_levels; k++) {
+    for(int cell_idx = 0; cell_idx < mesh.cells().size(); ++cell_idx) {
+      ASSERT_EQ(cout_v(cell_idx, k), sparse_val * nnbh_c2c[cell_idx] + sparse_val);
     }
   }
 }

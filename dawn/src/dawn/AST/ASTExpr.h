@@ -15,6 +15,7 @@
 #pragma once
 
 #include "ASTVisitorHelpers.h"
+#include "IterationSpace.h"
 #include "LocationType.h"
 #include "Offsets.h"
 
@@ -642,7 +643,7 @@ private:
 
   std::string op_ = "+";
   std::optional<std::vector<std::shared_ptr<Expr>>> weights_;
-  std::vector<ast::LocationType> chain_;
+  ast::UnstructuredIterationSpace iterSpace_;
   // due to current design limitations (getChildren() returning a view into memory), the operands
   // hold a copy of the (shared pointer to) the weights
   std::vector<std::shared_ptr<Expr>> operands_ = std::vector<std::shared_ptr<Expr>>(2);
@@ -653,11 +654,11 @@ public:
   /// @{
   ReductionOverNeighborExpr(std::string const& op, std::shared_ptr<Expr> const& rhs,
                             std::shared_ptr<Expr> const& init, std::vector<ast::LocationType> chain,
-                            SourceLocation loc = SourceLocation());
+                            bool includeCenter = false, SourceLocation loc = SourceLocation());
   ReductionOverNeighborExpr(std::string const& op, std::shared_ptr<Expr> const& rhs,
                             std::shared_ptr<Expr> const& init,
                             std::vector<std::shared_ptr<Expr>> weights,
-                            std::vector<ast::LocationType> chain,
+                            std::vector<ast::LocationType> chain, bool includeCenter = false,
                             SourceLocation loc = SourceLocation());
   ReductionOverNeighborExpr(ReductionOverNeighborExpr const& stmt);
   ReductionOverNeighborExpr& operator=(ReductionOverNeighborExpr const& stmt);
@@ -668,9 +669,11 @@ public:
   std::string const& getOp() const { return op_; }
   std::shared_ptr<Expr> const& getRhs() const { return operands_[Rhs]; }
   void setRhs(std::shared_ptr<Expr> rhs) { operands_[Rhs] = std::move(rhs); }
-  std::vector<ast::LocationType> getNbhChain() const { return chain_; };
-  ast::LocationType getLhsLocation() const { return chain_.front(); };
+  std::vector<ast::LocationType> getNbhChain() const { return iterSpace_; };
+  ast::LocationType getLhsLocation() const { return iterSpace_.Chain.front(); };
   const std::optional<std::vector<std::shared_ptr<Expr>>>& getWeights() const { return weights_; };
+  bool getIncludeCenter() const { return iterSpace_.IncludeCenter; };
+  ast::UnstructuredIterationSpace getIterSpace() const { return iterSpace_; }
 
   ExprRangeType getChildren() override;
 

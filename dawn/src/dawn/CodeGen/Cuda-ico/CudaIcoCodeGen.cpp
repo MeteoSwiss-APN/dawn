@@ -16,6 +16,7 @@
 
 #include "ASTStencilBody.h"
 #include "dawn/AST/ASTExpr.h"
+#include "dawn/AST/IterationSpace.h"
 #include "dawn/AST/LocationType.h"
 #include "dawn/CodeGen/Cuda-ico/LocToStringUtils.h"
 #include "dawn/CodeGen/Cuda/CodeGeneratorHelper.h"
@@ -84,13 +85,19 @@ CudaIcoCodeGen::CudaIcoCodeGen(const StencilInstantiationContext& ctx, int maxHa
 
 CudaIcoCodeGen::~CudaIcoCodeGen() {}
 
-class CollectChainStrings : public iir::ASTVisitorForwarding {
-private:
-  std::set<std::vector<ast::LocationType>> chains_;
+class CollectIterationSpaces : public iir::ASTVisitorForwarding {
 
 public:
+  struct IterSpaceHash {
+    std::size_t operator()(const ast::UnstructuredIterationSpace& space) const {
+      std::size_t seed = 0;
+      dawn::hash_combine(seed, space.Chain, space.IncludeCenter);
+      return seed;
+    }
+  };
+
   void visit(const std::shared_ptr<iir::ReductionOverNeighborExpr>& expr) override {
-    chains_.insert(expr->getNbhChain());
+    spaces_.insert(expr->getIterSpace());
     for(auto c : expr->getChildren()) {
       c->accept(*this);
     }
@@ -98,13 +105,18 @@ public:
 
   void visit(const std::shared_ptr<iir::LoopStmt>& stmt) override {
     auto chainDescr = dynamic_cast<const ast::ChainIterationDescr*>(stmt->getIterationDescrPtr());
-    chains_.insert(chainDescr->getChain());
+    spaces_.insert(chainDescr->getIterSpace());
     for(auto c : stmt->getChildren()) {
       c->accept(*this);
     }
   }
 
-  const std::set<std::vector<ast::LocationType>>& getChains() const { return chains_; }
+  const std::unordered_set<ast::UnstructuredIterationSpace, IterSpaceHash>& getSpaces() const {
+    return spaces_;
+  }
+
+private:
+  std::unordered_set<ast::UnstructuredIterationSpace, IterSpaceHash> spaces_;
 };
 
 void CudaIcoCodeGen::generateGpuMesh(
@@ -117,14 +129,14 @@ void CudaIcoCodeGen::generateGpuMesh(
   gpuMeshClass.addMember("int", "NumCells");
   gpuMeshClass.addMember("dawn::unstructured_domain", "Domain");
 
-  CollectChainStrings chainCollector;
-  std::set<std::vector<ast::LocationType>> chains;
+  CollectIterationSpaces spaceCollector;
+  std::unordered_set<ast::UnstructuredIterationSpace, CollectIterationSpaces::IterSpaceHash> spaces;
   for(const auto& doMethod : iterateIIROver<iir::DoMethod>(*(stencilInstantiation->getIIR()))) {
-    doMethod->getAST().accept(chainCollector);
-    chains.insert(chainCollector.getChains().begin(), chainCollector.getChains().end());
+    doMethod->getAST().accept(spaceCollector);
+    spaces.insert(spaceCollector.getSpaces().begin(), spaceCollector.getSpaces().end());
   }
-  for(auto chain : chains) {
-    gpuMeshClass.addMember("int*", chainToTableString(chain));
+  for(auto space : spaces) {
+    gpuMeshClass.addMember("int*", chainToTableString(space));
   }
 
   {
@@ -133,14 +145,15 @@ void CudaIcoCodeGen::generateGpuMesh(
     gpuMeshFromLibCtor.addStatement("NumVertices = mesh.nodes().size()");
     gpuMeshFromLibCtor.addStatement("NumCells = mesh.cells().size()");
     gpuMeshFromLibCtor.addStatement("NumEdges = mesh.edges().size()");
-    for(auto chain : chains) {
-      gpuMeshFromLibCtor.addStatement("gpuErrchk(cudaMalloc((void**)&" + chainToTableString(chain) +
-                                      ", sizeof(int) * " + chainToDenseSizeStringHostMesh(chain) +
-                                      "* " + chainToSparseSizeString(chain) + "))");
+    for(auto space : spaces) {
+      gpuMeshFromLibCtor.addStatement("gpuErrchk(cudaMalloc((void**)&" + chainToTableString(space) +
+                                      ", sizeof(int) * " + chainToDenseSizeStringHostMesh(space) +
+                                      "* " + chainToSparseSizeString(space) + "))");
       gpuMeshFromLibCtor.addStatement(
-          "dawn::generateNbhTable<LibTag>(mesh, " + chainToVectorString(chain) + ", " +
-          chainToDenseSizeStringHostMesh(chain) + ", " + chainToSparseSizeString(chain) + ", " +
-          chainToTableString(chain) + ")");
+          "dawn::generateNbhTable<LibTag>(mesh, " + chainToVectorString(space) + ", " +
+          chainToDenseSizeStringHostMesh(space) + ", " + chainToSparseSizeString(space) + ", " +
+          chainToTableString(space) + ", /*include center*/" + std::to_string(space.IncludeCenter) +
+          ")");
     }
   }
   {
@@ -150,9 +163,11 @@ void CudaIcoCodeGen::generateGpuMesh(
     gpuMeshFromGlobalCtor.addStatement("NumCells = mesh->NumCells");
     gpuMeshFromGlobalCtor.addStatement("NumEdges = mesh->NumEdges");
     gpuMeshFromGlobalCtor.addStatement("Domain = mesh->Domain");
-    for(auto chain : chains) {
-      gpuMeshFromGlobalCtor.addStatement(chainToTableString(chain) + " = mesh->NeighborTables.at(" +
-                                         chainToVectorString(chain) + ")");
+    for(auto space : spaces) {
+      gpuMeshFromGlobalCtor.addStatement(chainToTableString(space) + " = mesh->NeighborTables.at(" +
+                                         "std::tuple<std::vector<dawn::LocationType>, bool>{" +
+                                         chainToVectorString(space) + ", " +
+                                         std::to_string(space.IncludeCenter) + "})");
     }
   }
 }
@@ -206,15 +221,15 @@ void CudaIcoCodeGen::generateRunFun(
       auto spaceMagicNumToEnum = [](int magicNum) -> std::string {
         switch(magicNum) {
         case 0:
-          return "dawn::UnstructuredIterationSpace::LateralBoundary";
+          return "dawn::UnstructuredSubdomain::LateralBoundary";
         case 1:
-          return "dawn::UnstructuredIterationSpace::Nudging";
+          return "dawn::UnstructuredSubdomain::Nudging";
         case 2:
-          return "dawn::UnstructuredIterationSpace::Interior";
+          return "dawn::UnstructuredSubdomain::Interior";
         case 3:
-          return "dawn::UnstructuredIterationSpace::Halo";
+          return "dawn::UnstructuredSubdomain::Halo";
         case 4:
-          return "dawn::UnstructuredIterationSpace::End";
+          return "dawn::UnstructuredSubdomain::End";
         default:
           throw std::runtime_error("Invalid magic number");
         }
@@ -294,11 +309,11 @@ void CudaIcoCodeGen::generateRunFun(
       kernelCall << kName;
 
       // which nbh tables need to be passed / which templates need to be defined?
-      CollectChainStrings chainStringCollector;
+      CollectIterationSpaces chainStringCollector;
       for(const auto& doMethod : stage->getChildren()) {
         doMethod->getAST().accept(chainStringCollector);
       }
-      auto chains = chainStringCollector.getChains();
+      auto chains = chainStringCollector.getSpaces();
 
       if(chains.size() != 0) {
         kernelCall << "<";
@@ -401,8 +416,7 @@ static void allocTempFields(MemberFunction& ctor, const iir::Stencil& stencil) {
       } else {
         ctor.addStatement("::dawn::allocField(&" + fname + "_, " + "mesh_." +
                           locToDenseSizeStringGpuMesh(hdims.getDenseLocationType()) + ", " +
-                          chainToSparseSizeString(hdims.getNeighborChain()) + ", " + kSizeStr +
-                          ")");
+                          chainToSparseSizeString(hdims.getIterSpace()) + ", " + kSizeStr + ")");
       }
     }
   }
@@ -535,8 +549,8 @@ void CudaIcoCodeGen::generateCopyMemoryFun(MemberFunction& copyFun,
     } else {
       copyFun.addStatement("dawn::initSparseField(" + fname + ", " + "&" + fname + "_, " +
                            "mesh_." + locToDenseSizeStringGpuMesh(hdims.getNeighborChain()[0]) +
-                           ", " + chainToSparseSizeString(hdims.getNeighborChain()) + ", " +
-                           kSizeStr + ", do_reshape)");
+                           ", " + chainToSparseSizeString(hdims.getIterSpace()) + ", " + kSizeStr +
+                           ", do_reshape)");
     }
   }
 }
@@ -612,7 +626,7 @@ void CudaIcoCodeGen::generateCopyBackFun(MemberFunction& copyBackFun, const iir:
         sizestr += locToDenseSizeStringGpuMesh(hdims.getDenseLocationType());
       } else {
         sizestr += locToDenseSizeStringGpuMesh(hdims.getDenseLocationType()) + "*" +
-                   chainToSparseSizeString(hdims.getNeighborChain());
+                   chainToSparseSizeString(hdims.getIterSpace());
       }
       if(field.field.getFieldDimensions().K()) {
         sizestr += " * kSize_";
@@ -652,7 +666,7 @@ void CudaIcoCodeGen::generateCopyBackFun(MemberFunction& copyBackFun, const iir:
             copyBackFun.addStatement("dawn::reshape_back(host_buf, " + field.Name +
                                      ((!rawPtrs) ? ".data()" : "") + ", " + kSizeStr + ", mesh_." +
                                      locToDenseSizeStringGpuMesh(dims.getDenseLocationType()) +
-                                     ", " + chainToSparseSizeString(dims.getNeighborChain()) + ")");
+                                     ", " + chainToSparseSizeString(dims.getIterSpace()) + ")");
           }
         }
         copyBackFun.addStatement("delete[] host_buf");
@@ -760,11 +774,11 @@ void CudaIcoCodeGen::generateAllAPIRunFunctions(
   const auto& stencils = stencilInstantiation->getStencils();
   DAWN_ASSERT_MSG(stencils.size() <= 1, "code generation only for at most one stencil!\n");
 
-  CollectChainStrings chainCollector;
+  CollectIterationSpaces chainCollector;
   std::set<std::vector<ast::LocationType>> chains;
   for(const auto& doMethod : iterateIIROver<iir::DoMethod>(*(stencilInstantiation->getIIR()))) {
     doMethod->getAST().accept(chainCollector);
-    chains.insert(chainCollector.getChains().begin(), chainCollector.getChains().end());
+    chains.insert(chainCollector.getSpaces().begin(), chainCollector.getSpaces().end());
   }
 
   const std::string wrapperName = stencilInstantiation->getName();
@@ -903,11 +917,11 @@ void CudaIcoCodeGen::generateAllCudaKernels(
       //--------------------------------------
 
       // which nbh tables / size templates need to be passed?
-      CollectChainStrings chainStringCollector;
+      CollectIterationSpaces chainStringCollector;
       for(const auto& doMethod : stage->getChildren()) {
         doMethod->getAST().accept(chainStringCollector);
       }
-      auto chains = chainStringCollector.getChains();
+      auto chains = chainStringCollector.getSpaces();
 
       std::string retString = "__global__ void";
       if(chains.size() != 0) {
@@ -1053,25 +1067,29 @@ std::string CudaIcoCodeGen::generateStencilInstantiation(
 
   generateAllCudaKernels(ssSW, stencilInstantiation);
 
-  CollectChainStrings chainCollector;
-  std::set<std::vector<ast::LocationType>> chains;
+  CollectIterationSpaces spaceCollector;
+  std::unordered_set<ast::UnstructuredIterationSpace, CollectIterationSpaces::IterSpaceHash> spaces;
   for(const auto& doMethod : iterateIIROver<iir::DoMethod>(*(stencilInstantiation->getIIR()))) {
-    doMethod->getAST().accept(chainCollector);
-    chains.insert(chainCollector.getChains().begin(), chainCollector.getChains().end());
+    doMethod->getAST().accept(spaceCollector);
+    spaces.insert(spaceCollector.getSpaces().begin(), spaceCollector.getSpaces().end());
   }
   std::stringstream ss;
   bool first = true;
-  for(auto chain : chains) {
+  for(auto space : spaces) {
     if(!first) {
       ss << ", ";
     }
-    ss << "int " + chainToSparseSizeString(chain) << " ";
+    ss << "int " + chainToSparseSizeString(space) << " ";
     first = false;
   }
   Class stencilWrapperClass(stencilInstantiation->getName(), ssSW, "typename LibTag");
-  for(auto chain : chains) {
-    stencilWrapperClass.addMember("static const int", chainToSparseSizeString(chain) + " = " +
-                                                          std::to_string(ICOChainSize(chain)));
+  for(auto space : spaces) {
+    std::string spaceStr = std::to_string(ICOChainSize(space));
+    if(space.IncludeCenter) {
+      spaceStr += "+ 1";
+    }
+    stencilWrapperClass.addMember("static const int",
+                                  chainToSparseSizeString(space) + " = " + spaceStr);
   }
 
   stencilWrapperClass.changeAccessibility("public");

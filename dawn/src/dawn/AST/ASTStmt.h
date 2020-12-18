@@ -15,6 +15,7 @@
 #pragma once
 
 #include "dawn/AST/ASTVisitorHelpers.h"
+#include "dawn/AST/IterationSpace.h"
 #include "dawn/AST/LocationType.h"
 #include "dawn/Support/ArrayRef.h"
 #include "dawn/Support/Assert.h"
@@ -554,11 +555,13 @@ public:
 };
 
 class ChainIterationDescr : public IterationDescr {
-  ast::NeighborChain chain_;
+  ast::UnstructuredIterationSpace iterSpace_;
 
 public:
-  ChainIterationDescr(ast::NeighborChain&& chain);
+  ChainIterationDescr(ast::NeighborChain&& chain, bool includeCenter = false);
   ast::NeighborChain getChain() const;
+  bool getIncludeCenter() const { return iterSpace_.IncludeCenter; }
+  ast::UnstructuredIterationSpace getIterSpace() const { return iterSpace_; }
   std::unique_ptr<IterationDescr> clone() const override;
   std::string toString() const override;
   bool equals(const IterationDescr* otherPtr) const override;
@@ -569,6 +572,8 @@ class LoopStmt : public Stmt {
   std::unique_ptr<IterationDescr> iterationDescr_;
 
 public:
+  LoopStmt(std::unique_ptr<StmtData> data, ast::NeighborChain&& chain, bool includeCenter,
+           std::shared_ptr<BlockStmt> stmt, SourceLocation loc = SourceLocation());
   LoopStmt(std::unique_ptr<StmtData> data, ast::NeighborChain&& chain,
            std::shared_ptr<BlockStmt> stmt, SourceLocation loc = SourceLocation());
   LoopStmt(const LoopStmt& stmt);

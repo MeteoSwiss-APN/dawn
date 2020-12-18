@@ -24,3 +24,16 @@ using NeighborChain = std::vector<ast::LocationType>;
 
 } // namespace ast
 } // namespace dawn
+
+namespace std {
+template <>
+struct hash<std::vector<dawn::ast::LocationType>> {
+  size_t operator()(const std::vector<dawn::ast::LocationType>& vec) const {
+    std::size_t seed = vec.size();
+    for(auto& i : vec) {
+      seed ^= (int)i + 0x9e3779b9 + (seed << 6) + (seed >> 2);
+    }
+    return seed;
+  }
+};
+} // namespace std

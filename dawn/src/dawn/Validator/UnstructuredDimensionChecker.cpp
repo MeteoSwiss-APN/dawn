@@ -1,5 +1,6 @@
 #include "UnstructuredDimensionChecker.h"
 #include "dawn/AST/ASTStmt.h"
+#include "dawn/AST/IterationSpace.h"
 #include "dawn/AST/LocationType.h"
 #include "dawn/AST/Offsets.h"
 #include "dawn/IIR/ASTFwd.h"
@@ -159,11 +160,11 @@ void UnstructuredDimensionChecker::UnstructuredDimensionCheckerImpl::visit(
   if(!nameToDimensions_.at(fieldName).isVertical()) {
     if(hasOffset && getUnstructuredDim(*curDimensions_).isDense()) {
       dimensionsConsistent_ &= getUnstructuredDim(*curDimensions_).getDenseLocationType() ==
-                               config_.currentChain_->back();
+                               config_.currentIterSpace_->Chain.back();
     }
-    if(hasOffset && !getUnstructuredDim(*curDimensions_).isDense()) {
+    if(getUnstructuredDim(*curDimensions_).isSparse()) {
       dimensionsConsistent_ &=
-          getUnstructuredDim(*curDimensions_).getNeighborChain() == config_.currentChain_.value();
+          getUnstructuredDim(*curDimensions_).getIterSpace() == *config_.currentIterSpace_;
     }
   }
 
@@ -250,12 +251,12 @@ void UnstructuredDimensionChecker::UnstructuredDimensionCheckerImpl::visit(
 }
 
 static bool checkAgainstChain(const sir::UnstructuredFieldDimension& dim,
-                              ast::NeighborChain chain) {
+                              const ast::UnstructuredIterationSpace& space) {
   if(dim.isDense()) {
-    return dim.getDenseLocationType() == chain.back() ||
-           dim.getDenseLocationType() == chain.front();
+    return dim.getDenseLocationType() == space.Chain.back() ||
+           dim.getDenseLocationType() == space.Chain.front();
   } else {
-    return dim.getNeighborChain() == chain;
+    return dim.getIterSpace() == space;
   }
 }
 
@@ -264,9 +265,9 @@ void UnstructuredDimensionChecker::UnstructuredDimensionCheckerImpl::checkBinary
   const auto& unstructuredDimLeft = getUnstructuredDim(left);
   const auto& unstructuredDimRight = getUnstructuredDim(right);
 
-  if(config_.currentChain_) {
-    dimensionsConsistent_ &= checkAgainstChain(unstructuredDimLeft, *config_.currentChain_);
-    dimensionsConsistent_ &= checkAgainstChain(unstructuredDimRight, *config_.currentChain_);
+  if(config_.currentIterSpace_) {
+    dimensionsConsistent_ &= checkAgainstChain(unstructuredDimLeft, *config_.currentIterSpace_);
+    dimensionsConsistent_ &= checkAgainstChain(unstructuredDimRight, *config_.currentIterSpace_);
   } else {
     dimensionsConsistent_ &=
         unstructuredDimLeft.isDense() && unstructuredDimRight.isDense() &&
@@ -335,7 +336,7 @@ void UnstructuredDimensionChecker::UnstructuredDimensionCheckerImpl::visit(
 
   // assigning from sparse dimensions is only allowed in either reductions or for loops
   if(right.hasHorizontalDimensions() && getUnstructuredDim(right.getDimensions()).isSparse() &&
-     !(config_.parentIsReduction_ || config_.parentIsChainForLoop_)) {
+     !(config_.currentIterSpace_.has_value())) {
     dimensionsConsistent_ = false;
     return;
   }
@@ -343,7 +344,6 @@ void UnstructuredDimensionChecker::UnstructuredDimensionCheckerImpl::visit(
   // if both sides access unstructured fields, they need to be on the same target location type
   // or both sides can be without type, e.g. 3*5 or 3*cell_field, so no error in this case
   if(left.hasHorizontalDimensions() && right.hasHorizontalDimensions()) {
-
     const auto& unstructuredDimLeft = getUnstructuredDim(left.getDimensions());
     const auto& unstructuredDimRight = getUnstructuredDim(right.getDimensions());
 
@@ -443,13 +443,13 @@ void UnstructuredDimensionChecker::UnstructuredDimensionCheckerImpl::visit(
   const auto maybeChainPtr =
       dynamic_cast<const ast::ChainIterationDescr*>(loopStmt->getIterationDescrPtr());
   if(maybeChainPtr) {
-    config_.currentChain_ = maybeChainPtr->getChain();
+    config_.currentIterSpace_ = maybeChainPtr->getIterSpace();
   }
   for(auto it : loopStmt->getChildren()) {
     it->accept(*this);
   }
   config_.parentIsChainForLoop_ = false;
-  config_.currentChain_ = std::nullopt;
+  config_.currentIterSpace_ = std::nullopt;
 }
 
 void UnstructuredDimensionChecker::UnstructuredDimensionCheckerImpl::visit(
@@ -461,9 +461,8 @@ void UnstructuredDimensionChecker::UnstructuredDimensionCheckerImpl::visit(
   UnstructuredDimensionChecker::UnstructuredDimensionCheckerImpl init(
       nameToDimensions_, idToNameMap_, idToLocalVariableData_, config_);
 
-  config_.parentIsReduction_ = true;
+  config_.currentIterSpace_ = reductionExpr->getIterSpace();
   reductionExpr->getInit()->accept(init);
-  config_.currentChain_ = reductionExpr->getNbhChain();
   UnstructuredDimensionChecker::UnstructuredDimensionCheckerImpl ops(
       nameToDimensions_, idToNameMap_, idToLocalVariableData_, config_);
   reductionExpr->getRhs()->accept(ops);
