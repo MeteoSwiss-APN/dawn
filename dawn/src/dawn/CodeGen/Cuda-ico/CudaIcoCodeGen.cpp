@@ -221,15 +221,15 @@ void CudaIcoCodeGen::generateRunFun(
       auto spaceMagicNumToEnum = [](int magicNum) -> std::string {
         switch(magicNum) {
         case 0:
-          return "dawn::UnstructuredIterationSpace::LateralBoundary";
+          return "dawn::UnstructuredSubdomain::LateralBoundary";
         case 1:
-          return "dawn::UnstructuredIterationSpace::Nudging";
+          return "dawn::UnstructuredSubdomain::Nudging";
         case 2:
-          return "dawn::UnstructuredIterationSpace::Interior";
+          return "dawn::UnstructuredSubdomain::Interior";
         case 3:
-          return "dawn::UnstructuredIterationSpace::Halo";
+          return "dawn::UnstructuredSubdomain::Halo";
         case 4:
-          return "dawn::UnstructuredIterationSpace::End";
+          return "dawn::UnstructuredSubdomain::End";
         default:
           throw std::runtime_error("Invalid magic number");
         }

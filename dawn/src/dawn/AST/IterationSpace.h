@@ -26,7 +26,6 @@ struct UnstructuredIterationSpace {
   NeighborChain Chain;
   bool IncludeCenter = false;
 
-  UnstructuredIterationSpace(std::vector<LocationType>&& chain) : Chain(chain) {}
   UnstructuredIterationSpace(std::vector<LocationType>&& chain, bool includeCenter)
       : Chain(chain), IncludeCenter(includeCenter) {
     if(includeCenter && chain.front() != chain.back()) {
@@ -41,6 +40,9 @@ struct UnstructuredIterationSpace {
                                  "expaneded notation (e.g. C->C becomes C->E->C\n");
     }
   }
+  UnstructuredIterationSpace(std::vector<LocationType>&& chain)
+      : UnstructuredIterationSpace(std::move(chain), false) {}
+
   operator std::vector<LocationType>() const { return Chain; }
 
   bool chainIsValid() const {
