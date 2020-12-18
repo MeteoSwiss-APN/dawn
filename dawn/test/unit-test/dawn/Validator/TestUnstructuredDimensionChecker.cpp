@@ -424,7 +424,7 @@ TEST(UnstructuredDimensionCheckerTest, NestedReduce0) {
                                                                {LocType::Vertices, LocType::Cells}),
                                                            Op::multiply),
                                               b.lit(0.), {LocType::Edges, LocType::Vertices}))),
-                                      {LocType::Cells, LocType::Edges}))))));
+                                      {LocType::Edges, LocType::Cells, LocType::Vertices}))))));
   auto result = UnstructuredDimensionChecker::checkDimensionsConsistency(*stencil->getIIR(),
                                                                          stencil->getMetaData());
   EXPECT_EQ(result, UnstructuredDimensionChecker::ConsistencyResult(true, dawn::SourceLocation()));

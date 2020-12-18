@@ -464,11 +464,7 @@ ReductionOverNeighborExpr::ReductionOverNeighborExpr(std::string const& op,
                                                      std::vector<ast::LocationType> chain,
                                                      bool includeCenter, SourceLocation loc)
     : Expr(Kind::ReductionOverNeighborExpr, loc), op_(op),
-      iterSpace_(std::move(chain), includeCenter), operands_{rhs, init} {
-  DAWN_ASSERT_MSG(iterSpace_.chainIsValid(),
-                  "invalid neighbor chain (repeated element in succession, use "
-                  "expaneded notation (e.g. C->C becomes C->E->C\n");
-}
+      iterSpace_(std::move(chain), includeCenter), operands_{rhs, init} {}
 
 ReductionOverNeighborExpr::ReductionOverNeighborExpr(std::string const& op,
                                                      std::shared_ptr<Expr> const& rhs,
@@ -476,12 +472,9 @@ ReductionOverNeighborExpr::ReductionOverNeighborExpr(std::string const& op,
                                                      std::vector<std::shared_ptr<Expr>> weights,
                                                      std::vector<ast::LocationType> chain,
                                                      bool includeCenter, SourceLocation loc)
-    : Expr(Kind::ReductionOverNeighborExpr, loc), op_(op), weights_(weights),
-      iterSpace_(std::move(chain), includeCenter), operands_{rhs, init} {
+    : ReductionOverNeighborExpr(op, rhs, init, chain, includeCenter, loc) {
   DAWN_ASSERT_MSG(weights.size() > 0, "empty weights vector passed!\n");
-  DAWN_ASSERT_MSG(iterSpace_.chainIsValid(),
-                  "invalid neighbor chain (repeated element in succession, use "
-                  "expaneded notation (e.g. C->C becomes C->E->C\n");
+  weights_ = weights;
   operands_.insert(operands_.end(), weights.begin(), weights.end());
 }
 

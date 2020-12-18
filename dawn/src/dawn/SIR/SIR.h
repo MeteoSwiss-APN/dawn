@@ -205,8 +205,6 @@ class UnstructuredFieldDimension : public FieldDimensionImpl {
     auto const& otherUnstructured = dynamic_cast<UnstructuredFieldDimension const&>(other);
     return iterSpace_ == otherUnstructured.iterSpace_;
   }
-
-  bool chainIsValid() const;
   const ast::UnstructuredIterationSpace iterSpace_;
 
 public:
@@ -221,6 +219,7 @@ public:
   bool isSparse() const { return iterSpace_.Chain.size() > 1; }
   bool isDense() const { return !isSparse(); }
   bool getIncludeCenter() const { return iterSpace_.IncludeCenter; }
+  ast::UnstructuredIterationSpace getIterSpace() const { return iterSpace_; }
   std::string toString() const;
 };
 
@@ -316,6 +315,9 @@ public:
 
   // returns number of dimensions (1-3)
   int numSpatialDimensions() const;
+
+  // returns the rank of the corresponding storage (multidimensional array)
+  int rank() const;
 
 private:
   std::optional<HorizontalFieldDimension> horizontalFieldDimension_;

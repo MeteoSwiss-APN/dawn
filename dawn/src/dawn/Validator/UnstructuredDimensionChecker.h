@@ -34,7 +34,6 @@ private:
     enum class checkType { runOnIIR, runOnSIR };
     struct UnstructuredDimensionCheckerConfig {
       bool parentIsChainForLoop_ = false;
-      bool parentIsReduction_ = false;
       std::optional<ast::UnstructuredIterationSpace> currentIterSpace_;
       UnstructuredDimensionCheckerConfig() {}
     };

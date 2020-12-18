@@ -513,7 +513,6 @@ static std::shared_ptr<sir::Expr> makeExpr(const dawn::proto::statements::Expr& 
       std::copy(exprProto.argument_map().begin(), exprProto.argument_map().end(),
                 argumentMap.begin());
     }
-
     return std::make_shared<sir::FieldAccessExpr>(name, offset, argumentMap, argumentOffset,
                                                   negateOffset, makeLocation(exprProto));
   }

@@ -567,12 +567,7 @@ CompareResult Field::comparison(const Field& rhs) const {
 
 UnstructuredFieldDimension::UnstructuredFieldDimension(ast::NeighborChain neighborChain,
                                                        bool includeCenter)
-    : iterSpace_(std::move(neighborChain), includeCenter) {
-  DAWN_ASSERT_MSG(neighborChain.size() > 0, "neighbor chain needs to have at least one member");
-  DAWN_ASSERT_MSG(iterSpace_.chainIsValid(),
-                  "invalid neighbor chain (repeated element in succession, use "
-                  "expaneded notation (e.g. C->C becomes C->E->C\n");
-}
+    : iterSpace_(std::move(neighborChain), includeCenter) {}
 
 const ast::NeighborChain& UnstructuredFieldDimension::getNeighborChain() const {
   DAWN_ASSERT(isSparse());
@@ -647,6 +642,25 @@ int FieldDimensions::numSpatialDimensions() const {
   }
 }
 
+int FieldDimensions::rank() const {
+  const int spatialDims = numSpatialDimensions();
+  if(isVertical()) {
+    return 1;
+  }
+  int rank;
+  if(sir::dimension_isa<sir::UnstructuredFieldDimension>(getHorizontalFieldDimension())) {
+    rank = spatialDims > 1 ? spatialDims - 1 // The horizontal counts as 1 dimension (dense)
+                           : spatialDims;
+    // Need to account for sparse dimension, if present
+    if(sir::dimension_cast<sir::UnstructuredFieldDimension const&>(getHorizontalFieldDimension())
+           .isSparse()) {
+      ++rank;
+    }
+  } else { // Cartesian
+    rank = spatialDims;
+  }
+  return rank;
+}
 } // namespace sir
 
 std::ostream& operator<<(std::ostream& os, const SIR& Sir) {

@@ -45,9 +45,9 @@ struct GlobalGpuTriMesh {
   int NumEdges;
   int NumCells;
   int NumVertices;
-  std::map<std::vector<dawn::LocationType>, int*> NeighborTables;
-  void set_splitter_index(dawn::LocationType loc, dawn::UnstructuredIterationSpace space,
-                          int offset, int index) {
+  std::map<dawn::UnstructuredIterationSpace, int*> NeighborTables;
+  void set_splitter_index(dawn::LocationType loc, dawn::UnstructuredSubdomain space, int offset,
+                          int index) {
     Domain.set_splitter_index({loc, space, offset}, index);
   }
 };
@@ -207,7 +207,8 @@ inline void initSparseField(::dawn::float_type*& field, dawn::float_type** cudaS
 
 template <typename LibTag>
 void generateNbhTable(dawn::mesh_t<LibTag> const& mesh, std::vector<dawn::LocationType> chain,
-                      int numElements, int numNbhPerElement, int* target) {
+                      int numElements, int numNbhPerElement, int* target,
+                      bool includeCenter = false) {
   std::vector<dawn::nbh_table_index_t<LibTag>> elems;
   switch(chain.front()) {
   case dawn::LocationType::Cells: {
@@ -234,7 +235,7 @@ void generateNbhTable(dawn::mesh_t<LibTag> const& mesh, std::vector<dawn::Locati
 
   std::vector<int> hostTable;
   for(int elem : elems) {
-    auto neighbors = getNeighbors(LibTag{}, mesh, chain, elem);
+    auto neighbors = getNeighbors(LibTag{}, mesh, chain, elem, includeCenter);
     for(int nbhIdx = 0; nbhIdx < numNbhPerElement; nbhIdx++) {
       if(nbhIdx < neighbors.size()) {
         hostTable.push_back(neighbors[nbhIdx]);

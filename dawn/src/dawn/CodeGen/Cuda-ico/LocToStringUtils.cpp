@@ -22,9 +22,9 @@ namespace dawn {
 namespace codegen {
 namespace cudaico {
 
-std::string chainToTableString(std::vector<dawn::ast::LocationType> locs) {
+std::string chainToTableString(const ast::UnstructuredIterationSpace iterSpace) {
   std::stringstream ss;
-  for(auto loc : locs) {
+  for(auto loc : iterSpace.Chain) {
     switch(loc) {
     case dawn::ast::LocationType::Cells:
       ss << "c";
@@ -37,13 +37,17 @@ std::string chainToTableString(std::vector<dawn::ast::LocationType> locs) {
       break;
     }
   }
-  ss << "Table";
+  if(iterSpace.IncludeCenter) {
+    ss << "ITable";
+  } else {
+    ss << "Table";
+  }
   return ss.str();
 }
 
-std::string chainToSparseSizeString(std::vector<dawn::ast::LocationType> locs) {
+std::string chainToSparseSizeString(const ast::UnstructuredIterationSpace iterSpace) {
   std::stringstream ss;
-  for(auto loc : locs) {
+  for(auto loc : iterSpace.Chain) {
     switch(loc) {
     case dawn::ast::LocationType::Cells:
       ss << "C_";
@@ -56,7 +60,11 @@ std::string chainToSparseSizeString(std::vector<dawn::ast::LocationType> locs) {
       break;
     }
   }
-  ss << "SIZE";
+  if(iterSpace.IncludeCenter) {
+    ss << "ISIZE";
+  } else {
+    ss << "SIZE";
+  }
   return ss.str();
 }
 

@@ -95,16 +95,18 @@ def main(args: argparse.Namespace):
                         "geofac_grg",
                         sir_utils.make_field_dimensions_unstructured(
                             [SIR.LocationType.Value("Cell"), SIR.LocationType.Value("Edge"), SIR.LocationType.Value("Cell")], 1, include_center = True
-                        ),                       
+                        ),
                     ),
                 ],
             ),
         ],
     )
 
-    # print the SIR       
-    if args.verbose:
-        print(MessageToJson(sir))
+    # print the SIR
+    # if args.verbose:
+    f = open(SIR_OUTPUT_FILE, "w")
+    f.write(MessageToJson(sir))
+    f.close()
 
     # compile
     code = dawn4py.compile(sir, backend=dawn4py.CodeGenBackend.CUDAIco)

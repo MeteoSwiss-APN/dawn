@@ -20,15 +20,15 @@
 
 namespace dawn {
 
-enum class UnstructuredIterationSpace { LateralBoundary = 0, Nudging, Interior, Halo, End };
+enum class UnstructuredSubdomain { LateralBoundary = 0, Nudging, Interior, Halo, End };
 
 class unstructured_domain {
-  using KeyType = std::tuple<::dawn::LocationType, UnstructuredIterationSpace, int>;
-  std::map<KeyType, int> iterationSpaceToIndex_;
+  using KeyType = std::tuple<::dawn::LocationType, UnstructuredSubdomain, int>;
+  std::map<KeyType, int> subdomainToIndex_;
 
 public:
-  int operator()(KeyType&& key) const { return iterationSpaceToIndex_.at(key); }
-  void set_splitter_index(KeyType&& key, int index) { iterationSpaceToIndex_[key] = index; }
+  int operator()(KeyType&& key) const { return subdomainToIndex_.at(key); }
+  void set_splitter_index(KeyType&& key, int index) { subdomainToIndex_[key] = index; }
 };
 
 } // namespace dawn

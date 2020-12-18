@@ -72,8 +72,8 @@ public:
   // Members
   ::dawn::edge_field_t<LibTag, ::dawn::float_type> m_c_0;
 
-  void set_splitter_index(::dawn::LocationType loc, ::dawn::UnstructuredIterationSpace space, int offset, int index) {
-    m_stencil_37.m_unstructured_domain.set_splitter_index({loc, space, offset}, index);
+  void set_splitter_index(::dawn::LocationType loc, ::dawn::UnstructuredSubdomain subdomain, int offset, int index) {
+    m_stencil_37.m_unstructured_domain.set_splitter_index({loc, subdomain, offset}, index);
   }
 
   generate_versioned_field(const ::dawn::mesh_t<LibTag> &mesh, int k_size, ::dawn::edge_field_t<LibTag, ::dawn::float_type>& a, ::dawn::edge_field_t<LibTag, ::dawn::float_type>& b, ::dawn::edge_field_t<LibTag, ::dawn::float_type>& c, ::dawn::edge_field_t<LibTag, ::dawn::float_type>& d, ::dawn::edge_field_t<LibTag, ::dawn::float_type>& e) : m_stencil_37(mesh, k_size,a,b,c,d,e,m_c_0), m_c_0(allocateField(LibTag{}, numEdges(LibTag{}, mesh), k_size)){}

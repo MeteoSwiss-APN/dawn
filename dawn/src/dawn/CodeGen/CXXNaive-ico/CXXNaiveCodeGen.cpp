@@ -351,14 +351,14 @@ void CXXNaiveIcoCodeGen::generateStencilWrapperMembers(
 
   auto splitterIdxFun = stencilWrapperClass.addMemberFunction("void", "set_splitter_index");
   splitterIdxFun.addArg("::dawn::LocationType loc");
-  splitterIdxFun.addArg("::dawn::UnstructuredIterationSpace space");
+  splitterIdxFun.addArg("::dawn::UnstructuredSubdomain subdomain");
   splitterIdxFun.addArg("int offset");
   splitterIdxFun.addArg("int index");
   for(auto stencilPropertiesPair :
       codeGenProperties.stencilProperties(StencilContext::SC_Stencil)) {
     splitterIdxFun.addStatement(
         "m_" + stencilPropertiesPair.second->name_ +
-        ".m_unstructured_domain.set_splitter_index({loc, space, offset}, index)");
+        ".m_unstructured_domain.set_splitter_index({loc, subdomain, offset}, index)");
   }
   splitterIdxFun.commit();
 }
@@ -529,15 +529,15 @@ void CXXNaiveIcoCodeGen::generateStencilClasses(
       auto spaceMagicNumToEnum = [](int magicNum) {
         switch(magicNum) {
         case 0:
-          return "::dawn::UnstructuredIterationSpace::LateralBoundary";
+          return "::dawn::UnstructuredSubdomain::LateralBoundary";
         case 1:
-          return "::dawn::UnstructuredIterationSpace::Nudging";
+          return "::dawn::UnstructuredSubdomain::Nudging";
         case 2:
-          return "::dawn::UnstructuredIterationSpace::Interior";
+          return "::dawn::UnstructuredSubdomain::Interior";
         case 3:
-          return "::dawn::UnstructuredIterationSpace::Halo";
+          return "::dawn::UnstructuredSubdomain::Halo";
         case 4:
-          return "::dawn::UnstructuredIterationSpace::End";
+          return "::dawn::UnstructuredSubdomain::End";
         default:
           throw std::runtime_error("Invalid magic number");
         }

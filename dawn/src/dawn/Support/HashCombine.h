@@ -16,6 +16,8 @@
 
 #include <functional>
 
+#include "dawn/AST/LocationType.h"
+
 namespace dawn {
 
 /// @brief Called repeatedly to incrementally create a hash value from several variables
@@ -44,6 +46,7 @@ inline void hash_combine(std::size_t& seed, const T& v, Rest... rest) {
   seed ^= hasher(v) + 0x9e3779b9 + (seed << 6) + (seed >> 2);
   hash_combine(seed, rest...);
 }
+
 /// @}
 } // namespace dawn
 
