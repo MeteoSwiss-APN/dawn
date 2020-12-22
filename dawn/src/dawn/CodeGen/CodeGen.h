@@ -17,6 +17,7 @@
 #include "dawn/AST/GridType.h"
 #include "dawn/CodeGen/CXXUtil.h"
 #include "dawn/CodeGen/CodeGenProperties.h"
+#include "dawn/CodeGen/Options.h"
 #include "dawn/CodeGen/TranslationUnit.h"
 #include "dawn/IIR/StencilInstantiation.h"
 #include "dawn/Support/IndexRange.h"
@@ -35,6 +36,7 @@ protected:
   const StencilInstantiationContext& context_;
   struct codeGenOption {
     int MaxHaloPoints;
+    Padding UnstrPadding;
   } codeGenOptions;
 
   static size_t getVerticalTmpHaloSize(iir::Stencil const& stencil);
@@ -75,7 +77,7 @@ protected:
   const std::string bigWrapperMetadata_ = "m_meta_data";
 
 public:
-  CodeGen(const StencilInstantiationContext& ctx, int maxHaloPoints);
+  CodeGen(const StencilInstantiationContext& ctx, int maxHaloPoints, Padding = {});
   virtual ~CodeGen() {}
 
   /// @brief Generate code

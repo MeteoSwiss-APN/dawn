@@ -98,13 +98,15 @@ std::unique_ptr<TranslationUnit>
 run(const std::map<std::string, std::shared_ptr<iir::StencilInstantiation>>&
         stencilInstantiationMap,
     const Options& options) {
-  CXXNaiveIcoCodeGen CG(stencilInstantiationMap, options.MaxHaloSize);
-
+  CXXNaiveIcoCodeGen CG(
+      stencilInstantiationMap, options.MaxHaloSize,
+      Padding{options.paddingCells, options.paddingEdges, options.paddingVertices});
   return CG.generateCode();
-}
+} // namespace cxxnaiveico
 
-CXXNaiveIcoCodeGen::CXXNaiveIcoCodeGen(const StencilInstantiationContext& ctx, int maxHaloPoint)
-    : CodeGen(ctx, maxHaloPoint) {}
+CXXNaiveIcoCodeGen::CXXNaiveIcoCodeGen(const StencilInstantiationContext& ctx, int maxHaloPoint,
+                                       Padding padding)
+    : CodeGen(ctx, maxHaloPoint, padding) {}
 
 CXXNaiveIcoCodeGen::~CXXNaiveIcoCodeGen() {}
 
@@ -261,14 +263,17 @@ void CXXNaiveIcoCodeGen::generateStencilWrapperCtr(
           auto hdims = sir::dimension_cast<sir::UnstructuredFieldDimension const&>(
               field.getFieldDimensions().getHorizontalFieldDimension());
 
-          auto getNumElCall = [](const sir::UnstructuredFieldDimension& hdims) -> std::string {
+          auto getNumElCall = [&](const sir::UnstructuredFieldDimension& hdims) -> std::string {
             switch(hdims.getDenseLocationType()) {
             case ast::LocationType::Cells:
-              return "numCells(LibTag{}, mesh)";
+              return "numCells(LibTag{}, mesh) + " +
+                     std::to_string(codeGenOptions.UnstrPadding.Cells());
             case ast::LocationType::Edges:
-              return "numEdges(LibTag{}, mesh)";
+              return "numEdges(LibTag{}, mesh) + " +
+                     std::to_string(codeGenOptions.UnstrPadding.Edges());
             case ast::LocationType::Vertices:
-              return "numVertices(LibTag{}, mesh)";
+              return "numVertices(LibTag{}, mesh) + " +
+                     std::to_string(codeGenOptions.UnstrPadding.Vertices());
             default:
               dawn_unreachable("invalid location");
             }

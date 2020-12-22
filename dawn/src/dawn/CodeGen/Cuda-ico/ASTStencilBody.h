@@ -55,6 +55,7 @@ public:
 class ASTStencilBody : public ASTCodeGenCXX {
 protected:
   const iir::StencilMetaInformation& metadata_;
+  const Padding& padding_;
 
   // arg names for field access exprs
   std::string denseArgName_ = "loc";
@@ -75,7 +76,7 @@ public:
   using Base::visit;
 
   /// @brief constructor
-  ASTStencilBody(const iir::StencilMetaInformation& metadata);
+  ASTStencilBody(const iir::StencilMetaInformation& metadata, const Padding& padding);
 
   virtual ~ASTStencilBody();
 
