@@ -625,14 +625,15 @@ void CudaIcoCodeGen::generateCopyBackFun(MemberFunction& copyBackFun, const iir:
       auto hdims = sir::dimension_cast<sir::UnstructuredFieldDimension const&>(
           field.field.getFieldDimensions().getHorizontalFieldDimension());
 
-      std::string sizestr = "mesh_.";
+      std::string sizestr = "(mesh_.";
       if(hdims.isDense()) {
         sizestr +=
-            locToDenseSizeStringGpuMesh(hdims.getDenseLocationType(), codeGenOptions.UnstrPadding);
+            locToDenseSizeStringGpuMesh(hdims.getDenseLocationType(), codeGenOptions.UnstrPadding) +
+            ")";
       } else {
         sizestr +=
             locToDenseSizeStringGpuMesh(hdims.getDenseLocationType(), codeGenOptions.UnstrPadding) +
-            "*" + chainToSparseSizeString(hdims.getIterSpace());
+            ")" + "*" + chainToSparseSizeString(hdims.getIterSpace());
       }
       if(field.field.getFieldDimensions().K()) {
         sizestr += " * kSize_";
