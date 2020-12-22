@@ -50,11 +50,7 @@ void ASTStencilBody::visit(const std::shared_ptr<iir::LoopStmt>& stmt) {
       << "];\n";
   ss_ << "if (nbhIdx == DEVICE_MISSING_VALUE) { continue; }";
 
-  if(maybeChainPtr->getIncludeCenter()) {
-    parentIterationIncludesCenterIter_ = true;
-  }
   stmt->getBlockStmt()->accept(*this);
-  parentIterationIncludesCenterIter_ = false;
 
   ss_ << "}\n";
   parentIsForLoop_ = false;
@@ -122,8 +118,7 @@ std::string ASTStencilBody::makeIndexString(const std::shared_ptr<iir::FieldAcce
     if((parentIsReduction_ || parentIsForLoop_) &&
        ast::offset_cast<const ast::UnstructuredOffset&>(expr->getOffset().horizontalOffset())
            .hasOffset()) {
-      return kiterStr + "*" + denseSize +
-             (parentIterationIncludesCenterPrep_ ? "+ pidx" : "+ nbhIdx");
+      return kiterStr + "*" + denseSize + "+ nbhIdx";
     } else {
       return kiterStr + "*" + denseSize + "+ pidx";
     }
@@ -143,7 +138,7 @@ std::string ASTStencilBody::makeIndexString(const std::shared_ptr<iir::FieldAcce
     if((parentIsReduction_ || parentIsForLoop_) &&
        ast::offset_cast<const ast::UnstructuredOffset&>(expr->getOffset().horizontalOffset())
            .hasOffset()) {
-      return parentIterationIncludesCenterPrep_ ? "pidx" : "nbhIdx";
+      return "nbhIdx";
     } else {
       return "pidx";
     }
@@ -251,11 +246,7 @@ void ASTStencilBody::visit(const std::shared_ptr<iir::ReductionOverNeighborExpr>
   if(weights.has_value()) {
     ss_ << " " << weights_name << "[nbhIter] * ";
   }
-  if(expr->getIncludeCenter()) {
-    parentIterationIncludesCenterIter_ = true;
-  }
   expr->getRhs()->accept(*this);
-  parentIterationIncludesCenterIter_ = false;
   ss_ << ";}\n";
   parentIsReduction_ = false;
 }
