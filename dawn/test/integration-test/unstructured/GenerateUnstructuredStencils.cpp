@@ -18,6 +18,7 @@
 #include "dawn/CodeGen/CXXNaive-ico/CXXNaiveCodeGen.h"
 #include "dawn/CodeGen/CXXNaive/CXXNaiveCodeGen.h"
 #include "dawn/CodeGen/Driver.h"
+#include "dawn/CodeGen/Options.h"
 #include "dawn/IIR/ASTFwd.h"
 #include "dawn/IIR/LocalVariable.h"
 #include "dawn/Optimizer/Driver.h"
@@ -1138,6 +1139,38 @@ int main() {
     std::ofstream of("generated/generated_" + stencilName + ".hpp");
     DAWN_ASSERT_MSG(of, "couldn't open output file!\n");
     auto tu = dawn::codegen::run(stencilInstantiation, dawn::codegen::Backend::CXXNaiveIco);
+    of << dawn::codegen::generate(tu) << std::endl;
+  }
+
+  {
+    using namespace dawn::iir;
+    using LocType = dawn::ast::LocationType;
+
+    UnstructuredIIRBuilder b;
+    auto c_f = b.field("c_field", LocType::Cells);
+    auto e_f = b.field("e_field", LocType::Edges);
+    auto v_f = b.field("v_field", LocType::Vertices);
+
+    std::string stencilName = "padding";
+
+    auto stencilInstantiation = b.build(
+        stencilName,
+        b.stencil(b.multistage(
+            LoopOrderKind::Parallel,
+            b.stage(LocType::Cells, b.doMethod(dawn::sir::Interval::Start, dawn::sir::Interval::End,
+                                               b.stmt(b.assignExpr(b.at(c_f), b.lit(1.))))),
+            b.stage(LocType::Edges, b.doMethod(dawn::sir::Interval::Start, dawn::sir::Interval::End,
+                                               b.stmt(b.assignExpr(b.at(e_f), b.lit(1.))))),
+            b.stage(LocType::Vertices, b.doMethod(dawn::sir::Interval::Start, dawn::sir::Interval::End,
+                                               b.stmt(b.assignExpr(b.at(v_f), b.lit(1.))))))));
+
+    std::ofstream of("generated/generated_" + stencilName + ".hpp");
+    DAWN_ASSERT_MSG(of, "couldn't open output file!\n");
+    dawn::codegen::Options opt;
+    opt.paddingCells = 10;
+    opt.paddingEdges = 20;
+    opt.paddingVertices = 30;
+    auto tu = dawn::codegen::run(stencilInstantiation, dawn::codegen::Backend::CXXNaiveIco, opt);
     of << dawn::codegen::generate(tu) << std::endl;
   }
 
