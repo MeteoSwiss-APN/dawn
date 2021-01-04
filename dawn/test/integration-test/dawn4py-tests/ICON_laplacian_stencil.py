@@ -160,12 +160,14 @@ def main():
                         sir_utils.make_field_dimensions_unstructured(
                             [SIR.LocationType.Value("Edge")], 1
                         ),
+                        is_temporary = True
                     ),
                     sir_utils.make_field(
                         "nabla2t2_vec",
                         sir_utils.make_field_dimensions_unstructured(
                             [SIR.LocationType.Value("Edge")], 1
                         ),
+                        is_temporary = True
                     ),
                     sir_utils.make_field(
                         "nabla2_vec",

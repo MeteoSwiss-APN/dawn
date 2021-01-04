@@ -113,8 +113,10 @@ std::string ASTStencilBody::makeIndexString(const std::shared_ptr<iir::FieldAcce
   bool isDense = unstrDims.isDense();
   bool isSparse = unstrDims.isSparse();
 
+  std::string denseSize =
+      locToDenseSizeStringGpuMesh(unstrDims.getDenseLocationType(), padding_, /*addParens*/ true);
+
   if(isFullField && isDense) {
-    std::string denseSize = locToDenseSizeStringGpuMesh(unstrDims.getDenseLocationType());
     if((parentIsReduction_ || parentIsForLoop_) &&
        ast::offset_cast<const ast::UnstructuredOffset&>(expr->getOffset().horizontalOffset())
            .hasOffset()) {
@@ -127,14 +129,12 @@ std::string ASTStencilBody::makeIndexString(const std::shared_ptr<iir::FieldAcce
   if(isFullField && isSparse) {
     DAWN_ASSERT_MSG(parentIsForLoop_ || parentIsReduction_,
                     "Sparse Field Access not allowed in this context");
-    std::string denseSize = locToDenseSizeStringGpuMesh(unstrDims.getDenseLocationType());
     std::string sparseSize = chainToSparseSizeString(unstrDims.getIterSpace());
     return kiterStr + "*" + denseSize + " * " + sparseSize + " + " + "nbhIter * " + denseSize +
            " + pidx";
   }
 
   if(isHorizontal && isDense) {
-    std::string denseSize = locToDenseSizeStringGpuMesh(unstrDims.getDenseLocationType());
     if((parentIsReduction_ || parentIsForLoop_) &&
        ast::offset_cast<const ast::UnstructuredOffset&>(expr->getOffset().horizontalOffset())
            .hasOffset()) {
@@ -147,7 +147,6 @@ std::string ASTStencilBody::makeIndexString(const std::shared_ptr<iir::FieldAcce
   if(isHorizontal && isSparse) {
     DAWN_ASSERT_MSG(parentIsForLoop_ || parentIsReduction_,
                     "Sparse Field Access not allowed in this context");
-    std::string denseSize = locToDenseSizeStringGpuMesh(unstrDims.getDenseLocationType());
     std::string sparseSize = chainToSparseSizeString(unstrDims.getIterSpace());
     return "nbhIter * " + denseSize + " + pidx";
   }
@@ -258,7 +257,8 @@ std::string ASTStencilBody::getName(const std::shared_ptr<iir::Expr>& expr) cons
   return metadata_.getFieldNameFromAccessID(iir::getAccessID(expr));
 }
 
-ASTStencilBody::ASTStencilBody(const iir::StencilMetaInformation& metadata) : metadata_(metadata) {}
+ASTStencilBody::ASTStencilBody(const iir::StencilMetaInformation& metadata, const Padding& padding)
+    : metadata_(metadata), padding_(padding) {}
 ASTStencilBody::~ASTStencilBody() {}
 
 } // namespace cudaico

@@ -14,11 +14,13 @@
 
 #pragma once
 
+#include <optional>
 #include <string>
 #include <vector>
 
 #include "dawn/AST/IterationSpace.h"
 #include "dawn/AST/LocationType.h"
+#include "dawn/CodeGen/Options.h"
 
 namespace dawn {
 namespace codegen {
@@ -32,7 +34,8 @@ std::string chainToDenseSizeStringHostMesh(std::vector<dawn::ast::LocationType> 
 
 std::string chainToVectorString(std::vector<dawn::ast::LocationType> locs);
 
-std::string locToDenseSizeStringGpuMesh(dawn::ast::LocationType loc);
+std::string locToDenseSizeStringGpuMesh(dawn::ast::LocationType loc, std::optional<Padding>,
+                                        bool addParens = false);
 
 std::string locToDenseTypeString(dawn::ast::LocationType loc);
 

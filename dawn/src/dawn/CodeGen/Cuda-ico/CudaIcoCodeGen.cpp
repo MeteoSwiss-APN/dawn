@@ -73,15 +73,17 @@ run(const std::map<std::string, std::shared_ptr<iir::StencilInstantiation>>&
       stencilInstantiationMap, options.MaxHaloSize,
       options.OutputCHeader == "" ? std::nullopt : std::make_optional(options.OutputCHeader),
       options.OutputFortranInterface == "" ? std::nullopt
-                                           : std::make_optional(options.OutputFortranInterface));
+                                           : std::make_optional(options.OutputFortranInterface),
+      Padding{options.paddingCells, options.paddingEdges, options.paddingVertices});
 
   return CG.generateCode();
 }
 
 CudaIcoCodeGen::CudaIcoCodeGen(const StencilInstantiationContext& ctx, int maxHaloPoints,
                                std::optional<std::string> outputCHeader,
-                               std::optional<std::string> outputFortranInterface)
-    : CodeGen(ctx, maxHaloPoints), codeGenOptions_{outputCHeader, outputFortranInterface} {}
+                               std::optional<std::string> outputFortranInterface, Padding padding)
+    : CodeGen(ctx, maxHaloPoints, padding), codeGenOptions_{outputCHeader, outputFortranInterface} {
+}
 
 CudaIcoCodeGen::~CudaIcoCodeGen() {}
 
@@ -348,7 +350,7 @@ void CudaIcoCodeGen::generateRunFun(
         if(dims.getDenseLocationType() == *stage->getLocationType()) {
           continue;
         }
-        locArgs.insert(locToDenseSizeStringGpuMesh(dims.getDenseLocationType()));
+        locArgs.insert(locToDenseSizeStringGpuMesh(dims.getDenseLocationType(), {}));
       }
       for(auto arg : locArgs) {
         kernelCall << "mesh_." + arg + ", ";
@@ -388,7 +390,7 @@ void CudaIcoCodeGen::generateRunFun(
   runFun.addStatement("sbase::pause()");
 }
 
-static void allocTempFields(MemberFunction& ctor, const iir::Stencil& stencil) {
+static void allocTempFields(MemberFunction& ctor, const iir::Stencil& stencil, Padding padding) {
   if(stencil.getMetadata()
          .hasAccessesOfType<iir::FieldAccessType::InterStencilTemporary,
                             iir::FieldAccessType::StencilTemporary>()) {
@@ -411,12 +413,13 @@ static void allocTempFields(MemberFunction& ctor, const iir::Stencil& stencil) {
           dims.getHorizontalFieldDimension());
       if(hdims.isDense()) {
         ctor.addStatement("::dawn::allocField(&" + fname + "_, mesh_." +
-                          locToDenseSizeStringGpuMesh(hdims.getDenseLocationType()) + ", " +
-                          kSizeStr + ")");
+                          locToDenseSizeStringGpuMesh(hdims.getDenseLocationType(), padding) +
+                          ", " + kSizeStr + ")");
       } else {
         ctor.addStatement("::dawn::allocField(&" + fname + "_, " + "mesh_." +
-                          locToDenseSizeStringGpuMesh(hdims.getDenseLocationType()) + ", " +
-                          chainToSparseSizeString(hdims.getIterSpace()) + ", " + kSizeStr + ")");
+                          locToDenseSizeStringGpuMesh(hdims.getDenseLocationType(), padding) +
+                          ", " + chainToSparseSizeString(hdims.getIterSpace()) + ", " + kSizeStr +
+                          ")");
       }
     }
   }
@@ -473,7 +476,7 @@ void CudaIcoCodeGen::generateStencilClassCtr(MemberFunction& ctor, const iir::St
     }
   }
   ctor.addStatement("copy_memory(" + fieldsStr.str() + ", true)");
-  allocTempFields(ctor, stencil);
+  allocTempFields(ctor, stencil, codeGenOptions.UnstrPadding);
 }
 
 void CudaIcoCodeGen::generateStencilClassDtr(MemberFunction& stencilClassDtor,
@@ -512,7 +515,7 @@ void CudaIcoCodeGen::generateStencilClassCtrMinimal(MemberFunction& ctor,
   }
   ctor.addInit("kSize_(kSize)");
 
-  allocTempFields(ctor, stencil);
+  allocTempFields(ctor, stencil, codeGenOptions.UnstrPadding);
 }
 
 void CudaIcoCodeGen::generateCopyMemoryFun(MemberFunction& copyFun,
@@ -543,14 +546,15 @@ void CudaIcoCodeGen::generateCopyMemoryFun(MemberFunction& copyFun,
     auto hdims = sir::dimension_cast<sir::UnstructuredFieldDimension const&>(
         dims.getHorizontalFieldDimension());
     if(hdims.isDense()) {
-      copyFun.addStatement("dawn::initField(" + fname + ", " + "&" + fname + "_, " + "mesh_." +
-                           locToDenseSizeStringGpuMesh(hdims.getDenseLocationType()) + ", " +
-                           kSizeStr + ", do_reshape)");
+      copyFun.addStatement(
+          "dawn::initField(" + fname + ", " + "&" + fname + "_, " + "mesh_." +
+          locToDenseSizeStringGpuMesh(hdims.getDenseLocationType(), codeGenOptions.UnstrPadding) +
+          ", " + kSizeStr + ", do_reshape)");
     } else {
-      copyFun.addStatement("dawn::initSparseField(" + fname + ", " + "&" + fname + "_, " +
-                           "mesh_." + locToDenseSizeStringGpuMesh(hdims.getNeighborChain()[0]) +
-                           ", " + chainToSparseSizeString(hdims.getIterSpace()) + ", " + kSizeStr +
-                           ", do_reshape)");
+      copyFun.addStatement(
+          "dawn::initSparseField(" + fname + ", " + "&" + fname + "_, " + "mesh_." +
+          locToDenseSizeStringGpuMesh(hdims.getNeighborChain()[0], codeGenOptions.UnstrPadding) +
+          ", " + chainToSparseSizeString(hdims.getIterSpace()) + ", " + kSizeStr + ", do_reshape)");
     }
   }
 }
@@ -621,12 +625,15 @@ void CudaIcoCodeGen::generateCopyBackFun(MemberFunction& copyBackFun, const iir:
       auto hdims = sir::dimension_cast<sir::UnstructuredFieldDimension const&>(
           field.field.getFieldDimensions().getHorizontalFieldDimension());
 
-      std::string sizestr = "mesh_.";
+      std::string sizestr = "(mesh_.";
       if(hdims.isDense()) {
-        sizestr += locToDenseSizeStringGpuMesh(hdims.getDenseLocationType());
+        sizestr +=
+            locToDenseSizeStringGpuMesh(hdims.getDenseLocationType(), codeGenOptions.UnstrPadding) +
+            ")";
       } else {
-        sizestr += locToDenseSizeStringGpuMesh(hdims.getDenseLocationType()) + "*" +
-                   chainToSparseSizeString(hdims.getIterSpace());
+        sizestr +=
+            locToDenseSizeStringGpuMesh(hdims.getDenseLocationType(), codeGenOptions.UnstrPadding) +
+            ")" + "*" + chainToSparseSizeString(hdims.getIterSpace());
       }
       if(field.field.getFieldDimensions().K()) {
         sizestr += " * kSize_";
@@ -660,12 +667,14 @@ void CudaIcoCodeGen::generateCopyBackFun(MemberFunction& copyBackFun, const iir:
           if(dims.isDense()) {
             copyBackFun.addStatement("dawn::reshape_back(host_buf, " + field.Name +
                                      ((!rawPtrs) ? ".data()" : "") + " , " + kSizeStr + ", mesh_." +
-                                     locToDenseSizeStringGpuMesh(dims.getDenseLocationType()) +
+                                     locToDenseSizeStringGpuMesh(dims.getDenseLocationType(),
+                                                                 codeGenOptions.UnstrPadding) +
                                      ")");
           } else {
             copyBackFun.addStatement("dawn::reshape_back(host_buf, " + field.Name +
                                      ((!rawPtrs) ? ".data()" : "") + ", " + kSizeStr + ", mesh_." +
-                                     locToDenseSizeStringGpuMesh(dims.getDenseLocationType()) +
+                                     locToDenseSizeStringGpuMesh(dims.getDenseLocationType(),
+                                                                 codeGenOptions.UnstrPadding) +
                                      ", " + chainToSparseSizeString(dims.getIterSpace()) + ")");
           }
         }
@@ -903,7 +912,8 @@ void CudaIcoCodeGen::generateAllCudaKernels(
     std::stringstream& ssSW,
     const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation) {
 
-  ASTStencilBody stencilBodyCXXVisitor(stencilInstantiation->getMetaData());
+  ASTStencilBody stencilBodyCXXVisitor(stencilInstantiation->getMetaData(),
+                                       codeGenOptions.UnstrPadding);
   const auto& globalsMap = stencilInstantiation->getIIR()->getGlobalVariableMap();
 
   for(const auto& ms : iterateIIROver<iir::MultiStage>(*(stencilInstantiation->getIIR()))) {
@@ -946,7 +956,7 @@ void CudaIcoCodeGen::generateAllCudaKernels(
         cudaKernel.addArg("globals globals");
       }
       auto loc = *stage->getLocationType();
-      cudaKernel.addArg("int " + locToDenseSizeStringGpuMesh(loc));
+      cudaKernel.addArg("int " + locToDenseSizeStringGpuMesh(loc, {}));
 
       // which additional loc size args ( int NumCells, int NumEdges, int NumVertices) need to
       // be passed?
@@ -960,7 +970,7 @@ void CudaIcoCodeGen::generateAllCudaKernels(
         if(dims.getDenseLocationType() == loc) {
           continue;
         }
-        locArgs.insert(locToDenseSizeStringGpuMesh(dims.getDenseLocationType()));
+        locArgs.insert(locToDenseSizeStringGpuMesh(dims.getDenseLocationType(), {}));
       }
       for(auto arg : locArgs) {
         cudaKernel.addArg("int " + arg);
