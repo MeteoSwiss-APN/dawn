@@ -35,14 +35,7 @@ def test_sir_serialization(name):
     serialized_json = dawn4py.serialization.to_json(sir)
     assert serialized_json is not None
     sir_from_json = dawn4py.serialization.from_json(serialized_json, SIR.SIR)
-    assert sir == sir_from_json
-
-    bytes_strio = io.StringIO()
-    sir_utils.pprint(sir_from_bytes, file=bytes_strio)
-    json_strio = io.StringIO()
-    sir_utils.pprint(sir_from_json, file=json_strio)
-
-    assert bytes_strio.getvalue() == json_strio.getvalue()
+    assert sir == sir_from_json    
 
 
 def test_compilation(unstructured_sir_with_reference_code):

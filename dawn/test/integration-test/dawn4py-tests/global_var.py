@@ -20,6 +20,7 @@ import os
 import dawn4py
 from dawn4py.serialization import SIR
 from dawn4py.serialization import utils as sir_utils
+from google.protobuf.json_format import MessageToJson, Parse
 
 OUTPUT_NAME = "global_var_stencil"
 OUTPUT_FILE = f"{OUTPUT_NAME}.cpp"
@@ -65,9 +66,9 @@ def main(args: argparse.Namespace):
         global_variables=globals
     )
 
-    # print the SIR
+    # print the SIR       
     if args.verbose:
-        sir_utils.pprint(sir)
+        print(MessageToJson(sir))
 
     # compile
     code = dawn4py.compile(sir, backend=dawn4py.CodeGenBackend.CXXNaive)

@@ -74,9 +74,9 @@ def main(args: argparse.Namespace):
         ],
     )
 
-    # print the SIR
+    # print the SIR       
     if args.verbose:
-        sir_utils.pprint(sir)
+        print(MessageToJson(sir))
 
     # compile
     code = dawn4py.compile(sir, backend=dawn4py.CodeGenBackend.CXXNaiveIco)
