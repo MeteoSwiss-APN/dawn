@@ -263,7 +263,8 @@ void CXXNaiveIcoCodeGen::generateStencilWrapperCtr(
           auto hdims = sir::dimension_cast<sir::UnstructuredFieldDimension const&>(
               field.getFieldDimensions().getHorizontalFieldDimension());
 
-          auto getNumElCall = [&](const sir::UnstructuredFieldDimension& hdims) -> std::string {
+          auto getPaddedNumElCall =
+              [&](const sir::UnstructuredFieldDimension& hdims) -> std::string {
             switch(hdims.getDenseLocationType()) {
             case ast::LocationType::Cells:
               return "numCells(LibTag{}, mesh) + " +
@@ -280,9 +281,9 @@ void CXXNaiveIcoCodeGen::generateStencilWrapperCtr(
           };
 
           if(hdims.isDense()) {
-            allocString = "allocateField(LibTag{}, " + getNumElCall(hdims) + ", k_size)";
+            allocString = "allocateField(LibTag{}, " + getPaddedNumElCall(hdims) + ", k_size)";
           } else {
-            allocString = "allocateField(LibTag{}, " + getNumElCall(hdims) + ", k_size, " +
+            allocString = "allocateField(LibTag{}, " + getPaddedNumElCall(hdims) + ", k_size, " +
                           std::to_string(ICOChainSize(hdims.getNeighborChain())) +
                           (hdims.getIncludeCenter() ? "+1" : "") + ")";
           }

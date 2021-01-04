@@ -112,8 +112,10 @@ std::string ASTStencilBody::makeIndexString(const std::shared_ptr<iir::FieldAcce
       metadata_.getFieldDimensions(iir::getAccessID(expr)).getHorizontalFieldDimension());
   bool isDense = unstrDims.isDense();
   bool isSparse = unstrDims.isSparse();
+
   std::string denseSize =
       locToDenseSizeStringGpuMesh(unstrDims.getDenseLocationType(), padding_, /*addParens*/ true);
+
   if(isFullField && isDense) {
     if((parentIsReduction_ || parentIsForLoop_) &&
        ast::offset_cast<const ast::UnstructuredOffset&>(expr->getOffset().horizontalOffset())
@@ -133,9 +135,6 @@ std::string ASTStencilBody::makeIndexString(const std::shared_ptr<iir::FieldAcce
   }
 
   if(isHorizontal && isDense) {
-    std::string denseSize =
-        locToDenseSizeStringGpuMesh(unstrDims.getDenseLocationType(), padding_, /*addParens*/ true);
-    ;
     if((parentIsReduction_ || parentIsForLoop_) &&
        ast::offset_cast<const ast::UnstructuredOffset&>(expr->getOffset().horizontalOffset())
            .hasOffset()) {
@@ -148,8 +147,6 @@ std::string ASTStencilBody::makeIndexString(const std::shared_ptr<iir::FieldAcce
   if(isHorizontal && isSparse) {
     DAWN_ASSERT_MSG(parentIsForLoop_ || parentIsReduction_,
                     "Sparse Field Access not allowed in this context");
-    std::string denseSize =
-        locToDenseSizeStringGpuMesh(unstrDims.getDenseLocationType(), padding_, /*addParens*/ true);
     std::string sparseSize = chainToSparseSizeString(unstrDims.getIterSpace());
     return "nbhIter * " + denseSize + " + pidx";
   }
