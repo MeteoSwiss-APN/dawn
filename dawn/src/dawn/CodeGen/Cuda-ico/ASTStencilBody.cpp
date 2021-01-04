@@ -131,7 +131,7 @@ std::string ASTStencilBody::makeIndexString(const std::shared_ptr<iir::FieldAcce
                     "Sparse Field Access not allowed in this context");
     std::string denseSize =
         locToDenseSizeStringGpuMesh(unstrDims.getDenseLocationType(), padding_, /*addParens*/ true);
-    ;
+    
     std::string sparseSize = chainToSparseSizeString(unstrDims.getIterSpace());
     return kiterStr + "*" + denseSize + " * " + sparseSize + " + " + "nbhIter * " + denseSize +
            " + pidx";
