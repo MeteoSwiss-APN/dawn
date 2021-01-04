@@ -119,7 +119,7 @@ std::string locToDenseSizeStringGpuMesh(dawn::ast::LocationType loc, std::option
     ret = padding.has_value() ? "NumEdges + " + std::to_string(padding->Edges()) : "NumEdges";
     break;
   case dawn::ast::LocationType::Vertices:
-    ret = padding.has_value() ? ret = "NumVertices + " + std::to_string(padding->Vertices())
+    ret = padding.has_value() ? "NumVertices + " + std::to_string(padding->Vertices())
                               : "NumVertices";
     break;
   default:
