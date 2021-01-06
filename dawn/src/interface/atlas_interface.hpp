@@ -347,14 +347,12 @@ inline std::vector<int> getNeighbors(atlasTag, atlas::Mesh const& mesh,
   std::list<int> result;
 
   // we want to exclude the original element from the neighborhood obtained if we don't include the
-  // center. we can compare by the id, but only if targetType = startOfChain, since ids may be
-  // duplicated amongst different element types; e.g. there may be a vertex and an edge with the
+  // center for now. we can compare by the id, but only if targetType = startOfChain, since ids may
+  // be duplicated amongst different element types; e.g. there may be a vertex and an edge with the
   // same id.
   NotDuplicateOrOrigin<int> pred;
-  if(chain.front() == chain.back() && !includeCenter) {
+  if(chain.front() == chain.back()) {
     pred = NotDuplicateOrOrigin<int>(idx);
-  } else {
-    pred = NotDuplicateOrOrigin<int>();
   }
 
   // start recursion
@@ -362,6 +360,13 @@ inline std::vector<int> getNeighbors(atlasTag, atlas::Mesh const& mesh,
 
   std::vector<int> resultUnique;
   std::copy_if(result.begin(), result.end(), std::back_inserter(resultUnique), std::ref(pred));
+
+  // center element (if included) needs to go first. so we need to re-insert it (not possible to
+  // achieve this via predicate since it uses a set internally)
+  if(includeCenter) {
+    resultUnique.insert(resultUnique.begin(), idx);
+  }
+
   return resultUnique;
 }
 
