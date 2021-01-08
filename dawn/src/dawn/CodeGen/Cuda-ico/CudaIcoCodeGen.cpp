@@ -884,7 +884,7 @@ void CudaIcoCodeGen::generateStaticMembersTrailer(
   }
   ssSW << "int " << fullStencilName << "::"
        << "kSize_;\n";
-  ssSW << "dawn_generated::cuda_ico::interpolation_sph::GpuTriMesh " << fullStencilName << "::"
+  ssSW << "dawn_generated::cuda_ico::" + wrapperName << "::GpuTriMesh " << fullStencilName << "::"
        << "mesh_;\n";
 }
 
