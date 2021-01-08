@@ -853,12 +853,14 @@ void CudaIcoCodeGen::generateMemMgmtFunctions(
   MemberFunction setupFun("void", "setup_" + wrapperName, ssSW, 0, onlyDecl);
   setupFun.addArg("dawn::GlobalGpuTriMesh *mesh");
   setupFun.addArg("int k_size");
+  setupFun.finishArgs();
   if(!onlyDecl) {
     setupFun.addStatement(fullStencilName + "::setup(mesh, k_size)");
   }
   setupFun.commit();
 
   MemberFunction freeFun("void", "free_" + wrapperName, ssSW, 0, onlyDecl);
+  freeFun.finishArgs();
   if(!onlyDecl) {
     freeFun.startBody();
     freeFun.addStatement(fullStencilName + "::free()");
