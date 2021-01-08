@@ -1111,8 +1111,8 @@ std::string CudaIcoCodeGen::generateStencilInstantiation(
   generateAllAPIRunFunctions(ssSW, stencilInstantiation, codeGenProperties, fromHost);
   generateAllAPIRunFunctions(ssSW, stencilInstantiation, codeGenProperties, !fromHost);
   generateMemMgmtFunctions(ssSW, stencilInstantiation, codeGenProperties);
-  generateStaticMembersTrailer(ssSW, stencilInstantiation, codeGenProperties);
   ssSW << "}\n";
+  generateStaticMembersTrailer(ssSW, stencilInstantiation, codeGenProperties);
 
   return ssSW.str();
 }
