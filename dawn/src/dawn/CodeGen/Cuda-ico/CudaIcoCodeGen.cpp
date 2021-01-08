@@ -858,6 +858,9 @@ void CudaIcoCodeGen::generateMemMgmtFunctions(
     setupFun.addStatement(fullStencilName + "::setup(mesh, k_size)");
   }
   setupFun.commit();
+  if(onlyDecl) {
+    ssSW << ";";
+  }
 
   MemberFunction freeFun("void", "free_" + wrapperName, ssSW, 0, onlyDecl);
   freeFun.finishArgs();
@@ -866,6 +869,9 @@ void CudaIcoCodeGen::generateMemMgmtFunctions(
     freeFun.addStatement(fullStencilName + "::free()");
   }
   freeFun.commit();
+  if(onlyDecl) {
+    ssSW << ";";
+  }
 }
 
 void CudaIcoCodeGen::generateStaticMembersTrailer(
