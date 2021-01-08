@@ -880,13 +880,11 @@ void CudaIcoCodeGen::generateStaticMembersTrailer(
                           .getAccessesOfType<iir::FieldAccessType::InterStencilTemporary,
                                              iir::FieldAccessType::StencilTemporary>()) {
     auto fname = stencil->getMetadata().getFieldNameFromAccessID(accessID);
-    ssSW << "::dawn::float_type *dawn_generated::cuda_ico::" << fullStencilName << "::" << fname
-         << "_;\n";
+    ssSW << "::dawn::float_type *" << fullStencilName << "::" << fname << "_;\n";
   }
-  ssSW << "int dawn_generated::cuda_ico::" << fullStencilName << "::"
+  ssSW << "int " << fullStencilName << "::"
        << "kSize_;\n";
-  ssSW << "dawn_generated::cuda_ico::interpolation_sph::GpuTriMesh dawn_generated::cuda_ico::"
-       << fullStencilName << "::"
+  ssSW << "dawn_generated::cuda_ico::interpolation_sph::GpuTriMesh " << fullStencilName << "::"
        << "mesh_;\n";
 }
 
