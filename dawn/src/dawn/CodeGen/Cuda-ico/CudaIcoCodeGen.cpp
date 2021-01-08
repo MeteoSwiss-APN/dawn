@@ -414,6 +414,7 @@ static void allocTempFields(MemberFunction& ctor, const iir::Stencil& stencil, P
 }
 
 void CudaIcoCodeGen::generateStencilFree(MemberFunction& stencilFree, const iir::Stencil& stencil) {
+  stencilFree.startBody();
   for(auto accessID : stencil.getMetadata()
                           .getAccessesOfType<iir::FieldAccessType::InterStencilTemporary,
                                              iir::FieldAccessType::StencilTemporary>()) {
