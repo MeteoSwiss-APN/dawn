@@ -725,24 +725,39 @@ void CudaIcoCodeGen::generateAllAPIRunFunctions(
           "double", "run_" + wrapperName, apiRunFunStreams[0], /*indent level*/ 0, onlyDecl));
     }
 
+    const auto& globalsMap = stencilInstantiation->getIIR()->getGlobalVariableMap();
+    auto addExplodedGlobals = [](const sir::GlobalVariableMap& globalsMap, MemberFunction& fun) {
+      for(const auto& global : globalsMap) {
+        std::string Name = global.first;
+        std::string Type = sir::Value::typeToString(global.second.getType());
+        fun.addArg(Type + " " + Name);
+      }
+    };
+
     if(fromHost) {
       for(auto& apiRunFun : apiRunFuns) {
         apiRunFun->addArg("dawn::GlobalGpuTriMesh *mesh");
         apiRunFun->addArg("int k_size");
-        for(auto accessID : stencilInstantiation->getMetaData().getAPIFields()) {
-          apiRunFun->addArg("::dawn::float_type *" +
-                            stencilInstantiation->getMetaData().getNameFromAccessID(accessID));
-        }
-        apiRunFun->finishArgs();
       }
-    } else {
+      apiRunFuns[0]->addArg("globals globals");
+      addExplodedGlobals(globalsMap, *apiRunFuns[1]);
       for(auto& apiRunFun : apiRunFuns) {
         for(auto accessID : stencilInstantiation->getMetaData().getAPIFields()) {
           apiRunFun->addArg("::dawn::float_type *" +
                             stencilInstantiation->getMetaData().getNameFromAccessID(accessID));
         }
-        apiRunFun->finishArgs();
       }
+    } else {
+      addExplodedGlobals(globalsMap, *apiRunFuns[0]);
+      for(auto& apiRunFun : apiRunFuns) {
+        for(auto accessID : stencilInstantiation->getMetaData().getAPIFields()) {
+          apiRunFun->addArg("::dawn::float_type *" +
+                            stencilInstantiation->getMetaData().getNameFromAccessID(accessID));
+        }
+      }
+    }
+    for(auto& apiRunFun : apiRunFuns) {
+      apiRunFun->finishArgs();
     }
 
     // Write body only when run for implementation generation
@@ -795,6 +810,15 @@ void CudaIcoCodeGen::generateAllAPIRunFunctions(
         const std::string fullStencilName =
             "dawn_generated::cuda_ico::" + wrapperName + "::" + stencilName;
 
+        auto copyGlobals = [](const sir::GlobalVariableMap& globalsMap, MemberFunction& fun,
+                              bool wrapped) {
+          for(const auto& global : globalsMap) {
+            std::string Name = global.first;
+            std::string Type = sir::Value::typeToString(global.second.getType());
+            fun.addStatement("s.set_" + Name + "(" + (wrapped ? "globals." + Name : Name) + ")");
+          }
+        };
+
         for(auto& apiRunFun : apiRunFuns) {
           apiRunFun->addStatement(fullStencilName + " s");
         }
@@ -806,8 +830,11 @@ void CudaIcoCodeGen::generateAllAPIRunFunctions(
           // not
           apiRunFuns[0]->addStatement("s.copy_memory(" + fieldsStr.str() + ", true)");
           apiRunFuns[1]->addStatement("s.copy_memory(" + fieldsStr.str() + ", false)");
+          copyGlobals(globalsMap, *apiRunFuns[0], true);
+          copyGlobals(globalsMap, *apiRunFuns[1], false);
         } else {
           apiRunFuns[0]->addStatement("s.copy_pointers(" + fieldsStr.str() + ")");
+          copyGlobals(globalsMap, *apiRunFuns[0], false);
         }
         for(auto& apiRunFun : apiRunFuns) {
           apiRunFun->addStatement("s.run()");
@@ -1161,6 +1188,22 @@ static void
 generateF90InterfaceSI(FortranInterfaceModuleGen& fimGen,
                        const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation) {
   const auto& stencils = stencilInstantiation->getStencils();
+  const auto& globalsMap = stencilInstantiation->getIIR()->getGlobalVariableMap();
+  auto globalTypeToFortType = [](const sir::Global& global) {
+    switch(global.getType()) {
+    case sir::Value::Kind::Boolean:
+      return FortranInterfaceAPI::InterfaceType::CHAR;
+    case sir::Value::Kind::Double:
+      return FortranInterfaceAPI::InterfaceType::DOUBLE;
+    case sir::Value::Kind::Float:
+      return FortranInterfaceAPI::InterfaceType::FLOAT;
+    case sir::Value::Kind::Integer:
+      return FortranInterfaceAPI::InterfaceType::INTEGER;
+    case sir::Value::Kind::String:
+    default:
+      throw std::runtime_error("string globals not supported in cuda ico backend");
+    }
+  };
 
   // The following assert is needed because we have only one (user-defined) name for a stencil
   // instantiation (stencilInstantiation->getName()). We could compute a per-stencil name (
@@ -1179,8 +1222,10 @@ generateF90InterfaceSI(FortranInterfaceModuleGen& fimGen,
   apis[1].addArg("mesh", FortranInterfaceAPI::InterfaceType::OBJ);
   apis[1].addArg("k_size", FortranInterfaceAPI::InterfaceType::INTEGER);
   for(auto&& api : apis) {
+    for(const auto& global : globalsMap) {
+      api.addArg(global.first, globalTypeToFortType(global.second));
+    }
     for(auto fieldID : stencilInstantiation->getMetaData().getAPIFields()) {
-
       api.addArg(
           stencilInstantiation->getMetaData().getNameFromAccessID(fieldID),
           FortranInterfaceAPI::InterfaceType::DOUBLE /* Unfortunately we need to know at codegen
@@ -1279,7 +1324,6 @@ std::unique_ptr<TranslationUnit> CudaIcoCodeGen::generateCode() {
   return std::make_unique<TranslationUnit>(filename, std::move(ppDefines), std::move(stencils),
                                            std::move(globals));
 }
-
 } // namespace cudaico
 } // namespace codegen
 } // namespace dawn
