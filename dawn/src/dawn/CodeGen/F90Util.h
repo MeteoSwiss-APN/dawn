@@ -105,7 +105,10 @@ protected:
   void streamInterface(IndentedStringStream& ss) const {
     bool isFunction = returnType_ != "";
     ss << (isFunction ? returnType_ + " function" : std::string("subroutine")) << " &" << endline;
-    ss << name_ << "( &";
+    ss << name_ << "( ";
+    if(args_.size() > 0) {
+      ss << "&";
+    }
     {
       std::string sep;
       for(const auto& arg : args_) {
@@ -113,7 +116,9 @@ protected:
         sep = ", &";
       }
     }
-    ss << " &" << endline;
+    if(args_.size() > 0) {
+      ss << " &" << endline;
+    }
     ss << ") bind(c)" << endline;
 
     ss.increaseIndent();

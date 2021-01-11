@@ -39,6 +39,7 @@
 #include <fstream>
 #include <memory>
 #include <numeric>
+#include <optional>
 #include <sstream>
 #include <string>
 #include <vector>
@@ -1173,9 +1174,11 @@ generateF90InterfaceSI(FortranInterfaceModuleGen& fimGen,
                           FortranInterfaceAPI::InterfaceType::DOUBLE),
       FortranInterfaceAPI("run_" + stencilInstantiation->getName() + "_from_fort_host",
                           FortranInterfaceAPI::InterfaceType::DOUBLE)};
+
+  // only from host convenience wrapper takes mesh and k_size
+  apis[1].addArg("mesh", FortranInterfaceAPI::InterfaceType::OBJ);
+  apis[1].addArg("k_size", FortranInterfaceAPI::InterfaceType::INTEGER);
   for(auto&& api : apis) {
-    api.addArg("mesh", FortranInterfaceAPI::InterfaceType::OBJ);
-    api.addArg("k_size", FortranInterfaceAPI::InterfaceType::INTEGER);
     for(auto fieldID : stencilInstantiation->getMetaData().getAPIFields()) {
 
       api.addArg(
@@ -1188,6 +1191,15 @@ generateF90InterfaceSI(FortranInterfaceModuleGen& fimGen,
 
     fimGen.addAPI(std::move(api));
   }
+
+  // memory management functions for production interface
+  FortranInterfaceAPI setup("setup_" + stencilInstantiation->getName(), std::nullopt);
+  FortranInterfaceAPI free("free_" + stencilInstantiation->getName(), std::nullopt);
+  setup.addArg("mesh", FortranInterfaceAPI::InterfaceType::OBJ);
+  setup.addArg("k_size", FortranInterfaceAPI::InterfaceType::INTEGER);
+
+  fimGen.addAPI(std::move(setup));
+  fimGen.addAPI(std::move(free));
 }
 
 std::string CudaIcoCodeGen::generateF90Interface(std::string moduleName) const {
