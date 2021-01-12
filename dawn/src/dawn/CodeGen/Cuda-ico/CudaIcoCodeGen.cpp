@@ -739,7 +739,9 @@ void CudaIcoCodeGen::generateAllAPIRunFunctions(
         apiRunFun->addArg("dawn::GlobalGpuTriMesh *mesh");
         apiRunFun->addArg("int k_size");
       }
-      apiRunFuns[0]->addArg("globals globals");
+      if(!globalsMap.empty()) {
+        apiRunFuns[0]->addArg("globals globals");
+      }
       addExplodedGlobals(globalsMap, *apiRunFuns[1]);
       for(auto& apiRunFun : apiRunFuns) {
         for(auto accessID : stencilInstantiation->getMetaData().getAPIFields()) {
