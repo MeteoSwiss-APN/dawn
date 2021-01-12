@@ -128,15 +128,7 @@ protected:
       if(std::get<2>(arg) == 0) {
         ss << "value";
       } else {
-        ss << "dimension(";
-        {
-          std::string sep;
-          for(int c = 0; c < std::get<2>(arg); ++c) {
-            ss << sep << ":";
-            sep = ",";
-          }
-        }
-        ss << ")";
+        ss << "dimension(*)";               
       }
       ss << ", target :: " << std::get<0>(arg) << endline;
     });
