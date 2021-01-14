@@ -327,7 +327,7 @@ struct StencilFunction {
   SourceLocation Loc;                                    ///< Source location of the stencil func
   std::vector<std::shared_ptr<StencilFunctionArg>> Args; ///< Arguments of the stencil function
   std::vector<std::shared_ptr<Interval>> Intervals; ///< Vertical intervals of the specializations
-  std::vector<std::shared_ptr<sir::AST>> Asts;      ///< ASTs of the specializations
+  std::vector<std::shared_ptr<ast::AST>> Asts;      ///< ASTs of the specializations
   Attr Attributes;                                  ///< Attributes of the stencil function
 
   /// @brief Check if the Stencil function contains specializations
@@ -338,7 +338,7 @@ struct StencilFunction {
 
   /// @brief Get the AST of the specified vertical interval or `NULL` if the function is not
   /// specialized for this interval
-  std::shared_ptr<sir::AST> getASTOfInterval(const Interval& interval) const;
+  std::shared_ptr<ast::AST> getASTOfInterval(const Interval& interval) const;
 
   bool operator==(const sir::StencilFunction& rhs) const;
   CompareResult comparison(const StencilFunction& rhs) const;
@@ -363,7 +363,7 @@ struct Stencil : public dawn::NonCopyable {
 
   std::string Name;                           ///< Name of the stencil
   SourceLocation Loc;                         ///< Source location of the stencil declaration
-  std::shared_ptr<sir::AST> StencilDescAst;   ///< Stencil description AST
+  std::shared_ptr<ast::AST> StencilDescAst;   ///< Stencil description AST
   std::vector<std::shared_ptr<Field>> Fields; ///< Fields referenced by this stencil
   Attr Attributes;                            ///< Attributes of the stencil
 

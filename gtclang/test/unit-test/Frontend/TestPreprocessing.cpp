@@ -79,7 +79,7 @@ TEST(PreprocessingTest, IterationSpaceToken) {
   {
     // iteration_space(i_start, i_end - 1)
     dawn::ast::VerticalRegionDeclStmt* vrds =
-        dawn::dyn_cast<dawn::sir::VerticalRegionDeclStmt>(statements[0].get());
+        dawn::dyn_cast<dawn::ast::VerticalRegionDeclStmt>(statements[0].get());
     ASSERT_NE(vrds, nullptr);
     checkVerticalRegion(*vrds->getVerticalRegion(), Interval(LevelKind::Start, LevelKind::End),
                         std::optional<Interval>(Interval(LevelKind::Start, LevelKind::End, 0, -1)),
@@ -88,7 +88,7 @@ TEST(PreprocessingTest, IterationSpaceToken) {
   {
     // iteration_space(j_start, j_end - 2)
     dawn::ast::VerticalRegionDeclStmt* vrds =
-        dawn::dyn_cast<dawn::sir::VerticalRegionDeclStmt>(statements[1].get());
+        dawn::dyn_cast<dawn::ast::VerticalRegionDeclStmt>(statements[1].get());
     ASSERT_NE(vrds, nullptr);
     checkVerticalRegion(*vrds->getVerticalRegion(), Interval(LevelKind::Start, LevelKind::End),
                         std::optional<Interval>(),
@@ -98,7 +98,7 @@ TEST(PreprocessingTest, IterationSpaceToken) {
     // iteration_space(i_start, i_start + 1, j_start, j_start + 1, k_start,
     // k_end - 1)
     dawn::ast::VerticalRegionDeclStmt* vrds =
-        dawn::dyn_cast<dawn::sir::VerticalRegionDeclStmt>(statements[2].get());
+        dawn::dyn_cast<dawn::ast::VerticalRegionDeclStmt>(statements[2].get());
     ASSERT_NE(vrds, nullptr);
     checkVerticalRegion(
         *vrds->getVerticalRegion(), Interval(LevelKind::Start, LevelKind::End, 0, -1),

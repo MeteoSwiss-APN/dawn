@@ -48,16 +48,16 @@ public:
   ClangASTStmtResolver(GTClangContext* context, StencilParser* parser);
 
   /// @brief Resolve a single statment into (possibly multiple) SIR Stmts
-  llvm::ArrayRef<std::shared_ptr<dawn::sir::Stmt>> resolveStmt(clang::Stmt* stmt, ASTKind kind);
+  llvm::ArrayRef<std::shared_ptr<dawn::ast::Stmt>> resolveStmt(clang::Stmt* stmt, ASTKind kind);
 
-  std::vector<std::shared_ptr<dawn::sir::Stmt>>& getStatements();
-  const std::vector<std::shared_ptr<dawn::sir::Stmt>>& getStatements() const;
+  std::vector<std::shared_ptr<dawn::ast::Stmt>>& getStatements();
+  const std::vector<std::shared_ptr<dawn::ast::Stmt>>& getStatements() const;
 
 private:
   //===----------------------------------------------------------------------------------------===//
   //     Internal statment resolver
 
-  inline void emplaceStmt(std::shared_ptr<dawn::sir::Stmt>&& stmt);
+  inline void emplaceStmt(std::shared_ptr<dawn::ast::Stmt>&& stmt);
 
   void resolve(clang::Stmt* stmt);
   void resolve(clang::BinaryOperator* expr);
@@ -81,7 +81,7 @@ private:
   std::shared_ptr<ClangASTExprResolver> clangASTExprResolver_;
 
   // State variables
-  std::vector<std::shared_ptr<dawn::sir::Stmt>> statements_;
+  std::vector<std::shared_ptr<dawn::ast::Stmt>> statements_;
   ASTKind AstKind_;
 };
 

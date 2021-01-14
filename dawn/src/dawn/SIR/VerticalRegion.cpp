@@ -58,39 +58,39 @@ std::shared_ptr<sir::VerticalRegion> sir::VerticalRegion::clone() const {
 
 namespace {
 /// @brief Allow direct comparison of the Stmts of an AST
-class DiffWriter final : public sir::ASTVisitorForwarding {
+class DiffWriter final : public ast::ASTVisitorForwarding {
 public:
-  virtual void visit(const std::shared_ptr<sir::VerticalRegionDeclStmt>& stmt) override {
+  virtual void visit(const std::shared_ptr<ast::VerticalRegionDeclStmt>& stmt) override {
     statements_.push_back(stmt);
     stmt->getVerticalRegion()->Ast->getRoot()->accept(*this);
   }
 
-  virtual void visit(const std::shared_ptr<sir::ReturnStmt>& stmt) override {
+  virtual void visit(const std::shared_ptr<ast::ReturnStmt>& stmt) override {
     statements_.push_back(stmt);
-    sir::ASTVisitorForwarding::visit(stmt);
+    ast::ASTVisitorForwarding::visit(stmt);
   }
 
-  virtual void visit(const std::shared_ptr<sir::ExprStmt>& stmt) override {
+  virtual void visit(const std::shared_ptr<ast::ExprStmt>& stmt) override {
     statements_.push_back(stmt);
-    sir::ASTVisitorForwarding::visit(stmt);
+    ast::ASTVisitorForwarding::visit(stmt);
   }
 
-  virtual void visit(const std::shared_ptr<sir::BlockStmt>& stmt) override {
+  virtual void visit(const std::shared_ptr<ast::BlockStmt>& stmt) override {
     statements_.push_back(stmt);
-    sir::ASTVisitorForwarding::visit(stmt);
+    ast::ASTVisitorForwarding::visit(stmt);
   }
 
-  virtual void visit(const std::shared_ptr<sir::VarDeclStmt>& stmt) override {
+  virtual void visit(const std::shared_ptr<ast::VarDeclStmt>& stmt) override {
     statements_.push_back(stmt);
-    sir::ASTVisitorForwarding::visit(stmt);
+    ast::ASTVisitorForwarding::visit(stmt);
   }
 
-  virtual void visit(const std::shared_ptr<sir::IfStmt>& stmt) override {
+  virtual void visit(const std::shared_ptr<ast::IfStmt>& stmt) override {
     statements_.push_back(stmt);
-    sir::ASTVisitorForwarding::visit(stmt);
+    ast::ASTVisitorForwarding::visit(stmt);
   }
 
-  std::vector<std::shared_ptr<sir::Stmt>> getStatements() const { return statements_; }
+  std::vector<std::shared_ptr<ast::Stmt>> getStatements() const { return statements_; }
 
   std::pair<std::string, bool> compare(const DiffWriter& other) {
 
@@ -106,8 +106,8 @@ public:
                          "    %s\n"
                          "  Expected:\n"
                          "    %s",
-                         indent(sir::ASTStringifier::toString(statements_[idx]), 4),
-                         indent(sir::ASTStringifier::toString(other.getStatements()[idx]), 4)),
+                         indent(ast::ASTStringifier::toString(statements_[idx]), 4),
+                         indent(ast::ASTStringifier::toString(other.getStatements()[idx]), 4)),
             false);
       }
     }
@@ -116,7 +116,7 @@ public:
   }
 
 private:
-  std::vector<std::shared_ptr<sir::Stmt>> statements_;
+  std::vector<std::shared_ptr<ast::Stmt>> statements_;
 };
 
 } // namespace
@@ -124,8 +124,8 @@ private:
 namespace sir {
 
 /// @brief Compares two ASTs
-std::pair<std::string, bool> compareAst(const std::shared_ptr<sir::AST>& lhs,
-                                        const std::shared_ptr<sir::AST>& rhs) {
+std::pair<std::string, bool> compareAst(const std::shared_ptr<ast::AST>& lhs,
+                                        const std::shared_ptr<ast::AST>& rhs) {
   if(lhs->getRoot()->equals(rhs->getRoot().get()))
     return std::make_pair("", true);
 

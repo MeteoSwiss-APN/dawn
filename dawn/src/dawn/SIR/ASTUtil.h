@@ -15,7 +15,7 @@
 #pragma once
 
 #include "dawn/AST/ASTUtil.h"
-#include "dawn/SIR/ASTFwd.h"
+#include "dawn/AST/ASTStmt.h"
 
 namespace dawn {
 namespace sir {
@@ -29,9 +29,9 @@ namespace sir {
 /// @param newExpr  Expression to use as a replacement
 ///
 /// @ingroup sir
-extern void replaceOldExprWithNewExprInStmt(const std::shared_ptr<Stmt>& stmt,
-                                            const std::shared_ptr<Expr>& oldExpr,
-                                            const std::shared_ptr<Expr>& newExpr);
+extern void replaceOldExprWithNewExprInStmt(const std::shared_ptr<ast::Stmt>& stmt,
+                                            const std::shared_ptr<ast::Expr>& oldExpr,
+                                            const std::shared_ptr<ast::Expr>& newExpr);
 
 /// @brief Replace `oldStmt` with `newStmt` in `stmt`
 ///
@@ -42,9 +42,9 @@ extern void replaceOldExprWithNewExprInStmt(const std::shared_ptr<Stmt>& stmt,
 /// @param newStmt  Statement to use as a replacement
 ///
 /// @ingroup sir
-extern void replaceOldStmtWithNewStmtInStmt(const std::shared_ptr<Stmt>& stmt,
-                                            const std::shared_ptr<Stmt>& oldStmt,
-                                            const std::shared_ptr<Stmt>& newStmt);
+extern void replaceOldStmtWithNewStmtInStmt(const std::shared_ptr<ast::Stmt>& stmt,
+                                            const std::shared_ptr<ast::Stmt>& oldStmt,
+                                            const std::shared_ptr<ast::Stmt>& newStmt);
 
 /// @brief Try to evaluate the expression `expr`
 ///
@@ -61,20 +61,16 @@ extern void replaceOldStmtWithNewStmtInStmt(const std::shared_ptr<Stmt>& stmt,
 ///
 /// @ingroup sir
 /// @{
-extern bool evalExprAsDouble(const std::shared_ptr<Expr>& expr, double& result,
+extern bool evalExprAsDouble(const std::shared_ptr<ast::Expr>& expr, double& result,
                              const std::unordered_map<std::string, double>& variableMap =
                                  std::unordered_map<std::string, double>());
-extern bool evalExprAsInteger(const std::shared_ptr<Expr>& expr, int& result,
+extern bool evalExprAsInteger(const std::shared_ptr<ast::Expr>& expr, int& result,
                               const std::unordered_map<std::string, double>& variableMap =
                                   std::unordered_map<std::string, double>());
-extern bool evalExprAsBoolean(const std::shared_ptr<Expr>& expr, bool& result,
+extern bool evalExprAsBoolean(const std::shared_ptr<ast::Expr>& expr, bool& result,
                               const std::unordered_map<std::string, double>& variableMap =
                                   std::unordered_map<std::string, double>());
 /// @}
 
-//
-// TODO refactor_AST: this is TEMPORARY, will be removed in the future
-//
-using ASTHelper = ast::ASTHelper;
 } // namespace sir
 } // namespace dawn

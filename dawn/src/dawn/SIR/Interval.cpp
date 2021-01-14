@@ -8,7 +8,7 @@ namespace dawn {
 
 namespace sir {
 
-std::shared_ptr<sir::AST> StencilFunction::getASTOfInterval(const Interval& interval) const {
+std::shared_ptr<ast::AST> StencilFunction::getASTOfInterval(const Interval& interval) const {
   for(int i = 0; i < Intervals.size(); ++i)
     if(*Intervals[i] == interval)
       return Asts[i];

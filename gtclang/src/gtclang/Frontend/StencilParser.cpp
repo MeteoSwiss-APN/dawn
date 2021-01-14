@@ -908,7 +908,7 @@ void StencilParser::parseStencilFunctionDoMethod(clang::CXXMethodDecl* DoMethod)
 
     // Assemble the stencil function
     currentParserRecord_->CurrentStencilFunction->Asts.emplace_back(
-        std::make_shared<dawn::sir::AST>(std::move(SIRBlockStmt)));
+        std::make_shared<dawn::ast::AST>(std::move(SIRBlockStmt)));
 
     if(intervals)
       currentParserRecord_->CurrentStencilFunction->Intervals.emplace_back(std::move(intervals));
@@ -935,7 +935,7 @@ void StencilParser::parseStencilDoMethod(clang::CXXMethodDecl* DoMethod) {
 
       ClangASTStmtResolver stmtResolver(context_, this);
 
-      std::shared_ptr<dawn::sir::AST>& stencilDescAst =
+      std::shared_ptr<dawn::ast::AST>& stencilDescAst =
           currentParserRecord_->CurrentStencil->StencilDescAst;
 
       // DoMethod is a CompoundStmt, start iterating
@@ -956,7 +956,7 @@ void StencilParser::parseStencilDoMethod(clang::CXXMethodDecl* DoMethod) {
           if(getClassNameFromConstructExpr(s) == "boundary_condition")
             // stmt is a declaration of a boundary condition
             stencilDescAst->getRoot()->push_back(parseBoundaryCondition(s));
-          else if(std::shared_ptr<dawn::sir::StencilCallDeclStmt> stencilCall = parseStencilCall(s))
+          else if(std::shared_ptr<dawn::ast::StencilCallDeclStmt> stencilCall = parseStencilCall(s))
             // stmt is a call to another stencil
             stencilDescAst->getRoot()->push_back(stencilCall);
 
@@ -991,7 +991,7 @@ void StencilParser::parseStencilDoMethod(clang::CXXMethodDecl* DoMethod) {
   DAWN_LOG(INFO) << "Done parsing Do-Method";
 }
 
-std::shared_ptr<dawn::sir::StencilCallDeclStmt>
+std::shared_ptr<dawn::ast::StencilCallDeclStmt>
 StencilParser::parseStencilCall(clang::CXXConstructExpr* stencilCall) {
 
   std::string callee = getClassNameFromConstructExpr(stencilCall);
@@ -1085,7 +1085,7 @@ StencilParser::parseStencilCall(clang::CXXConstructExpr* stencilCall) {
   return dawn::sir::makeStencilCallDeclStmt(astStencilCall, astStencilCall->Loc);
 }
 
-std::shared_ptr<dawn::sir::VerticalRegionDeclStmt>
+std::shared_ptr<dawn::ast::VerticalRegionDeclStmt>
 StencilParser::parseVerticalRegion(clang::CXXForRangeStmt* verticalRegion) {
   using namespace clang;
   using namespace llvm;
@@ -1131,7 +1131,7 @@ StencilParser::parseVerticalRegion(clang::CXXForRangeStmt* verticalRegion) {
   }
 
   // Assemble the vertical region and register it within the current Stencil
-  auto SIRAST = std::make_shared<dawn::sir::AST>(std::move(SIRBlockStmt));
+  auto SIRAST = std::make_shared<dawn::ast::AST>(std::move(SIRBlockStmt));
 
   auto intervalPair = intervalResolver.getInterval();
 
@@ -1142,7 +1142,7 @@ StencilParser::parseVerticalRegion(clang::CXXForRangeStmt* verticalRegion) {
   return dawn::sir::makeVerticalRegionDeclStmt(SIRVerticalRegion, SIRVerticalRegion->Loc);
 }
 
-std::shared_ptr<dawn::sir::VerticalRegionDeclStmt>
+std::shared_ptr<dawn::ast::VerticalRegionDeclStmt>
 StencilParser::parseIterationSpace(clang::CXXForRangeStmt* iterationSpaceDecl) {
   using namespace clang;
   using namespace llvm;
@@ -1188,7 +1188,7 @@ StencilParser::parseIterationSpace(clang::CXXForRangeStmt* iterationSpaceDecl) {
   }
 
   // Assemble the vertical region and register it within the current Stencil
-  auto SIRAST = std::make_shared<dawn::sir::AST>(std::move(SIRBlockStmt));
+  auto SIRAST = std::make_shared<dawn::ast::AST>(std::move(SIRBlockStmt));
 
   auto iInterval = intervalResolver.getInterval(0).first;
   auto jInterval = intervalResolver.getInterval(1).first;
@@ -1209,7 +1209,7 @@ StencilParser::parseIterationSpace(clang::CXXForRangeStmt* iterationSpaceDecl) {
   return dawn::sir::makeVerticalRegionDeclStmt(SIRVerticalRegion, SIRVerticalRegion->Loc);
 }
 
-std::shared_ptr<dawn::sir::BoundaryConditionDeclStmt>
+std::shared_ptr<dawn::ast::BoundaryConditionDeclStmt>
 StencilParser::parseBoundaryCondition(clang::CXXConstructExpr* boundaryCondition) {
   using namespace clang;
   using namespace llvm;
@@ -1248,13 +1248,13 @@ StencilParser::parseBoundaryCondition(clang::CXXConstructExpr* boundaryCondition
   return ASTBoundaryCondition;
 }
 
-std::vector<std::shared_ptr<dawn::sir::BoundaryConditionDeclStmt>>
+std::vector<std::shared_ptr<dawn::ast::BoundaryConditionDeclStmt>>
 StencilParser::parseBoundaryConditions(clang::CXXMethodDecl* allBoundaryConditions) {
   using namespace clang;
   using namespace llvm;
   DAWN_LOG(INFO) << "Parsing all the boundary conditions at " << getLocation(allBoundaryConditions);
 
-  std::vector<std::shared_ptr<dawn::sir::BoundaryConditionDeclStmt>> parsedBoundayConditions;
+  std::vector<std::shared_ptr<dawn::ast::BoundaryConditionDeclStmt>> parsedBoundayConditions;
   CompoundStmt* bodyStmt = dyn_cast<CompoundStmt>(allBoundaryConditions->getBody());
 
   // loop over all the bounary condition stmts

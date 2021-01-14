@@ -506,11 +506,11 @@ std::ostream& operator<<(std::ostream& os, const SIR& Sir) {
 
     if(!stencilFunction->isSpecialized()) {
       os << "\n" << indent2 << "Do\n";
-      os << sir::ASTStringifier::toString(*stencilFunction->Asts[0], 2 * DAWN_PRINT_INDENT);
+      os << ast::ASTStringifier::toString(*stencilFunction->Asts[0], 2 * DAWN_PRINT_INDENT);
     } else {
       for(int i = 0; i < stencilFunction->Intervals.size(); ++i) {
         os << "\n" << indent2 << "Do " << *stencilFunction->Intervals[i].get() << "\n";
-        os << sir::ASTStringifier::toString(*stencilFunction->Asts[i], 2 * DAWN_PRINT_INDENT);
+        os << ast::ASTStringifier::toString(*stencilFunction->Asts[i], 2 * DAWN_PRINT_INDENT);
       }
     }
     os << indent1 << "}\n";
@@ -523,7 +523,7 @@ std::ostream& operator<<(std::ostream& os, const SIR& Sir) {
     os << "\n";
 
     os << indent2 << "Do\n"
-       << sir::ASTStringifier::toString(*stencil->StencilDescAst, 2 * DAWN_PRINT_INDENT);
+       << ast::ASTStringifier::toString(*stencil->StencilDescAst, 2 * DAWN_PRINT_INDENT);
     os << indent1 << "}\n";
   }
 

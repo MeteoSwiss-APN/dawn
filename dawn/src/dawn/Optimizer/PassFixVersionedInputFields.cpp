@@ -50,7 +50,7 @@ createAssignmentStatement(int assignmentID, int assigneeID,
   if(hDimensions.getType() == ast::GridType::Unstructured &&
      sir::dimension_cast<const sir::UnstructuredFieldDimension&>(hDimensions).isSparse()) {
     auto blockAssignmentStatement =
-        iir::makeBlockStmt(std::vector<std::shared_ptr<sir::Stmt>>{assignmentStmt});
+        iir::makeBlockStmt(std::vector<std::shared_ptr<ast::Stmt>>{assignmentStmt});
     auto chain =
         sir::dimension_cast<const sir::UnstructuredFieldDimension&>(hDimensions).getNeighborChain();
     auto wrappedAssignmentStatement =

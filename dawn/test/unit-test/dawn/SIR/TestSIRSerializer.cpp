@@ -111,71 +111,71 @@ TEST_P(StencilTest, FieldsWithAttributes) {
 
 TEST_P(StencilTest, AST) {
   sirRef->Stencils[0]->StencilDescAst =
-      std::make_shared<sir::AST>(sir::makeBlockStmt(std::vector<std::shared_ptr<sir::Stmt>>{
-          sir::makeExprStmt(std::make_shared<sir::FieldAccessExpr>("bar"))}));
+      std::make_shared<ast::AST>(sir::makeBlockStmt(std::vector<std::shared_ptr<ast::Stmt>>{
+          sir::makeExprStmt(std::make_shared<ast::FieldAccessExpr>("bar"))}));
   SIR_EXCPECT_EQ(sirRef, serializeAndDeserializeRef());
 }
 
 TEST_P(StencilTest, AST_Reduction) {
-  const auto& reductionExpr = std::make_shared<sir::ReductionOverNeighborExpr>(
-      "*", std::make_shared<sir::FieldAccessExpr>("rhs"),
-      std::make_shared<sir::LiteralAccessExpr>("0.", BuiltinTypeID::Double),
+  const auto& reductionExpr = std::make_shared<ast::ReductionOverNeighborExpr>(
+      "*", std::make_shared<ast::FieldAccessExpr>("rhs"),
+      std::make_shared<ast::LiteralAccessExpr>("0.", BuiltinTypeID::Double),
       std::vector<ast::LocationType>{ast::LocationType::Cells, ast::LocationType::Edges,
                                      ast::LocationType::Cells});
 
-  sirRef->Stencils[0]->StencilDescAst = std::make_shared<sir::AST>(sir::makeBlockStmt(
-      std::vector<std::shared_ptr<sir::Stmt>>{sir::makeExprStmt(reductionExpr)}));
+  sirRef->Stencils[0]->StencilDescAst = std::make_shared<ast::AST>(sir::makeBlockStmt(
+      std::vector<std::shared_ptr<ast::Stmt>>{sir::makeExprStmt(reductionExpr)}));
 
   SIR_EXCPECT_EQ(sirRef, serializeAndDeserializeRef());
 }
 TEST_P(StencilTest, AST_ReductionIncludeCenter) {
-  const auto& reductionExpr = std::make_shared<sir::ReductionOverNeighborExpr>(
-      "*", std::make_shared<sir::FieldAccessExpr>("rhs"),
-      std::make_shared<sir::LiteralAccessExpr>("0.", BuiltinTypeID::Double),
+  const auto& reductionExpr = std::make_shared<ast::ReductionOverNeighborExpr>(
+      "*", std::make_shared<ast::FieldAccessExpr>("rhs"),
+      std::make_shared<ast::LiteralAccessExpr>("0.", BuiltinTypeID::Double),
       std::vector<ast::LocationType>{ast::LocationType::Cells, ast::LocationType::Edges,
                                      ast::LocationType::Cells},
       /*includeCenter*/ true);
 
-  sirRef->Stencils[0]->StencilDescAst = std::make_shared<sir::AST>(sir::makeBlockStmt(
-      std::vector<std::shared_ptr<sir::Stmt>>{sir::makeExprStmt(reductionExpr)}));
+  sirRef->Stencils[0]->StencilDescAst = std::make_shared<ast::AST>(sir::makeBlockStmt(
+      std::vector<std::shared_ptr<ast::Stmt>>{sir::makeExprStmt(reductionExpr)}));
 
   SIR_EXCPECT_EQ(sirRef, serializeAndDeserializeRef());
 }
 
 TEST_P(StencilTest, AST_ReductionWeighted) {
-  std::vector<std::shared_ptr<sir::Expr>> weights{
-      std::make_shared<sir::LiteralAccessExpr>("1", BuiltinTypeID::Double),
-      std::make_shared<sir::LiteralAccessExpr>("2", BuiltinTypeID::Double),
-      std::make_shared<sir::LiteralAccessExpr>("3", BuiltinTypeID::Double)};
+  std::vector<std::shared_ptr<ast::Expr>> weights{
+      std::make_shared<ast::LiteralAccessExpr>("1", BuiltinTypeID::Double),
+      std::make_shared<ast::LiteralAccessExpr>("2", BuiltinTypeID::Double),
+      std::make_shared<ast::LiteralAccessExpr>("3", BuiltinTypeID::Double)};
 
-  const auto& reductionExpr = std::make_shared<sir::ReductionOverNeighborExpr>(
-      "*", std::make_shared<sir::FieldAccessExpr>("rhs"),
-      std::make_shared<sir::LiteralAccessExpr>("0.", BuiltinTypeID::Double), weights,
+  const auto& reductionExpr = std::make_shared<ast::ReductionOverNeighborExpr>(
+      "*", std::make_shared<ast::FieldAccessExpr>("rhs"),
+      std::make_shared<ast::LiteralAccessExpr>("0.", BuiltinTypeID::Double), weights,
       std::vector<ast::LocationType>{ast::LocationType::Cells, ast::LocationType::Edges,
                                      ast::LocationType::Cells});
 
-  sirRef->Stencils[0]->StencilDescAst = std::make_shared<sir::AST>(sir::makeBlockStmt(
-      std::vector<std::shared_ptr<sir::Stmt>>{sir::makeExprStmt(reductionExpr)}));
+  sirRef->Stencils[0]->StencilDescAst = std::make_shared<ast::AST>(sir::makeBlockStmt(
+      std::vector<std::shared_ptr<ast::Stmt>>{sir::makeExprStmt(reductionExpr)}));
 
   SIR_EXCPECT_EQ(sirRef, serializeAndDeserializeRef());
 }
 
 TEST_P(StencilTest, AST_ForLoopChain) {
-  std::shared_ptr<sir::AssignmentExpr> body = std::make_shared<sir::AssignmentExpr>(
-      std::make_shared<sir::FieldAccessExpr>("lhs"), std::make_shared<sir::FieldAccessExpr>("rhs"));
-  std::shared_ptr<sir::BlockStmt> bodyBlock =
-      sir::makeBlockStmt(std::vector<std::shared_ptr<sir::Stmt>>{sir::makeExprStmt(body)});
+  std::shared_ptr<ast::AssignmentExpr> body = std::make_shared<ast::AssignmentExpr>(
+      std::make_shared<ast::FieldAccessExpr>("lhs"), std::make_shared<ast::FieldAccessExpr>("rhs"));
+  std::shared_ptr<ast::BlockStmt> bodyBlock =
+      sir::makeBlockStmt(std::vector<std::shared_ptr<ast::Stmt>>{sir::makeExprStmt(body)});
   std::vector<ast::LocationType> chain1{ast::LocationType::Cells, ast::LocationType::Edges,
                                         ast::LocationType::Vertices};
-  std::shared_ptr<sir::LoopStmt> loopStmt1 = sir::makeLoopStmt(std::move(chain1), bodyBlock);
+  std::shared_ptr<ast::LoopStmt> loopStmt1 = sir::makeLoopStmt(std::move(chain1), bodyBlock);
 
   std::vector<ast::LocationType> chain2{ast::LocationType::Cells, ast::LocationType::Edges,
                                         ast::LocationType::Cells};
-  std::shared_ptr<sir::LoopStmt> loopStmt2 =
+  std::shared_ptr<ast::LoopStmt> loopStmt2 =
       sir::makeLoopStmt(std::move(chain2), /*include center*/ true, bodyBlock);
 
-  sirRef->Stencils[0]->StencilDescAst = std::make_shared<sir::AST>(
-      sir::makeBlockStmt(std::vector<std::shared_ptr<sir::Stmt>>{loopStmt1, loopStmt2}));
+  sirRef->Stencils[0]->StencilDescAst = std::make_shared<ast::AST>(
+      sir::makeBlockStmt(std::vector<std::shared_ptr<ast::Stmt>>{loopStmt1, loopStmt2}));
 
   SIR_EXCPECT_EQ(sirRef, serializeAndDeserializeRef());
 }
@@ -217,15 +217,15 @@ TEST_P(StencilFunctionTest, Arguments) {
 
 TEST_P(StencilFunctionTest, ASTsFieldAccess) {
   sirRef->StencilFunctions[0]->Asts.emplace_back(
-      std::make_shared<sir::AST>(sir::makeBlockStmt(std::vector<std::shared_ptr<sir::Stmt>>{
-          sir::makeExprStmt(std::make_shared<sir::FieldAccessExpr>("bar"))})));
+      std::make_shared<ast::AST>(sir::makeBlockStmt(std::vector<std::shared_ptr<ast::Stmt>>{
+          sir::makeExprStmt(std::make_shared<ast::FieldAccessExpr>("bar"))})));
   SIR_EXCPECT_EQ(sirRef, serializeAndDeserializeRef());
 }
 
 TEST_P(StencilFunctionTest, ASTsLiteralAccess) {
-  sirRef->StencilFunctions[0]->Asts.emplace_back(std::make_shared<sir::AST>(
-      sir::makeBlockStmt(std::vector<std::shared_ptr<sir::Stmt>>{sir::makeExprStmt(
-          std::make_shared<sir::LiteralAccessExpr>("0.", BuiltinTypeID::Double))})));
+  sirRef->StencilFunctions[0]->Asts.emplace_back(std::make_shared<ast::AST>(
+      sir::makeBlockStmt(std::vector<std::shared_ptr<ast::Stmt>>{sir::makeExprStmt(
+          std::make_shared<ast::LiteralAccessExpr>("0.", BuiltinTypeID::Double))})));
   SIR_EXCPECT_EQ(sirRef, serializeAndDeserializeRef());
 }
 

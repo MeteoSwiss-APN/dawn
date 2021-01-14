@@ -97,19 +97,19 @@ TEST_F(SIRStencilTest, Fields) {
 
 TEST_F(SIRStencilTest, AST) {
   sir1->Stencils[0]->StencilDescAst =
-      std::make_shared<sir::AST>(sir::makeBlockStmt(std::vector<std::shared_ptr<sir::Stmt>>{
-          sir::makeExprStmt(std::make_shared<sir::FieldAccessExpr>("bar"))}));
+      std::make_shared<ast::AST>(sir::makeBlockStmt(std::vector<std::shared_ptr<ast::Stmt>>{
+          sir::makeExprStmt(std::make_shared<ast::FieldAccessExpr>("bar"))}));
   sir2->Stencils[0]->StencilDescAst =
-      std::make_shared<sir::AST>(sir::makeBlockStmt(std::vector<std::shared_ptr<sir::Stmt>>{
-          sir::makeExprStmt(std::make_shared<sir::FieldAccessExpr>("bar"))}));
+      std::make_shared<ast::AST>(sir::makeBlockStmt(std::vector<std::shared_ptr<ast::Stmt>>{
+          sir::makeExprStmt(std::make_shared<ast::FieldAccessExpr>("bar"))}));
   SIR_EXCPECT_EQ(sir1, sir2);
 
   sir1->Stencils[0]->StencilDescAst =
-      std::make_shared<sir::AST>(sir::makeBlockStmt(std::vector<std::shared_ptr<sir::Stmt>>{
-          sir::makeExprStmt(std::make_shared<sir::FieldAccessExpr>("bar"))}));
+      std::make_shared<ast::AST>(sir::makeBlockStmt(std::vector<std::shared_ptr<ast::Stmt>>{
+          sir::makeExprStmt(std::make_shared<ast::FieldAccessExpr>("bar"))}));
   sir2->Stencils[0]->StencilDescAst =
-      std::make_shared<sir::AST>(sir::makeBlockStmt(std::vector<std::shared_ptr<sir::Stmt>>{
-          sir::makeExprStmt(std::make_shared<sir::FieldAccessExpr>("foo"))}));
+      std::make_shared<ast::AST>(sir::makeBlockStmt(std::vector<std::shared_ptr<ast::Stmt>>{
+          sir::makeExprStmt(std::make_shared<ast::FieldAccessExpr>("foo"))}));
   SIR_EXCPECT_NE(sir1, sir2);
 }
 
@@ -174,19 +174,19 @@ TEST_F(SIRStencilFunctionTest, Interval) {
 
 TEST_F(SIRStencilFunctionTest, AST) {
   sir1->StencilFunctions[0]->Asts.emplace_back(
-      std::make_shared<sir::AST>(sir::makeBlockStmt(std::vector<std::shared_ptr<sir::Stmt>>{
-          sir::makeExprStmt(std::make_shared<sir::FieldAccessExpr>("bar"))})));
+      std::make_shared<ast::AST>(sir::makeBlockStmt(std::vector<std::shared_ptr<ast::Stmt>>{
+          sir::makeExprStmt(std::make_shared<ast::FieldAccessExpr>("bar"))})));
   sir2->StencilFunctions[0]->Asts.emplace_back(
-      std::make_shared<sir::AST>(sir::makeBlockStmt(std::vector<std::shared_ptr<sir::Stmt>>{
-          sir::makeExprStmt(std::make_shared<sir::FieldAccessExpr>("bar"))})));
+      std::make_shared<ast::AST>(sir::makeBlockStmt(std::vector<std::shared_ptr<ast::Stmt>>{
+          sir::makeExprStmt(std::make_shared<ast::FieldAccessExpr>("bar"))})));
   SIR_EXCPECT_EQ(sir1, sir2);
 
   sir1->StencilFunctions[0]->Asts.emplace_back(
-      std::make_shared<sir::AST>(sir::makeBlockStmt(std::vector<std::shared_ptr<sir::Stmt>>{
-          sir::makeExprStmt(std::make_shared<sir::FieldAccessExpr>("bar"))})));
+      std::make_shared<ast::AST>(sir::makeBlockStmt(std::vector<std::shared_ptr<ast::Stmt>>{
+          sir::makeExprStmt(std::make_shared<ast::FieldAccessExpr>("bar"))})));
   sir2->StencilFunctions[0]->Asts.emplace_back(
-      std::make_shared<sir::AST>(sir::makeBlockStmt(std::vector<std::shared_ptr<sir::Stmt>>{
-          sir::makeExprStmt(std::make_shared<sir::FieldAccessExpr>("foo"))})));
+      std::make_shared<ast::AST>(sir::makeBlockStmt(std::vector<std::shared_ptr<ast::Stmt>>{
+          sir::makeExprStmt(std::make_shared<ast::FieldAccessExpr>("foo"))})));
   SIR_EXCPECT_NE(sir1, sir2);
 }
 
