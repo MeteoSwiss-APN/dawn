@@ -15,7 +15,6 @@
 #include "dawn/AST/ASTExpr.h"
 #include "dawn/AST/ASTUtil.h"
 #include "dawn/AST/ASTVisitor.h"
-#include "dawn/SIR/SIR.h"
 #include "dawn/Support/Assert.h"
 #include "dawn/Support/Casting.h"
 #include <memory>

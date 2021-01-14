@@ -18,9 +18,10 @@
 #include "dawn/AST/IterationSpace.h"
 #include "dawn/AST/Tags.h"
 #include "dawn/SIR/AST.h"
+#include "dawn/SIR/Interval.h"
+#include "dawn/SIR/VerticalRegion.h"
 #include "dawn/Support/Assert.h"
 #include "dawn/Support/ComparisonHelpers.h"
-#include "dawn/Support/Format.h"
 #include "dawn/Support/HashCombine.h"
 #include "dawn/Support/Json.h"
 #include "dawn/Support/NonCopyable.h"
@@ -87,52 +88,6 @@ public:
 
   bool operator==(const Attr& rhs) const { return getBits() == rhs.getBits(); }
   bool operator!=(const Attr& rhs) const { return getBits() != rhs.getBits(); }
-};
-
-//===------------------------------------------------------------------------------------------===//
-//     Interval
-//===------------------------------------------------------------------------------------------===//
-
-/// @brief Representation of a vertical interval, given by a lower and upper bound where a bound
-/// is represented by a level and an offset (`bound = level + offset`)
-///
-/// The Interval has to satisfy the following invariants:
-///  - `lowerLevel >= Interval::Start`
-///  - `upperLevel <= Interval::End`
-///  - `(lowerLevel + lowerOffset) <= (upperLevel + upperOffset)`
-///
-/// @ingroup sir
-struct Interval {
-  enum LevelKind : int { Start = 0, End = (1 << 20) };
-
-  Interval(int lowerLevel, int upperLevel, int lowerOffset = 0, int upperOffset = 0)
-      : LowerLevel(lowerLevel), UpperLevel(upperLevel), LowerOffset(lowerOffset),
-        UpperOffset(upperOffset) {
-    DAWN_ASSERT(lowerLevel >= LevelKind::Start && upperLevel <= LevelKind::End);
-    DAWN_ASSERT((lowerLevel + lowerOffset) <= (upperLevel + upperOffset));
-  }
-
-  int LowerLevel;
-  int UpperLevel;
-  int LowerOffset;
-  int UpperOffset;
-
-  /// @name Comparison operator
-  /// @{
-  bool operator==(const Interval& other) const {
-    return LowerLevel == other.LowerLevel && UpperLevel == other.UpperLevel &&
-           LowerOffset == other.LowerOffset && UpperOffset == other.UpperOffset;
-  }
-  bool operator!=(const Interval& other) const { return !(*this == other); }
-
-  CompareResult comparison(const Interval& rhs) const;
-  /// @}
-
-  /// @brief Convert to string
-  /// @{
-  std::string toString() const;
-  friend std::ostream& operator<<(std::ostream& os, const Interval& interval);
-  /// @}
 };
 
 //===------------------------------------------------------------------------------------------===//
@@ -394,46 +349,6 @@ struct StencilFunction {
                           return name == arg->Name;
                         }) != Args.end();
   }
-};
-
-//===------------------------------------------------------------------------------------------===//
-//     StencilDescription
-//===------------------------------------------------------------------------------------------===//
-
-/// @brief A vertical region is given by a list of statements (given as an AST) executed on a
-/// specific vertical interval in a given loop order
-/// @ingroup sir
-struct VerticalRegion {
-  enum class LoopOrderKind { Forward, Backward };
-
-  SourceLocation Loc;                         ///< Source location of the vertical region
-  std::shared_ptr<sir::AST> Ast;              ///< AST of the region
-  std::shared_ptr<Interval> VerticalInterval; ///< Interval description of the region
-  LoopOrderKind LoopOrder;                    ///< Loop order (usually associated with the k-loop)
-
-  /// If it is not instantiated, iteration over the full domain is assumed.
-  std::array<std::optional<Interval>, 2> IterationSpace; /// < Iteration space in the horizontal.
-
-  VerticalRegion(const std::shared_ptr<sir::AST>& ast,
-                 const std::shared_ptr<Interval>& verticalInterval, LoopOrderKind loopOrder,
-                 SourceLocation loc = SourceLocation())
-      : Loc(loc), Ast(ast), VerticalInterval(verticalInterval), LoopOrder(loopOrder) {}
-  VerticalRegion(const std::shared_ptr<sir::AST>& ast,
-                 const std::shared_ptr<Interval>& verticalInterval, LoopOrderKind loopOrder,
-                 std::optional<Interval> iterationSpaceI, std::optional<Interval> iterationSpaceJ,
-                 SourceLocation loc = SourceLocation())
-      : Loc(loc), Ast(ast), VerticalInterval(verticalInterval), LoopOrder(loopOrder),
-        IterationSpace({iterationSpaceI, iterationSpaceJ}) {}
-
-  /// @brief Clone the vertical region
-  std::shared_ptr<VerticalRegion> clone() const;
-
-  /// @brief Comparison between stencils (omitting location)
-  bool operator==(const VerticalRegion& rhs) const;
-
-  /// @brief Comparison between stencils (omitting location)
-  /// if the comparison fails, outputs human readable reason why in the string
-  CompareResult comparison(const VerticalRegion& rhs) const;
 };
 
 //===------------------------------------------------------------------------------------------===//

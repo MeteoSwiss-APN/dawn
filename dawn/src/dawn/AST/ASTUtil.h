@@ -15,7 +15,6 @@
 #pragma once
 
 #include "dawn/AST/ASTFwd.h"
-#include "dawn/SIR/SIR.h"
 #include <memory>
 #include <unordered_map>
 

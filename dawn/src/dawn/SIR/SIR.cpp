@@ -15,11 +15,9 @@
 #include "dawn/SIR/SIR.h"
 #include "dawn/SIR/AST.h"
 #include "dawn/SIR/ASTStringifier.h"
-#include "dawn/SIR/ASTVisitor.h"
 #include "dawn/Support/Casting.h"
 #include "dawn/Support/Format.h"
 #include "dawn/Support/Printing.h"
-#include "dawn/Support/StringUtil.h"
 #include "dawn/Support/Unreachable.h"
 #include <iomanip>
 #include <sstream>
@@ -27,68 +25,6 @@
 namespace dawn {
 
 namespace {
-
-/// @brief Allow direct comparison of the Stmts of an AST
-class DiffWriter final : public sir::ASTVisitorForwarding {
-public:
-  virtual void visit(const std::shared_ptr<sir::VerticalRegionDeclStmt>& stmt) override {
-    statements_.push_back(stmt);
-    stmt->getVerticalRegion()->Ast->getRoot()->accept(*this);
-  }
-
-  virtual void visit(const std::shared_ptr<sir::ReturnStmt>& stmt) override {
-    statements_.push_back(stmt);
-    sir::ASTVisitorForwarding::visit(stmt);
-  }
-
-  virtual void visit(const std::shared_ptr<sir::ExprStmt>& stmt) override {
-    statements_.push_back(stmt);
-    sir::ASTVisitorForwarding::visit(stmt);
-  }
-
-  virtual void visit(const std::shared_ptr<sir::BlockStmt>& stmt) override {
-    statements_.push_back(stmt);
-    sir::ASTVisitorForwarding::visit(stmt);
-  }
-
-  virtual void visit(const std::shared_ptr<sir::VarDeclStmt>& stmt) override {
-    statements_.push_back(stmt);
-    sir::ASTVisitorForwarding::visit(stmt);
-  }
-
-  virtual void visit(const std::shared_ptr<sir::IfStmt>& stmt) override {
-    statements_.push_back(stmt);
-    sir::ASTVisitorForwarding::visit(stmt);
-  }
-
-  std::vector<std::shared_ptr<sir::Stmt>> getStatements() const { return statements_; }
-
-  std::pair<std::string, bool> compare(const DiffWriter& other) {
-
-    std::size_t minSize = std::min(statements_.size(), other.getStatements().size());
-    if(minSize == 0 && (statements_.size() != other.getStatements().size()))
-      return std::make_pair("[AST mismatch] AST is empty", false);
-
-    for(std::size_t idx = 0; idx < minSize; ++idx) {
-      if(!statements_[idx]->equals(other.getStatements()[idx].get())) {
-        return std::make_pair(
-            dawn::format("[AST mismatch] Statement mismatch\n"
-                         "  Actual:\n"
-                         "    %s\n"
-                         "  Expected:\n"
-                         "    %s",
-                         indent(sir::ASTStringifier::toString(statements_[idx]), 4),
-                         indent(sir::ASTStringifier::toString(other.getStatements()[idx]), 4)),
-            false);
-      }
-    }
-
-    return std::make_pair("", true);
-  }
-
-private:
-  std::vector<std::shared_ptr<sir::Stmt>> statements_;
-};
 
 ///@brief Stringification of a Value mismatch
 template <class T>
@@ -103,23 +39,6 @@ CompareResult isEqualImpl(const sir::Value& a, const sir::Value& b, const std::s
                          false};
 
   return CompareResult{"", true};
-}
-
-/// @brief Compares two ASTs
-std::pair<std::string, bool> compareAst(const std::shared_ptr<sir::AST>& lhs,
-                                        const std::shared_ptr<sir::AST>& rhs) {
-  if(lhs->getRoot()->equals(rhs->getRoot().get()))
-    return std::make_pair("", true);
-
-  DiffWriter lhsDW, rhsDW;
-  lhs->accept(lhsDW);
-  rhs->accept(rhsDW);
-
-  auto comp = lhsDW.compare(rhsDW);
-  if(!comp.second)
-    return comp;
-
-  return std::make_pair("", true);
 }
 
 /// @brief Compares the content of two shared pointers
@@ -446,108 +365,9 @@ CompareResult sir::Value::comparison(const sir::Value& rhs) const {
   }
 }
 
-CompareResult sir::VerticalRegion::comparison(const sir::VerticalRegion& rhs) const {
-  std::string output;
-  if(LoopOrder != rhs.LoopOrder) {
-    output += dawn::format("[VerticalRegion mismatch] Loop order does not match\n"
-                           "  Actual:\n"
-                           "    %s\n"
-                           "  Expected:\n"
-                           "    %s",
-                           static_cast<int>(LoopOrder), static_cast<int>(rhs.LoopOrder));
-    return CompareResult{output, false};
-  }
-
-  auto intervalComp = VerticalInterval->comparison(*(rhs.VerticalInterval));
-  if(!static_cast<bool>(intervalComp)) {
-    output += "[VerticalRegion mismatch] Intervals do not match\n";
-    output += intervalComp.why();
-    return CompareResult{output, false};
-  } else if(IterationSpace[0] != rhs.IterationSpace[0]) {
-    output += "[VerticalRegion mismatch] iteration space in i do not match\n";
-    return CompareResult{output, false};
-  } else if(IterationSpace[1] != rhs.IterationSpace[1]) {
-    output += "[VerticalRegion mismatch] iteration space in j do not match\n";
-    return CompareResult{output, false};
-  }
-
-  auto astComp = compareAst(Ast, rhs.Ast);
-  if(!astComp.second) {
-    output += "[VerticalRegion mismatch] ASTs do not match\n";
-    output += astComp.first;
-    return CompareResult{output, false};
-  } else {
-    return CompareResult{output, true};
-  }
-}
-
-bool sir::VerticalRegion::operator==(const sir::VerticalRegion& rhs) const {
-  // casted to bool by return statement
-  return this->comparison(rhs);
-}
-
 namespace sir {
 
 bool StencilFunction::isSpecialized() const { return !Intervals.empty(); }
-
-std::shared_ptr<sir::AST> StencilFunction::getASTOfInterval(const Interval& interval) const {
-  for(int i = 0; i < Intervals.size(); ++i)
-    if(*Intervals[i] == interval)
-      return Asts[i];
-  return nullptr;
-}
-
-CompareResult Interval::comparison(const Interval& rhs) const {
-  auto formatErrorMsg = [](const char* name, int l, int r) -> std::string {
-    return dawn::format("[Inverval mismatch] %s do not match\n"
-                        "  Actual:\n"
-                        "    %i\n"
-                        "  Expected:\n"
-                        "    %i",
-                        name, l, r);
-  };
-
-  if(LowerLevel != rhs.LowerLevel)
-    return CompareResult{formatErrorMsg("LowerLevels", LowerLevel, rhs.LowerLevel), false};
-
-  if(UpperLevel != rhs.UpperLevel)
-    return CompareResult{formatErrorMsg("UpperLevels", UpperLevel, rhs.UpperLevel), false};
-
-  if(LowerOffset != rhs.LowerOffset)
-    return CompareResult{formatErrorMsg("LowerOffsets", LowerOffset, rhs.LowerOffset), false};
-
-  if(UpperOffset != rhs.UpperOffset)
-    return CompareResult{formatErrorMsg("UpperOffsets", UpperOffset, rhs.UpperOffset), false};
-
-  return CompareResult{"", true};
-}
-
-std::string Interval::toString() const {
-  std::stringstream ss;
-  ss << *this;
-  return ss.str();
-}
-
-std::ostream& operator<<(std::ostream& os, const Interval& interval) {
-  auto printLevel = [&os](int level, int offset) -> void {
-    if(level == sir::Interval::Start)
-      os << "Start";
-    else if(level == sir::Interval::End)
-      os << "End";
-    else
-      os << level;
-
-    if(offset != 0)
-      os << (offset > 0 ? "+" : "") << offset;
-  };
-
-  os << "{ ";
-  printLevel(interval.LowerLevel, interval.LowerOffset);
-  os << " : ";
-  printLevel(interval.UpperLevel, interval.UpperOffset);
-  os << " }";
-  return os;
-}
 
 Stencil::Stencil() : StencilDescAst(sir::makeAST()) {}
 
@@ -609,7 +429,7 @@ ast::GridType HorizontalFieldDimension::getType() const {
   } else {
     return ast::GridType::Unstructured;
   }
-} // namespace sir
+}
 
 std::string FieldDimensions::toString() const {
   if(sir::dimension_isa<sir::CartesianFieldDimension>(getHorizontalFieldDimension())) {
@@ -767,13 +587,6 @@ std::string sir::Value::toString() const {
   default:
     dawn_unreachable("invalid type");
   }
-}
-
-std::shared_ptr<sir::VerticalRegion> sir::VerticalRegion::clone() const {
-  auto retval =
-      std::make_shared<sir::VerticalRegion>(Ast->clone(), VerticalInterval, LoopOrder, Loc);
-  retval->IterationSpace = IterationSpace;
-  return retval;
 }
 
 bool SIR::operator==(const SIR& rhs) const { return comparison(rhs); }
