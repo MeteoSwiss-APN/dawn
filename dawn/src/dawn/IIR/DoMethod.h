@@ -14,7 +14,6 @@
 
 #pragma once
 
-#include "dawn/IIR/ASTFwd.h"
 #include "dawn/IIR/DependencyGraphAccesses.h"
 #include "dawn/IIR/Field.h"
 #include "dawn/IIR/IIRNode.h"

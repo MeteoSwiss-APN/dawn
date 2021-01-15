@@ -14,7 +14,6 @@
 
 #include "dawn/Support/Unreachable.h"
 
-#include <cstdio>
 #include <iostream>
 
 namespace dawn {

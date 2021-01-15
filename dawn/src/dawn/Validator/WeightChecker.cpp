@@ -13,7 +13,6 @@
 //===------------------------------------------------------------------------------------------===//
 
 #include "WeightChecker.h"
-#include "dawn/AST/ASTFwd.h"
 #include "dawn/Support/SourceLocation.h"
 
 namespace dawn {

@@ -15,7 +15,7 @@
 #include "dawn/Optimizer/PassTemporaryType.h"
 #include "dawn/AST/GridType.h"
 #include "dawn/IIR/ASTExpr.h"
-#include "dawn/IIR/ASTVisitor.h"
+#include "dawn/AST/ASTVisitor.h"
 #include "dawn/IIR/IIRNodeIterator.h"
 #include "dawn/IIR/NodeUpdateType.h"
 #include "dawn/IIR/Stencil.h"

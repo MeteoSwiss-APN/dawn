@@ -14,7 +14,7 @@
 
 #pragma once
 
-#include "dawn/IIR/ASTFwd.h"
+#include "dawn/IIR/ASTExpr.h"
 #include <memory>
 
 namespace dawn {

@@ -13,10 +13,9 @@
 //===------------------------------------------------------------------------------------------===//
 
 #include "dawn/Optimizer/PassSetBoundaryCondition.h"
-#include "dawn/IIR/ASTExpr.h"
 #include "dawn/IIR/ASTStmt.h"
-#include "dawn/IIR/ASTUtil.h"
-#include "dawn/IIR/ASTVisitor.h"
+#include "dawn/AST/ASTUtil.h"
+#include "dawn/AST/ASTVisitor.h"
 #include "dawn/IIR/ControlFlowDescriptor.h"
 #include "dawn/IIR/IIRNodeIterator.h"
 #include "dawn/IIR/Stencil.h"

@@ -14,8 +14,8 @@
 
 #pragma once
 
-#include "dawn/IIR/ASTFwd.h"
 #include "dawn/Support/ArrayRef.h"
+#include "dawn/AST/ASTStmt.h"
 #include <memory>
 #include <vector>
 

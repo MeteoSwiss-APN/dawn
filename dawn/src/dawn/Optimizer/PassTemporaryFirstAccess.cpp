@@ -13,15 +13,12 @@
 //===------------------------------------------------------------------------------------------===//
 
 #include "dawn/Optimizer/PassTemporaryFirstAccess.h"
-#include "dawn/IIR/ASTVisitor.h"
-#include "dawn/IIR/IIRNodeIterator.h"
+#include "dawn/AST/ASTVisitor.h"
 #include "dawn/IIR/StencilInstantiation.h"
 #include "dawn/Support/Exception.h"
 #include "dawn/Support/IndexRange.h"
 #include "dawn/Support/Logger.h"
-#include <algorithm>
 #include <set>
-#include <sstream>
 #include <stack>
 #include <unordered_map>
 

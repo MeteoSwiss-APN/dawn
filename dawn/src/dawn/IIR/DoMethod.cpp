@@ -14,23 +14,20 @@
 
 #include "dawn/IIR/DoMethod.h"
 #include "dawn/IIR/ASTExpr.h"
-#include "dawn/IIR/ASTFwd.h"
 #include "dawn/IIR/ASTStmt.h"
-#include "dawn/IIR/ASTStringifier.h"
-#include "dawn/IIR/ASTVisitor.h"
+#include "dawn/AST/ASTStringifier.h"
+#include "dawn/AST/ASTVisitor.h"
 #include "dawn/IIR/AccessToNameMapper.h"
 #include "dawn/IIR/AccessUtils.h"
 #include "dawn/IIR/Accesses.h"
 #include "dawn/IIR/DependencyGraphAccesses.h"
 #include "dawn/IIR/IIR.h"
-#include "dawn/IIR/IIRNodeIterator.h"
 #include "dawn/IIR/MultiStage.h"
 #include "dawn/IIR/Stage.h"
 #include "dawn/IIR/Stencil.h"
 #include "dawn/IIR/StencilMetaInformation.h"
 #include "dawn/Support/IndexGenerator.h"
 #include "dawn/Support/Logger.h"
-#include <limits>
 #include <memory>
 
 namespace dawn {
@@ -180,7 +177,7 @@ json::json DoMethod::jsonDump(const StencilMetaInformation& metaData) const {
   json::json stmtsJson;
   for(const auto& stmt : getAST().getStatements()) {
     json::json stmtNode;
-    stmtNode["stmt"] = ASTStringifier::toString(stmt, 0);
+    stmtNode["stmt"] = ast::ASTStringifier::toString(stmt, 0);
 
     AccessToNameMapper accessToNameMapper(metaData);
     stmt->accept(accessToNameMapper);

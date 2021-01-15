@@ -15,7 +15,7 @@
 #include "dawn/Optimizer/PassFieldVersioning.h"
 #include "dawn/IIR/AST.h"
 #include "dawn/IIR/ASTExpr.h"
-#include "dawn/IIR/ASTVisitor.h"
+#include "dawn/AST/ASTVisitor.h"
 #include "dawn/IIR/AccessComputation.h"
 #include "dawn/IIR/DependencyGraphAccesses.h"
 #include "dawn/IIR/Extents.h"
@@ -28,7 +28,6 @@
 #include "dawn/Support/Logger.h"
 
 #include <set>
-#include <sstream>
 
 namespace dawn {
 

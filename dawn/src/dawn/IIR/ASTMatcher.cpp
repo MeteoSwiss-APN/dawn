@@ -13,8 +13,7 @@
 //===------------------------------------------------------------------------------------------===//
 #include "dawn/IIR/ASTMatcher.h"
 #include "dawn/IIR/ASTExpr.h"
-#include "dawn/IIR/ASTUtil.h"
-#include "dawn/IIR/ASTVisitor.h"
+#include "dawn/AST/ASTVisitor.h"
 
 namespace dawn {
 namespace iir {

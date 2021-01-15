@@ -17,7 +17,6 @@
 #include "dawn/IIR/IIR.h"
 #include "dawn/IIR/IIRNodeIterator.h"
 #include "dawn/SIR/SIR.h"
-#include "dawn/Support/StringUtil.h"
 #include "dawn/Support/Unreachable.h"
 
 #include <algorithm>

@@ -16,7 +16,6 @@
 #include "dawn/AST/LocationType.h"
 #include "dawn/IIR/AST.h"
 #include "dawn/IIR/ASTExpr.h"
-#include "dawn/IIR/ASTFwd.h"
 #include <memory>
 #include <sstream>
 #include <string>

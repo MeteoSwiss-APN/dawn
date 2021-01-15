@@ -14,7 +14,6 @@
 
 #include "dawn/CodeGen/ASTCodeGenCXX.h"
 #include "dawn/CodeGen/CXXUtil.h"
-#include "dawn/IIR/AST.h"
 #include "dawn/IIR/ASTExpr.h"
 #include "dawn/IIR/ASTStmt.h"
 #include "dawn/Support/Unreachable.h"

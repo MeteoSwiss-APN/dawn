@@ -16,9 +16,9 @@
 
 #ifndef GTCLANG_UNITTEST_PARSEDSTRING_H
 #define GTCLANG_UNITTEST_PARSEDSTRING_H
-#include "dawn/SIR/ASTExpr.h"
+#include "dawn/AST/ASTExpr.h"
 #include "dawn/SIR/ASTStmt.h"
-#include "dawn/SIR/ASTVisitor.h"
+#include "dawn/AST/ASTVisitor.h"
 #include "dawn/SIR/SIR.h"
 #include "dawn/Support/Array.h"
 #include "dawn/Support/Casting.h"

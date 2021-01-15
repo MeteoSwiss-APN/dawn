@@ -18,7 +18,6 @@
 #include "dawn/CodeGen/CXXUtil.h"
 #include "dawn/IIR/AST.h"
 #include "dawn/IIR/ASTExpr.h"
-#include "dawn/IIR/ASTFwd.h"
 #include "dawn/IIR/StencilFunctionInstantiation.h"
 #include "dawn/SIR/SIR.h"
 #include "dawn/Support/Unreachable.h"

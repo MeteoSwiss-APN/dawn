@@ -13,11 +13,9 @@
 //===------------------------------------------------------------------------------------------===//
 
 #include "dawn/AST/Tags.h"
-#include "dawn/IIR/ASTFwd.h"
 #include "dawn/SIR/SIR.h"
 #include "dawn/Unittest/IIRBuilder.h"
 #include "dawn/Validator/GridTypeChecker.h"
-#include "dawn/Validator/UnstructuredDimensionChecker.h"
 #include <gtest/gtest.h>
 #include <memory>
 

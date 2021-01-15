@@ -12,17 +12,14 @@
 //
 //===------------------------------------------------------------------------------------------===//
 
-#include "dawn/Compiler/Driver.h"
 #include "dawn/IIR/StencilInstantiation.h"
 #include "dawn/Optimizer/Driver.h"
 #include "dawn/SIR/SIR.h"
 #include "dawn/Serialization/IIRSerializer.h"
 #include "dawn/Serialization/SIRSerializer.h"
-#include "dawn/Support/FileSystem.h"
 #include "dawn/Support/Logger.h"
 
 #include <cxxopts.hpp>
-#include <fstream>
 #include <iostream>
 #include <string>
 #include <tuple>

@@ -16,11 +16,9 @@
 #include "dawn/AST/ASTStmt.h"
 #include "dawn/IIR/AST.h"
 #include "dawn/IIR/ASTStmt.h"
-#include "dawn/SIR/ASTStmt.h"
 #include "dawn/SIR/SIR.h"
 #include "dawn/Support/Unreachable.h"
 #include <memory>
-#include <unordered_map>
 
 namespace dawn {
 

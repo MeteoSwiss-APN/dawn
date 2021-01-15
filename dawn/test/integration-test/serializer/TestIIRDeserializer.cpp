@@ -14,28 +14,14 @@
 
 #include "dawn/AST/GridType.h"
 #include "dawn/IIR/ASTStmt.h"
-#include "dawn/IIR/ASTUtil.h"
-#include "dawn/IIR/AccessComputation.h"
-#include "dawn/IIR/FieldAccessMetadata.h"
-#include "dawn/IIR/IIR.h"
-#include "dawn/IIR/IIRNodeIterator.h"
-#include "dawn/IIR/InstantiationHelper.h"
-#include "dawn/IIR/StencilInstantiation.h"
 #include "dawn/IIR/StencilMetaInformation.h"
-#include "dawn/Optimizer/PassSetStageName.h"
-#include "dawn/Optimizer/PassTemporaryType.h"
 #include "dawn/Optimizer/StatementMapper.h"
-#include "dawn/SIR/ASTFwd.h"
 #include "dawn/SIR/SIR.h"
 #include "dawn/Serialization/IIRSerializer.h"
-#include "dawn/Support/Logger.h"
 #include "dawn/Support/STLExtras.h"
 
 #include <gtest/gtest.h>
-#include <memory>
 #include <stack>
-#include <string>
-#include <unistd.h>
 
 #include "GenerateInMemoryStencils.h"
 

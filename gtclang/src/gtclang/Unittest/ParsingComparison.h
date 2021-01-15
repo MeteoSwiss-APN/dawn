@@ -16,7 +16,7 @@
 
 #ifndef GTCLANG_UNITTEST_SIRGENERATOR_H
 #define GTCLANG_UNITTEST_SIRGENERATOR_H
-#include "dawn/SIR/ASTExpr.h"
+#include "dawn/AST/ASTExpr.h"
 #include "dawn/SIR/ASTStmt.h"
 #include "gtclang/Unittest/ParsedString.h"
 #include <string>

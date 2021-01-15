@@ -11,15 +11,6 @@
 #include "dawn/Support/NonCopyable.h"
 #include "dawn/Support/SourceLocation.h"
 #include "dawn/Support/Type.h"
-#include <algorithm>
-#include <iosfwd>
-#include <map>
-#include <memory>
-#include <optional>
-#include <ostream>
-#include <string>
-#include <variant>
-#include <vector>
 
 namespace dawn {
 

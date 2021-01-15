@@ -16,14 +16,9 @@
 #include "dawn/AST/LocationType.h"
 #include "dawn/IIR/AST.h"
 #include "dawn/IIR/ASTExpr.h"
-#include "dawn/IIR/ASTUtil.h"
-#include "dawn/IIR/ASTVisitor.h"
+#include "dawn/AST/ASTVisitor.h"
 #include "dawn/IIR/Extents.h"
 #include "dawn/IIR/IIRNodeIterator.h"
-#include "dawn/IIR/InstantiationHelper.h"
-#include "dawn/SIR/AST.h"
-#include "dawn/SIR/ASTUtil.h"
-#include "dawn/SIR/ASTVisitor.h"
 #include "dawn/SIR/SIR.h"
 #include "dawn/Support/Casting.h"
 #include "dawn/Support/Format.h"
@@ -31,10 +26,8 @@
 #include "dawn/Support/Logger.h"
 #include "dawn/Support/Printing.h"
 #include "dawn/Support/RemoveIf.hpp"
-#include <cstdlib>
 #include <fstream>
 #include <functional>
-#include <stack>
 #include <string>
 
 namespace dawn {

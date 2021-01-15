@@ -13,10 +13,9 @@
 //===------------------------------------------------------------------------------------------===//
 
 #include "dawn/IIR/AccessComputation.h"
-#include "dawn/IIR/AST.h"
 #include "dawn/IIR/ASTExpr.h"
 #include "dawn/IIR/ASTStmt.h"
-#include "dawn/IIR/ASTVisitor.h"
+#include "dawn/AST/ASTVisitor.h"
 #include "dawn/IIR/Accesses.h"
 #include "dawn/IIR/StencilFunctionInstantiation.h"
 #include "dawn/IIR/StencilInstantiation.h"

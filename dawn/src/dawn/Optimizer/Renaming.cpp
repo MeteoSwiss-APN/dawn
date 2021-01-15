@@ -14,7 +14,7 @@
 
 #include "dawn/Optimizer/Renaming.h"
 #include "dawn/IIR/ASTExpr.h"
-#include "dawn/IIR/ASTVisitor.h"
+#include "dawn/AST/ASTVisitor.h"
 #include "dawn/IIR/Accesses.h"
 #include "dawn/IIR/MultiStage.h"
 #include "dawn/IIR/Stencil.h"

@@ -16,7 +16,6 @@
 #include "dawn/AST/GridType.h"
 #include "dawn/AST/Offsets.h"
 #include "dawn/CodeGen/CXXNaive/ASTStencilBody.h"
-#include "dawn/CodeGen/CXXNaive/ASTStencilDesc.h"
 #include "dawn/CodeGen/CXXUtil.h"
 #include "dawn/CodeGen/CodeGenProperties.h"
 #include "dawn/IIR/Extents.h"
@@ -25,10 +24,8 @@
 #include "dawn/IIR/Stage.h"
 #include "dawn/IIR/StencilInstantiation.h"
 #include "dawn/SIR/SIR.h"
-#include "dawn/Support/Assert.h"
 #include "dawn/Support/Exception.h"
 #include "dawn/Support/Logger.h"
-#include "dawn/Support/StringUtil.h"
 #include <algorithm>
 #include <string>
 #include <vector>

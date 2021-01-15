@@ -3,7 +3,6 @@
 #include "dawn/AST/IterationSpace.h"
 #include "dawn/AST/LocationType.h"
 #include "dawn/AST/Offsets.h"
-#include "dawn/IIR/ASTFwd.h"
 #include "dawn/IIR/IIRNodeIterator.h"
 #include "dawn/IIR/Stage.h"
 #include "dawn/SIR/SIR.h"

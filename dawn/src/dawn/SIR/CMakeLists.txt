@@ -43,14 +43,8 @@ target_link_libraries(DawnSIRProto PUBLIC protobuf::libprotobuf)
 # Builds one library for both SIR and AST
 add_library(DawnSIR
   AST.h
-  ASTExpr.h
-  ASTFwd.h
   ASTStmt.h
   ASTStmt.cpp
-  ASTStringifier.h
-  ASTUtil.h
-  ASTUtil.cpp
-  ASTVisitor.h
   SIR.cpp
   SIR.h
   Interval.h

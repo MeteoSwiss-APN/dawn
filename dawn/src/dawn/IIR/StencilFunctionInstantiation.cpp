@@ -14,7 +14,7 @@
 
 #include "dawn/IIR/StencilFunctionInstantiation.h"
 #include "dawn/IIR/ASTExpr.h"
-#include "dawn/IIR/ASTStringifier.h"
+#include "dawn/AST/ASTStringifier.h"
 #include "dawn/IIR/AccessUtils.h"
 #include "dawn/IIR/Field.h"
 #include "dawn/IIR/StencilInstantiation.h"
@@ -611,7 +611,7 @@ void StencilFunctionInstantiation::dump(std::ostream& os) const {
 
   const auto& statements = getAST()->getRoot()->getStatements();
   for(std::size_t i = 0; i < statements.size(); ++i) {
-    os << "\033[1m" << iir::ASTStringifier::toString(statements[i], 2 * DAWN_PRINT_INDENT)
+    os << "\033[1m" << ast::ASTStringifier::toString(statements[i], 2 * DAWN_PRINT_INDENT)
        << "\033[0m";
     const auto& callerAccesses =
         doMethod_->getAST().getStatements()[i]->getData<IIRStmtData>().CallerAccesses;

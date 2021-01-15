@@ -22,7 +22,7 @@
 #include "dawn/CodeGen/Cuda/CodeGeneratorHelper.h"
 #include "dawn/CodeGen/F90Util.h"
 #include "dawn/CodeGen/IcoChainSizes.h"
-#include "dawn/IIR/ASTVisitor.h"
+#include "dawn/AST/ASTVisitor.h"
 #include "dawn/IIR/Field.h"
 #include "dawn/IIR/Interval.h"
 #include "dawn/IIR/MultiStage.h"
@@ -35,10 +35,8 @@
 #include "driver-includes/unstructured_interface.hpp"
 
 #include <algorithm>
-#include <fstream>
 #include <memory>
 #include <numeric>
-#include <sstream>
 #include <string>
 #include <vector>
 

@@ -16,11 +16,10 @@
 
 #include "gtclang/Unittest/ParsingComparison.h"
 #include "dawn/CodeGen/CXXUtil.h"
-#include "dawn/SIR/ASTUtil.h"
+#include "dawn/AST/ASTUtil.h"
 #include "dawn/SIR/SIR.h"
 #include "dawn/Support/Array.h"
 #include "dawn/Support/Casting.h"
-#include "dawn/Support/Unreachable.h"
 #include "gtclang/Unittest/GTClang.h"
 #include "gtclang/Unittest/UnittestEnvironment.h"
 #include "llvm/ProfileData/InstrProf.h"

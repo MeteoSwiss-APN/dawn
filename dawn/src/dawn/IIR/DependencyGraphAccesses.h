@@ -14,7 +14,7 @@
 
 #pragma once
 
-#include "dawn/IIR/ASTFwd.h"
+#include "dawn/IIR/ASTStmt.h"
 #include "dawn/IIR/DependencyGraph.h"
 #include "dawn/IIR/Extents.h"
 #include "dawn/Support/TypeTraits.h"

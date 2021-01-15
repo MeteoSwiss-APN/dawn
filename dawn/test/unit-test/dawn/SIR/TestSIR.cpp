@@ -12,7 +12,7 @@
 //
 //===------------------------------------------------------------------------------------------===//
 
-#include "dawn/SIR/ASTExpr.h"
+#include "dawn/AST/ASTExpr.h"
 #include "dawn/SIR/ASTStmt.h"
 #include "dawn/SIR/SIR.h"
 #include <gtest/gtest.h>

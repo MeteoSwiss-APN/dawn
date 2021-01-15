@@ -11,10 +11,8 @@
 //  See LICENSE.txt for details.
 //
 //===------------------------------------------------------------------------------------------===//
-#include "dawn/IIR/ASTFwd.h"
 #include "dawn/IIR/ASTStmt.h"
 #include "dawn/IIR/IIR.h"
-#include "dawn/IIR/IIRNodeIterator.h"
 #include "dawn/IIR/StencilInstantiation.h"
 #include "dawn/Optimizer/PassFieldVersioning.h"
 #include "dawn/Optimizer/PassFixVersionedInputFields.h"

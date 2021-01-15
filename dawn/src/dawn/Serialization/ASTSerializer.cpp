@@ -22,11 +22,8 @@
 #include "dawn/IIR/IIR/IIR.pb.h"
 #include "dawn/SIR/ASTStmt.h"
 #include "dawn/SIR/SIR.h"
-#include "dawn/SIR/SIR/SIR.pb.h"
 #include "dawn/Support/Unreachable.h"
-#include <fstream>
 #include <google/protobuf/util/json_util.h>
-#include <iterator>
 #include <list>
 #include <memory>
 #include <optional>

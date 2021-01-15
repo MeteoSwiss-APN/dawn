@@ -15,8 +15,8 @@
 #include "dawn/Optimizer/Replacing.h"
 #include "dawn/IIR/ASTExpr.h"
 #include "dawn/IIR/ASTStmt.h"
-#include "dawn/IIR/ASTUtil.h"
-#include "dawn/IIR/ASTVisitor.h"
+#include "dawn/AST/ASTUtil.h"
+#include "dawn/AST/ASTVisitor.h"
 #include "dawn/IIR/InstantiationHelper.h"
 #include "dawn/IIR/StencilInstantiation.h"
 #include <unordered_map>

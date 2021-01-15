@@ -15,21 +15,13 @@
 #include "PassSetStageLocationType.h"
 #include "dawn/AST/LocationType.h"
 #include "dawn/IIR/ASTExpr.h"
-#include "dawn/IIR/ASTFwd.h"
-#include "dawn/IIR/ASTVisitor.h"
-#include "dawn/IIR/DependencyGraphStage.h"
 #include "dawn/IIR/DoMethod.h"
 #include "dawn/IIR/IIRNodeIterator.h"
-#include "dawn/IIR/MultiStage.h"
 #include "dawn/IIR/Stage.h"
 #include "dawn/IIR/StencilInstantiation.h"
 #include "dawn/IIR/StencilMetaInformation.h"
 #include "dawn/Support/Exception.h"
-#include "dawn/Support/Logger.h"
-#include <deque>
-#include <iterator>
 #include <memory>
-#include <stdexcept>
 #include <string>
 
 namespace dawn {

@@ -14,7 +14,8 @@
 
 #pragma once
 
-#include "dawn/AST/ASTFwd.h"
+#include "dawn/AST/ASTStmt.h"
+#include "dawn/AST/ASTExpr.h"
 #include <memory>
 #include <unordered_map>
 

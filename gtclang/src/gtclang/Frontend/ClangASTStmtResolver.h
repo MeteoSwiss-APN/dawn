@@ -17,7 +17,7 @@
 #ifndef GTCLANG_FRONTEND_CLANGASTSTMTRESOLVER_H
 #define GTCLANG_FRONTEND_CLANGASTSTMTRESOLVER_H
 
-#include "dawn/SIR/ASTFwd.h"
+#include "dawn/AST/ASTStmt.h"
 #include "clang/AST/ASTFwd.h"
 #include "llvm/ADT/ArrayRef.h"
 #include <memory>

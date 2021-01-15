@@ -13,15 +13,12 @@
 //===------------------------------------------------------------------------------------------===//
 
 #include "dawn/IIR/IIR.h"
-#include "dawn/IIR/DependencyGraphStage.h"
 #include "dawn/IIR/Field.h"
 #include "dawn/IIR/Stencil.h"
 #include "dawn/SIR/SIR.h"
 #include "dawn/Support/Assert.h"
 #include "dawn/Support/StringUtil.h"
-#include "dawn/Support/Unreachable.h"
 #include <algorithm>
-#include <numeric>
 
 namespace dawn {
 namespace iir {

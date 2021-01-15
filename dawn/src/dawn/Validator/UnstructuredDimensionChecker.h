@@ -17,7 +17,6 @@
 #include "dawn/AST/IterationSpace.h"
 #include "dawn/AST/LocationType.h"
 #include "dawn/IIR/ASTExpr.h"
-#include "dawn/IIR/ASTFwd.h"
 #include "dawn/IIR/DoMethod.h"
 #include "dawn/IIR/IIR.h"
 #include "dawn/IIR/IIRNodeIterator.h"

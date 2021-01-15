@@ -15,13 +15,12 @@
 #include "dawn/Optimizer/PassDataLocalityMetric.h"
 #include "dawn/IIR/AST.h"
 #include "dawn/IIR/ASTExpr.h"
-#include "dawn/IIR/ASTVisitor.h"
+#include "dawn/AST/ASTVisitor.h"
 #include "dawn/IIR/IIRNodeIterator.h"
 #include "dawn/IIR/StencilInstantiation.h"
 #include "dawn/Optimizer/Options.h"
 #include "dawn/Support/Format.h"
 #include "dawn/Support/Logger.h"
-#include "dawn/Support/StringUtil.h"
 #include <deque>
 #include <sstream>
 #include <stack>

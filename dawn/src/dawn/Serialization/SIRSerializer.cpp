@@ -14,21 +14,17 @@
 
 #include "dawn/Serialization/SIRSerializer.h"
 #include "dawn/SIR/AST.h"
-#include "dawn/SIR/ASTVisitor.h"
 #include "dawn/SIR/SIR.h"
 #include "dawn/SIR/SIR/SIR.pb.h"
 #include "dawn/SIR/SIR/statements.pb.h"
 #include "dawn/Serialization/ASTSerializer.h"
-#include "dawn/Serialization/SIRSerializer.h"
 #include "dawn/Support/Exception.h"
 #include "dawn/Support/Format.h"
 #include "dawn/Support/Logger.h"
 #include "dawn/Support/Unreachable.h"
-#include <fstream>
 #include <google/protobuf/util/json_util.h>
 #include <list>
 #include <memory>
-#include <stack>
 #include <stdexcept>
 #include <tuple>
 

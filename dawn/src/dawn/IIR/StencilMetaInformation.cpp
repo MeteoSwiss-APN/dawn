@@ -14,18 +14,15 @@
 
 #include "dawn/IIR/StencilMetaInformation.h"
 #include "dawn/IIR/AST.h"
-#include "dawn/IIR/ASTStringifier.h"
-#include "dawn/IIR/ASTUtil.h"
-#include "dawn/IIR/ASTVisitor.h"
+#include "dawn/AST/ASTStringifier.h"
+#include "dawn/AST/ASTVisitor.h"
 #include "dawn/IIR/InstantiationHelper.h"
 #include "dawn/IIR/StencilFunctionInstantiation.h"
 #include "dawn/SIR/SIR.h"
 #include "dawn/Support/Casting.h"
-#include "dawn/Support/Format.h"
 #include "dawn/Support/Json.h"
 
 #include <cstdlib>
-#include <fstream>
 #include <functional>
 #include <stack>
 
@@ -496,7 +493,7 @@ json::json StencilMetaInformation::jsonDump() const {
 
   json::json bcJson;
   for(const auto& bc : fieldnameToBoundaryConditionMap_) {
-    bcJson[bc.first] = ASTStringifier::toString(bc.second);
+    bcJson[bc.first] = ast::ASTStringifier::toString(bc.second);
   }
   metaDataJson["FieldToBC"] = bcJson;
 
@@ -536,7 +533,7 @@ json::json StencilMetaInformation::jsonDump() const {
 
   json::json idToStencilCallJson;
   for(const auto& pair : StencilIDToStencilCallMap_.getDirectMap()) {
-    idToStencilCallJson[std::to_string(pair.first)] = ASTStringifier::toString(pair.second);
+    idToStencilCallJson[std::to_string(pair.first)] = ast::ASTStringifier::toString(pair.second);
   }
   metaDataJson["IDToStencilCall"] = idToStencilCallJson;
 

@@ -14,8 +14,7 @@
 
 #pragma once
 
-#include "dawn/IIR/ASTFwd.h"
-#include "dawn/IIR/ASTVisitor.h"
+#include "dawn/AST/ASTVisitor.h"
 #include "dawn/Support/ArrayRef.h"
 #include <memory>
 

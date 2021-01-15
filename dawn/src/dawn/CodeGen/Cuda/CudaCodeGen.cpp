@@ -15,7 +15,6 @@
 #include "dawn/CodeGen/Cuda/CudaCodeGen.h"
 #include "dawn/CodeGen/CXXUtil.h"
 #include "dawn/CodeGen/CodeGenProperties.h"
-#include "dawn/CodeGen/Cuda/ASTStencilBody.h"
 #include "dawn/CodeGen/Cuda/ASTStencilDesc.h"
 #include "dawn/CodeGen/Cuda/CacheProperties.h"
 #include "dawn/CodeGen/Cuda/CodeGeneratorHelper.h"

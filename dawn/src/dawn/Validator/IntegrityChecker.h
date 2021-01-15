@@ -15,7 +15,7 @@
 #pragma once
 
 #include "dawn/IIR/ASTExpr.h"
-#include "dawn/IIR/ASTUtil.h"
+#include "dawn/AST/ASTUtil.h"
 #include "dawn/IIR/StencilInstantiation.h"
 #include "dawn/Support/Exception.h"
 

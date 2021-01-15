@@ -14,7 +14,7 @@
 
 #include "dawn/SIR/SIR.h"
 #include "dawn/SIR/AST.h"
-#include "dawn/SIR/ASTStringifier.h"
+#include "dawn/AST/ASTStringifier.h"
 #include "dawn/Support/Casting.h"
 #include "dawn/Support/Format.h"
 #include "dawn/Support/Printing.h"

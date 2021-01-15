@@ -14,7 +14,6 @@
 
 #include "dawn/CodeGen/CXXNaive-ico/ASTStencilFunctionParamVisitor.h"
 #include "dawn/CodeGen/CXXUtil.h"
-#include "dawn/IIR/AST.h"
 #include "dawn/IIR/ASTExpr.h"
 #include "dawn/IIR/StencilFunctionInstantiation.h"
 #include "dawn/IIR/StencilInstantiation.h"

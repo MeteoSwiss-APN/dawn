@@ -14,7 +14,6 @@
 
 #pragma once
 
-#include "dawn/IIR/ASTFwd.h"
 #include "dawn/IIR/DoMethod.h"
 #include "dawn/Support/ArrayRef.h"
 #include <memory>

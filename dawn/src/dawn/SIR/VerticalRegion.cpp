@@ -1,6 +1,5 @@
-#include "dawn/SIR/AST.h"
-#include "dawn/SIR/ASTStringifier.h"
-#include "dawn/SIR/ASTVisitor.h"
+#include "dawn/AST/ASTStringifier.h"
+#include "dawn/AST/ASTVisitor.h"
 #include "dawn/SIR/VerticalRegion.h"
 #include "dawn/Support/Casting.h"
 #include "dawn/Support/Format.h"

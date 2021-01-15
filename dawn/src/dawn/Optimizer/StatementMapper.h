@@ -12,7 +12,7 @@
 //
 //===------------------------------------------------------------------------------------------===//
 
-#include "dawn/IIR/ASTUtil.h"
+#include "dawn/AST/ASTUtil.h"
 #include "dawn/IIR/StencilInstantiation.h"
 #include <stack>
 

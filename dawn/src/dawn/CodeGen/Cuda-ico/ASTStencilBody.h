@@ -16,7 +16,6 @@
 
 #include "dawn/CodeGen/ASTCodeGenCXX.h"
 #include "dawn/CodeGen/CodeGenProperties.h"
-#include "dawn/IIR/ASTFwd.h"
 #include "dawn/IIR/Interval.h"
 #include "dawn/Support/StringUtil.h"
 

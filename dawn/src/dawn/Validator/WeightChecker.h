@@ -16,7 +16,6 @@
 
 #include "dawn/AST/ASTExpr.h"
 #include "dawn/IIR/ASTExpr.h"
-#include "dawn/IIR/ASTFwd.h"
 #include "dawn/IIR/DoMethod.h"
 #include "dawn/IIR/IIR.h"
 #include "dawn/IIR/IIRNodeIterator.h"

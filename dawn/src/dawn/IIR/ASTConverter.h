@@ -16,7 +16,7 @@
 
 #include "dawn/IIR/ASTStmt.h"
 #include "dawn/SIR/ASTStmt.h"
-#include "dawn/SIR/ASTVisitor.h"
+#include "dawn/AST/ASTVisitor.h"
 #include <memory>
 #include <unordered_map>
 

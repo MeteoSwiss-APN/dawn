@@ -22,8 +22,6 @@
 #include "dawn/Support/Logger.h"
 
 #include <deque>
-#include <iterator>
-#include <unordered_set>
 
 namespace dawn {
 

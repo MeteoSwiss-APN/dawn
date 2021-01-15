@@ -15,13 +15,9 @@
 //===------------------------------------------------------------------------------------------===//
 
 #include "dawn/AST/LocationType.h"
-#include "dawn/CodeGen/CXXNaive-ico/CXXNaiveCodeGen.h"
-#include "dawn/CodeGen/CXXNaive/CXXNaiveCodeGen.h"
 #include "dawn/CodeGen/Driver.h"
 #include "dawn/CodeGen/Options.h"
-#include "dawn/IIR/ASTFwd.h"
 #include "dawn/IIR/LocalVariable.h"
-#include "dawn/Optimizer/Driver.h"
 #include "dawn/Optimizer/Lowering.h"
 #include "dawn/Optimizer/PassFieldVersioning.h"
 #include "dawn/Optimizer/PassFixVersionedInputFields.h"
@@ -31,15 +27,7 @@
 
 #include "testMutator.h"
 
-#include <cstring>
-#include <execinfo.h>
 #include <fstream>
-#include <map>
-#include <optional>
-#include <signal.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <unistd.h>
 
 // not in use, but can be employed to rapidly inject indirected reads into existing IIR
 // for debugging / get coverage quickly. example usage see below

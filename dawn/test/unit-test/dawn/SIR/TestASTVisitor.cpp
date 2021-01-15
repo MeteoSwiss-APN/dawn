@@ -13,8 +13,7 @@
 //===------------------------------------------------------------------------------------------===//
 
 #include "dawn/SIR/AST.h"
-#include "dawn/SIR/ASTUtil.h"
-#include "dawn/SIR/ASTVisitor.h"
+#include "dawn/AST/ASTVisitor.h"
 #include "dawn/Support/Casting.h"
 #include "dawn/Support/STLExtras.h"
 #include <cmath>
