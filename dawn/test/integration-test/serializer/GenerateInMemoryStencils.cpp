@@ -35,7 +35,7 @@ std::shared_ptr<iir::StencilInstantiation> createCopyStencilIIRInMemory(ast::Gri
   auto target = std::make_shared<iir::StencilInstantiation>(gridType);
 
   ///////////////// Generation of the IIR
-  sir::Attr attributes;
+  ast::Attr attributes;
   int stencilID = target->nextUID();
   target->getIIR()->insertChild(
       std::make_unique<iir::Stencil>(target->getMetaData(), attributes, stencilID),
@@ -53,7 +53,7 @@ std::shared_ptr<iir::StencilInstantiation> createCopyStencilIIRInMemory(ast::Gri
 
   // Create one doMethod inside the Stage that spans the full domain
   IIRStage->insertChild(std::make_unique<iir::DoMethod>(
-      iir::Interval(sir::Interval{sir::Interval::Start, sir::Interval::End}),
+      iir::Interval(ast::Interval{ast::Interval::Start, ast::Interval::End}),
       target->getMetaData()));
   const auto& IIRDoMethod = IIRStage->getChild(0);
   IIRDoMethod->setID(target->nextUID());
@@ -132,7 +132,7 @@ std::shared_ptr<iir::StencilInstantiation> createLapStencilIIRInMemory(ast::Grid
   auto target = std::make_shared<iir::StencilInstantiation>(gridType);
 
   ///////////////// Generation of the IIR
-  sir::Attr attributes;
+  ast::Attr attributes;
   int stencilID = target->nextUID();
   target->getIIR()->insertChild(
       std::make_unique<iir::Stencil>(target->getMetaData(), attributes, stencilID),
@@ -151,13 +151,13 @@ std::shared_ptr<iir::StencilInstantiation> createLapStencilIIRInMemory(ast::Grid
 
   // Create one doMethod inside the Stage that spans the full domain
   IIRStage1->insertChild(std::make_unique<iir::DoMethod>(
-      iir::Interval(sir::Interval{sir::Interval::Start, sir::Interval::End}),
+      iir::Interval(ast::Interval{ast::Interval::Start, ast::Interval::End}),
       target->getMetaData()));
   const auto& IIRDoMethod1 = IIRStage1->getChild(0);
   IIRDoMethod1->setID(target->nextUID());
 
   IIRStage2->insertChild(std::make_unique<iir::DoMethod>(
-      iir::Interval(sir::Interval{sir::Interval::Start, sir::Interval::End}),
+      iir::Interval(ast::Interval{ast::Interval::Start, ast::Interval::End}),
       target->getMetaData()));
   const auto& IIRDoMethod2 = IIRStage2->getChild(0);
   IIRDoMethod2->setID(target->nextUID());
@@ -328,11 +328,11 @@ std::shared_ptr<dawn::iir::StencilInstantiation> createUnstructuredSumEdgeToCell
       "generated",
       b.stencil(b.multistage(
           LoopOrderKind::Parallel,
-          b.stage(LocType::Edges, b.doMethod(dawn::sir::Interval::Start, dawn::sir::Interval::End,
+          b.stage(LocType::Edges, b.doMethod(dawn::ast::Interval::Start, dawn::ast::Interval::End,
                                              b.stmt(b.assignExpr(b.at(in_f), b.lit(10))))),
           b.stage(
               LocType::Cells,
-              b.doMethod(dawn::sir::Interval::Start, dawn::sir::Interval::End,
+              b.doMethod(dawn::ast::Interval::Start, dawn::ast::Interval::End,
                          b.stmt(b.assignExpr(
                              b.at(out_f), b.reduceOverNeighborExpr(
                                               Op::plus, b.at(in_f, HOffsetType::withOffset, 0),
@@ -354,9 +354,9 @@ std::shared_ptr<dawn::iir::StencilInstantiation> createUnstructuredMixedCopies()
       "generated",
       b.stencil(b.multistage(
           dawn::iir::LoopOrderKind::Forward,
-          b.stage(LocType::Cells, b.doMethod(dawn::sir::Interval::Start, dawn::sir::Interval::End,
+          b.stage(LocType::Cells, b.doMethod(dawn::ast::Interval::Start, dawn::ast::Interval::End,
                                              b.stmt(b.assignExpr(b.at(out_c), b.at(in_c))))),
-          b.stage(LocType::Edges, b.doMethod(dawn::sir::Interval::Start, dawn::sir::Interval::End,
+          b.stage(LocType::Edges, b.doMethod(dawn::ast::Interval::Start, dawn::ast::Interval::End,
                                              b.stmt(b.assignExpr(b.at(out_e), b.at(in_e))))))));
   return stencilInstantiation;
 }

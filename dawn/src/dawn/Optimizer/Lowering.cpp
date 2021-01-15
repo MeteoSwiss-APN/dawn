@@ -98,7 +98,7 @@ public:
   StencilDescStatementMapper(std::shared_ptr<iir::StencilInstantiation>& instantiation,
                              sir::Stencil* sirStencil,
                              const std::vector<std::shared_ptr<sir::Stencil>>& stencils,
-                             const sir::GlobalVariableMap& globalVariableMap,
+                             const ast::GlobalVariableMap& globalVariableMap,
                              const Options& options)
       : instantiation_(instantiation), metadata_(instantiation->getMetaData()), options_(options),
         sirStencil_(sirStencil), stencils_(stencils) {
@@ -112,17 +112,17 @@ public:
     // We add all global variables which have constant values
     for(const auto& keyValuePair : globalVariableMap) {
       const std::string& key = keyValuePair.first;
-      const sir::Global& value = keyValuePair.second;
+      const ast::Global& value = keyValuePair.second;
 
       if(value.isConstexpr()) {
         switch(value.getType()) {
-        case sir::Value::Kind::Boolean:
+        case ast::Value::Kind::Boolean:
           scope_.top()->VariableMap[key] = value.getValue<bool>();
           break;
-        case sir::Value::Kind::Integer:
+        case ast::Value::Kind::Integer:
           scope_.top()->VariableMap[key] = value.getValue<int>();
           break;
-        case sir::Value::Kind::Double:
+        case ast::Value::Kind::Double:
           scope_.top()->VariableMap[key] = value.getValue<double>();
           break;
         default:
@@ -565,7 +565,7 @@ public:
         DAWN_ASSERT_MSG(value.has_value(), "constant global variable with no value");
 
         auto newExpr = std::make_shared<ast::LiteralAccessExpr>(
-            value.toString(), sir::Value::typeToBuiltinTypeID(value.getType()));
+            value.toString(), ast::Value::typeToBuiltinTypeID(value.getType()));
         ast::replaceOldExprWithNewExprInStmt(
             scope_.top()->controlFlowDescriptor_.getStatements().back(), expr, newExpr);
 
@@ -704,7 +704,7 @@ toStencilInstantiationMap(const SIR& stencilIR, const Options& options) {
                  });
 
   for(const auto& stencil : stencilIR.Stencils) {
-    if(!stencil->Attributes.has(sir::Attr::Kind::NoCodeGen)) {
+    if(!stencil->Attributes.has(ast::Attr::Kind::NoCodeGen)) {
       stencilInstantiationMap.insert(std::make_pair(
           stencil->Name, std::make_shared<iir::StencilInstantiation>(stencilIR.GridType,
                                                                      stencilIR.GlobalVariableMap,

@@ -1,23 +1,10 @@
 #pragma once
 
-#include "dawn/AST/GridType.h"
-#include "dawn/AST/Tags.h"
-#include "dawn/SIR/AST.h"
 #include "dawn/Support/Assert.h"
 #include "dawn/Support/ComparisonHelpers.h"
-#include "dawn/Support/Format.h"
-#include "dawn/Support/HashCombine.h"
-#include "dawn/Support/Json.h"
-#include "dawn/Support/NonCopyable.h"
-#include "dawn/Support/SourceLocation.h"
-#include "dawn/Support/Type.h"
 
 namespace dawn {
-
-/// @namespace sir
-/// @brief This namespace contains a C++ implementation of the SIR specification
-/// @ingroup sir
-namespace sir {
+namespace ast {
 
 //===------------------------------------------------------------------------------------------===//
 //     Interval

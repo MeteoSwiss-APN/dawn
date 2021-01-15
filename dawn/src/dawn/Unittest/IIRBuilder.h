@@ -123,7 +123,7 @@ public:
     DAWN_ASSERT(si_);
     int accessID =
         si_->getMetaData().insertAccessOfType(iir::FieldAccessType::GlobalVariable, name);
-    auto&& global = sir::Global(std::forward<T>(v));
+    auto&& global = ast::Global(std::forward<T>(v));
     si_->getIIR()->insertGlobalVariable(name, std::move(global));
     return {accessID, name};
   }
@@ -184,7 +184,7 @@ public:
     int acc = si_->getMetaData().insertAccessOfType(iir::FieldAccessType::Literal, v_str);
     auto expr = std::make_shared<ast::LiteralAccessExpr>(
         v_str,
-        sir::Value::typeToBuiltinTypeID(sir::Value::TypeInfo<typename std::decay<T>::type>::Type));
+        ast::Value::typeToBuiltinTypeID(ast::Value::TypeInfo<typename std::decay<T>::type>::Type));
     expr->setID(-si_->nextUID());
     expr->template getData<IIRAccessExprData>().AccessID = std::make_optional(acc);
     return expr;
@@ -232,13 +232,13 @@ public:
   }
 
   template <typename... Stmts>
-  std::unique_ptr<iir::DoMethod> doMethod(sir::Interval::LevelKind s, sir::Interval::LevelKind e,
+  std::unique_ptr<iir::DoMethod> doMethod(ast::Interval::LevelKind s, ast::Interval::LevelKind e,
                                           Stmts&&... stmts) {
     return doMethod(iir::Interval(s, e), stmts...);
   }
 
   template <typename... Stmts>
-  std::unique_ptr<iir::DoMethod> doMethod(sir::Interval::LevelKind s, sir::Interval::LevelKind e,
+  std::unique_ptr<iir::DoMethod> doMethod(ast::Interval::LevelKind s, ast::Interval::LevelKind e,
                                           int offsetLow, int offsetHigh, Stmts&&... stmts) {
     DAWN_ASSERT(si_);
     auto ret = std::make_unique<iir::DoMethod>(iir::Interval(s, e, offsetLow, offsetHigh),
@@ -326,7 +326,7 @@ public:
   template <typename... MultiStages>
   std::unique_ptr<iir::Stencil> stencil(MultiStages&&... multistages) {
     DAWN_ASSERT(si_);
-    auto ret = std::make_unique<iir::Stencil>(si_->getMetaData(), sir::Attr{}, si_->nextUID());
+    auto ret = std::make_unique<iir::Stencil>(si_->getMetaData(), ast::Attr{}, si_->nextUID());
     int x[] = {(ret->insertChild(std::forward<MultiStages>(multistages)), 0)...};
     (void)x;
     return ret;

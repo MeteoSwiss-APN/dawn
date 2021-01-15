@@ -152,9 +152,9 @@ bool Stencil::Lifetime::overlaps(const Stencil::Lifetime& other) const {
   return lowerBoundOverlap && upperBoundOverlap;
 }
 
-sir::Attr& Stencil::getStencilAttributes() { return stencilAttributes_; }
+ast::Attr& Stencil::getStencilAttributes() { return stencilAttributes_; }
 
-Stencil::Stencil(const StencilMetaInformation& metadata, sir::Attr attributes, int StencilID)
+Stencil::Stencil(const StencilMetaInformation& metadata, ast::Attr attributes, int StencilID)
     : metadata_(metadata), stencilAttributes_(attributes), StencilID_(StencilID) {}
 
 void Stencil::DerivedInfo::clear() { fields_.clear(); }

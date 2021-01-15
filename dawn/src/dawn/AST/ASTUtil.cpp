@@ -13,7 +13,6 @@
 //===------------------------------------------------------------------------------------------===//
 
 #include "dawn/AST/ASTUtil.h"
-#include "dawn/AST/AST.h"
 #include "dawn/AST/ASTVisitor.h"
 #include "dawn/Support/StringSwitch.h"
 #include "dawn/Support/Unreachable.h"

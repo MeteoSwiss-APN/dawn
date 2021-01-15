@@ -195,19 +195,19 @@ static std::string serializeImpl(const SIR* sir, SIRSerializer::Format kind) {
 
     // Value
     switch(value.getType()) {
-    case sir::Value::Kind::Boolean:
+    case ast::Value::Kind::Boolean:
       valueProto.set_boolean_value(value.has_value() ? value.getValue<bool>() : bool());
       break;
-    case sir::Value::Kind::Integer:
+    case ast::Value::Kind::Integer:
       valueProto.set_integer_value(value.has_value() ? value.getValue<int>() : int());
       break;
-    case sir::Value::Kind::Double:
+    case ast::Value::Kind::Double:
       valueProto.set_double_value(value.has_value() ? value.getValue<double>() : double());
       break;
-    case sir::Value::Kind::Float:
+    case ast::Value::Kind::Float:
       valueProto.set_float_value(value.has_value() ? value.getValue<float>() : float());
       break;
-    case sir::Value::Kind::String:
+    case ast::Value::Kind::String:
       valueProto.set_string_value(value.has_value() ? value.getValue<std::string>()
                                                     : std::string());
       break;
@@ -306,29 +306,29 @@ static std::shared_ptr<sir::Offset> makeOffset(const dawn::proto::statements::Of
   return std::make_shared<sir::Offset>(offsetProto.name(), makeLocation(offsetProto));
 }
 
-static std::shared_ptr<sir::Interval>
+static std::shared_ptr<ast::Interval>
 makeInterval(const dawn::proto::statements::Interval& intervalProto) {
   int lowerLevel = -1, upperLevel = -1, lowerOffset = -1, upperOffset = -1;
 
   if(intervalProto.LowerLevel_case() == dawn::proto::statements::Interval::kSpecialLowerLevel)
     lowerLevel = intervalProto.special_lower_level() ==
                          dawn::proto::statements::Interval_SpecialLevel::Interval_SpecialLevel_Start
-                     ? sir::Interval::Start
-                     : sir::Interval::End;
+                     ? ast::Interval::Start
+                     : ast::Interval::End;
   else
     lowerLevel = intervalProto.lower_level();
 
   if(intervalProto.UpperLevel_case() == dawn::proto::statements::Interval::kSpecialUpperLevel)
     upperLevel = intervalProto.special_upper_level() ==
                          dawn::proto::statements::Interval_SpecialLevel::Interval_SpecialLevel_Start
-                     ? sir::Interval::Start
-                     : sir::Interval::End;
+                     ? ast::Interval::Start
+                     : ast::Interval::End;
   else
     upperLevel = intervalProto.upper_level();
 
   lowerOffset = intervalProto.lower_offset();
   upperOffset = intervalProto.upper_offset();
-  return std::make_shared<sir::Interval>(lowerLevel, upperLevel, lowerOffset, upperOffset);
+  return std::make_shared<ast::Interval>(lowerLevel, upperLevel, lowerOffset, upperOffset);
 }
 
 static std::shared_ptr<sir::VerticalRegion>
@@ -755,28 +755,28 @@ static std::shared_ptr<SIR> deserializeImpl(const std::string& str, SIRSerialize
       sir->StencilFunctions.emplace_back(stencilFunction);
     }
 
-    // SIR.GlobalVariableMap
+    // AST.GlobalVariableMap
     for(const auto& nameValuePair : sirProto.global_variables().map()) {
       const std::string& sirName = nameValuePair.first;
       const sir::proto::GlobalVariableValue& sirValue = nameValuePair.second;
-      std::shared_ptr<Global> value = nullptr;
+      std::shared_ptr<ast::Global> value = nullptr;
       bool isConstExpr = sirValue.is_constexpr();
 
       switch(sirValue.Value_case()) {
       case sir::proto::GlobalVariableValue::kBooleanValue:
-        value = std::make_shared<Global>(static_cast<bool>(sirValue.boolean_value()), isConstExpr);
+        value = std::make_shared<ast::Global>(static_cast<bool>(sirValue.boolean_value()), isConstExpr);
         break;
       case sir::proto::GlobalVariableValue::kIntegerValue:
-        value = std::make_shared<Global>(static_cast<int>(sirValue.integer_value()), isConstExpr);
+        value = std::make_shared<ast::Global>(static_cast<int>(sirValue.integer_value()), isConstExpr);
         break;
       case sir::proto::GlobalVariableValue::kFloatValue:
-        value = std::make_shared<Global>(static_cast<float>(sirValue.float_value()), isConstExpr);
+        value = std::make_shared<ast::Global>(static_cast<float>(sirValue.float_value()), isConstExpr);
         break;
       case sir::proto::GlobalVariableValue::kDoubleValue:
-        value = std::make_shared<Global>(static_cast<double>(sirValue.double_value()), isConstExpr);
+        value = std::make_shared<ast::Global>(static_cast<double>(sirValue.double_value()), isConstExpr);
         break;
       case sir::proto::GlobalVariableValue::kStringValue:
-        value = std::make_shared<Global>(static_cast<std::string>(sirValue.string_value()),
+        value = std::make_shared<ast::Global>(static_cast<std::string>(sirValue.string_value()),
                                          isConstExpr);
         break;
       case sir::proto::GlobalVariableValue::VALUE_NOT_SET:

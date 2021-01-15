@@ -36,7 +36,7 @@ TEST(IndirectionCheckerTest, Case_Pass) {
       "pass", b.stencil(b.multistage(
                   LoopOrderKind::Parallel,
                   b.stage(b.doMethod(
-                      dawn::sir::Interval::Start, dawn::sir::Interval::End,
+                      dawn::ast::Interval::Start, dawn::ast::Interval::End,
                       b.stmt(b.assignExpr(
                           b.at(out), b.at(in, AccessType::r,
                                           ast::Offsets{ast::unstructured, false, 1, "kidx"}))))))));
@@ -58,7 +58,7 @@ TEST(IndirectionCheckerTest, Case_Fail) {
       "fail", b.stencil(b.multistage(
                   LoopOrderKind::Parallel,
                   b.stage(b.doMethod(
-                      dawn::sir::Interval::Start, dawn::sir::Interval::End,
+                      dawn::ast::Interval::Start, dawn::ast::Interval::End,
                       b.stmt(b.assignExpr(
                           b.at(out), b.at(in, AccessType::r,
                                           ast::Offsets{ast::unstructured, false, 1, "kidx"}))))))));
@@ -96,7 +96,7 @@ TEST(IndirectionCheckerTest, Case_Fail2) {
       "fail", b.stencil(b.multistage(
                   LoopOrderKind::Parallel,
                   b.stage(b.doMethod(
-                      dawn::sir::Interval::Start, dawn::sir::Interval::End,
+                      dawn::ast::Interval::Start, dawn::ast::Interval::End,
                       b.stmt(b.assignExpr(b.at(out, AccessType::rw,
                                                ast::Offsets{ast::unstructured, false, 0, "kidx"}),
                                           b.at(in))))))));

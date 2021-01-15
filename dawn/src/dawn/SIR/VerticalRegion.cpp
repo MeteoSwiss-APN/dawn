@@ -1,10 +1,7 @@
 #include "dawn/AST/ASTStringifier.h"
 #include "dawn/AST/ASTVisitor.h"
 #include "dawn/SIR/VerticalRegion.h"
-#include "dawn/Support/Casting.h"
-#include "dawn/Support/Format.h"
 #include "dawn/Support/StringUtil.h"
-#include <sstream>
 
 namespace dawn {
 

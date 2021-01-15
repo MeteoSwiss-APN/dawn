@@ -34,7 +34,7 @@ TEST(WeightCheckerTest, Reduce_0) {
       b.stencil(b.multistage(
           LoopOrderKind::Parallel,
           b.stage(b.doMethod(
-              dawn::sir::Interval::Start, dawn::sir::Interval::End,
+              dawn::ast::Interval::Start, dawn::ast::Interval::End,
               b.stmt(b.assignExpr(
                   b.at(cell_field),
                   b.reduceOverNeighborExpr(Op::plus, b.at(edge_field, HOffsetType::withOffset, 0),
@@ -60,7 +60,7 @@ TEST(WeightCheckerTest, Reduce_1) {
       b.stencil(b.multistage(
           LoopOrderKind::Parallel,
           b.stage(b.doMethod(
-              dawn::sir::Interval::Start, dawn::sir::Interval::End,
+              dawn::ast::Interval::Start, dawn::ast::Interval::End,
               b.stmt(b.assignExpr(b.at(cell_field),
                                   b.reduceOverNeighborExpr(
                                       Op::plus, b.at(edge_field, HOffsetType::withOffset, 0),
@@ -87,7 +87,7 @@ TEST(WeightCheckerTest, Reduce_2) {
           b.stencil(b.multistage(
               LoopOrderKind::Parallel,
               b.stage(b.doMethod(
-                  dawn::sir::Interval::Start, dawn::sir::Interval::End,
+                  dawn::ast::Interval::Start, dawn::ast::Interval::End,
                   b.stmt(b.assignExpr(b.at(cell_field),
                                       b.reduceOverNeighborExpr(
                                           Op::plus, b.at(edge_field, HOffsetType::withOffset, 0),
@@ -112,7 +112,7 @@ TEST(WeightCheckerTest, NestedReduce_0) {
       b.stencil(b.multistage(
           dawn::iir::LoopOrderKind::Parallel,
           b.stage(LocType::Cells,
-                  b.doMethod(dawn::sir::Interval::Start, dawn::sir::Interval::End,
+                  b.doMethod(dawn::ast::Interval::Start, dawn::ast::Interval::End,
                              b.stmt(b.assignExpr(
                                  b.at(cell_f),
                                  b.reduceOverNeighborExpr(
@@ -146,7 +146,7 @@ TEST(WeightCheckerTest, NestedReduce_1) {
                   dawn::iir::LoopOrderKind::Parallel,
                   b.stage(LocType::Cells,
                           b.doMethod(
-                              dawn::sir::Interval::Start, dawn::sir::Interval::End,
+                              dawn::ast::Interval::Start, dawn::ast::Interval::End,
                               b.stmt(b.assignExpr(
                                   b.at(cell_f),
                                   b.reduceOverNeighborExpr(

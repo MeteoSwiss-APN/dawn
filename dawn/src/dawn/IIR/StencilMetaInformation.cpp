@@ -456,7 +456,7 @@ void StencilMetaInformation::removeAccessID(int AccessID) {
 }
 
 StencilMetaInformation::StencilMetaInformation(
-    std::shared_ptr<sir::GlobalVariableMap> globalVariables) {
+    std::shared_ptr<ast::GlobalVariableMap> globalVariables) {
   for(const auto& global : *globalVariables) {
     insertAccessOfType(iir::FieldAccessType::GlobalVariable, global.first);
   }

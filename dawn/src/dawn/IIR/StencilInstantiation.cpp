@@ -38,7 +38,7 @@ namespace iir {
 //===------------------------------------------------------------------------------------------===//
 
 StencilInstantiation::StencilInstantiation(
-    ast::GridType const gridType, std::shared_ptr<sir::GlobalVariableMap> globalVariables,
+    ast::GridType const gridType, std::shared_ptr<ast::GlobalVariableMap> globalVariables,
     std::vector<std::shared_ptr<sir::StencilFunction>> const& stencilFunctions)
     : metadata_(globalVariables),
       IIR_(std::make_unique<IIR>(gridType, globalVariables, stencilFunctions)) {}
@@ -74,7 +74,7 @@ bool StencilInstantiation::insertBoundaryConditions(
   }
 }
 
-const sir::Global& StencilInstantiation::getGlobalVariableValue(const std::string& name) const {
+const ast::Global& StencilInstantiation::getGlobalVariableValue(const std::string& name) const {
   DAWN_ASSERT(IIR_->getGlobalVariableMap().count(name));
   return IIR_->getGlobalVariableMap().at(name);
 }

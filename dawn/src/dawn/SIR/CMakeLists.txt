@@ -47,8 +47,6 @@ add_library(DawnSIR
   ASTStmt.cpp
   SIR.cpp
   SIR.h
-  Interval.h
-  Interval.cpp
   VerticalRegion.h
   VerticalRegion.cpp
   $<TARGET_OBJECTS:DawnSIRProto>

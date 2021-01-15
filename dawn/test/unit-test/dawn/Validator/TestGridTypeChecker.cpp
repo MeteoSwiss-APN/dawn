@@ -37,7 +37,7 @@ TEST(GridTypeCheckerTest, MixedGridTypesOffset) {
   auto si = b.build(stencilName.c_str(),
                     b.stencil(b.multistage(
                         LoopOrderKind::Parallel,
-                        b.stage(b.doMethod(dawn::sir::Interval::Start, dawn::sir::Interval::End,
+                        b.stage(b.doMethod(dawn::ast::Interval::Start, dawn::ast::Interval::End,
                                            b.stmt(b.assignExpr(b.at(cell_fA), b.at(cell_fB))))))));
 
   // lets manually add a field access of the wrong type to the IIR
@@ -87,7 +87,7 @@ TEST(GridTypeCheckerTest, LocalVariableDataMixed) {
   auto si = b.build(stencilName.c_str(),
                     b.stencil(b.multistage(
                         LoopOrderKind::Parallel,
-                        b.stage(b.doMethod(dawn::sir::Interval::Start, dawn::sir::Interval::End,
+                        b.stage(b.doMethod(dawn::ast::Interval::Start, dawn::ast::Interval::End,
                                            b.declareVar(varA),
                                            b.stmt(b.assignExpr(b.at(cell_fA), b.at(cell_fB))))))));
 

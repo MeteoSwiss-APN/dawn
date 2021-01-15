@@ -424,7 +424,7 @@ static void allocTempFields(MemberFunction& ctor, const iir::Stencil& stencil, P
 }
 
 void CudaIcoCodeGen::generateStencilClassCtr(MemberFunction& ctor, const iir::Stencil& stencil,
-                                             const sir::GlobalVariableMap& globalsMap,
+                                             const ast::GlobalVariableMap& globalsMap,
                                              CodeGenProperties& codeGenProperties) const {
 
   // arguments: mesh, kSize, fields
@@ -493,7 +493,7 @@ void CudaIcoCodeGen::generateStencilClassDtr(MemberFunction& stencilClassDtor,
 
 void CudaIcoCodeGen::generateStencilClassCtrMinimal(MemberFunction& ctor,
                                                     const iir::Stencil& stencil,
-                                                    const sir::GlobalVariableMap& globalsMap,
+                                                    const ast::GlobalVariableMap& globalsMap,
                                                     CodeGenProperties& codeGenProperties) const {
 
   if(!globalsMap.empty()) {

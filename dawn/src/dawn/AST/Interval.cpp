@@ -1,18 +1,9 @@
-#include "dawn/SIR/SIR.h"
-#include "dawn/AST/ASTStringifier.h"
+#include "Interval.h"
 #include "dawn/Support/Format.h"
 #include <sstream>
 
 namespace dawn {
-
-namespace sir {
-
-std::shared_ptr<ast::AST> StencilFunction::getASTOfInterval(const Interval& interval) const {
-  for(int i = 0; i < Intervals.size(); ++i)
-    if(*Intervals[i] == interval)
-      return Asts[i];
-  return nullptr;
-}
+namespace ast {
 
 CompareResult Interval::comparison(const Interval& rhs) const {
   auto formatErrorMsg = [](const char* name, int l, int r) -> std::string {
@@ -47,9 +38,9 @@ std::string Interval::toString() const {
 
 std::ostream& operator<<(std::ostream& os, const Interval& interval) {
   auto printLevel = [&os](int level, int offset) -> void {
-    if(level == sir::Interval::Start)
+    if(level == Interval::Start)
       os << "Start";
-    else if(level == sir::Interval::End)
+    else if(level == Interval::End)
       os << "End";
     else
       os << level;

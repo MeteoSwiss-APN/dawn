@@ -109,7 +109,7 @@ private:
         parser_->reportDiagnostic(clang_compat::getBeginLoc(*expr->getArg(1)),
                                   Diagnostics::DiagKind::err_interval_custom_not_constexpr)
             << expr->getSourceRange()
-            << (builtinLevel_ == dawn::sir::Interval::Start ? "k_start" : "k_end");
+            << (builtinLevel_ == dawn::ast::Interval::Start ? "k_start" : "k_end");
       }
     }
   }
@@ -117,9 +117,9 @@ private:
   void resolve(clang::DeclRefExpr* expr) {
     llvm::StringRef name = expr->getDecl()->getName();
     if(name == "k_start")
-      builtinLevel_ = dawn::sir::Interval::Start;
+      builtinLevel_ = dawn::ast::Interval::Start;
     else if(name == "k_end")
-      builtinLevel_ = dawn::sir::Interval::End;
+      builtinLevel_ = dawn::ast::Interval::End;
     else {
       parser_->reportDiagnostic(clang_compat::getBeginLoc(*expr),
                                 Diagnostics::DiagKind::err_interval_custom_not_builtin)
@@ -211,18 +211,18 @@ public:
   }
 
   /// @brief Get the SIRInterval
-  std::pair<std::shared_ptr<dawn::sir::Interval>, dawn::sir::VerticalRegion::LoopOrderKind>
+  std::pair<std::shared_ptr<dawn::ast::Interval>, dawn::sir::VerticalRegion::LoopOrderKind>
   getInterval() const {
 
     // Note that intervals have the the invariant lowerBound <= upperBound. We thus encapsulate the
     // loop order here.
     if((level_[0] + offset_[0]) <= (level_[1] + offset_[1]))
       return std::make_pair(
-          std::make_shared<dawn::sir::Interval>(level_[0], level_[1], offset_[0], offset_[1]),
+          std::make_shared<dawn::ast::Interval>(level_[0], level_[1], offset_[0], offset_[1]),
           dawn::sir::VerticalRegion::LoopOrderKind::Forward);
     else
       return std::make_pair(
-          std::make_shared<dawn::sir::Interval>(level_[1], level_[0], offset_[1], offset_[0]),
+          std::make_shared<dawn::ast::Interval>(level_[1], level_[0], offset_[1], offset_[0]),
           dawn::sir::VerticalRegion::LoopOrderKind::Backward);
   }
 
@@ -284,9 +284,9 @@ private:
 
     llvm::StringRef name = expr->getDecl()->getName();
     if(name == "k_start")
-      level_[curIndex_] = dawn::sir::Interval::Start;
+      level_[curIndex_] = dawn::ast::Interval::Start;
     else if(name == "k_end")
-      level_[curIndex_] = dawn::sir::Interval::End;
+      level_[curIndex_] = dawn::ast::Interval::End;
     else {
       // Not a builtin interval, parse it!
       auto levelPair = parser_->getCustomIntervalLevel(name);
@@ -370,7 +370,7 @@ public:
   }
 
   /// @brief Get the SIRInterval
-  std::pair<std::shared_ptr<dawn::sir::Interval>, dawn::sir::VerticalRegion::LoopOrderKind>
+  std::pair<std::shared_ptr<dawn::ast::Interval>, dawn::sir::VerticalRegion::LoopOrderKind>
   getInterval(int dim) const {
 
     // Note that intervals have the the invariant lowerBound <= upperBound. We thus encapsulate the
@@ -378,12 +378,12 @@ public:
     if(dim < 3 && dim >= 0) {
       if((level_[2 * dim] + offset_[2 * dim]) <= (level_[2 * dim + 1] + offset_[2 * dim + 1]))
         return std::make_pair(
-            std::make_shared<dawn::sir::Interval>(level_[2 * dim], level_[2 * dim + 1],
+            std::make_shared<dawn::ast::Interval>(level_[2 * dim], level_[2 * dim + 1],
                                                   offset_[2 * dim], offset_[2 * dim + 1]),
             dawn::sir::VerticalRegion::LoopOrderKind::Forward);
       else
         return std::make_pair(
-            std::make_shared<dawn::sir::Interval>(level_[2 * dim + 1], level_[2 * dim],
+            std::make_shared<dawn::ast::Interval>(level_[2 * dim + 1], level_[2 * dim],
                                                   offset_[2 * dim + 1], offset_[2 * dim]),
             dawn::sir::VerticalRegion::LoopOrderKind::Backward);
     } else {
@@ -449,9 +449,9 @@ private:
 
     llvm::StringRef name = expr->getDecl()->getName();
     if(name == "k_start" || name == "i_start" || name == "j_start")
-      level_[curIndex_] = dawn::sir::Interval::Start;
+      level_[curIndex_] = dawn::ast::Interval::Start;
     else if(name == "k_end" || name == "i_end" || name == "j_end")
-      level_[curIndex_] = dawn::sir::Interval::End;
+      level_[curIndex_] = dawn::ast::Interval::End;
     else {
       // Not a builtin interval, parse it!
       auto levelPair = parser_->getCustomIntervalLevel(name);
@@ -867,7 +867,7 @@ void StencilParser::parseStencilFunctionDoMethod(clang::CXXMethodDecl* DoMethod)
       << getFilename(DoMethod->getLocation().printToString(context_->getSourceManager())).str()
       << " ...";
 
-  std::shared_ptr<dawn::sir::Interval> intervals = nullptr;
+  std::shared_ptr<dawn::ast::Interval> intervals = nullptr;
   if(DoMethod->getNumParams() > 0) {
     if(DoMethod->getNumParams() != 2) {
       reportDiagnostic(clang_compat::getBeginLoc(*DoMethod),
@@ -1196,12 +1196,12 @@ StencilParser::parseIterationSpace(clang::CXXForRangeStmt* iterationSpaceDecl) {
 
   auto SIRVerticalRegion = std::make_shared<dawn::sir::VerticalRegion>(
       SIRAST, kIntervalPair.first, kIntervalPair.second, getLocation(iterationSpaceDecl));
-  if(iInterval->LowerLevel != dawn::sir::Interval::Start || iInterval->LowerOffset != 0 ||
-     iInterval->UpperLevel != dawn::sir::Interval::End || iInterval->UpperOffset != 0) {
+  if(iInterval->LowerLevel != dawn::ast::Interval::Start || iInterval->LowerOffset != 0 ||
+     iInterval->UpperLevel != dawn::ast::Interval::End || iInterval->UpperOffset != 0) {
     SIRVerticalRegion->IterationSpace[0] = *iInterval;
   }
-  if(jInterval->LowerLevel != dawn::sir::Interval::Start || jInterval->LowerOffset != 0 ||
-     jInterval->UpperLevel != dawn::sir::Interval::End || jInterval->UpperOffset != 0) {
+  if(jInterval->LowerLevel != dawn::ast::Interval::Start || jInterval->LowerOffset != 0 ||
+     jInterval->UpperLevel != dawn::ast::Interval::End || jInterval->UpperOffset != 0) {
     SIRVerticalRegion->IterationSpace[1] = *jInterval;
   }
 

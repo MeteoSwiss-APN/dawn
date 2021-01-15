@@ -14,7 +14,6 @@
 
 #include "dawn/CodeGen/Driver.h"
 #include "dawn/SIR/SIR.h"
-#include "dawn/Serialization/IIRSerializer.h"
 #include "dawn/Support/FileSystem.h"
 #include "dawn/Unittest/IIRBuilder.h"
 
@@ -24,7 +23,7 @@
 
 namespace dawn {
 
-using SInterval = dawn::sir::Interval;
+using AInterval = dawn::ast::Interval;
 
 std::shared_ptr<iir::StencilInstantiation> getGlobalIndexStencil() {
   UIDGenerator::getInstance()->reset();
@@ -37,10 +36,10 @@ std::shared_ptr<iir::StencilInstantiation> getGlobalIndexStencil() {
       b.build("generated",
               b.stencil(b.multistage(
                   iir::LoopOrderKind::Parallel,
-                  b.stage(b.doMethod(SInterval::Start, SInterval::End,
+                  b.stage(b.doMethod(AInterval::Start, AInterval::End,
                                      b.block(b.stmt(b.assignExpr(b.at(out_f), b.at(in_f)))))),
                   b.stage(1, {0, 2},
-                          b.doMethod(SInterval::Start, SInterval::End,
+                          b.doMethod(AInterval::Start, AInterval::End,
                                      b.block(b.stmt(b.assignExpr(b.at(out_f), b.lit(10)))))))));
 
   return stencilInstantiation;
@@ -59,7 +58,7 @@ std::shared_ptr<iir::StencilInstantiation> getLaplacianStencil() {
       b.stencil(b.multistage(
           iir::LoopOrderKind::Parallel,
           b.stage(b.doMethod(
-              SInterval::Start, SInterval::End, b.declareVar(dx),
+              AInterval::Start, AInterval::End, b.declareVar(dx),
               b.block(b.stmt(b.assignExpr(
                   b.at(out),
                   b.binaryExpr(
@@ -90,7 +89,7 @@ std::shared_ptr<iir::StencilInstantiation> getNonOverlappingInterval() {
       b.stencil(b.multistage(
           iir::LoopOrderKind::Parallel,
           b.stage(b.doMethod(
-              SInterval(SInterval::Start, 10), b.declareVar(dx),
+              AInterval(AInterval::Start, 10), b.declareVar(dx),
               b.block(b.stmt(b.assignExpr(
                   b.at(out),
                   b.binaryExpr(
@@ -104,7 +103,7 @@ std::shared_ptr<iir::StencilInstantiation> getNonOverlappingInterval() {
                                                                      b.at(in, {0, 1, 0}))))),
                           iir::Op::multiply),
                       b.binaryExpr(b.at(dx), b.at(dx), iir::Op::multiply), iir::Op::divide)))))),
-          b.stage(b.doMethod(SInterval(15, SInterval::End),
+          b.stage(b.doMethod(AInterval(15, AInterval::End),
                              b.block(b.stmt(b.assignExpr(b.at(out), b.lit(10)))))))));
 
   return stencilInstantiation;

@@ -35,7 +35,7 @@ void setLocation(dawn::proto::statements::SourceLocation* locProto, const Source
 void setBuiltinType(dawn::proto::statements::BuiltinType* builtinTypeProto,
                     const BuiltinTypeID& builtinType);
 
-void setInterval(dawn::proto::statements::Interval* intervalProto, const sir::Interval* interval);
+void setInterval(dawn::proto::statements::Interval* intervalProto, const ast::Interval* interval);
 
 void setDirection(dawn::proto::statements::Direction* directionProto,
                   const sir::Direction* direction);
@@ -133,7 +133,7 @@ std::shared_ptr<sir::Direction> makeDirection(const proto::statements::Direction
 
 std::shared_ptr<sir::Offset> makeOffset(const proto::statements::Offset& offsetProto);
 
-std::shared_ptr<sir::Interval> makeInterval(const proto::statements::Interval& intervalProto);
+std::shared_ptr<ast::Interval> makeInterval(const proto::statements::Interval& intervalProto);
 
 std::shared_ptr<ast::Expr> makeExpr(const proto::statements::Expr& expressionProto,
                                     ast::StmtData::DataType dataType, int& maxID);

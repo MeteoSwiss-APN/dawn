@@ -36,7 +36,7 @@ class StencilMetaInformation;
 /// @ingroup optimizer
 class Stencil : public IIRNode<IIR, Stencil, MultiStage, impl::StdList> {
   const StencilMetaInformation& metadata_;
-  sir::Attr stencilAttributes_;
+  ast::Attr stencilAttributes_;
 
   /// Identifier of the stencil. Note that this ID is only for code-generation to associate the
   /// stencil with a stencil-call in the run() method
@@ -176,7 +176,7 @@ public:
 
   /// @name Constructors and Assignment
   /// @{
-  Stencil(const StencilMetaInformation& metadata, sir::Attr attributes, int StencilID);
+  Stencil(const StencilMetaInformation& metadata, ast::Attr attributes, int StencilID);
 
   Stencil(Stencil&&) = default;
   /// @}
@@ -298,7 +298,7 @@ public:
   bool compareDerivedInfo() const;
 
   ///@brief Get the Attributes of the Stencil as specified in the user-code
-  sir::Attr& getStencilAttributes();
+  ast::Attr& getStencilAttributes();
 
 private:
   void forEachStatementImpl(std::function<void(ArrayRef<std::shared_ptr<ast::Stmt>>)> func,

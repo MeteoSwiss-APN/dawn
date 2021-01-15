@@ -147,7 +147,7 @@ void GTClangASTConsumer::HandleTranslationUnit(clang::ASTContext& ASTContext) {
 
   if(std::any_of(SIR->Stencils.begin(), SIR->Stencils.end(),
                  [](const std::shared_ptr<dawn::sir::Stencil>& stencilPtr) {
-                   return stencilPtr->Attributes.has(dawn::sir::Attr::Kind::MergeTemporaries);
+                   return stencilPtr->Attributes.has(dawn::ast::Attr::Kind::MergeTemporaries);
                  }) ||
      context_->getOptions().TemporaryMerger) {
     passGroup.push_back(dawn::PassGroup::TemporaryMerger);
@@ -278,7 +278,7 @@ void GTClangASTConsumer::HandleTranslationUnit(clang::ASTContext& ASTContext) {
           context_->getASTContext().getLangOpts(), skipNewLines);
       if(rewriter.ReplaceText(
              clang::SourceRange(stencilDecl->getSourceRange().getBegin(), semiAfterDef),
-             stencilPair.second->Attributes.has(dawn::sir::Attr::Kind::NoCodeGen)
+             stencilPair.second->Attributes.has(dawn::ast::Attr::Kind::NoCodeGen)
                  ? ""
                  : DawnTranslationUnit->getStencils().at(
                        DawnTranslationUnit->getStencils().count("<restored>") > 0

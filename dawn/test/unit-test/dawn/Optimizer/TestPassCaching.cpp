@@ -45,9 +45,9 @@ TEST(TestCaching, test_global_iteration_space_01) {
       b.build(stencilName.c_str(),
               b.stencil(b.multistage(
                   dawn::iir::LoopOrderKind::Forward,
-                  b.stage(b.doMethod(dawn::sir::Interval::Start, dawn::sir::Interval::Start,
+                  b.stage(b.doMethod(dawn::ast::Interval::Start, dawn::ast::Interval::Start,
                                      b.stmt(b.assignExpr(b.at(tmp), b.at(in))))),
-                  b.stage(b.doMethod(dawn::sir::Interval::Start, dawn::sir::Interval::End, 1, 0,
+                  b.stage(b.doMethod(dawn::ast::Interval::Start, dawn::ast::Interval::End, 1, 0,
                                      b.stmt(b.assignExpr(b.at(out), b.at(tmp, {0, 0, -1}))))))));
 
   // run single compiler pass (caching)
@@ -81,10 +81,10 @@ TEST(TestCaching, test_global_iteration_space_02) {
               b.stencil(b.multistage(
                   dawn::iir::LoopOrderKind::Forward,
                   b.stage(Interval(0, 10), Interval(0, 10),
-                          b.doMethod(dawn::sir::Interval::Start, dawn::sir::Interval::Start,
+                          b.doMethod(dawn::ast::Interval::Start, dawn::ast::Interval::Start,
                                      b.stmt(b.assignExpr(b.at(tmp), b.at(in))))),
                   b.stage(Interval(2, 8), Interval(3, 10),
-                          b.doMethod(dawn::sir::Interval::Start, dawn::sir::Interval::End, 1, 0,
+                          b.doMethod(dawn::ast::Interval::Start, dawn::ast::Interval::End, 1, 0,
                                      b.stmt(b.assignExpr(b.at(out), b.at(tmp, {0, 0, -1}))))))));
 
   // run single compiler pass (caching)
@@ -119,10 +119,10 @@ TEST(TestCaching, test_global_iteration_space_03) {
               b.stencil(b.multistage(
                   dawn::iir::LoopOrderKind::Forward,
                   b.stage(Interval(0, 10), Interval(0, 10),
-                          b.doMethod(dawn::sir::Interval::Start, dawn::sir::Interval::Start,
+                          b.doMethod(dawn::ast::Interval::Start, dawn::ast::Interval::Start,
                                      b.stmt(b.assignExpr(b.at(tmp), b.at(in))))),
                   b.stage(Interval(2, 12), Interval(10, 13),
-                          b.doMethod(dawn::sir::Interval::Start, dawn::sir::Interval::End, 1, 0,
+                          b.doMethod(dawn::ast::Interval::Start, dawn::ast::Interval::End, 1, 0,
                                      b.stmt(b.assignExpr(b.at(out), b.at(tmp, {0, 0, -1}))))))));
 
   // run single compiler pass (caching)
@@ -154,9 +154,9 @@ TEST(TestCaching, test_global_iteration_space_04) {
               b.stencil(b.multistage(
                   dawn::iir::LoopOrderKind::Forward,
                   b.stage(Interval(0, 10), Interval(0, 10),
-                          b.doMethod(dawn::sir::Interval::Start, dawn::sir::Interval::Start,
+                          b.doMethod(dawn::ast::Interval::Start, dawn::ast::Interval::Start,
                                      b.stmt(b.assignExpr(b.at(tmp), b.at(in))))),
-                  b.stage(b.doMethod(dawn::sir::Interval::Start, dawn::sir::Interval::End, 1, 0,
+                  b.stage(b.doMethod(dawn::ast::Interval::Start, dawn::ast::Interval::End, 1, 0,
                                      b.stmt(b.assignExpr(b.at(out), b.at(tmp, {0, 0, -1}))))))));
 
   // run single compiler pass (caching)
@@ -187,10 +187,10 @@ TEST(TestCaching, test_global_iteration_space_05) {
       b.build(stencilName.c_str(),
               b.stencil(b.multistage(
                   dawn::iir::LoopOrderKind::Forward,
-                  b.stage(b.doMethod(dawn::sir::Interval::Start, dawn::sir::Interval::Start,
+                  b.stage(b.doMethod(dawn::ast::Interval::Start, dawn::ast::Interval::Start,
                                      b.stmt(b.assignExpr(b.at(tmp), b.at(in))))),
                   b.stage(Interval(0, 10), Interval(0, 10),
-                          b.doMethod(dawn::sir::Interval::Start, dawn::sir::Interval::End, 1, 0,
+                          b.doMethod(dawn::ast::Interval::Start, dawn::ast::Interval::End, 1, 0,
                                      b.stmt(b.assignExpr(b.at(out), b.at(tmp, {0, 0, -1}))))))));
 
   // run single compiler pass (caching)

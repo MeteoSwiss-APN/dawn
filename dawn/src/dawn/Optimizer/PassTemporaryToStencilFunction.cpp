@@ -33,12 +33,12 @@
 namespace dawn {
 
 namespace {
-sir::Interval intervalToSIRInterval(iir::Interval interval) {
-  return sir::Interval(interval.lowerLevel(), interval.upperLevel(), interval.lowerOffset(),
+ast::Interval intervalToSIRInterval(iir::Interval interval) {
+  return ast::Interval(interval.lowerLevel(), interval.upperLevel(), interval.lowerOffset(),
                        interval.upperOffset());
 }
 
-iir::Interval sirIntervalToInterval(sir::Interval interval) {
+iir::Interval sirIntervalToInterval(ast::Interval interval) {
   return iir::Interval(interval.LowerLevel, interval.UpperLevel, interval.LowerOffset,
                        interval.UpperOffset);
 }
@@ -148,7 +148,7 @@ std::string makeOnTheFlyFunctionName(const std::shared_ptr<ast::FieldAccessExpr>
 }
 
 std::string makeOnTheFlyFunctionCandidateName(const std::string fieldName,
-                                              const sir::Interval& interval) {
+                                              const ast::Interval& interval) {
   return fieldName + "_OnTheFly_" + sirIntervalToInterval(interval).toStringGen();
 }
 
@@ -158,7 +158,7 @@ std::string makeOnTheFlyFunctionCandidateName(const std::string fieldName,
 class TmpAssignment : public ast::ASTVisitorPostOrder, public NonCopyable {
 protected:
   const iir::StencilMetaInformation& metadata_;
-  sir::Interval interval_; // interval where the function declaration will be defined
+  ast::Interval interval_; // interval where the function declaration will be defined
   std::shared_ptr<sir::StencilFunction>
       tmpFunction_;            // sir function with the declaration of the tmp computation
   std::vector<int> accessIDs_; // accessIDs of the accesses that form the tmp = ... expression, that
@@ -172,7 +172,7 @@ protected:
                           // requirements, like they contain cycle dependencies, etc
 
 public:
-  TmpAssignment(const iir::StencilMetaInformation& metadata, sir::Interval const& interval,
+  TmpAssignment(const iir::StencilMetaInformation& metadata, ast::Interval const& interval,
                 const std::set<int>& skipAccessIDsOfMS)
       : metadata_(metadata), interval_(interval), tmpFunction_(nullptr),
         skipAccessIDsOfMS_(skipAccessIDsOfMS) {}
@@ -250,7 +250,7 @@ public:
 
       tmpFunction_->Name = makeOnTheFlyFunctionCandidateName(tmpFieldName, interval_);
       tmpFunction_->Loc = expr->getSourceLocation();
-      tmpFunction_->Intervals.push_back(std::make_shared<sir::Interval>(interval_));
+      tmpFunction_->Intervals.push_back(std::make_shared<ast::Interval>(interval_));
 
       return true;
     }
@@ -300,7 +300,7 @@ protected:
   const Options& options_;
   std::unordered_map<int, TemporaryFunctionProperties> const& temporaryFieldAccessIDToFunctionCall_;
   const iir::Interval interval_;
-  const sir::Interval sirInterval_;
+  const ast::Interval sirInterval_;
   const std::vector<ast::StencilCall*>& stackTrace_;
   std::shared_ptr<ast::Expr> skip_;
 
@@ -639,7 +639,7 @@ bool PassTemporaryToStencilFunction::run(
               {
                 // TODO catch a temp expr
                 const iir::Interval& doMethodInterval = doMethodPtr->getInterval();
-                const sir::Interval sirInterval = intervalToSIRInterval(interval);
+                const ast::Interval sirInterval = intervalToSIRInterval(interval);
 
                 DAWN_ASSERT(stmt->getData<iir::IIRStmtData>().StackTrace);
 

@@ -222,7 +222,7 @@ TEST_F(TestPassFieldVersioning, VersionSparseField) {
       b.stencil(b.multistage(
           LoopOrderKind::Parallel,
           b.stage(b.doMethod(
-              dawn::sir::Interval::Start, dawn::sir::Interval::End,
+              dawn::ast::Interval::Start, dawn::ast::Interval::End,
               b.stmt(b.assignExpr(b.at(dense),
                                   b.reduceOverNeighborExpr(Op::plus, b.at(sparse), b.lit(0.),
                                                            {LocType::Edges, LocType::Cells,

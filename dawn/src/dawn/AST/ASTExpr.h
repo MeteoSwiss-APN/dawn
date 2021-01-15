@@ -21,7 +21,6 @@
 
 #include "dawn/Support/Array.h"
 #include "dawn/Support/ArrayRef.h"
-#include "dawn/Support/SourceLocation.h"
 #include "dawn/Support/Type.h"
 #include "dawn/Support/UIDGenerator.h"
 #include <array>

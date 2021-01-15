@@ -204,7 +204,7 @@ void StatementMapper::visit(const std::shared_ptr<ast::StencilFunCallExpr>& expr
       std::shared_ptr<ast::AST> ast = nullptr;
       if(iirStencilFun->isSpecialized()) {
         // Select the correct overload
-        ast = iirStencilFun->getASTOfInterval(interval.asSIRInterval());
+        ast = iirStencilFun->getASTOfInterval(interval.asASTInterval());
         if(ast == nullptr) {
           throw SyntacticError(
               std::string("No viable Do-Method overload for stencil function call '") +
@@ -314,7 +314,7 @@ void StatementMapper::visit(const std::shared_ptr<ast::VarAccessExpr>& expr) {
       DAWN_ASSERT_MSG(value.has_value(), "constant global variable with no value");
 
       auto newExpr = std::make_shared<ast::LiteralAccessExpr>(
-          value.toString(), sir::Value::typeToBuiltinTypeID(value.getType()));
+          value.toString(), ast::Value::typeToBuiltinTypeID(value.getType()));
       ast::replaceOldExprWithNewExprInStmt(
           (*(scope_.top()->doMethod_.getAST().getStatements().rbegin())), expr, newExpr);
 

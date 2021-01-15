@@ -12,34 +12,13 @@
 //
 //===------------------------------------------------------------------------------------------===//
 
-#include "dawn/SIR/SIR.h"
-#include "dawn/SIR/AST.h"
 #include "dawn/AST/ASTStringifier.h"
-#include "dawn/Support/Casting.h"
-#include "dawn/Support/Format.h"
+#include "dawn/SIR/SIR.h"
 #include "dawn/Support/Printing.h"
-#include "dawn/Support/Unreachable.h"
-#include <iomanip>
-#include <sstream>
 
 namespace dawn {
 
 namespace {
-
-///@brief Stringification of a Value mismatch
-template <class T>
-CompareResult isEqualImpl(const sir::Value& a, const sir::Value& b, const std::string& name) {
-  if(a.getValue<T>() != b.getValue<T>())
-    return CompareResult{dawn::format("[Value mismatch] %s values are not equal\n"
-                                      "  Actual:\n"
-                                      "    %s\n"
-                                      "  Expected:\n"
-                                      "    %s",
-                                      name, a.toString(), b.toString()),
-                         false};
-
-  return CompareResult{"", true};
-}
 
 /// @brief Compares the content of two shared pointers
 ///
@@ -72,8 +51,8 @@ CompareResult pointeeComparisonWithOutput(const std::shared_ptr<T>& comparate1,
 /// the string returns a potential mismatch notification
 ///
 /// @return pair of boolean and string
-static std::pair<std::string, bool> globalMapComparison(const sir::GlobalVariableMap& map1,
-                                                        const sir::GlobalVariableMap& map2) {
+static std::pair<std::string, bool> globalMapComparison(const ast::GlobalVariableMap& map1,
+                                                        const ast::GlobalVariableMap& map2) {
   std::string output;
   if(map1.size() != map2.size()) {
     output += dawn::format("[GlobalVariableMap mismatch] Number of Global Variables do not match\n"
@@ -259,7 +238,7 @@ CompareResult sir::StencilFunction::comparison(const sir::StencilFunction& rhs) 
 
   // Intervals
   if(!Intervals.empty() && !std::equal(Intervals.begin(), Intervals.end(), rhs.Intervals.begin(),
-                                       pointeeComparison<sir::Interval>)) {
+                                       pointeeComparison<ast::Interval>)) {
     std::string output = "[StencilFunction mismatch] Intervals do not match\n";
     for(int i = 0; i < Intervals.size(); ++i) {
       auto comp = pointeeComparisonWithOutput(Intervals[i], rhs.Intervals[i]);
@@ -282,7 +261,7 @@ CompareResult sir::StencilFunction::comparison(const sir::StencilFunction& rhs) 
                          false};
   }
 
-  auto intervalToString = [](const sir::Interval& interval) {
+  auto intervalToString = [](const ast::Interval& interval) {
     std::stringstream ss;
     ss << interval;
     return ss.str();
@@ -337,35 +316,14 @@ CompareResult sir::StencilFunctionArg::comparison(const sir::StencilFunctionArg&
   return CompareResult{"", true};
 }
 
-CompareResult sir::Value::comparison(const sir::Value& rhs) const {
-  auto type = getType();
-  if(type != rhs.getType())
-    return CompareResult{dawn::format("[Value mismatch] Values are not of the same type\n"
-                                      "  Actual:\n"
-                                      "    %s\n"
-                                      "  Expected:\n"
-                                      "    %s",
-                                      sir::Value::typeToString(type),
-                                      sir::Value::typeToString(rhs.getType())),
-                         false};
-
-  switch(type) {
-  case sir::Value::Kind::Boolean:
-    return isEqualImpl<bool>(*this, rhs, rhs.toString());
-  case sir::Value::Kind::Integer:
-    return isEqualImpl<int>(*this, rhs, rhs.toString());
-  case sir::Value::Kind::Double:
-    return isEqualImpl<double>(*this, rhs, rhs.toString());
-  case sir::Value::Kind::Float:
-    return isEqualImpl<float>(*this, rhs, rhs.toString());
-  case sir::Value::Kind::String:
-    return isEqualImpl<std::string>(*this, rhs, rhs.toString());
-  default:
-    dawn_unreachable("invalid type");
-  }
-}
-
 namespace sir {
+
+std::shared_ptr<ast::AST> StencilFunction::getASTOfInterval(const ast::Interval& interval) const {
+  for(int i = 0; i < Intervals.size(); ++i)
+    if(*Intervals[i] == interval)
+      return Asts[i];
+  return nullptr;
+}
 
 bool StencilFunction::isSpecialized() const { return !Intervals.empty(); }
 
@@ -481,6 +439,17 @@ int FieldDimensions::rank() const {
   }
   return rank;
 }
+
+bool Stencil::operator==(const sir::Stencil& rhs) const { return bool(comparison(rhs)); }
+
+bool StencilFunction::operator==(const sir::StencilFunction& rhs) const {
+  return bool(comparison(rhs));
+}
+
+bool StencilFunctionArg::operator==(const sir::StencilFunctionArg& rhs) const {
+  return bool(comparison(rhs));
+}
+
 } // namespace sir
 
 std::ostream& operator<<(std::ostream& os, const SIR& Sir) {
@@ -532,77 +501,12 @@ std::ostream& operator<<(std::ostream& os, const SIR& Sir) {
 }
 
 SIR::SIR(const ast::GridType gridType)
-    : GlobalVariableMap(std::make_shared<sir::GlobalVariableMap>()), GridType(gridType) {}
+    : GlobalVariableMap(std::make_shared<ast::GlobalVariableMap>()), GridType(gridType) {}
 
 void SIR::dump(std::ostream& os) { os << *this << std::endl; }
-
-const char* sir::Value::typeToString(sir::Value::Kind type) {
-  switch(type) {
-  case Kind::Boolean:
-    return "bool";
-  case Kind::Integer:
-    return "int";
-  case Kind::Double:
-    return "double";
-  case Kind::Float:
-    return "float";
-  case Kind::String:
-    return "std::string";
-  }
-  dawn_unreachable("invalid type");
-}
-
-BuiltinTypeID sir::Value::typeToBuiltinTypeID(sir::Value::Kind type) {
-  switch(type) {
-  case Kind::Boolean:
-    return BuiltinTypeID::Boolean;
-  case Kind::Integer:
-    return BuiltinTypeID::Integer;
-  case Kind::Double:
-    return BuiltinTypeID::Double;
-  case Kind::Float:
-    return BuiltinTypeID::Float;
-  default:
-    dawn_unreachable("invalid type");
-  }
-}
-
-std::string sir::Value::toString() const {
-  std::ostringstream out;
-  DAWN_ASSERT(has_value());
-  switch(type_) {
-  case Kind::Boolean:
-    return std::get<bool>(*value_) ? "true" : "false";
-  case Kind::Integer:
-    return std::to_string(std::get<int>(*value_));
-  case Kind::Double:
-    out << std::setprecision(std::numeric_limits<double>::max_digits10)
-        << std::get<double>(*value_);
-    return out.str();
-  case Kind::Float:
-    out << std::setprecision(std::numeric_limits<float>::max_digits10) << std::get<float>(*value_);
-    return out.str();
-  case Kind::String:
-    return std::get<std::string>(*value_);
-  default:
-    dawn_unreachable("invalid type");
-  }
-}
 
 bool SIR::operator==(const SIR& rhs) const { return comparison(rhs); }
 
 bool SIR::operator!=(const SIR& rhs) const { return !(*this == rhs); }
-
-bool sir::Stencil::operator==(const sir::Stencil& rhs) const { return bool(comparison(rhs)); }
-
-bool sir::StencilFunction::operator==(const sir::StencilFunction& rhs) const {
-  return bool(comparison(rhs));
-}
-
-bool sir::StencilFunctionArg::operator==(const sir::StencilFunctionArg& rhs) const {
-  return bool(comparison(rhs));
-}
-
-bool sir::Value::operator==(const sir::Value& rhs) const { return bool(comparison(rhs)); }
 
 } // namespace dawn

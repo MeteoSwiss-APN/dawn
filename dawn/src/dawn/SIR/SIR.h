@@ -14,28 +14,17 @@
 
 #pragma once
 
+#include "dawn/AST/Attr.h"
 #include "dawn/AST/GridType.h"
+#include "dawn/AST/Interval.h"
 #include "dawn/AST/IterationSpace.h"
-#include "dawn/AST/Tags.h"
+#include "dawn/AST/Value.h"
 #include "dawn/SIR/AST.h"
-#include "dawn/SIR/Interval.h"
 #include "dawn/SIR/VerticalRegion.h"
 #include "dawn/Support/Assert.h"
 #include "dawn/Support/ComparisonHelpers.h"
-#include "dawn/Support/HashCombine.h"
-#include "dawn/Support/Json.h"
 #include "dawn/Support/NonCopyable.h"
 #include "dawn/Support/SourceLocation.h"
-#include "dawn/Support/Type.h"
-#include <algorithm>
-#include <iosfwd>
-#include <map>
-#include <memory>
-#include <optional>
-#include <ostream>
-#include <string>
-#include <variant>
-#include <vector>
 
 namespace dawn {
 
@@ -43,52 +32,6 @@ namespace dawn {
 /// @brief This namespace contains a C++ implementation of the SIR specification
 /// @ingroup sir
 namespace sir {
-
-/// @brief Attributes attached to various SIR objects which allow to change the behavior on per
-/// stencil basis
-/// @ingroup sir
-class Attr {
-  unsigned attrBits_;
-
-public:
-  Attr() : attrBits_(0) {}
-
-  /// @brief Attribute bit-mask
-  enum class Kind : unsigned {
-    NoCodeGen = 1 << 0,        ///< Don't generate code for this stencil
-    MergeStages = 1 << 1,      ///< Merge the Stages of this stencil
-    MergeDoMethods = 1 << 2,   ///< Merge the Do-Methods of this stencil
-    MergeTemporaries = 1 << 3, ///< Merge the temporaries of this stencil
-    UseKCaches = 1 << 4        ///< Use K-Caches
-  };
-
-  /// @brief Check if `attr` bit is set
-  bool has(Kind attr) const { return (attrBits_ >> static_cast<unsigned>(attr)) & 1; }
-
-  /// @brief Check if any of the `attrs` bits is set
-  /// @{
-  bool hasOneOf(Kind attr1, Kind attr2) const { return has(attr1) || has(attr2); }
-
-  template <typename... AttrTypes>
-  bool hasOneOf(Kind attr1, Kind attr2, AttrTypes... attrs) const {
-    return has(attr1) || hasOneOf(attr2, attrs...);
-  }
-  /// @}
-
-  ///@brief getting the Bits
-  unsigned getBits() const { return attrBits_; }
-  /// @brief Set `attr`bit
-  void set(Kind attr) { attrBits_ |= 1 << static_cast<unsigned>(attr); }
-
-  /// @brief Unset `attr` bit
-  void unset(Kind attr) { attrBits_ &= ~(1 << static_cast<unsigned>(attr)); }
-
-  /// @brief Clear all attributes
-  void clear() { attrBits_ = 0; }
-
-  bool operator==(const Attr& rhs) const { return getBits() == rhs.getBits(); }
-  bool operator!=(const Attr& rhs) const { return getBits() != rhs.getBits(); }
-};
 
 //===------------------------------------------------------------------------------------------===//
 //     StencilFunctionArgs (Field, Direction and Offset)
@@ -326,9 +269,9 @@ struct StencilFunction {
   std::string Name;                                      ///< Name of the stencil function
   SourceLocation Loc;                                    ///< Source location of the stencil func
   std::vector<std::shared_ptr<StencilFunctionArg>> Args; ///< Arguments of the stencil function
-  std::vector<std::shared_ptr<Interval>> Intervals; ///< Vertical intervals of the specializations
+  std::vector<std::shared_ptr<ast::Interval>> Intervals; ///< Vertical intervals of the specializations
   std::vector<std::shared_ptr<ast::AST>> Asts;      ///< ASTs of the specializations
-  Attr Attributes;                                  ///< Attributes of the stencil function
+  ast::Attr Attributes;                                  ///< Attributes of the stencil function
 
   /// @brief Check if the Stencil function contains specializations
   ///
@@ -338,7 +281,7 @@ struct StencilFunction {
 
   /// @brief Get the AST of the specified vertical interval or `NULL` if the function is not
   /// specialized for this interval
-  std::shared_ptr<ast::AST> getASTOfInterval(const Interval& interval) const;
+  std::shared_ptr<ast::AST> getASTOfInterval(const ast::Interval& interval) const;
 
   bool operator==(const sir::StencilFunction& rhs) const;
   CompareResult comparison(const StencilFunction& rhs) const;
@@ -365,141 +308,11 @@ struct Stencil : public dawn::NonCopyable {
   SourceLocation Loc;                         ///< Source location of the stencil declaration
   std::shared_ptr<ast::AST> StencilDescAst;   ///< Stencil description AST
   std::vector<std::shared_ptr<Field>> Fields; ///< Fields referenced by this stencil
-  Attr Attributes;                            ///< Attributes of the stencil
+  ast::Attr Attributes;                            ///< Attributes of the stencil
 
   bool operator==(const Stencil& rhs) const;
   CompareResult comparison(const Stencil& rhs) const;
 };
-
-//===------------------------------------------------------------------------------------------===//
-//     Global Variable Map
-//===------------------------------------------------------------------------------------------===//
-
-/// @brief Representation of a value of a global variable
-///
-/// This is a very primitive (i.e non-copyable, immutable) version of boost::any.
-/// Further, the possible values are restricted to `bool`, `int`, `double` or `std::string`.
-///
-/// @ingroup sir
-
-class Value {
-public:
-  enum class Kind { Boolean = 0, Integer, Float, Double, String };
-  template <typename T>
-  struct TypeInfo;
-
-  template <class T>
-  Value(T value)
-      : value_{std::move(value)}, isConstexpr_{false}, type_{TypeInfo<std::decay_t<T>>::Type} {}
-
-  template <class T>
-  Value(T value, bool is_constexpr)
-      : value_{std::move(value)},
-        isConstexpr_{is_constexpr}, type_{TypeInfo<std::decay_t<T>>::Type} {}
-
-  Value(const Value& other)
-      : value_{other.value_}, isConstexpr_{other.isConstexpr()}, type_{other.getType()} {}
-
-  Value(Value& other)
-      : value_{other.value_}, isConstexpr_{other.isConstexpr()}, type_{other.getType()} {}
-
-  Value(Value&& other)
-      : value_{std::move(other.value_)}, isConstexpr_{other.isConstexpr()}, type_{other.getType()} {
-  }
-
-  Value(Kind type) : value_{}, isConstexpr_{false}, type_{type} {}
-
-  virtual ~Value() = default;
-
-  Value& operator=(const Value& other) {
-    value_ = other.value_;
-    isConstexpr_ = other.isConstexpr();
-    type_ = other.getType();
-    return *this;
-  }
-
-  /// @brief Get/Set if the variable is `constexpr`
-  virtual bool isConstexpr() const { return isConstexpr_; }
-
-  /// @brief `Type` to string
-  static const char* typeToString(Kind type);
-
-  /// @brief `Type` to `BuiltinTypeID`
-  static BuiltinTypeID typeToBuiltinTypeID(Kind type);
-
-  /// Convert the value to string
-  virtual std::string toString() const;
-
-  /// @brief Check if value is set
-  virtual bool has_value() const { return value_.has_value(); }
-
-  /// @brief Get/Set the underlying type
-  virtual Kind getType() const { return type_; }
-
-  /// @brief Get the value as type `T`
-  /// @returns Copy of the value
-  template <class T>
-  T getValue() const {
-    DAWN_ASSERT(has_value());
-    DAWN_ASSERT_MSG(getType() == TypeInfo<T>::Type, "type mismatch");
-    return std::get<T>(*value_);
-  }
-
-  virtual bool operator==(const Value& rhs) const;
-  virtual CompareResult comparison(const sir::Value& rhs) const;
-
-  virtual json::json jsonDump() const {
-    json::json valueJson;
-    valueJson["type"] = Value::typeToString(getType());
-    valueJson["isConstexpr"] = isConstexpr();
-    valueJson["value"] = toString();
-    return valueJson;
-  }
-
-protected:
-  std::optional<std::variant<bool, int, float, double, std::string>> value_;
-  bool isConstexpr_;
-  Kind type_;
-};
-
-template <>
-struct Value::TypeInfo<bool> {
-  static constexpr Kind Type = Kind::Boolean;
-};
-
-template <>
-struct Value::TypeInfo<int> {
-  static constexpr Kind Type = Kind::Integer;
-};
-
-template <>
-struct Value::TypeInfo<float> {
-  static constexpr Kind Type = Kind::Float;
-};
-
-template <>
-struct Value::TypeInfo<double> {
-  static constexpr Kind Type = Kind::Double;
-};
-
-template <>
-struct Value::TypeInfo<std::string> {
-  static constexpr Kind Type = Kind::String;
-};
-
-class Global : public Value, NonCopyable {
-public:
-  template <class T>
-  Global(T value) : Value(value) {}
-
-  template <class T>
-  Global(T value, bool is_constexpr) : Value(value, is_constexpr) {}
-
-  Global(Kind type) : Value(type) {}
-};
-
-// Using ordered map to guarantee the same backend code will be generated
-using GlobalVariableMap = std::map<std::string, Global>;
 
 } // namespace sir
 
@@ -534,7 +347,7 @@ struct SIR : public dawn::NonCopyable {
   std::string Filename;                                ///< Name of the file the SIR was parsed from
   std::vector<std::shared_ptr<sir::Stencil>> Stencils; ///< List of stencils
   std::vector<std::shared_ptr<sir::StencilFunction>> StencilFunctions; ///< List of stencil function
-  std::shared_ptr<sir::GlobalVariableMap> GlobalVariableMap;           ///< Map of global variables
+  std::shared_ptr<ast::GlobalVariableMap> GlobalVariableMap;           ///< Map of global variables
   const ast::GridType GridType;
 };
 

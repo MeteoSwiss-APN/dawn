@@ -44,7 +44,7 @@ TEST(TestIIRDeserializer, CopyStencil) {
   EXPECT_EQ(stage->getChildren().size(), 1);
 
   auto const& doMethod = *(stage->childrenBegin());
-  auto interval = iir::Interval{0, sir::Interval::End};
+  auto interval = iir::Interval{0, ast::Interval::End};
   EXPECT_EQ(doMethod->getInterval(), interval);
 
   auto const& ast = doMethod->getAST();
@@ -85,7 +85,7 @@ TEST(TestIIRDeserializer, LapStencil) {
   EXPECT_EQ(stage1->getChildren().size(), 1);
 
   auto const& doMethod1 = *(stage1->childrenBegin());
-  auto interval = iir::Interval{0, sir::Interval::End};
+  auto interval = iir::Interval{0, ast::Interval::End};
   EXPECT_EQ(doMethod1->getInterval(), interval);
 
   auto const& ast1 = doMethod1->getAST();
@@ -111,7 +111,7 @@ TEST(TestIIRDeserializer, LapStencil) {
   EXPECT_EQ(stage2->getChildren().size(), 1);
 
   auto const& doMethod2 = *(stage2->childrenBegin());
-  interval = iir::Interval{0, sir::Interval::End};
+  interval = iir::Interval{0, ast::Interval::End};
   EXPECT_EQ(doMethod2->getInterval(), interval);
 
   auto const& ast2 = doMethod2->getAST();
@@ -154,7 +154,7 @@ TEST(TestIIRDeserializer, UnstructuredSumEdgeToCells) {
   EXPECT_EQ(stage1->getChildren().size(), 1);
 
   auto const& doMethod1 = *(stage1->childrenBegin());
-  auto interval = iir::Interval{0, sir::Interval::End};
+  auto interval = iir::Interval{0, ast::Interval::End};
   EXPECT_EQ(doMethod1->getInterval(), interval);
 
   auto const& ast1 = doMethod1->getAST();
@@ -178,7 +178,7 @@ TEST(TestIIRDeserializer, UnstructuredSumEdgeToCells) {
   EXPECT_EQ(stage2->getChildren().size(), 1);
 
   auto const& doMethod2 = *(stage2->childrenBegin());
-  interval = iir::Interval{0, sir::Interval::End};
+  interval = iir::Interval{0, ast::Interval::End};
   EXPECT_EQ(doMethod2->getInterval(), interval);
 
   auto const& ast2 = doMethod2->getAST();
@@ -224,7 +224,7 @@ TEST(TestIIRDeserializer, UnstructuredMixedCopies) {
   EXPECT_EQ(stage1->getChildren().size(), 1);
 
   auto const& doMethod1 = *(stage1->childrenBegin());
-  auto interval = iir::Interval{0, sir::Interval::End};
+  auto interval = iir::Interval{0, ast::Interval::End};
   EXPECT_EQ(doMethod1->getInterval(), interval);
 
   auto const& ast1 = doMethod1->getAST();
@@ -248,7 +248,7 @@ TEST(TestIIRDeserializer, UnstructuredMixedCopies) {
   EXPECT_EQ(stage2->getChildren().size(), 1);
 
   auto const& doMethod2 = *(stage2->childrenBegin());
-  interval = iir::Interval{0, sir::Interval::End};
+  interval = iir::Interval{0, ast::Interval::End};
   EXPECT_EQ(doMethod2->getInterval(), interval);
 
   auto const& ast2 = doMethod2->getAST();

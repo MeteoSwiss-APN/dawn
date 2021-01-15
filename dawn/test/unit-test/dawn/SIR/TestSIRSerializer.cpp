@@ -231,12 +231,12 @@ TEST_P(StencilFunctionTest, ASTsLiteralAccess) {
 
 TEST_P(StencilFunctionTest, Intervals) {
   sirRef->StencilFunctions[0]->Intervals.emplace_back(
-      std::make_shared<sir::Interval>(sir::Interval::Start, sir::Interval::End));
+      std::make_shared<ast::Interval>(ast::Interval::Start, ast::Interval::End));
 
   sirRef->StencilFunctions[0]->Intervals.emplace_back(
-      std::make_shared<sir::Interval>(0, sir::Interval::End, -1, 2));
+      std::make_shared<ast::Interval>(0, ast::Interval::End, -1, 2));
 
-  sirRef->StencilFunctions[0]->Intervals.emplace_back(std::make_shared<sir::Interval>(5, 9, 1, -1));
+  sirRef->StencilFunctions[0]->Intervals.emplace_back(std::make_shared<ast::Interval>(5, 9, 1, -1));
 
   SIR_EXCPECT_EQ(sirRef, serializeAndDeserializeRef());
 }
@@ -249,15 +249,15 @@ class GlobalVariableTest : public SIRSerializerTest {
   virtual void SetUp() override {
     SIRSerializerTest::SetUp();
 
-    sirRef->GlobalVariableMap = std::make_shared<sir::GlobalVariableMap>();
+    sirRef->GlobalVariableMap = std::make_shared<ast::GlobalVariableMap>();
   }
 };
 
 TEST_P(GlobalVariableTest, Value) {
-  sirRef->GlobalVariableMap->insert(std::pair("int", sir::Global(5)));
-  sirRef->GlobalVariableMap->insert(std::pair("double", sir::Global(5.5)));
-  sirRef->GlobalVariableMap->insert(std::pair("string", sir::Global(std::string{"str"})));
-  sirRef->GlobalVariableMap->insert(std::pair("bool", sir::Global(true)));
+  sirRef->GlobalVariableMap->insert(std::pair("int", ast::Global(5)));
+  sirRef->GlobalVariableMap->insert(std::pair("double", ast::Global(5.5)));
+  sirRef->GlobalVariableMap->insert(std::pair("string", ast::Global(std::string{"str"})));
+  sirRef->GlobalVariableMap->insert(std::pair("bool", ast::Global(true)));
 
   SIR_EXCPECT_EQ(sirRef, serializeAndDeserializeRef());
 }

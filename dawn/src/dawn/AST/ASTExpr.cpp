@@ -16,7 +16,6 @@
 #include "dawn/AST/ASTUtil.h"
 #include "dawn/Support/Assert.h"
 #include "dawn/Support/Casting.h"
-#include <memory>
 
 namespace dawn {
 namespace ast {

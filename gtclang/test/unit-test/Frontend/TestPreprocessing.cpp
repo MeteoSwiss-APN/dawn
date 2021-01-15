@@ -55,8 +55,8 @@ TEST(PreprocessingTest, Include) {
   ASSERT_EQ(sirString1, sirString2);
 }
 
-using LevelKind = dawn::sir::Interval::LevelKind;
-using Interval = dawn::sir::Interval;
+using LevelKind = dawn::ast::Interval::LevelKind;
+using Interval = dawn::ast::Interval;
 
 void checkVerticalRegion(const dawn::sir::VerticalRegion& vr, const Interval& VerticalInterval,
                          const std::optional<Interval>& Interval0,

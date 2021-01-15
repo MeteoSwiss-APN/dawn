@@ -89,7 +89,7 @@ json::json IIR::jsonDump() const {
   return node;
 }
 
-IIR::IIR(const ast::GridType gridType, std::shared_ptr<sir::GlobalVariableMap> sirGlobals,
+IIR::IIR(const ast::GridType gridType, std::shared_ptr<ast::GlobalVariableMap> sirGlobals,
          const std::vector<std::shared_ptr<sir::StencilFunction>>& stencilFunction)
     : gridType_(gridType), globalVariableMap_(sirGlobals), stencilFunctions_(stencilFunction) {}
 

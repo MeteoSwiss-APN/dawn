@@ -119,7 +119,7 @@ class StencilMetaInformation : public NonCopyable {
   friend IIRSerializer;
 
 public:
-  StencilMetaInformation(std::shared_ptr<sir::GlobalVariableMap> globalVariables);
+  StencilMetaInformation(std::shared_ptr<ast::GlobalVariableMap> globalVariables);
 
   void clone(const StencilMetaInformation& origin);
 

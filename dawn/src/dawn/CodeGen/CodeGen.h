@@ -95,13 +95,13 @@ public:
   computeCodeGenProperties(const iir::StencilInstantiation* stencilInstantiation) const;
 
   virtual void generateGlobalsAPI(Structure& stencilWrapperClass,
-                                  const sir::GlobalVariableMap& globalsMap,
+                                  const ast::GlobalVariableMap& globalsMap,
                                   const CodeGenProperties& codeGenProperties) const;
   virtual std::string generateGlobals(const StencilInstantiationContext& context,
                                       std::string namespace_);
   virtual std::string generateGlobals(const StencilInstantiationContext& context,
                                       std::string outer_namespace_, std::string inner_namespace_);
-  virtual std::string generateGlobals(const sir::GlobalVariableMap& globalsMaps,
+  virtual std::string generateGlobals(const ast::GlobalVariableMap& globalsMaps,
                                       std::string namespace_) const;
 
   void generateBCHeaders(std::vector<std::string>& ppDefines) const;

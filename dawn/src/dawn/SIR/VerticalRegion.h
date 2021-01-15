@@ -1,18 +1,8 @@
 #pragma once
 
-#include "dawn/AST/GridType.h"
-#include "dawn/AST/Tags.h"
-#include "dawn/SIR/ASTStmt.h"
+#include "dawn/AST/Interval.h"
 #include "dawn/SIR/AST.h"
-#include "dawn/SIR/Interval.h"
-#include "dawn/Support/Assert.h"
-#include "dawn/Support/ComparisonHelpers.h"
-#include "dawn/Support/Format.h"
-#include "dawn/Support/HashCombine.h"
-#include "dawn/Support/Json.h"
-#include "dawn/Support/NonCopyable.h"
-#include "dawn/Support/SourceLocation.h"
-#include "dawn/Support/Type.h"
+#include "dawn/SIR/ASTStmt.h"
 
 namespace dawn {
 
@@ -33,19 +23,19 @@ struct VerticalRegion {
 
   SourceLocation Loc;                         ///< Source location of the vertical region
   std::shared_ptr<ast::AST> Ast;              ///< AST of the region
-  std::shared_ptr<Interval> VerticalInterval; ///< Interval description of the region
+  std::shared_ptr<ast::Interval> VerticalInterval; ///< Interval description of the region
   LoopOrderKind LoopOrder;                    ///< Loop order (usually associated with the k-loop)
 
   /// If it is not instantiated, iteration over the full domain is assumed.
-  std::array<std::optional<Interval>, 2> IterationSpace; /// < Iteration space in the horizontal.
+  std::array<std::optional<ast::Interval>, 2> IterationSpace; /// < Iteration space in the horizontal.
 
   VerticalRegion(const std::shared_ptr<ast::AST>& ast,
-                 const std::shared_ptr<Interval>& verticalInterval, LoopOrderKind loopOrder,
+                 const std::shared_ptr<ast::Interval>& verticalInterval, LoopOrderKind loopOrder,
                  SourceLocation loc = SourceLocation())
       : Loc(loc), Ast(ast), VerticalInterval(verticalInterval), LoopOrder(loopOrder) {}
   VerticalRegion(const std::shared_ptr<ast::AST>& ast,
-                 const std::shared_ptr<Interval>& verticalInterval, LoopOrderKind loopOrder,
-                 std::optional<Interval> iterationSpaceI, std::optional<Interval> iterationSpaceJ,
+                 const std::shared_ptr<ast::Interval>& verticalInterval, LoopOrderKind loopOrder,
+                 std::optional<ast::Interval> iterationSpaceI, std::optional<ast::Interval> iterationSpaceJ,
                  SourceLocation loc = SourceLocation())
       : Loc(loc), Ast(ast), VerticalInterval(verticalInterval), LoopOrder(loopOrder),
         IterationSpace({iterationSpaceI, iterationSpaceJ}) {}

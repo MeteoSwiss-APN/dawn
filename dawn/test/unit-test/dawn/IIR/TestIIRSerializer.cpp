@@ -256,10 +256,10 @@ TEST_F(IIRSerializerTest, IIRTestsStageLocationType) {
       stencilName.c_str(),
       b.stencil(b.multistage(
           LoopOrderKind::Parallel,
-          b.stage(LocType::Cells, b.doMethod(dawn::sir::Interval::Start, dawn::sir::Interval::End,
+          b.stage(LocType::Cells, b.doMethod(dawn::ast::Interval::Start, dawn::ast::Interval::End,
                                              b.stmt(b.assignExpr(b.at(out_c), b.at(in_c))))),
           b.stage(LocType::Vertices,
-                  b.doMethod(dawn::sir::Interval::Start, dawn::sir::Interval::End,
+                  b.doMethod(dawn::ast::Interval::Start, dawn::ast::Interval::End,
                              b.stmt(b.assignExpr(b.at(out_v), b.at(in_v))))))));
 
   auto deserializedAndSerialized =
@@ -283,7 +283,7 @@ TEST_F(IIRSerializerTest, IIRTestsReduce) {
               b.stencil(b.multistage(
                   LoopOrderKind::Parallel,
                   b.stage(b.doMethod(
-                      dawn::sir::Interval::Start, dawn::sir::Interval::End,
+                      dawn::ast::Interval::Start, dawn::ast::Interval::End,
                       b.stmt(b.assignExpr(b.at(out_f),
                                           b.reduceOverNeighborExpr(
                                               Op::plus, b.at(in_f, HOffsetType::withOffset, 0),
@@ -309,7 +309,7 @@ TEST_F(IIRSerializerTest, IIRTestsLoop) {
           dawn::iir::LoopOrderKind::Parallel,
           b.stage(
               LocType::Edges,
-              b.doMethod(dawn::sir::Interval::Start, dawn::sir::Interval::End,
+              b.doMethod(dawn::ast::Interval::Start, dawn::ast::Interval::End,
                          b.loopStmtChain(b.stmt(b.assignExpr(b.at(out_f), b.at(in_f))),
                                          {LocType::Edges, LocType::Cells, LocType::Vertices}))))));
 
@@ -334,7 +334,7 @@ TEST_F(IIRSerializerTest, IIRTestsWeightedReduce) {
       b.stencil(b.multistage(
           LoopOrderKind::Parallel,
           b.stage(b.doMethod(
-              dawn::sir::Interval::Start, dawn::sir::Interval::End,
+              dawn::ast::Interval::Start, dawn::ast::Interval::End,
               b.stmt(b.assignExpr(b.at(out_f), b.reduceOverNeighborExpr(
                                                    Op::plus, b.at(in_f, HOffsetType::withOffset, 0),
                                                    b.lit(0.), {LocType::Cells, LocType::Edges},
@@ -371,7 +371,7 @@ TEST_F(IIRSerializerTest, IIRTestsGeneralWeightedReduce) {
       b.stencil(b.multistage(
           LoopOrderKind::Parallel,
           b.stage(b.doMethod(
-              dawn::sir::Interval::Start, dawn::sir::Interval::End,
+              dawn::ast::Interval::Start, dawn::ast::Interval::End,
               b.stmt(b.assignExpr(b.at(out_f),
                                   b.reduceOverNeighborExpr(
                                       Op::plus, b.at(in_f, HOffsetType::withOffset, 0), b.lit(0.),
@@ -393,15 +393,15 @@ TEST_F(IIRSerializerTest, IIRTestsGeneralWeightedReduce) {
 }
 
 TEST_F(IIRSerializerTest, IIRTests) {
-  sir::Attr attributes;
-  attributes.set(sir::Attr::Kind::MergeStages);
+  ast::Attr attributes;
+  attributes.set(ast::Attr::Kind::MergeStages);
   referenceInstantiation->getIIR()->insertChild(
       std::make_unique<iir::Stencil>(referenceInstantiation->getMetaData(), attributes, 10),
       referenceInstantiation->getIIR());
   const auto& IIRStencil = referenceInstantiation->getIIR()->getChild(0);
   auto deserialized = serializeAndDeserializeRef();
   IIR_EXPECT_EQ(deserialized, referenceInstantiation);
-  IIRStencil->getStencilAttributes().set(sir::Attr::Kind::NoCodeGen);
+  IIRStencil->getStencilAttributes().set(ast::Attr::Kind::NoCodeGen);
   IIR_EXPECT_NE(deserialized, referenceInstantiation);
 
   (IIRStencil)
@@ -501,10 +501,10 @@ TEST_F(IIRSerializerTest, IterationSpace) {
       b.build("iteration_space",
               b.stencil(b.multistage(
                   LoopOrderKind::Parallel,
-                  b.stage(b.doMethod(dawn::sir::Interval::Start, dawn::sir::Interval::End,
+                  b.stage(b.doMethod(dawn::ast::Interval::Start, dawn::ast::Interval::End,
                                      b.block(b.stmt(b.assignExpr(b.at(out_f), b.at(in_f)))))),
                   b.stage(1, {0, 2},
-                          b.doMethod(dawn::sir::Interval::Start, dawn::sir::Interval::End,
+                          b.doMethod(dawn::ast::Interval::Start, dawn::ast::Interval::End,
                                      b.block(b.stmt(b.assignExpr(b.at(out_f), b.lit(10)))))))));
 
   std::string serializedIIR = IIRSerializer::serializeToString(instantiation);

@@ -242,17 +242,17 @@ void setBuiltinType(dawn::proto::statements::BuiltinType* builtinTypeProto,
       static_cast<dawn::proto::statements::BuiltinType_TypeID>(builtinType));
 }
 
-void setInterval(dawn::proto::statements::Interval* intervalProto, const sir::Interval* interval) {
-  if(interval->LowerLevel == sir::Interval::Start)
+void setInterval(dawn::proto::statements::Interval* intervalProto, const Interval* interval) {
+  if(interval->LowerLevel == Interval::Start)
     intervalProto->set_special_lower_level(dawn::proto::statements::Interval::Start);
-  else if(interval->LowerLevel == sir::Interval::End)
+  else if(interval->LowerLevel == Interval::End)
     intervalProto->set_special_lower_level(dawn::proto::statements::Interval::End);
   else
     intervalProto->set_lower_level(interval->LowerLevel);
 
-  if(interval->UpperLevel == sir::Interval::Start)
+  if(interval->UpperLevel == Interval::Start)
     intervalProto->set_special_upper_level(dawn::proto::statements::Interval::Start);
-  else if(interval->UpperLevel == sir::Interval::End)
+  else if(interval->UpperLevel == Interval::End)
     intervalProto->set_special_upper_level(dawn::proto::statements::Interval::End);
   else
     intervalProto->set_upper_level(interval->UpperLevel);
@@ -814,28 +814,28 @@ std::shared_ptr<sir::Offset> makeOffset(const proto::statements::Offset& offsetP
   return std::make_shared<sir::Offset>(offsetProto.name(), makeLocation(offsetProto));
 }
 
-std::shared_ptr<sir::Interval> makeInterval(const proto::statements::Interval& intervalProto) {
+std::shared_ptr<ast::Interval> makeInterval(const proto::statements::Interval& intervalProto) {
   int lowerLevel = -1, upperLevel = -1, lowerOffset = -1, upperOffset = -1;
 
   if(intervalProto.LowerLevel_case() == proto::statements::Interval::kSpecialLowerLevel)
     lowerLevel = intervalProto.special_lower_level() ==
                          proto::statements::Interval_SpecialLevel::Interval_SpecialLevel_Start
-                     ? sir::Interval::Start
-                     : sir::Interval::End;
+                     ? ast::Interval::Start
+                     : ast::Interval::End;
   else
     lowerLevel = intervalProto.lower_level();
 
   if(intervalProto.UpperLevel_case() == proto::statements::Interval::kSpecialUpperLevel)
     upperLevel = intervalProto.special_upper_level() ==
                          proto::statements::Interval_SpecialLevel::Interval_SpecialLevel_Start
-                     ? sir::Interval::Start
-                     : sir::Interval::End;
+                     ? ast::Interval::Start
+                     : ast::Interval::End;
   else
     upperLevel = intervalProto.upper_level();
 
   lowerOffset = intervalProto.lower_offset();
   upperOffset = intervalProto.upper_offset();
-  return std::make_shared<sir::Interval>(lowerLevel, upperLevel, lowerOffset, upperOffset);
+  return std::make_shared<ast::Interval>(lowerLevel, upperLevel, lowerOffset, upperOffset);
 }
 
 std::shared_ptr<Expr> makeExpr(const proto::statements::Expr& expressionProto,
@@ -1163,7 +1163,7 @@ std::shared_ptr<Stmt> makeStmt(const proto::statements::Stmt& statementProto,
   case proto::statements::Stmt::kVerticalRegionDeclStmt: {
     const auto& stmtProto = statementProto.vertical_region_decl_stmt();
     auto loc = makeLocation(stmtProto.vertical_region());
-    std::shared_ptr<sir::Interval> interval = makeInterval(stmtProto.vertical_region().interval());
+    std::shared_ptr<ast::Interval> interval = makeInterval(stmtProto.vertical_region().interval());
     sir::VerticalRegion::LoopOrderKind looporder;
     switch(stmtProto.vertical_region().loop_order()) {
     case proto::statements::VerticalRegion_LoopOrder_Forward:

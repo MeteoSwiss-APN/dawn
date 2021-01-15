@@ -66,7 +66,7 @@ private:
                            const std::shared_ptr<StencilProperties>& stencilProperties,
                            const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation,
                            const std::unordered_map<std::string, std::string>& paramNameToType,
-                           const sir::GlobalVariableMap& globalsMap) const;
+                           const ast::GlobalVariableMap& globalsMap) const;
 
   void
   generateStencilClasses(const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation,
@@ -87,13 +87,13 @@ private:
   void generateGridFun(MemberFunction& runFun);
 
   void generateStencilClassCtr(MemberFunction& stencilClassCtor, const iir::Stencil& stencil,
-                               const sir::GlobalVariableMap& globalsMap,
+                               const ast::GlobalVariableMap& globalsMap,
                                CodeGenProperties& codeGenProperties) const;
 
   void generateStencilClassDtr(MemberFunction& stencilClassDtor, const iir::Stencil& stencil);
 
   void generateStencilClassCtrMinimal(MemberFunction& stencilClassCtor, const iir::Stencil& stencil,
-                                      const sir::GlobalVariableMap& globalsMap,
+                                      const ast::GlobalVariableMap& globalsMap,
                                       CodeGenProperties& codeGenProperties) const;
 
   void generateStencilClassRawPtrCtr(MemberFunction& stencilClassCtor, const iir::Stencil& stencil,

@@ -58,8 +58,8 @@ template <typename T>
 decltype(auto) lit(T&& value) {
   return std::make_shared<dawn::ast::LiteralAccessExpr>(
       std::to_string(std::forward<T>(value)),
-      dawn::sir::Value::typeToBuiltinTypeID(
-          dawn::sir::Value::TypeInfo<typename std::decay<T>::type>::Type));
+      dawn::ast::Value::typeToBuiltinTypeID(
+          dawn::ast::Value::TypeInfo<typename std::decay<T>::type>::Type));
 }
 
 template <typename... Args>

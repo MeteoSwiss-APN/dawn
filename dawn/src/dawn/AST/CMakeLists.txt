@@ -27,12 +27,17 @@ add_library(DawnAST OBJECT
   ASTVisitor.cpp
   ASTVisitor.h
   ASTVisitorHelpers.h
+  Attr.h
+  Interval.h
+  Interval.cpp
   LocationType.h
   GridType.h
   GridType.cpp
   Offsets.h
   Offsets.cpp
   Tags.h
+  Value.cpp
+  Value.h
 )
 
 target_add_dawn_standard_props(DawnAST)
