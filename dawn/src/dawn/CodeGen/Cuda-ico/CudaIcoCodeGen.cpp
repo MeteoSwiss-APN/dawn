@@ -87,7 +87,7 @@ CudaIcoCodeGen::CudaIcoCodeGen(const StencilInstantiationContext& ctx, int maxHa
 
 CudaIcoCodeGen::~CudaIcoCodeGen() {}
 
-class CollectIterationSpaces : public iir::ASTVisitorForwarding {
+class CollectIterationSpaces : public ast::ASTVisitorForwarding {
 
 public:
   struct IterSpaceHash {
@@ -98,14 +98,14 @@ public:
     }
   };
 
-  void visit(const std::shared_ptr<iir::ReductionOverNeighborExpr>& expr) override {
+  void visit(const std::shared_ptr<ast::ReductionOverNeighborExpr>& expr) override {
     spaces_.insert(expr->getIterSpace());
     for(auto c : expr->getChildren()) {
       c->accept(*this);
     }
   }
 
-  void visit(const std::shared_ptr<iir::LoopStmt>& stmt) override {
+  void visit(const std::shared_ptr<ast::LoopStmt>& stmt) override {
     auto chainDescr = dynamic_cast<const ast::ChainIterationDescr*>(stmt->getIterationDescrPtr());
     spaces_.insert(chainDescr->getIterSpace());
     for(auto c : stmt->getChildren()) {

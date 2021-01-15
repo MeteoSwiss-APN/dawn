@@ -34,7 +34,7 @@ namespace {
 
 static constexpr int TERMINAL_CHAR_WIDTH = 70;
 
-class ReadWriteCounter : public iir::ASTVisitorForwarding {
+class ReadWriteCounter : public ast::ASTVisitorForwarding {
   const iir::StencilMetaInformation& metadata_;
   const Options& options_;
 
@@ -104,12 +104,12 @@ public:
   }
 
   std::shared_ptr<iir::StencilFunctionInstantiation>
-  getStencilFunctionInstantiation(const std::shared_ptr<iir::StencilFunCallExpr>& expr) {
+  getStencilFunctionInstantiation(const std::shared_ptr<ast::StencilFunCallExpr>& expr) {
     return stencilFunCalls_.empty() ? metadata_.getStencilFunctionInstantiation(expr)
                                     : stencilFunCalls_.top()->getStencilFunctionInstantiation(expr);
   }
 
-  ast::Offsets getOffset(const std::shared_ptr<iir::FieldAccessExpr>& field) {
+  ast::Offsets getOffset(const std::shared_ptr<ast::FieldAccessExpr>& field) {
     return stencilFunCalls_.empty()
                ? field->getOffset()
                : stencilFunCalls_.top()->evalOffsetOfFieldAccessExpr(field, true);
@@ -140,7 +140,7 @@ public:
     kCacheLoaded_.insert(AccessID);
   }
 
-  void processWriteAccess(const std::shared_ptr<iir::FieldAccessExpr>& field) {
+  void processWriteAccess(const std::shared_ptr<ast::FieldAccessExpr>& field) {
     int AccessID = iir::getAccessID(field);
 
     // Is field stored in cache?
@@ -156,7 +156,7 @@ public:
     }
   }
 
-  void processReadAccess(const std::shared_ptr<iir::FieldAccessExpr>& fieldExpr) {
+  void processReadAccess(const std::shared_ptr<ast::FieldAccessExpr>& fieldExpr) {
     int AccessID = iir::getAccessID(fieldExpr);
     int kOffset = fieldExpr->getOffset().verticalShift();
 
@@ -197,13 +197,13 @@ public:
       updateTextureCache(AccessID, kOffset);
   }
 
-  void visit(const std::shared_ptr<iir::AssignmentExpr>& expr) override {
+  void visit(const std::shared_ptr<ast::AssignmentExpr>& expr) override {
     // LHS is a write and maybe a read if we have an expression like `a += 5`
     bool readAndWrite = expr->getOp() == "+=" || expr->getOp() == "-=" || expr->getOp() == "/=" ||
                         expr->getOp() == "*=" || expr->getOp() == "|=" || expr->getOp() == "&=";
 
-    if(isa<iir::FieldAccessExpr>(expr->getLeft().get())) {
-      auto field = std::static_pointer_cast<iir::FieldAccessExpr>(expr->getLeft());
+    if(isa<ast::FieldAccessExpr>(expr->getLeft().get())) {
+      auto field = std::static_pointer_cast<ast::FieldAccessExpr>(expr->getLeft());
       processWriteAccess(field);
       if(readAndWrite)
         processReadAccess(field);
@@ -213,13 +213,13 @@ public:
     expr->getRight()->accept(*this);
   }
 
-  void visit(const std::shared_ptr<iir::StencilFunCallExpr>& expr) override {
+  void visit(const std::shared_ptr<ast::StencilFunCallExpr>& expr) override {
     stencilFunCalls_.push(getStencilFunctionInstantiation(expr));
     stencilFunCalls_.top()->getAST()->accept(*this);
     stencilFunCalls_.pop();
   }
 
-  void visit(const std::shared_ptr<iir::FieldAccessExpr>& expr) override {
+  void visit(const std::shared_ptr<ast::FieldAccessExpr>& expr) override {
     processReadAccess(expr);
   }
   const std::unordered_map<int, ReadWriteAccumulator>& getIndividualReadWrites() const {

@@ -67,10 +67,10 @@ TEST(IndirectionCheckerTest, Case_Fail) {
   //  out[c,k] = in[kidx[kidx[c,k]]]
   // which is prohibited
   for(auto stmt : dawn::iterateIIROverStmt(*stencil->getIIR())) {
-    if(auto exprStmt = dyn_pointer_cast<ExprStmt>(stmt)) {
-      if(auto assignExpr = dyn_pointer_cast<AssignmentExpr>(exprStmt->getExpr())) {
-        auto rhs = dyn_pointer_cast<FieldAccessExpr>(assignExpr->getRight());
-        std::dynamic_pointer_cast<FieldAccessExpr>(
+    if(auto exprStmt = dyn_pointer_cast<ast::ExprStmt>(stmt)) {
+      if(auto assignExpr = dyn_pointer_cast<ast::AssignmentExpr>(exprStmt->getExpr())) {
+        auto rhs = dyn_pointer_cast<ast::FieldAccessExpr>(assignExpr->getRight());
+        std::dynamic_pointer_cast<ast::FieldAccessExpr>(
             rhs->getOffset().getVerticalIndirectionFieldAsExpr())
             ->getOffset()
             .setVerticalIndirection("kidx");

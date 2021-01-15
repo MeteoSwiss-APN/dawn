@@ -65,7 +65,7 @@ TEST(WeightCheckerTest, Reduce_1) {
                                   b.reduceOverNeighborExpr(
                                       Op::plus, b.at(edge_field, HOffsetType::withOffset, 0),
                                       b.lit(0.), {LocType::Cells, LocType::Edges},
-                                      std::vector<std::shared_ptr<Expr>>{
+                                      std::vector<std::shared_ptr<ast::Expr>>{
                                           b.at(distToE1), b.at(distToE2), b.at(distToE3)}))))))));
 
   auto result = WeightChecker::CheckWeights(*stencil->getIIR(), stencil->getMetaData());
@@ -92,7 +92,7 @@ TEST(WeightCheckerTest, Reduce_2) {
                                       b.reduceOverNeighborExpr(
                                           Op::plus, b.at(edge_field, HOffsetType::withOffset, 0),
                                           b.lit(0.), {LocType::Cells, LocType::Edges},
-                                          std::vector<std::shared_ptr<Expr>>{
+                                          std::vector<std::shared_ptr<ast::Expr>>{
                                               b.at(distToE), b.at(distToE), b.at(distToE)})))))))),
       ".*Found invalid weights.*");
 }
@@ -119,10 +119,10 @@ TEST(WeightCheckerTest, NestedReduce_0) {
                                      Op::plus,
                                      b.reduceOverNeighborExpr(Op::plus, b.at(vertex_f), b.lit(0.),
                                                               {LocType::Edges, LocType::Vertices},
-                                                              std::vector<std::shared_ptr<Expr>>{
+                                                              std::vector<std::shared_ptr<ast::Expr>>{
                                                                   b.at(edge_f), b.at(edge_f)}),
                                      b.lit(0.), {LocType::Cells, LocType::Edges},
-                                     std::vector<std::shared_ptr<Expr>>{b.at(cell_f),
+                                     std::vector<std::shared_ptr<ast::Expr>>{b.at(cell_f),
                                                                         b.at(cell_f)}))))))));
 
   auto result = WeightChecker::CheckWeights(*stencil->getIIR(), stencil->getMetaData());
@@ -153,10 +153,10 @@ TEST(WeightCheckerTest, NestedReduce_1) {
                                       Op::plus,
                                       b.reduceOverNeighborExpr(Op::plus, b.at(vertex_f), b.lit(0.),
                                                                {LocType::Edges, LocType::Vertices},
-                                                               std::vector<std::shared_ptr<Expr>>{
+                                                               std::vector<std::shared_ptr<ast::Expr>>{
                                                                    b.at(edge_f), b.at(edge_f)}),
                                       b.lit(0.), {LocType::Cells, LocType::Edges},
-                                      std::vector<std::shared_ptr<Expr>>{b.at(distToE),
+                                      std::vector<std::shared_ptr<ast::Expr>>{b.at(distToE),
                                                                          b.at(distToE)})))))))),
       ".*Found invalid weights.*");
 }

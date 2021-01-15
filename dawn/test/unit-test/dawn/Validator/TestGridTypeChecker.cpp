@@ -44,7 +44,7 @@ TEST(GridTypeCheckerTest, MixedGridTypesOffset) {
 
   // lets manually add a field access of the wrong type to the IIR
   ast::Offsets offsets(ast::cartesian_{}, 0, 0, 0);
-  auto fieldAccessExprCartesian = std::make_shared<FieldAccessExpr>("wrongFieldAccess", offsets);
+  auto fieldAccessExprCartesian = std::make_shared<ast::FieldAccessExpr>("wrongFieldAccess", offsets);
   auto exprStmt = iir::makeExprStmt(fieldAccessExprCartesian);
   for(auto& doMethodPtr : iterateIIROver<iir::DoMethod>(*si->getIIR())) {
     doMethodPtr->getAST().push_back(exprStmt);

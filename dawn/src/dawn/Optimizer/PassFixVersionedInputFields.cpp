@@ -122,13 +122,13 @@ createAssignmentMultiStage(int assignmentID, std::shared_ptr<iir::StencilInstant
 }
 
 /// @brief Collects AccessIDs from versioned fields in the IIR.
-struct CollectVersionedIDs : public iir::ASTVisitorForwarding {
+struct CollectVersionedIDs : public ast::ASTVisitorForwarding {
   const iir::StencilMetaInformation& metadata_;
   std::set<int> versionedAccessIDs;
 
   CollectVersionedIDs(const iir::StencilMetaInformation& metadata) : metadata_(metadata) {}
 
-  virtual void visit(const std::shared_ptr<iir::FieldAccessExpr>& expr) override {
+  virtual void visit(const std::shared_ptr<ast::FieldAccessExpr>& expr) override {
     const int id = iir::getAccessID(expr);
     if(metadata_.isAccessIDAVersion(id)) {
       versionedAccessIDs.insert(id);

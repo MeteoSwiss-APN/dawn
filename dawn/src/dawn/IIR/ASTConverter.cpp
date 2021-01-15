@@ -36,7 +36,7 @@ ASTConverter::StmtMap& ASTConverter::getStmtMap() {
 }
 
 void ASTConverter::visit(const std::shared_ptr<ast::BlockStmt>& blockStmt) {
-  iir::BlockStmt::StatementList statementList;
+  ast::BlockStmt::StatementList statementList;
   for(const auto& stmt : blockStmt->getStatements()) {
     stmt->accept(*this);
     statementList.push_back(stmtMap_.at(stmt));
@@ -53,7 +53,7 @@ void ASTConverter::visit(const std::shared_ptr<ast::ReturnStmt>& stmt) {
 }
 
 void ASTConverter::visit(const std::shared_ptr<ast::VarDeclStmt>& varDeclStmt) {
-  iir::VarDeclStmt::InitList initList;
+  ast::VarDeclStmt::InitList initList;
   for(auto& expr : varDeclStmt->getInitList())
     initList.push_back(expr->clone());
 
@@ -67,7 +67,7 @@ void ASTConverter::visit(const std::shared_ptr<ast::VerticalRegionDeclStmt>& stm
   stmt->getVerticalRegion()->Ast->getRoot()->accept(*this);
 
   auto verticalRegion = std::make_shared<sir::VerticalRegion>(
-      std::make_shared<ast::AST>(std::dynamic_pointer_cast<iir::BlockStmt>(
+      std::make_shared<ast::AST>(std::dynamic_pointer_cast<ast::BlockStmt>(
           stmtMap_.at(stmt->getVerticalRegion()->Ast->getRoot()))),
       stmt->getVerticalRegion()->VerticalInterval, stmt->getVerticalRegion()->LoopOrder,
       stmt->getVerticalRegion()->IterationSpace[0], stmt->getVerticalRegion()->IterationSpace[1],
@@ -84,7 +84,7 @@ void ASTConverter::visit(const std::shared_ptr<ast::StencilCallDeclStmt>& stmt) 
 }
 
 void ASTConverter::visit(const std::shared_ptr<ast::BoundaryConditionDeclStmt>& bcStmt) {
-  std::shared_ptr<iir::BoundaryConditionDeclStmt> iirBcStmt =
+  std::shared_ptr<ast::BoundaryConditionDeclStmt> iirBcStmt =
       iir::makeBoundaryConditionDeclStmt(bcStmt->getFunctor(), bcStmt->getSourceLocation());
   iirBcStmt->getFields() = bcStmt->getFields();
   stmtMap_.emplace(bcStmt, iirBcStmt);
@@ -106,7 +106,7 @@ void ASTConverter::visit(const std::shared_ptr<ast::LoopStmt>& stmt) {
   if(auto* chainDesc =
          dynamic_cast<const ast::ChainIterationDescr*>(stmt->getIterationDescrPtr())) {
     stmtMap_.emplace(stmt, iir::makeLoopStmt(chainDesc->getChain(), chainDesc->getIncludeCenter(),
-                                             std::dynamic_pointer_cast<iir::BlockStmt>(
+                                             std::dynamic_pointer_cast<ast::BlockStmt>(
                                                  stmtMap_.at(stmt->getBlockStmt()))));
   } else {
     dawn_unreachable("unsupported loop descriptor!\n");

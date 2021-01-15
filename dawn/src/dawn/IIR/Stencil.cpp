@@ -200,19 +200,19 @@ int Stencil::getNumStages() const {
                          });
 }
 
-void Stencil::forEachStatement(std::function<void(ArrayRef<std::shared_ptr<iir::Stmt>>)> func,
+void Stencil::forEachStatement(std::function<void(ArrayRef<std::shared_ptr<ast::Stmt>>)> func,
                                bool updateFields) {
   forEachStatementImpl(func, 0, getNumStages(), updateFields);
 }
 
-void Stencil::forEachStatement(std::function<void(ArrayRef<std::shared_ptr<iir::Stmt>>)> func,
+void Stencil::forEachStatement(std::function<void(ArrayRef<std::shared_ptr<ast::Stmt>>)> func,
                                const Stencil::Lifetime& lifetime, bool updateFields) {
   int startStageIdx = getStageIndexFromPosition(lifetime.Begin.StagePos);
   int endStageIdx = getStageIndexFromPosition(lifetime.End.StagePos);
   forEachStatementImpl(func, startStageIdx, endStageIdx + 1, updateFields);
 }
 
-void Stencil::forEachStatementImpl(std::function<void(ArrayRef<std::shared_ptr<iir::Stmt>>)> func,
+void Stencil::forEachStatementImpl(std::function<void(ArrayRef<std::shared_ptr<ast::Stmt>>)> func,
                                    int startStageIdx, int endStageIdx, bool updateFields) {
   for(int stageIdx = startStageIdx; stageIdx < endStageIdx; ++stageIdx) {
     const auto& stage = getStage(stageIdx);
@@ -538,7 +538,7 @@ std::optional<Interval> Stencil::getEnclosingIntervalTemporaries() const {
   return tmpInterval;
 }
 
-void Stencil::accept(iir::ASTVisitor& visitor) {
+void Stencil::accept(ast::ASTVisitor& visitor) {
   for(const auto& stmt : iterateIIROverStmt(*this)) {
     stmt->accept(visitor);
   }

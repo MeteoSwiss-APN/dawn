@@ -48,9 +48,9 @@ private:
     std::stack<std::shared_ptr<const iir::StencilFunctionInstantiation>>
         functionInstantiationStack_;
     std::shared_ptr<const iir::StencilFunctionInstantiation>
-    getStencilFunctionInstantiation(const std::shared_ptr<iir::StencilFunCallExpr>& expr);
+    getStencilFunctionInstantiation(const std::shared_ptr<ast::StencilFunCallExpr>& expr);
     std::optional<std::reference_wrapper<
-        const std::unordered_map<std::shared_ptr<iir::StencilFunCallExpr>,
+        const std::unordered_map<std::shared_ptr<ast::StencilFunCallExpr>,
                                  std::shared_ptr<iir::StencilFunctionInstantiation>>>>
         ExprToStencilFunctionInstantiationMap_;
 
@@ -71,7 +71,7 @@ private:
     WeightCheckerImpl(
         const std::unordered_map<std::string, sir::FieldDimensions> nameToDimensionsMap,
         const std::unordered_map<int, std::string> idToNameMap,
-        const std::unordered_map<std::shared_ptr<iir::StencilFunCallExpr>,
+        const std::unordered_map<std::shared_ptr<ast::StencilFunCallExpr>,
                                  std::shared_ptr<iir::StencilFunctionInstantiation>>& exprToFunMap);
   };
 

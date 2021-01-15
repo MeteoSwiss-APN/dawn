@@ -229,11 +229,11 @@ private:
                                int assigneeID) {
     // Create the statement of the assignment with the new and old variables
     auto fa_assignee =
-        std::make_shared<iir::FieldAccessExpr>(metadata_.getFieldNameFromAccessID(assigneeID));
+        std::make_shared<ast::FieldAccessExpr>(metadata_.getFieldNameFromAccessID(assigneeID));
     auto fa_assignment =
-        std::make_shared<iir::FieldAccessExpr>(metadata_.getFieldNameFromAccessID(assignmentID));
+        std::make_shared<ast::FieldAccessExpr>(metadata_.getFieldNameFromAccessID(assignmentID));
     auto assignmentExpression =
-        std::make_shared<iir::AssignmentExpr>(fa_assignment, fa_assignee, "=");
+        std::make_shared<ast::AssignmentExpr>(fa_assignment, fa_assignee, "=");
     auto expAssignment = iir::makeExprStmt(assignmentExpression);
     iir::Accesses newAccess;
     newAccess.addWriteExtent(assignmentID, iir::Extents{});

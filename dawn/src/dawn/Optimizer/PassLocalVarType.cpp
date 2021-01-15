@@ -158,13 +158,13 @@ class VarTypeFinder : public ast::ASTVisitorForwarding {
   }
 
 public:
-  void visit(const std::shared_ptr<iir::FieldAccessExpr>& expr) override {
+  void visit(const std::shared_ptr<ast::FieldAccessExpr>& expr) override {
     if(curVarID_.has_value()) { // We are inside an assignment to variable / variable declaration
       iir::LocalVariableType newType = inferLocalVarTypeFromField(iir::getAccessID(expr));
       updateVariableType(*curVarID_, newType, expr->getSourceLocation());
     }
   }
-  void visit(const std::shared_ptr<iir::VarAccessExpr>& expr) override {
+  void visit(const std::shared_ptr<ast::VarAccessExpr>& expr) override {
     if(curVarID_.has_value() && expr->isLocal()) { // We are inside an assignment / variable
                                                    // declaration and the current variable accessed
                                                    // is not a global variable
@@ -172,7 +172,7 @@ public:
       recordVariablePair(accessedVariableID, *curVarID_, expr->getSourceLocation());
     }
   }
-  void visit(const std::shared_ptr<iir::IfStmt>& ifStmt) override {
+  void visit(const std::shared_ptr<ast::IfStmt>& ifStmt) override {
 
     const bool outerIf = !conditionalType_.has_value() && variablesAccessedInConditionals_.empty();
     // If in the conditional expression we are accessing a field/variable, it means that every
@@ -209,10 +209,10 @@ public:
       variablesAccessedInConditionals_ = {};
     }
   }
-  void visit(const std::shared_ptr<iir::AssignmentExpr>& expr) override {
+  void visit(const std::shared_ptr<ast::AssignmentExpr>& expr) override {
     // Run only when lhs is a local variable
     if(expr->getLeft()->getKind() == ast::Expr::Kind::VarAccessExpr &&
-       std::dynamic_pointer_cast<iir::VarAccessExpr>(expr->getLeft())->isLocal()) {
+       std::dynamic_pointer_cast<ast::VarAccessExpr>(expr->getLeft())->isLocal()) {
 
       if(curVarID_.has_value()) {
         throw std::runtime_error(dawn::format("Variable assignment inside rhs of variable "
@@ -236,7 +236,7 @@ public:
       curVarID_ = std::nullopt;
     }
   }
-  void visit(const std::shared_ptr<iir::ReductionOverNeighborExpr>& expr) override {
+  void visit(const std::shared_ptr<ast::ReductionOverNeighborExpr>& expr) override {
     if(curVarID_.has_value()) { // We are inside an assignment to variable / variable declaration
       // Inferred variable type is the lhs location type of the reduction
       updateVariableType(*curVarID_, localVarTypeFromLocationType(expr->getLhsLocation()),
@@ -244,7 +244,7 @@ public:
       // No need to visit inside reduction
     }
   }
-  void visit(const std::shared_ptr<iir::VarDeclStmt>& stmt) override {
+  void visit(const std::shared_ptr<ast::VarDeclStmt>& stmt) override {
     // Set curVarID_ to current variable being processed
     curVarID_ = iir::getAccessID(stmt);
     initializeLocalVarType(stmt->getSourceLocation());

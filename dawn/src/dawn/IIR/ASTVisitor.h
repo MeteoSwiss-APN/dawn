@@ -18,14 +18,5 @@
 
 namespace dawn {
 namespace iir {
-//
-// TODO refactor_AST: this is TEMPORARY, will be removed in the future
-//
-using ASTVisitor = ast::ASTVisitor;
-using ASTVisitorNonConst = ast::ASTVisitorNonConst;
-using ASTVisitorForwarding = ast::ASTVisitorForwarding;
-using ASTVisitorPostOrder = ast::ASTVisitorPostOrder;
-using ASTVisitorForwardingNonConst = ast::ASTVisitorForwardingNonConst;
-using ASTVisitorDisabled = ast::ASTVisitorDisabled;
 } // namespace iir
 } // namespace dawn

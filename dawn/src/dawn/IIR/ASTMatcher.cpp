@@ -82,24 +82,24 @@ void ASTMatcher::check(const std::shared_ptr<ast::Expr>& expr) {
     exprMatches_.push_back(expr);
 }
 
-void ASTMatcher::visit(const std::shared_ptr<iir::BlockStmt>& stmt) {
+void ASTMatcher::visit(const std::shared_ptr<ast::BlockStmt>& stmt) {
   check(stmt);
   for(const auto& child : stmt->getStatements()) {
     child->accept(*this);
   }
 }
 
-void ASTMatcher::visit(const std::shared_ptr<iir::ExprStmt>& stmt) {
+void ASTMatcher::visit(const std::shared_ptr<ast::ExprStmt>& stmt) {
   check(stmt);
   stmt->getExpr()->accept(*this);
 }
 
-void ASTMatcher::visit(const std::shared_ptr<iir::ReturnStmt>& stmt) {
+void ASTMatcher::visit(const std::shared_ptr<ast::ReturnStmt>& stmt) {
   check(stmt);
   stmt->getExpr()->accept(*this);
 }
 
-void ASTMatcher::visit(const std::shared_ptr<iir::IfStmt>& stmt) {
+void ASTMatcher::visit(const std::shared_ptr<ast::IfStmt>& stmt) {
   check(stmt);
   stmt->getCondExpr()->accept(*this);
   stmt->getThenStmt()->accept(*this);
@@ -107,60 +107,60 @@ void ASTMatcher::visit(const std::shared_ptr<iir::IfStmt>& stmt) {
     stmt->getElseStmt()->accept(*this);
 }
 
-void ASTMatcher::visit(const std::shared_ptr<iir::VarDeclStmt>& stmt) {
+void ASTMatcher::visit(const std::shared_ptr<ast::VarDeclStmt>& stmt) {
   check(stmt);
   for(const auto& expr : stmt->getInitList())
     expr->accept(*this);
 }
 
-void ASTMatcher::visit(const std::shared_ptr<iir::AssignmentExpr>& expr) {
+void ASTMatcher::visit(const std::shared_ptr<ast::AssignmentExpr>& expr) {
   check(expr);
   for(auto& child : expr->getChildren())
     child->accept(*this);
 }
 
-void ASTMatcher::visit(const std::shared_ptr<iir::ReductionOverNeighborExpr>& expr) {
+void ASTMatcher::visit(const std::shared_ptr<ast::ReductionOverNeighborExpr>& expr) {
   check(expr);
   for(auto& child : expr->getChildren())
     child->accept(*this);
 }
 
-void ASTMatcher::visit(const std::shared_ptr<iir::UnaryOperator>& expr) {
+void ASTMatcher::visit(const std::shared_ptr<ast::UnaryOperator>& expr) {
   check(expr);
   for(auto& child : expr->getChildren())
     child->accept(*this);
 }
 
-void ASTMatcher::visit(const std::shared_ptr<iir::BinaryOperator>& expr) {
+void ASTMatcher::visit(const std::shared_ptr<ast::BinaryOperator>& expr) {
   check(expr);
   for(auto& child : expr->getChildren())
     child->accept(*this);
 }
 
-void ASTMatcher::visit(const std::shared_ptr<iir::TernaryOperator>& expr) {
+void ASTMatcher::visit(const std::shared_ptr<ast::TernaryOperator>& expr) {
   check(expr);
   for(auto& child : expr->getChildren())
     child->accept(*this);
 }
 
-void ASTMatcher::visit(const std::shared_ptr<iir::FunCallExpr>& expr) {
+void ASTMatcher::visit(const std::shared_ptr<ast::FunCallExpr>& expr) {
   check(expr);
   for(auto& child : expr->getChildren())
     child->accept(*this);
 }
 
-void ASTMatcher::visit(const std::shared_ptr<iir::StencilFunCallExpr>& expr) { check(expr); }
+void ASTMatcher::visit(const std::shared_ptr<ast::StencilFunCallExpr>& expr) { check(expr); }
 
-void ASTMatcher::visit(const std::shared_ptr<iir::StencilFunArgExpr>& expr) { check(expr); }
+void ASTMatcher::visit(const std::shared_ptr<ast::StencilFunArgExpr>& expr) { check(expr); }
 
-void ASTMatcher::visit(const std::shared_ptr<iir::VarAccessExpr>& expr) { check(expr); }
+void ASTMatcher::visit(const std::shared_ptr<ast::VarAccessExpr>& expr) { check(expr); }
 
-void ASTMatcher::visit(const std::shared_ptr<iir::FieldAccessExpr>& expr) {
+void ASTMatcher::visit(const std::shared_ptr<ast::FieldAccessExpr>& expr) {
   check(expr);
   ASTVisitorForwarding::visit(expr);
 }
 
-void ASTMatcher::visit(const std::shared_ptr<iir::LiteralAccessExpr>& expr) { check(expr); }
+void ASTMatcher::visit(const std::shared_ptr<ast::LiteralAccessExpr>& expr) { check(expr); }
 
 } // namespace iir
 } // namespace dawn

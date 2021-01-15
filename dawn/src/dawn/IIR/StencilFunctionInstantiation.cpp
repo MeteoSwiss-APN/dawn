@@ -34,8 +34,8 @@ namespace iir {
 using ::dawn::operator<<;
 
 StencilFunctionInstantiation::StencilFunctionInstantiation(
-    StencilInstantiation* context, const std::shared_ptr<iir::StencilFunCallExpr>& expr,
-    const std::shared_ptr<sir::StencilFunction>& function, const std::shared_ptr<iir::AST>& ast,
+    StencilInstantiation* context, const std::shared_ptr<ast::StencilFunCallExpr>& expr,
+    const std::shared_ptr<sir::StencilFunction>& function, const std::shared_ptr<ast::AST>& ast,
     const Interval& interval, bool isNested)
     : stencilInstantiation_(context), metadata_(context->getMetaData()), expr_(expr),
       function_(function), ast_(ast), interval_(interval), hasReturn_(false), isNested_(isNested),
@@ -47,7 +47,7 @@ StencilFunctionInstantiation::StencilFunctionInstantiation(
 StencilFunctionInstantiation StencilFunctionInstantiation::clone() const {
   // The SIR object function_ is not cloned, but copied, since the SIR is considered immuatble
   StencilFunctionInstantiation stencilFun(
-      stencilInstantiation_, std::static_pointer_cast<iir::StencilFunCallExpr>(expr_->clone()),
+      stencilInstantiation_, std::static_pointer_cast<ast::StencilFunCallExpr>(expr_->clone()),
       function_, ast_->clone(), interval_, isNested_);
 
   stencilFun.hasReturn_ = hasReturn_;
@@ -72,7 +72,7 @@ StencilFunctionInstantiation StencilFunctionInstantiation::clone() const {
 }
 
 ast::Offsets StencilFunctionInstantiation::evalOffsetOfFieldAccessExpr(
-    const std::shared_ptr<iir::FieldAccessExpr>& expr, bool applyInitialOffset) const {
+    const std::shared_ptr<ast::FieldAccessExpr>& expr, bool applyInitialOffset) const {
 
   // Get the offsets we know so far (i.e the constant offset)
   ast::Offsets offset = expr->getOffset();
@@ -322,7 +322,7 @@ StencilFunctionInstantiation::getCallerAccessIDToInitialOffsetMap() const {
   return CallerAccessIDToInitialOffsetMap_;
 }
 
-const std::unordered_map<std::shared_ptr<iir::StencilFunCallExpr>,
+const std::unordered_map<std::shared_ptr<ast::StencilFunCallExpr>,
                          std::shared_ptr<StencilFunctionInstantiation>>&
 StencilFunctionInstantiation::getExprToStencilFunctionInstantiationMap() const {
   return ExprToStencilFunctionInstantiationMap_;
@@ -336,25 +336,25 @@ void StencilFunctionInstantiation::insertExprToStencilFunction(
 }
 
 void StencilFunctionInstantiation::removeStencilFunctionInstantiation(
-    const std::shared_ptr<iir::StencilFunCallExpr>& expr) {
+    const std::shared_ptr<ast::StencilFunCallExpr>& expr) {
   ExprToStencilFunctionInstantiationMap_.erase(expr);
 }
 
 std::shared_ptr<StencilFunctionInstantiation>
 StencilFunctionInstantiation::getStencilFunctionInstantiation(
-    const std::shared_ptr<iir::StencilFunCallExpr>& expr) const {
+    const std::shared_ptr<ast::StencilFunCallExpr>& expr) const {
   auto it = ExprToStencilFunctionInstantiationMap_.find(expr);
   DAWN_ASSERT_MSG(it != ExprToStencilFunctionInstantiationMap_.end(), "Invalid stencil function");
   return it->second;
 }
 
 bool StencilFunctionInstantiation::hasStencilFunctionInstantiation(
-    const std::shared_ptr<iir::StencilFunCallExpr>& expr) const {
+    const std::shared_ptr<ast::StencilFunCallExpr>& expr) const {
   return (ExprToStencilFunctionInstantiationMap_.find(expr) !=
           ExprToStencilFunctionInstantiationMap_.end());
 }
 
-const std::vector<std::shared_ptr<iir::Stmt>>& StencilFunctionInstantiation::getStatements() const {
+const std::vector<std::shared_ptr<ast::Stmt>>& StencilFunctionInstantiation::getStatements() const {
   return doMethod_->getAST().getStatements();
 }
 

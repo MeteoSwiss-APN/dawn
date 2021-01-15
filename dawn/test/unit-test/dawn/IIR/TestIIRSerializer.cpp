@@ -426,7 +426,7 @@ TEST_F(IIRSerializerTest, IIRTests) {
   auto& IIRDoMethod = (IIRStage)->getChild(0);
 
   {
-    auto expr = std::make_shared<iir::VarAccessExpr>("name");
+   auto expr = std::make_shared<ast::VarAccessExpr>("name");
     expr->getData<iir::IIRAccessExprData>().AccessID = std::make_optional<int>(42);
     auto stmt = iir::makeExprStmt(expr);
     stmt->setID(22);
@@ -439,7 +439,7 @@ TEST_F(IIRSerializerTest, IIRTests) {
 
     std::string varName = "foo";
     auto varDeclStmt = iir::makeVarDeclStmt(dawn::Type(BuiltinTypeID::Float), varName, 0, "=",
-                                            std::vector<std::shared_ptr<iir::Expr>>{expr->clone()});
+                                            std::vector<std::shared_ptr<ast::Expr>>{expr->clone()});
     iir::Accesses varDeclStmtAccesses;
     varDeclStmtAccesses.addWriteExtent(33, extents);
     varDeclStmt->getData<iir::IIRStmtData>().CallerAccesses =
@@ -452,7 +452,7 @@ TEST_F(IIRSerializerTest, IIRTests) {
   {
     const int id = 43;
     const std::string fieldname = "in";
-    auto expr = std::make_shared<iir::FieldAccessExpr>(fieldname);
+    auto expr = std::make_shared<ast::FieldAccessExpr>(fieldname);
     expr->getData<iir::IIRAccessExprData>().AccessID = std::make_optional<int>(id);
     auto stmt = iir::makeExprStmt(expr);
     stmt->setID(23);
@@ -472,20 +472,20 @@ TEST_F(IIRSerializerTest, IIRTests) {
   deserialized = serializeAndDeserializeRef();
   IIR_EXPECT_EQ(deserialized, referenceInstantiation);
   auto deserializedExprStmt =
-      std::dynamic_pointer_cast<iir::ExprStmt>(getNthStmt(getFirstDoMethod(deserialized), 0));
+      std::dynamic_pointer_cast<ast::ExprStmt>(getNthStmt(getFirstDoMethod(deserialized), 0));
   deserializedExprStmt->getData<iir::IIRStmtData>().CallerAccesses->addReadExtent(
       50, iir::Extents(ast::Offsets{ast::cartesian}));
   IIR_EXPECT_NE(deserialized, referenceInstantiation);
   deserialized = serializeAndDeserializeRef();
-  auto deserializedVarAccessExpr = std::dynamic_pointer_cast<iir::VarAccessExpr>(
-      std::dynamic_pointer_cast<iir::ExprStmt>(getNthStmt(getFirstDoMethod(deserialized), 0))
+  auto deserializedVarAccessExpr = std::dynamic_pointer_cast<ast::VarAccessExpr>(
+      std::dynamic_pointer_cast<ast::ExprStmt>(getNthStmt(getFirstDoMethod(deserialized), 0))
           ->getExpr());
   deserializedVarAccessExpr->getData<iir::IIRAccessExprData>().AccessID =
       std::make_optional<int>(50);
   IIR_EXPECT_NE(deserialized, referenceInstantiation);
   deserialized = serializeAndDeserializeRef();
   auto deserializedVarDeclStmt =
-      std::dynamic_pointer_cast<iir::VarDeclStmt>(getNthStmt(getFirstDoMethod(deserialized), 1));
+      std::dynamic_pointer_cast<ast::VarDeclStmt>(getNthStmt(getFirstDoMethod(deserialized), 1));
   deserializedVarDeclStmt->getData<iir::VarDeclStmtData>().AccessID = std::make_optional<int>(34);
   IIR_EXPECT_NE(deserialized, referenceInstantiation);
 }

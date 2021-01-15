@@ -39,15 +39,15 @@ namespace astgen {
 STMT_CONSTRUCTOR_ALIAS(expr, iir::makeExprStmt)
 STMT_CONSTRUCTOR_ALIAS(ifstmt, iir::makeIfStmt)
 
-EXPR_CONSTRUCTOR_ALIAS(assign, iir::AssignmentExpr)
-EXPR_CONSTRUCTOR_ALIAS(binop, iir::BinaryOperator)
-EXPR_CONSTRUCTOR_ALIAS(var, iir::VarAccessExpr)
-EXPR_CONSTRUCTOR_ALIAS(field, iir::FieldAccessExpr)
-EXPR_CONSTRUCTOR_ALIAS(lit, iir::LiteralAccessExpr)
+EXPR_CONSTRUCTOR_ALIAS(assign, ast::AssignmentExpr)
+EXPR_CONSTRUCTOR_ALIAS(binop, ast::BinaryOperator)
+EXPR_CONSTRUCTOR_ALIAS(var, ast::VarAccessExpr)
+EXPR_CONSTRUCTOR_ALIAS(field, ast::FieldAccessExpr)
+EXPR_CONSTRUCTOR_ALIAS(lit, ast::LiteralAccessExpr)
 
 template <typename... Stmts>
 decltype(auto) block(Stmts&&... stmts) {
-  return iir::makeBlockStmt(std::vector<std::shared_ptr<iir::Stmt>>{std::move(stmts)...});
+  return iir::makeBlockStmt(std::vector<std::shared_ptr<ast::Stmt>>{std::move(stmts)...});
 }
 
 inline decltype(auto) vardecl(const std::string& name, BuiltinTypeID type = BuiltinTypeID::Float) {
@@ -56,7 +56,7 @@ inline decltype(auto) vardecl(const std::string& name, BuiltinTypeID type = Buil
 
 template <typename T>
 decltype(auto) lit(T&& value) {
-  return std::make_shared<dawn::iir::LiteralAccessExpr>(
+  return std::make_shared<dawn::ast::LiteralAccessExpr>(
       std::to_string(std::forward<T>(value)),
       dawn::sir::Value::typeToBuiltinTypeID(
           dawn::sir::Value::TypeInfo<typename std::decay<T>::type>::Type));

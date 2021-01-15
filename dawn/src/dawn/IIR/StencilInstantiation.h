@@ -64,7 +64,7 @@ public:
   /// associated with the `AccessID` in the given statement.
   std::pair<std::string, std::vector<SourceLocation>>
   getOriginalNameAndLocationsFromAccessID(int AccessID,
-                                          const std::shared_ptr<iir::Stmt>& stmt) const;
+                                          const std::shared_ptr<ast::Stmt>& stmt) const;
 
   /// @brief Get the original name of the field (as registered in the AST)
   std::string getOriginalNameFromAccessID(int AccessID) const;
@@ -95,7 +95,7 @@ public:
   inline std::unique_ptr<IIR>& getIIR() { return IIR_; }
 
   bool insertBoundaryConditions(std::string originalFieldName,
-                                std::shared_ptr<iir::BoundaryConditionDeclStmt> bc);
+                                std::shared_ptr<ast::BoundaryConditionDeclStmt> bc);
 
   /// @brief Get a unique (positive) identifier
   inline int nextUID() { return UIDGenerator::getInstance()->get(); }
@@ -108,9 +108,9 @@ public:
   /// If `curStencilFunctionInstantiation` is not NULL, the stencil function is treated as a nested
   /// stencil function.
   std::shared_ptr<StencilFunctionInstantiation> makeStencilFunctionInstantiation(
-      const std::shared_ptr<iir::StencilFunCallExpr>& expr,
+      const std::shared_ptr<ast::StencilFunCallExpr>& expr,
       const std::shared_ptr<sir::StencilFunction>& SIRStencilFun,
-      const std::shared_ptr<iir::AST>& ast, const Interval& interval,
+      const std::shared_ptr<ast::AST>& ast, const Interval& interval,
       const std::shared_ptr<StencilFunctionInstantiation>& curStencilFunctionInstantiation);
 
   /// @brief Report the accesses to the console (according to `-freport-accesses`)

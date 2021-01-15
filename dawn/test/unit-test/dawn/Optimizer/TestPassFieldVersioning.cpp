@@ -251,16 +251,16 @@ TEST_F(TestPassFieldVersioning, VersionSparseField) {
   EXPECT_EQ(firstStatement->getKind(), ast::Stmt::Kind::LoopStmt);
 
   // lets look at the assign expression therein...
-  auto assignExpr = std::dynamic_pointer_cast<iir::AssignmentExpr>(
-      std::dynamic_pointer_cast<iir::ExprStmt>(
-          std::dynamic_pointer_cast<iir::LoopStmt>(firstStatement)
+  auto assignExpr = std::dynamic_pointer_cast<ast::AssignmentExpr>(
+      std::dynamic_pointer_cast<ast::ExprStmt>(
+          std::dynamic_pointer_cast<ast::LoopStmt>(firstStatement)
               ->getBlockStmt()
               ->getStatements()
               .front())
           ->getExpr());
 
-  auto fieldAccessLeft = std::dynamic_pointer_cast<iir::FieldAccessExpr>(assignExpr->getLeft());
-  auto fieldAccessRight = std::dynamic_pointer_cast<iir::FieldAccessExpr>(assignExpr->getRight());
+  auto fieldAccessLeft = std::dynamic_pointer_cast<ast::FieldAccessExpr>(assignExpr->getLeft());
+  auto fieldAccessRight = std::dynamic_pointer_cast<ast::FieldAccessExpr>(assignExpr->getRight());
 
   // ... and ensure that we indeed fill the versioned sparse field here
   EXPECT_EQ(fieldAccessRight->getName(), "sparse");

@@ -37,14 +37,14 @@ StatementMapper::Scope* StatementMapper::getCurrentCandidateScope() {
                                                 : nullptr);
 }
 
-void StatementMapper::appendNewStatement(const std::shared_ptr<iir::Stmt>& stmt) {
+void StatementMapper::appendNewStatement(const std::shared_ptr<ast::Stmt>& stmt) {
   stmt->getData<iir::IIRStmtData>().StackTrace = stackTrace_;
   if(scope_.top()->ScopeDepth == 1) {
-    scope_.top()->doMethod_.getAST().push_back(std::shared_ptr<iir::Stmt>{stmt});
+    scope_.top()->doMethod_.getAST().push_back(std::shared_ptr<ast::Stmt>{stmt});
   }
 }
 
-void StatementMapper::visit(const std::shared_ptr<iir::BlockStmt>& stmt) {
+void StatementMapper::visit(const std::shared_ptr<ast::BlockStmt>& stmt) {
   initializedWithBlockStmt_ = true;
   scope_.top()->ScopeDepth++;
 
@@ -55,20 +55,20 @@ void StatementMapper::visit(const std::shared_ptr<iir::BlockStmt>& stmt) {
   scope_.top()->ScopeDepth--;
 }
 
-void StatementMapper::visit(const std::shared_ptr<iir::LoopStmt>& stmt) {
+void StatementMapper::visit(const std::shared_ptr<ast::LoopStmt>& stmt) {
   DAWN_ASSERT(initializedWithBlockStmt_);
 
   appendNewStatement(stmt);
   stmt->getBlockStmt()->accept(*this);
 }
 
-void StatementMapper::visit(const std::shared_ptr<iir::ExprStmt>& stmt) {
+void StatementMapper::visit(const std::shared_ptr<ast::ExprStmt>& stmt) {
   DAWN_ASSERT(initializedWithBlockStmt_);
   appendNewStatement(stmt);
   stmt->getExpr()->accept(*this);
 }
 
-void StatementMapper::visit(const std::shared_ptr<iir::ReturnStmt>& stmt) {
+void StatementMapper::visit(const std::shared_ptr<ast::ReturnStmt>& stmt) {
   DAWN_ASSERT(initializedWithBlockStmt_);
   DAWN_ASSERT(scope_.top()->FunctionInstantiation);
   std::shared_ptr<const iir::StencilFunctionInstantiation> curFunc =
@@ -85,7 +85,7 @@ void StatementMapper::visit(const std::shared_ptr<iir::ReturnStmt>& stmt) {
   stmt->getExpr()->accept(*this);
 }
 
-void StatementMapper::visit(const std::shared_ptr<iir::IfStmt>& stmt) {
+void StatementMapper::visit(const std::shared_ptr<ast::IfStmt>& stmt) {
   DAWN_ASSERT(initializedWithBlockStmt_);
 
   appendNewStatement(stmt);
@@ -96,7 +96,7 @@ void StatementMapper::visit(const std::shared_ptr<iir::IfStmt>& stmt) {
     stmt->getElseStmt()->accept(*this);
 }
 
-void StatementMapper::visit(const std::shared_ptr<iir::VarDeclStmt>& stmt) {
+void StatementMapper::visit(const std::shared_ptr<ast::VarDeclStmt>& stmt) {
   DAWN_ASSERT(initializedWithBlockStmt_);
 
   if(!stmt->getData<iir::VarDeclStmtData>().AccessID) {
@@ -137,61 +137,61 @@ void StatementMapper::visit(const std::shared_ptr<iir::VarDeclStmt>& stmt) {
   }
 }
 
-void StatementMapper::visit(const std::shared_ptr<iir::VerticalRegionDeclStmt>& stmt) {
+void StatementMapper::visit(const std::shared_ptr<ast::VerticalRegionDeclStmt>& stmt) {
   DAWN_ASSERT_MSG(0, "VerticalRegionDeclStmt not allowed in this context");
 }
 
-void StatementMapper::visit(const std::shared_ptr<iir::StencilCallDeclStmt>& stmt) {
+void StatementMapper::visit(const std::shared_ptr<ast::StencilCallDeclStmt>& stmt) {
   DAWN_ASSERT_MSG(0, "StencilCallDeclStmt not allowed in this context");
 }
 
-void StatementMapper::visit(const std::shared_ptr<iir::BoundaryConditionDeclStmt>& stmt) {
+void StatementMapper::visit(const std::shared_ptr<ast::BoundaryConditionDeclStmt>& stmt) {
   DAWN_ASSERT_MSG(0, "StencilCallDeclStmt not allowed in this context");
 }
 
-void StatementMapper::visit(const std::shared_ptr<iir::AssignmentExpr>& expr) {
+void StatementMapper::visit(const std::shared_ptr<ast::AssignmentExpr>& expr) {
   DAWN_ASSERT(initializedWithBlockStmt_);
 
   for(auto& s : expr->getChildren())
     s->accept(*this);
 }
 
-void StatementMapper::visit(const std::shared_ptr<iir::UnaryOperator>& expr) {
+void StatementMapper::visit(const std::shared_ptr<ast::UnaryOperator>& expr) {
   DAWN_ASSERT(initializedWithBlockStmt_);
 
   for(auto& s : expr->getChildren())
     s->accept(*this);
 }
 
-void StatementMapper::visit(const std::shared_ptr<iir::ReductionOverNeighborExpr>& expr) {
+void StatementMapper::visit(const std::shared_ptr<ast::ReductionOverNeighborExpr>& expr) {
   DAWN_ASSERT(initializedWithBlockStmt_);
 
   for(auto& s : expr->getChildren())
     s->accept(*this);
 }
 
-void StatementMapper::visit(const std::shared_ptr<iir::BinaryOperator>& expr) {
+void StatementMapper::visit(const std::shared_ptr<ast::BinaryOperator>& expr) {
   DAWN_ASSERT(initializedWithBlockStmt_);
 
   for(auto& s : expr->getChildren())
     s->accept(*this);
 }
 
-void StatementMapper::visit(const std::shared_ptr<iir::TernaryOperator>& expr) {
+void StatementMapper::visit(const std::shared_ptr<ast::TernaryOperator>& expr) {
   DAWN_ASSERT(initializedWithBlockStmt_);
 
   for(auto& s : expr->getChildren())
     s->accept(*this);
 }
 
-void StatementMapper::visit(const std::shared_ptr<iir::FunCallExpr>& expr) {
+void StatementMapper::visit(const std::shared_ptr<ast::FunCallExpr>& expr) {
   DAWN_ASSERT(initializedWithBlockStmt_);
 
   for(auto& s : expr->getChildren())
     s->accept(*this);
 }
 
-void StatementMapper::visit(const std::shared_ptr<iir::StencilFunCallExpr>& expr) {
+void StatementMapper::visit(const std::shared_ptr<ast::StencilFunCallExpr>& expr) {
   DAWN_ASSERT(initializedWithBlockStmt_);
 
   // Find the referenced stencil function
@@ -201,7 +201,7 @@ void StatementMapper::visit(const std::shared_ptr<iir::StencilFunCallExpr>& expr
   for(auto& iirStencilFun : instantiation_->getIIR()->getStencilFunctions()) {
     if(iirStencilFun->Name == expr->getCallee()) {
 
-      std::shared_ptr<iir::AST> ast = nullptr;
+      std::shared_ptr<ast::AST> ast = nullptr;
       if(iirStencilFun->isSpecialized()) {
         // Select the correct overload
         ast = iirStencilFun->getASTOfInterval(interval.asSIRInterval());
@@ -272,7 +272,7 @@ void StatementMapper::visit(const std::shared_ptr<iir::StencilFunCallExpr>& expr
   scope_.top()->CandiateScopes.pop();
 }
 
-void StatementMapper::visit(const std::shared_ptr<iir::StencilFunArgExpr>& expr) {
+void StatementMapper::visit(const std::shared_ptr<ast::StencilFunArgExpr>& expr) {
   DAWN_ASSERT(initializedWithBlockStmt_);
 
   DAWN_ASSERT(!scope_.top()->CandiateScopes.empty());
@@ -299,7 +299,7 @@ void StatementMapper::visit(const std::shared_ptr<iir::StencilFunArgExpr>& expr)
   argumentIndex += 1;
 }
 
-void StatementMapper::visit(const std::shared_ptr<iir::VarAccessExpr>& expr) {
+void StatementMapper::visit(const std::shared_ptr<ast::VarAccessExpr>& expr) {
   DAWN_ASSERT(initializedWithBlockStmt_);
 
   auto& function = scope_.top()->FunctionInstantiation;
@@ -313,9 +313,9 @@ void StatementMapper::visit(const std::shared_ptr<iir::VarAccessExpr>& expr) {
       // Replace the variable access with the actual value
       DAWN_ASSERT_MSG(value.has_value(), "constant global variable with no value");
 
-      auto newExpr = std::make_shared<iir::LiteralAccessExpr>(
+      auto newExpr = std::make_shared<ast::LiteralAccessExpr>(
           value.toString(), sir::Value::typeToBuiltinTypeID(value.getType()));
-      iir::replaceOldExprWithNewExprInStmt(
+      ast::replaceOldExprWithNewExprInStmt(
           (*(scope_.top()->doMethod_.getAST().getStatements().rbegin())), expr, newExpr);
 
       // if a global is replaced by its value it becomes a de-facto literal negate access id
@@ -349,7 +349,7 @@ void StatementMapper::visit(const std::shared_ptr<iir::VarAccessExpr>& expr) {
   }
 }
 
-void StatementMapper::visit(const std::shared_ptr<iir::LiteralAccessExpr>& expr) {
+void StatementMapper::visit(const std::shared_ptr<ast::LiteralAccessExpr>& expr) {
   DAWN_ASSERT(initializedWithBlockStmt_);
 
   // Register a literal access (Note: the negative AccessID we assign!)
@@ -364,7 +364,7 @@ void StatementMapper::visit(const std::shared_ptr<iir::LiteralAccessExpr>& expr)
   expr->getData<iir::IIRAccessExprData>().AccessID = std::make_optional(AccessID);
 }
 
-void StatementMapper::visit(const std::shared_ptr<iir::FieldAccessExpr>& expr) {
+void StatementMapper::visit(const std::shared_ptr<ast::FieldAccessExpr>& expr) {
   DAWN_ASSERT(initializedWithBlockStmt_);
   // Register the mapping between FieldAccessExpr and AccessID
   int AccessID = scope_.top()->LocalFieldnameToAccessIDMap.at(expr->getName());

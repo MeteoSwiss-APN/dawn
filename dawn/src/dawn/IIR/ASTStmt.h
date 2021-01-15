@@ -118,27 +118,12 @@ std::shared_ptr<ast::LoopStmt> makeLoopStmt(Args&&... args) {
   return std::make_shared<ast::LoopStmt>(std::make_unique<IIRStmtData>(),
                                          std::forward<Args>(args)...);
 }
-//
-// TODO refactor_AST: the following is going to be removed
-//
-using Stmt = ast::Stmt;
-using BlockStmt = ast::BlockStmt;
-using ExprStmt = ast::ExprStmt;
-using ReturnStmt = ast::ReturnStmt;
-using VarDeclStmt = ast::VarDeclStmt;
-using VerticalRegionDeclStmt = ast::VerticalRegionDeclStmt;
-using StencilCallDeclStmt = ast::StencilCallDeclStmt;
-using BoundaryConditionDeclStmt = ast::BoundaryConditionDeclStmt;
-using IfStmt = ast::IfStmt;
-using LoopStmt = ast::LoopStmt;
-//
-// END_TODO
-//
+
 /// @brief Computes the maximum extent among all the accesses of accessID in stmt
-std::optional<Extents> computeMaximumExtents(Stmt& stmt, const int accessID);
+std::optional<Extents> computeMaximumExtents(ast::Stmt& stmt, const int accessID);
 
 /// @brief Get the `AccessID` of the a VarDeclStmt
-int getAccessID(const std::shared_ptr<VarDeclStmt>& stmt);
+int getAccessID(const std::shared_ptr<ast::VarDeclStmt>& stmt);
 
 } // namespace iir
 } // namespace dawn

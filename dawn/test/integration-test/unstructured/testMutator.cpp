@@ -47,9 +47,9 @@ void injectRedirectedReads(std::shared_ptr<dawn::iir::StencilInstantiation> sten
     stencil->accept(mutator);
 
     // this means the accesses of the statements changed. recompute them.
-    std::vector<std::shared_ptr<dawn::iir::Stmt>> stmtsVec =
+    std::vector<std::shared_ptr<dawn::ast::Stmt>> stmtsVec =
         dawn::iterateIIROverStmt(*stencilInstantiation->getIIR());
-    dawn::ArrayRef<std::shared_ptr<dawn::iir::Stmt>> stmts(stmtsVec.data(), stmtsVec.size());
+    dawn::ArrayRef<std::shared_ptr<dawn::ast::Stmt>> stmts(stmtsVec.data(), stmtsVec.size());
     dawn::computeAccesses(stencilInstantiation->getMetaData(), stmts);
 
     // this info needs to be propagated updwards

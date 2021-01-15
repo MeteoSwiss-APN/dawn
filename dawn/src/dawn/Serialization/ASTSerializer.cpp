@@ -100,7 +100,7 @@ void setAccessExprData(dawn::proto::statements::AccessExprData* dataProto,
     accessID->set_value(dataAccessID.value());
   }
 }
-void setStmtData(proto::statements::StmtData* protoStmtData, iir::Stmt& stmt) {
+void setStmtData(proto::statements::StmtData* protoStmtData, ast::Stmt& stmt) {
   if(stmt.getDataType() == ast::StmtData::IIR_DATA_TYPE) {
     if(stmt.getData<iir::IIRStmtData>().CallerAccesses.has_value()) {
       setAccesses(protoStmtData->mutable_accesses(),
@@ -112,7 +112,7 @@ void setStmtData(proto::statements::StmtData* protoStmtData, iir::Stmt& stmt) {
 }
 
 void setVarDeclStmtData(dawn::proto::statements::VarDeclStmtData* dataProto,
-                        const iir::VarDeclStmt& stmt) {
+                        const ast::VarDeclStmt& stmt) {
   if(stmt.getDataType() == ast::StmtData::IIR_DATA_TYPE) {
     if(stmt.getData<iir::VarDeclStmtData>().AccessID) {
       auto accessID = dataProto->mutable_accessid();

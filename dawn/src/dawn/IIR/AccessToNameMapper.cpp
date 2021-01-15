@@ -22,12 +22,12 @@
 namespace dawn {
 namespace iir {
 
-void AccessToNameMapper::visit(const std::shared_ptr<iir::VarDeclStmt>& stmt) {
+void AccessToNameMapper::visit(const std::shared_ptr<ast::VarDeclStmt>& stmt) {
   insertAccessInfo(stmt);
-  iir::ASTVisitorForwarding::visit(stmt);
+  ast::ASTVisitorForwarding::visit(stmt);
 }
 
-void AccessToNameMapper::visit(const std::shared_ptr<iir::StencilFunCallExpr>& expr) {
+void AccessToNameMapper::visit(const std::shared_ptr<ast::StencilFunCallExpr>& expr) {
   if(!curFunctionInstantiation_.empty()) {
     auto* stencilFunctionInstantiation =
         curFunctionInstantiation_.top()->getStencilFunctionInstantiation(expr).get();
@@ -39,10 +39,10 @@ void AccessToNameMapper::visit(const std::shared_ptr<iir::StencilFunCallExpr>& e
   curFunctionInstantiation_.top()->getAST()->accept(*this);
 
   curFunctionInstantiation_.pop();
-  iir::ASTVisitorForwarding::visit(expr);
+  ast::ASTVisitorForwarding::visit(expr);
 }
 
-void AccessToNameMapper::insertAccessInfo(const std::shared_ptr<iir::Expr>& expr) {
+void AccessToNameMapper::insertAccessInfo(const std::shared_ptr<ast::Expr>& expr) {
   int accessID = iir::getAccessID(expr);
   std::string name = (curFunctionInstantiation_.empty())
                          ? metaData_.getNameFromAccessID(accessID)
@@ -50,7 +50,7 @@ void AccessToNameMapper::insertAccessInfo(const std::shared_ptr<iir::Expr>& expr
 
   accessIDToName_.emplace(accessID, name);
 }
-void AccessToNameMapper::insertAccessInfo(const std::shared_ptr<iir::VarDeclStmt>& stmt) {
+void AccessToNameMapper::insertAccessInfo(const std::shared_ptr<ast::VarDeclStmt>& stmt) {
   int accessID = iir::getAccessID(stmt);
   std::string name = (curFunctionInstantiation_.empty())
                          ? metaData_.getNameFromAccessID(accessID)
@@ -59,11 +59,11 @@ void AccessToNameMapper::insertAccessInfo(const std::shared_ptr<iir::VarDeclStmt
   accessIDToName_.emplace(accessID, name);
 }
 
-void AccessToNameMapper::visit(const std::shared_ptr<iir::VarAccessExpr>& expr) {
+void AccessToNameMapper::visit(const std::shared_ptr<ast::VarAccessExpr>& expr) {
   insertAccessInfo(expr);
 }
 
-void AccessToNameMapper::visit(const std::shared_ptr<iir::FieldAccessExpr>& expr) {
+void AccessToNameMapper::visit(const std::shared_ptr<ast::FieldAccessExpr>& expr) {
   insertAccessInfo(expr);
   ASTVisitorForwarding::visit(expr);
 }

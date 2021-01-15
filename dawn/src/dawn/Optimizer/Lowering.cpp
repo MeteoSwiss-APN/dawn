@@ -41,7 +41,7 @@ std::shared_ptr<ast::AST> convertToIIRAST(const ast::AST& sirAST) {
   ASTConverter astConverter;
   sirAST.accept(astConverter);
   return std::make_shared<ast::AST>(
-      std::dynamic_pointer_cast<iir::BlockStmt>(astConverter.getStmtMap().at(sirAST.getRoot())));
+      std::dynamic_pointer_cast<ast::BlockStmt>(astConverter.getStmtMap().at(sirAST.getRoot())));
 }
 
 using namespace iir;
@@ -51,7 +51,7 @@ using namespace iir;
 
 /// @brief Map the statements of the stencil description AST to a flat list of statements and
 /// inline all calls to other stencils
-class StencilDescStatementMapper : public iir::ASTVisitor {
+class StencilDescStatementMapper : public ast::ASTVisitor {
 
   /// @brief Record of the current scope (each StencilCall will create a new scope)
   struct Scope : public NonCopyable {
@@ -93,7 +93,7 @@ class StencilDescStatementMapper : public iir::ASTVisitor {
 
   /// We replace the first VerticalRegionDeclStmt with a dummy node which signals code-gen that it
   /// should insert a call to the gridtools stencil here
-  std::shared_ptr<iir::Stmt> stencilDescReplacement_;
+  std::shared_ptr<ast::Stmt> stencilDescReplacement_;
 
 public:
   StencilDescStatementMapper(std::shared_ptr<iir::StencilInstantiation>& instantiation,
@@ -161,7 +161,7 @@ public:
   /// description AST are pruned at the end
   ///
   /// @see removeObsoleteStencilDescNodes
-  void tryReplaceStencilDescStmt(const std::shared_ptr<iir::Stmt>& stencilDescNode) {
+  void tryReplaceStencilDescStmt(const std::shared_ptr<ast::Stmt>& stencilDescNode) {
     DAWN_ASSERT(stencilDescNode->isStencilDesc());
 
     // Nothing to do, statement was already replaced
@@ -177,7 +177,7 @@ public:
     } else {
 
       // We need to replace the VerticalRegionDeclStmt in the current statement
-      iir::replaceOldStmtWithNewStmtInStmt(
+      ast::replaceOldStmtWithNewStmtInStmt(
           scope_.top()->controlFlowDescriptor_.getStatements().back(), stencilDescNode,
           stencilDescReplacement_);
     }
@@ -191,17 +191,17 @@ public:
 
     // We only need to remove "nested" nodes as the top-level VerticalRegions or StencilCalls are
     // not inserted into the statement list in the frist place
-    class RemoveStencilDescNodes : public iir::ASTVisitorForwarding {
+    class RemoveStencilDescNodes : public ast::ASTVisitorForwarding {
     public:
       RemoveStencilDescNodes() {}
 
-      bool needsRemoval(const std::shared_ptr<iir::Stmt>& stmt) const {
-        if(StencilCallDeclStmt* s = dyn_cast<iir::StencilCallDeclStmt>(stmt.get())) {
+      bool needsRemoval(const std::shared_ptr<ast::Stmt>& stmt) const {
+        if(ast::StencilCallDeclStmt* s = dyn_cast<ast::StencilCallDeclStmt>(stmt.get())) {
           // StencilCallDeclStmt node, remove it if it is not one of our artificial stencil call
           // nodes
           if(!InstantiationHelper::isStencilCallCodeGenName(s->getStencilCall()->Callee))
             return true;
-        } else if(isa<iir::VerticalRegionDeclStmt>(stmt.get())) {
+        } else if(isa<ast::VerticalRegionDeclStmt>(stmt.get())) {
           // Remove all remaining vertical regions
           return true;
         }
@@ -209,7 +209,7 @@ public:
         return false;
       }
 
-      void visit(const std::shared_ptr<iir::BlockStmt>& stmt) override {
+      void visit(const std::shared_ptr<ast::BlockStmt>& stmt) override {
         for(auto it = stmt->getStatements().begin(); it != stmt->getStatements().end();) {
           if(needsRemoval(*it)) {
             it = stmt->erase(it);
@@ -242,12 +242,12 @@ public:
   }
 
   /// @brief Push back a new statement to the end of the current statement list
-  void pushBackStatement(const std::shared_ptr<iir::Stmt>& stmt) {
+  void pushBackStatement(const std::shared_ptr<ast::Stmt>& stmt) {
     stmt->getData<iir::IIRStmtData>().StackTrace = std::make_optional(scope_.top()->StackTrace);
     scope_.top()->controlFlowDescriptor_.insertStmt(stmt);
   }
 
-  void visit(const std::shared_ptr<iir::BlockStmt>& stmt) override {
+  void visit(const std::shared_ptr<ast::BlockStmt>& stmt) override {
     scope_.top()->ScopeDepth++;
     for(const auto& s : stmt->getStatements()) {
       s->accept(*this);
@@ -255,11 +255,11 @@ public:
     scope_.top()->ScopeDepth--;
   }
 
-  void visit(const std::shared_ptr<iir::LoopStmt>& stmt) override {
+  void visit(const std::shared_ptr<ast::LoopStmt>& stmt) override {
     stmt->getBlockStmt()->accept(*this);
   }
 
-  void visit(const std::shared_ptr<iir::ExprStmt>& stmt) override {
+  void visit(const std::shared_ptr<ast::ExprStmt>& stmt) override {
     if(scope_.top()->ScopeDepth == 1)
       pushBackStatement(stmt);
 
@@ -272,24 +272,24 @@ public:
     stmt->getExpr()->accept(*this);
   }
 
-  void visit(const std::shared_ptr<iir::ReturnStmt>&) override {
+  void visit(const std::shared_ptr<ast::ReturnStmt>&) override {
     DAWN_ASSERT_MSG(0, "ReturnStmt not allowed in this context");
   }
 
-  void visit(const std::shared_ptr<iir::IfStmt>& stmt) override {
+  void visit(const std::shared_ptr<ast::IfStmt>& stmt) override {
     bool result;
-    if(iir::evalExprAsBoolean(stmt->getCondExpr(), result, scope_.top()->VariableMap)) {
+    if(ast::evalExprAsBoolean(stmt->getCondExpr(), result, scope_.top()->VariableMap)) {
 
       if(scope_.top()->ScopeDepth == 1) {
         // The condition is known at compile time, we can remove this If statement completely by
         // just not inserting it into the statement list
         if(result) {
-          BlockStmt* thenBody = dyn_cast<iir::BlockStmt>(stmt->getThenStmt().get());
+          ast::BlockStmt* thenBody = dyn_cast<ast::BlockStmt>(stmt->getThenStmt().get());
           DAWN_ASSERT_MSG(thenBody, "then-body of if-statement should be a BlockStmt!");
           for(const auto& s : thenBody->getStatements())
             s->accept(*this);
         } else if(stmt->hasElse()) {
-          BlockStmt* elseBody = dyn_cast<iir::BlockStmt>(stmt->getElseStmt().get());
+          ast::BlockStmt* elseBody = dyn_cast<ast::BlockStmt>(stmt->getElseStmt().get());
           DAWN_ASSERT_MSG(elseBody, "else-body of if-statement should be a BlockStmt!");
           for(const auto& s : elseBody->getStatements())
             s->accept(*this);
@@ -303,24 +303,24 @@ public:
         if(result) {
           // Replace the if-statement with the then-block
           // TODO very repetitive scope_.top()->control....getStatements() ...
-          iir::replaceOldStmtWithNewStmtInStmt(
+          ast::replaceOldStmtWithNewStmtInStmt(
               scope_.top()->controlFlowDescriptor_.getStatements().back(), stmt,
               stmt->getThenStmt());
           stmt->getThenStmt()->accept(*this);
         } else if(stmt->hasElse()) {
           // Replace the if-statement with the else-block
-          iir::replaceOldStmtWithNewStmtInStmt(
+          ast::replaceOldStmtWithNewStmtInStmt(
               scope_.top()->controlFlowDescriptor_.getStatements().back(), stmt,
               stmt->getElseStmt());
           stmt->getElseStmt()->accept(*this);
         } else {
           // Replace the if-statement with a void `0`
-          auto voidExpr = std::make_shared<iir::LiteralAccessExpr>("0", BuiltinTypeID::Float);
+          auto voidExpr = std::make_shared<ast::LiteralAccessExpr>("0", BuiltinTypeID::Float);
           auto voidStmt = iir::makeExprStmt(voidExpr);
           int AccessID = -instantiation_->nextUID();
           metadata_.insertAccessOfType(iir::FieldAccessType::Literal, AccessID, "0");
           voidExpr->getData<iir::IIRAccessExprData>().AccessID = std::make_optional(AccessID);
-          iir::replaceOldStmtWithNewStmtInStmt(
+          ast::replaceOldStmtWithNewStmtInStmt(
               scope_.top()->controlFlowDescriptor_.getStatements().back(), stmt, voidStmt);
         }
       }
@@ -346,7 +346,7 @@ public:
     }
   }
 
-  void visit(const std::shared_ptr<iir::VarDeclStmt>& stmt) override {
+  void visit(const std::shared_ptr<ast::VarDeclStmt>& stmt) override {
     // This is the first time we encounter this variable. We have to make sure the name is not
     // already used in another scope!
 
@@ -366,12 +366,12 @@ public:
     // Check if we can evaluate the RHS to a constant expression
     if(stmt->getInitList().size() == 1) {
       double result;
-      if(iir::evalExprAsDouble(stmt->getInitList().front(), result, scope_.top()->VariableMap))
+      if(ast::evalExprAsDouble(stmt->getInitList().front(), result, scope_.top()->VariableMap))
         scope_.top()->VariableMap[stmt->getName()] = result;
     }
   }
 
-  void visit(const std::shared_ptr<iir::VerticalRegionDeclStmt>& stmt) override {
+  void visit(const std::shared_ptr<ast::VerticalRegionDeclStmt>& stmt) override {
     sir::VerticalRegion* verticalRegion = stmt->getVerticalRegion().get();
 
     tryReplaceStencilDescStmt(stmt);
@@ -382,7 +382,7 @@ public:
     // mapping of AST nodes to AccessIDs, hence we clone the ASTs of the vertical regions of
     // stencil calls
     const bool cloneAST = scope_.size() > 1;
-    std::shared_ptr<iir::AST> ast = cloneAST ? verticalRegion->Ast->clone() : verticalRegion->Ast;
+    std::shared_ptr<ast::AST> ast = cloneAST ? verticalRegion->Ast->clone() : verticalRegion->Ast;
 
     // Create the new multi-stage
     std::unique_ptr<MultiStage> multiStage = std::make_unique<MultiStage>(
@@ -429,7 +429,7 @@ public:
     stencil->insertChild(std::move(multiStage));
   }
 
-  void visit(const std::shared_ptr<iir::StencilCallDeclStmt>& stmt) override {
+  void visit(const std::shared_ptr<ast::StencilCallDeclStmt>& stmt) override {
     ast::StencilCall* stencilCall = stmt->getStencilCall().get();
 
     tryReplaceStencilDescStmt(stmt);
@@ -489,7 +489,7 @@ public:
     DAWN_LOG(INFO) << "Done processing stencil call to `" << stencilCall->Callee << "`";
   }
 
-  void visit(const std::shared_ptr<iir::BoundaryConditionDeclStmt>& stmt) override {
+  void visit(const std::shared_ptr<ast::BoundaryConditionDeclStmt>& stmt) override {
     if(instantiation_->insertBoundaryConditions(stmt->getFields()[0], stmt) == false)
       DAWN_ASSERT_MSG(false, "Boundary Condition specified twice for the same field");
     //      if(instantiation_->insertBoundaryConditions(stmt->getFields()[0]->Name, stmt) ==
@@ -497,16 +497,16 @@ public:
     //      field");
   }
 
-  void visit(const std::shared_ptr<iir::AssignmentExpr>& expr) override {
+  void visit(const std::shared_ptr<ast::AssignmentExpr>& expr) override {
     for(auto& s : expr->getChildren())
       s->accept(*this);
 
     // If the LHS is known to be a known constant, we need to update its value or remove it as
     // being compile time constant
-    if(VarAccessExpr* var = dyn_cast<iir::VarAccessExpr>(expr->getLeft().get())) {
+    if(ast::VarAccessExpr* var = dyn_cast<ast::VarAccessExpr>(expr->getLeft().get())) {
       if(scope_.top()->VariableMap.count(var->getName())) {
         double result;
-        if(iir::evalExprAsDouble(expr->getRight(), result, scope_.top()->VariableMap)) {
+        if(ast::evalExprAsDouble(expr->getRight(), result, scope_.top()->VariableMap)) {
           if(expr->getOp() == "=")
             scope_.top()->VariableMap[var->getName()] = result;
           else if(expr->getOp() == "+=")
@@ -525,37 +525,37 @@ public:
     }
   }
 
-  void visit(const std::shared_ptr<iir::UnaryOperator>& expr) override {
+  void visit(const std::shared_ptr<ast::UnaryOperator>& expr) override {
     for(auto& s : expr->getChildren())
       s->accept(*this);
   }
 
-  void visit(const std::shared_ptr<iir::BinaryOperator>& expr) override {
+  void visit(const std::shared_ptr<ast::BinaryOperator>& expr) override {
     for(auto& s : expr->getChildren())
       s->accept(*this);
   }
 
-  void visit(const std::shared_ptr<iir::TernaryOperator>& expr) override {
+  void visit(const std::shared_ptr<ast::TernaryOperator>& expr) override {
     for(auto& s : expr->getChildren())
       s->accept(*this);
   }
 
-  void visit(const std::shared_ptr<iir::FunCallExpr>& expr) override {
+  void visit(const std::shared_ptr<ast::FunCallExpr>& expr) override {
     for(auto& s : expr->getChildren())
       s->accept(*this);
   }
 
-  void visit(const std::shared_ptr<iir::StencilFunCallExpr>&) override {
+  void visit(const std::shared_ptr<ast::StencilFunCallExpr>&) override {
     DAWN_ASSERT_MSG(0, "StencilFunCallExpr not allowed in this context");
   }
-  void visit(const std::shared_ptr<iir::StencilFunArgExpr>&) override {
+  void visit(const std::shared_ptr<ast::StencilFunArgExpr>&) override {
     DAWN_ASSERT_MSG(0, "StencilFunArgExpr not allowed in this context");
   }
-  void visit(const std::shared_ptr<iir::ReductionOverNeighborExpr>&) override {
+  void visit(const std::shared_ptr<ast::ReductionOverNeighborExpr>&) override {
     DAWN_ASSERT_MSG(0, "ReductionOverNeighborExpr not allowed in this context");
   }
 
-  void visit(const std::shared_ptr<iir::VarAccessExpr>& expr) override {
+  void visit(const std::shared_ptr<ast::VarAccessExpr>& expr) override {
     const auto& varname = expr->getName();
     if(expr->isExternal()) {
       DAWN_ASSERT_MSG(!expr->isArrayAccess(), "global array access is not supported");
@@ -565,9 +565,9 @@ public:
         // Replace the variable access with the actual value
         DAWN_ASSERT_MSG(value.has_value(), "constant global variable with no value");
 
-        auto newExpr = std::make_shared<dawn::LiteralAccessExpr>(
+        auto newExpr = std::make_shared<ast::LiteralAccessExpr>(
             value.toString(), sir::Value::typeToBuiltinTypeID(value.getType()));
-        iir::replaceOldExprWithNewExprInStmt(
+        ast::replaceOldExprWithNewExprInStmt(
             scope_.top()->controlFlowDescriptor_.getStatements().back(), expr, newExpr);
 
         int AccessID = instantiation_->nextUID();
@@ -590,14 +590,14 @@ public:
     }
   }
 
-  void visit(const std::shared_ptr<iir::LiteralAccessExpr>& expr) override {
+  void visit(const std::shared_ptr<ast::LiteralAccessExpr>& expr) override {
     // Register a literal access (Note: the negative AccessID we assign!)
     int AccessID = -instantiation_->nextUID();
     metadata_.insertAccessOfType(iir::FieldAccessType::Literal, AccessID, expr->getValue());
     expr->getData<iir::IIRAccessExprData>().AccessID = std::make_optional(AccessID);
   }
 
-  void visit(const std::shared_ptr<iir::FieldAccessExpr>& expr) override {}
+  void visit(const std::shared_ptr<ast::FieldAccessExpr>& expr) override {}
 };
 
 void fillIIRFromSIR(std::shared_ptr<iir::StencilInstantiation> stencilInstantiation,

@@ -31,7 +31,7 @@ namespace dawn {
 /// visit.
 class ASTConverter : public ast::ASTVisitorForwarding {
 public:
-  using StmtMap = std::unordered_map<std::shared_ptr<ast::Stmt>, std::shared_ptr<iir::Stmt>>;
+  using StmtMap = std::unordered_map<std::shared_ptr<ast::Stmt>, std::shared_ptr<ast::Stmt>>;
 
   ASTConverter();
 

@@ -27,7 +27,7 @@ class StencilFunctionInstantiation;
 class StencilMetaInformation;
 
 /// @brief Dump AST to string
-class AccessToNameMapper : public iir::ASTVisitorForwarding {
+class AccessToNameMapper : public ast::ASTVisitorForwarding {
   const StencilMetaInformation& metaData_;
   std::stack<StencilFunctionInstantiation*> curFunctionInstantiation_;
 
@@ -39,17 +39,17 @@ class AccessToNameMapper : public iir::ASTVisitorForwarding {
 public:
   AccessToNameMapper(const StencilMetaInformation& metaData) : metaData_(metaData) {}
 
-  virtual void visit(const std::shared_ptr<iir::VarDeclStmt>& stmt) override;
-  virtual void visit(const std::shared_ptr<iir::StencilFunCallExpr>& expr) override;
-  virtual void visit(const std::shared_ptr<iir::VarAccessExpr>& expr) override;
-  virtual void visit(const std::shared_ptr<iir::FieldAccessExpr>& expr) override;
+  virtual void visit(const std::shared_ptr<ast::VarDeclStmt>& stmt) override;
+  virtual void visit(const std::shared_ptr<ast::StencilFunCallExpr>& expr) override;
+  virtual void visit(const std::shared_ptr<ast::VarAccessExpr>& expr) override;
+  virtual void visit(const std::shared_ptr<ast::FieldAccessExpr>& expr) override;
 
   std::string getNameFromAccessID(int accessID) const { return accessIDToName_.at(accessID); }
   bool hasAccessID(int accessID) const { return accessIDToName_.count(accessID); }
 
 private:
-  void insertAccessInfo(const std::shared_ptr<iir::Expr>& expr);
-  void insertAccessInfo(const std::shared_ptr<iir::VarDeclStmt>& stmt);
+  void insertAccessInfo(const std::shared_ptr<ast::Expr>& expr);
+  void insertAccessInfo(const std::shared_ptr<ast::VarDeclStmt>& stmt);
 };
 
 } // namespace iir

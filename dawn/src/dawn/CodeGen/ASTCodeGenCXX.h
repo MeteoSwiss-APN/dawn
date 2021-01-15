@@ -25,7 +25,7 @@ namespace codegen {
 
 /// @brief Abstract base class of all C++ code generation visitor
 /// @ingroup codegen
-class ASTCodeGenCXX : public iir::ASTVisitor, public NonCopyable {
+class ASTCodeGenCXX : public ast::ASTVisitor, public NonCopyable {
 protected:
   /// Indent of each statement
   int indent_;
@@ -41,22 +41,22 @@ public:
 
   /// @name Statement implementation
   /// @{
-  virtual void visit(const std::shared_ptr<iir::BlockStmt>& stmt) override;
-  virtual void visit(const std::shared_ptr<iir::ExprStmt>& stmt) override;
-  virtual void visit(const std::shared_ptr<iir::VarDeclStmt>& stmt) override;
-  virtual void visit(const std::shared_ptr<iir::IfStmt>& stmt) override;
-  virtual void visit(const std::shared_ptr<iir::LoopStmt>& stmt) override{};
+  virtual void visit(const std::shared_ptr<ast::BlockStmt>& stmt) override;
+  virtual void visit(const std::shared_ptr<ast::ExprStmt>& stmt) override;
+  virtual void visit(const std::shared_ptr<ast::VarDeclStmt>& stmt) override;
+  virtual void visit(const std::shared_ptr<ast::IfStmt>& stmt) override;
+  virtual void visit(const std::shared_ptr<ast::LoopStmt>& stmt) override{};
   /// @}
 
   /// @name Expression implementation
   /// @{
-  virtual void visit(const std::shared_ptr<iir::ReductionOverNeighborExpr>& expr) override{};
-  virtual void visit(const std::shared_ptr<iir::UnaryOperator>& expr) override;
-  virtual void visit(const std::shared_ptr<iir::BinaryOperator>& expr) override;
-  virtual void visit(const std::shared_ptr<iir::AssignmentExpr>& expr) override;
-  virtual void visit(const std::shared_ptr<iir::TernaryOperator>& expr) override;
-  virtual void visit(const std::shared_ptr<iir::FunCallExpr>& expr) override;
-  virtual void visit(const std::shared_ptr<iir::LiteralAccessExpr>& expr) override;
+  virtual void visit(const std::shared_ptr<ast::ReductionOverNeighborExpr>& expr) override{};
+  virtual void visit(const std::shared_ptr<ast::UnaryOperator>& expr) override;
+  virtual void visit(const std::shared_ptr<ast::BinaryOperator>& expr) override;
+  virtual void visit(const std::shared_ptr<ast::AssignmentExpr>& expr) override;
+  virtual void visit(const std::shared_ptr<ast::TernaryOperator>& expr) override;
+  virtual void visit(const std::shared_ptr<ast::FunCallExpr>& expr) override;
+  virtual void visit(const std::shared_ptr<ast::LiteralAccessExpr>& expr) override;
   /// @}
 
   /// @brief Get the generated code and reset the internal string stream
@@ -67,8 +67,8 @@ public:
 
   /// @brief Mapping of VarDeclStmt and Var/FieldAccessExpr to their name
   /// @{
-  virtual std::string getName(const std::shared_ptr<iir::Expr>& expr) const = 0;
-  virtual std::string getName(const std::shared_ptr<iir::VarDeclStmt>& stmt) const = 0;
+  virtual std::string getName(const std::shared_ptr<ast::Expr>& expr) const = 0;
+  virtual std::string getName(const std::shared_ptr<ast::VarDeclStmt>& stmt) const = 0;
   /// @}
 
   /// @brief Convert builtin type to the corresponding C++ type

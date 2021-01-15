@@ -235,9 +235,9 @@ public:
   /// @param func           Function to run on all statements of each Do-Method
   /// @param updateFields   Update the fields afterwards
   /// @{
-  void forEachStatement(std::function<void(ArrayRef<std::shared_ptr<iir::Stmt>>)> func,
+  void forEachStatement(std::function<void(ArrayRef<std::shared_ptr<ast::Stmt>>)> func,
                         bool updateFields = false);
-  void forEachStatement(std::function<void(ArrayRef<std::shared_ptr<iir::Stmt>>)> func,
+  void forEachStatement(std::function<void(ArrayRef<std::shared_ptr<ast::Stmt>>)> func,
                         const Lifetime& lifetime, bool updateFields = false);
   /// @}
 
@@ -278,7 +278,7 @@ public:
   const std::shared_ptr<sir::Stencil> getSIRStencil() const;
 
   /// @brief Apply the visitor to all statements in the stencil
-  void accept(iir::ASTVisitor& visitor);
+  void accept(ast::ASTVisitor& visitor);
 
   /// @brief Get the pair <AccessID, field> for the fields used within the multi-stage
   const std::unordered_map<int, FieldInfo>& getFields() const { return derivedInfo_.fields_; }
@@ -301,7 +301,7 @@ public:
   sir::Attr& getStencilAttributes();
 
 private:
-  void forEachStatementImpl(std::function<void(ArrayRef<std::shared_ptr<iir::Stmt>>)> func,
+  void forEachStatementImpl(std::function<void(ArrayRef<std::shared_ptr<ast::Stmt>>)> func,
                             int startStageIdx, int endStageIdx, bool updateFields);
   void updateFieldsImpl(int startStageIdx, int endStageIdx);
 };

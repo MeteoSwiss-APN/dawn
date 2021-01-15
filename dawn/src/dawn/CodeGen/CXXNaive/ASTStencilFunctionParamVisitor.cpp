@@ -31,7 +31,7 @@ ASTStencilFunctionParamVisitor::ASTStencilFunctionParamVisitor(
 
 ASTStencilFunctionParamVisitor::~ASTStencilFunctionParamVisitor() {}
 
-std::string ASTStencilFunctionParamVisitor::getName(const std::shared_ptr<iir::Expr>& expr) const {
+std::string ASTStencilFunctionParamVisitor::getName(const std::shared_ptr<ast::Expr>& expr) const {
 
   if(currentFunction_)
     return currentFunction_->getFieldNameFromAccessID(iir::getAccessID(expr));
@@ -39,20 +39,20 @@ std::string ASTStencilFunctionParamVisitor::getName(const std::shared_ptr<iir::E
     return metadata_.getFieldNameFromAccessID(iir::getAccessID(expr));
 }
 
-void ASTStencilFunctionParamVisitor::visit(const std::shared_ptr<iir::VarAccessExpr>& expr) {}
+void ASTStencilFunctionParamVisitor::visit(const std::shared_ptr<ast::VarAccessExpr>& expr) {}
 
-void ASTStencilFunctionParamVisitor::visit(const std::shared_ptr<iir::StencilFunArgExpr>& expr) {}
+void ASTStencilFunctionParamVisitor::visit(const std::shared_ptr<ast::StencilFunArgExpr>& expr) {}
 
-void ASTStencilFunctionParamVisitor::visit(const std::shared_ptr<iir::LiteralAccessExpr>& expr) {}
+void ASTStencilFunctionParamVisitor::visit(const std::shared_ptr<ast::LiteralAccessExpr>& expr) {}
 
-void ASTStencilFunctionParamVisitor::visit(const std::shared_ptr<iir::StencilFunCallExpr>& expr) {
+void ASTStencilFunctionParamVisitor::visit(const std::shared_ptr<ast::StencilFunCallExpr>& expr) {
 
   for(auto& arg : expr->getArguments()) {
     arg->accept(*this);
   }
 }
 
-void ASTStencilFunctionParamVisitor::visit(const std::shared_ptr<iir::FieldAccessExpr>& expr) {
+void ASTStencilFunctionParamVisitor::visit(const std::shared_ptr<ast::FieldAccessExpr>& expr) {
 
   std::string fieldName =
       currentFunction_ ? currentFunction_->getOriginalNameFromCallerAccessID(iir::getAccessID(expr))

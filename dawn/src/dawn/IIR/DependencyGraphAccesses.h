@@ -92,7 +92,7 @@ public:
   /// +-------+           +--------+
   ///
   /// Note that only child-less nodes are processed.
-  void insertStatement(const std::shared_ptr<iir::Stmt>& stmt);
+  void insertStatement(const std::shared_ptr<ast::Stmt>& stmt);
 
   /// @brief Insert a new node
   Vertex& insertNode(int ID);

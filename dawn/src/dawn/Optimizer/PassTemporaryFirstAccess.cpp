@@ -29,7 +29,7 @@ namespace dawn {
 
 namespace {
 
-class UnusedFieldVisitor : public iir::ASTVisitorForwarding {
+class UnusedFieldVisitor : public ast::ASTVisitorForwarding {
   int AccessID_;
   bool fieldIsUnused_;
   const std::shared_ptr<iir::StencilInstantiation>& instantiation_;
@@ -40,13 +40,13 @@ public:
       : AccessID_(AccessID), fieldIsUnused_(false), instantiation_(instantiation) {}
 
   std::shared_ptr<const iir::StencilFunctionInstantiation>
-  getStencilFunctionInstantiation(const std::shared_ptr<iir::StencilFunCallExpr>& expr) {
+  getStencilFunctionInstantiation(const std::shared_ptr<ast::StencilFunCallExpr>& expr) {
     if(!functionInstantiationStack_.empty())
       return functionInstantiationStack_.top()->getStencilFunctionInstantiation(expr);
     return instantiation_->getMetaData().getStencilFunctionInstantiation(expr);
   }
 
-  void visit(const std::shared_ptr<iir::StencilFunCallExpr>& expr) override {
+  void visit(const std::shared_ptr<ast::StencilFunCallExpr>& expr) override {
     std::shared_ptr<const iir::StencilFunctionInstantiation> funCall =
         getStencilFunctionInstantiation(expr);
 
@@ -57,7 +57,7 @@ public:
     funCall->getAST()->accept(*this);
 
     // Visit arguments
-    iir::ASTVisitorForwarding::visit(expr);
+    ast::ASTVisitorForwarding::visit(expr);
     functionInstantiationStack_.pop();
   }
 
@@ -81,7 +81,7 @@ bool PassTemporaryFirstAccess::run(
     }
 
     // {AccesID : (isFirstAccessWrite, Stmt)}
-    std::unordered_map<int, std::pair<bool, std::shared_ptr<iir::Stmt>>> accessMap;
+    std::unordered_map<int, std::pair<bool, std::shared_ptr<ast::Stmt>>> accessMap;
 
     for(const auto& stmt : iterateIIROverStmt(*stencilPtr)) {
       const auto& accesses = stmt->getData<iir::IIRStmtData>().CallerAccesses;
@@ -100,7 +100,7 @@ bool PassTemporaryFirstAccess::run(
       // Is first access to the temporary a read?
       if(accessPair.second.first == false) {
         int AccessID = accessPair.first;
-        const std::shared_ptr<iir::Stmt>& stmt = accessPair.second.second;
+        const std::shared_ptr<ast::Stmt>& stmt = accessPair.second.second;
 
         // Check if the statment contains a stencil function call in which the field is unused.
         // If a field is unused, we still have to add it as an input field of the stencil function.

@@ -72,7 +72,7 @@ std::shared_ptr<StencilInstantiation> StencilInstantiation::clone() const {
 const std::string StencilInstantiation::getName() const { return metadata_.getStencilName(); }
 
 bool StencilInstantiation::insertBoundaryConditions(
-    std::string originalFieldName, std::shared_ptr<iir::BoundaryConditionDeclStmt> bc) {
+    std::string originalFieldName, std::shared_ptr<ast::BoundaryConditionDeclStmt> bc) {
   if(metadata_.hasFieldBC(originalFieldName) != 0) {
     return false;
   } else {
@@ -112,9 +112,9 @@ bool StencilInstantiation::isIDAccessedMultipleMSs(int accessID) const {
 
 std::shared_ptr<StencilFunctionInstantiation>
 StencilInstantiation::makeStencilFunctionInstantiation(
-    const std::shared_ptr<iir::StencilFunCallExpr>& expr,
+    const std::shared_ptr<ast::StencilFunCallExpr>& expr,
     const std::shared_ptr<sir::StencilFunction>& SIRStencilFun,
-    const std::shared_ptr<iir::AST>& ast, const Interval& interval,
+    const std::shared_ptr<ast::AST>& ast, const Interval& interval,
     const std::shared_ptr<StencilFunctionInstantiation>& curStencilFunctionInstantiation) {
 
   std::shared_ptr<StencilFunctionInstantiation> stencilFun =
@@ -132,7 +132,7 @@ namespace {
 
 /// @brief Get the orignal name of the field (or variable) given by AccessID and a list of
 /// SourceLocations where this field (or variable) was accessed.
-class OriginalNameGetter : public iir::ASTVisitorForwarding {
+class OriginalNameGetter : public ast::ASTVisitorForwarding {
   const int AccessID_;
   const bool captureLocation_;
 
@@ -143,7 +143,7 @@ public:
   OriginalNameGetter(int AccessID, bool captureLocation)
       : AccessID_(AccessID), captureLocation_(captureLocation) {}
 
-  virtual void visit(const std::shared_ptr<iir::VarDeclStmt>& stmt) override {
+  virtual void visit(const std::shared_ptr<ast::VarDeclStmt>& stmt) override {
     if(iir::getAccessID(stmt) == AccessID_) {
       name_ = stmt->getName();
       if(captureLocation_)
@@ -154,7 +154,7 @@ public:
       expr->accept(*this);
   }
 
-  void visit(const std::shared_ptr<iir::VarAccessExpr>& expr) override {
+  void visit(const std::shared_ptr<ast::VarAccessExpr>& expr) override {
     if(iir::getAccessID(expr) == AccessID_) {
       name_ = expr->getName();
       if(captureLocation_)
@@ -162,7 +162,7 @@ public:
     }
   }
 
-  void visit(const std::shared_ptr<iir::LiteralAccessExpr>& expr) override {
+  void visit(const std::shared_ptr<ast::LiteralAccessExpr>& expr) override {
     if(iir::getAccessID(expr) == AccessID_) {
       name_ = expr->getValue();
       if(captureLocation_)
@@ -170,7 +170,7 @@ public:
     }
   }
 
-  virtual void visit(const std::shared_ptr<iir::FieldAccessExpr>& expr) override {
+  virtual void visit(const std::shared_ptr<ast::FieldAccessExpr>& expr) override {
     if(iir::getAccessID(expr) == AccessID_) {
       name_ = expr->getName();
       if(captureLocation_)
@@ -190,7 +190,7 @@ public:
 
 std::pair<std::string, std::vector<SourceLocation>>
 StencilInstantiation::getOriginalNameAndLocationsFromAccessID(
-    int AccessID, const std::shared_ptr<iir::Stmt>& stmt) const {
+    int AccessID, const std::shared_ptr<ast::Stmt>& stmt) const {
   OriginalNameGetter orignalNameGetter(AccessID, true);
   stmt->accept(orignalNameGetter);
   return orignalNameGetter.getNameLocationPair();

@@ -35,15 +35,15 @@ namespace cxxnaiveico {
 
 // quick visitor to check whether a statement contains a reduceOverNeighborExpr
 class FindReduceOverNeighborExpr : public ast::ASTVisitorForwarding {
-  std::optional<std::shared_ptr<iir::ReductionOverNeighborExpr>> foundReduction_ = std::nullopt;
+  std::optional<std::shared_ptr<ast::ReductionOverNeighborExpr>> foundReduction_ = std::nullopt;
 
 public:
-  void visit(const std::shared_ptr<iir::ReductionOverNeighborExpr>& stmt) override {
+  void visit(const std::shared_ptr<ast::ReductionOverNeighborExpr>& stmt) override {
     foundReduction_ = stmt;
     return;
   }
   bool hasReduceOverNeighborExpr() const { return foundReduction_.has_value(); }
-  const iir::ReductionOverNeighborExpr& foundReduceOverNeighborExpr() {
+  const ast::ReductionOverNeighborExpr& foundReduceOverNeighborExpr() {
     DAWN_ASSERT(foundReduction_.has_value());
     return *foundReduction_.value();
   }
@@ -95,7 +95,7 @@ protected:
     return res;
   }
 
-  std::string makeIndexString(const std::shared_ptr<iir::FieldAccessExpr>& expr,
+  std::string makeIndexString(const std::shared_ptr<ast::FieldAccessExpr>& expr,
                               std::string kiterStr);
 
 public:
@@ -119,21 +119,21 @@ public:
 
   /// @name Statement implementation
   /// @{
-  void visit(const std::shared_ptr<iir::BlockStmt>& stmt) override;
-  void visit(const std::shared_ptr<iir::ReturnStmt>& stmt) override;
-  void visit(const std::shared_ptr<iir::LoopStmt>& stmt) override;
-  void visit(const std::shared_ptr<iir::VerticalRegionDeclStmt>& stmt) override;
-  void visit(const std::shared_ptr<iir::StencilCallDeclStmt>& stmt) override;
-  void visit(const std::shared_ptr<iir::BoundaryConditionDeclStmt>& stmt) override;
+  void visit(const std::shared_ptr<ast::BlockStmt>& stmt) override;
+  void visit(const std::shared_ptr<ast::ReturnStmt>& stmt) override;
+  void visit(const std::shared_ptr<ast::LoopStmt>& stmt) override;
+  void visit(const std::shared_ptr<ast::VerticalRegionDeclStmt>& stmt) override;
+  void visit(const std::shared_ptr<ast::StencilCallDeclStmt>& stmt) override;
+  void visit(const std::shared_ptr<ast::BoundaryConditionDeclStmt>& stmt) override;
   /// @}
 
   /// @name Expression implementation
   /// @{
-  void visit(const std::shared_ptr<iir::StencilFunCallExpr>& expr) override;
-  void visit(const std::shared_ptr<iir::StencilFunArgExpr>& expr) override;
-  void visit(const std::shared_ptr<iir::VarAccessExpr>& expr) override;
-  void visit(const std::shared_ptr<iir::FieldAccessExpr>& expr) override;
-  void visit(const std::shared_ptr<iir::ReductionOverNeighborExpr>& expr) override;
+  void visit(const std::shared_ptr<ast::StencilFunCallExpr>& expr) override;
+  void visit(const std::shared_ptr<ast::StencilFunArgExpr>& expr) override;
+  void visit(const std::shared_ptr<ast::VarAccessExpr>& expr) override;
+  void visit(const std::shared_ptr<ast::FieldAccessExpr>& expr) override;
+  void visit(const std::shared_ptr<ast::ReductionOverNeighborExpr>& expr) override;
   /// @}
 
   /// @brief Set the current stencil function (can be NULL)
@@ -141,8 +141,8 @@ public:
       const std::shared_ptr<iir::StencilFunctionInstantiation>& currentFunction);
 
   /// @brief Mapping of VarDeclStmt and Var/FieldAccessExpr to their name
-  std::string getName(const std::shared_ptr<iir::Expr>& expr) const override;
-  std::string getName(const std::shared_ptr<iir::VarDeclStmt>& stmt) const override;
+  std::string getName(const std::shared_ptr<ast::Expr>& expr) const override;
+  std::string getName(const std::shared_ptr<ast::VarDeclStmt>& stmt) const override;
 };
 
 } // namespace cxxnaiveico

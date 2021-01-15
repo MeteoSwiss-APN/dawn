@@ -35,22 +35,22 @@ namespace dawn {
 namespace {
 
 /// @brief Register all referenced AccessIDs
-struct AccessIDGetter : public iir::ASTVisitorForwarding {
+struct AccessIDGetter : public ast::ASTVisitorForwarding {
   const iir::StencilMetaInformation& metadata_;
   std::set<int> AccessIDs;
 
   AccessIDGetter(const iir::StencilMetaInformation& metadata) : metadata_(metadata) {}
 
-  virtual void visit(const std::shared_ptr<iir::FieldAccessExpr>& expr) override {
+  virtual void visit(const std::shared_ptr<ast::FieldAccessExpr>& expr) override {
     AccessIDs.insert(iir::getAccessID(expr));
   }
 };
 
 /// @brief Compute the AccessIDs of the left and right hand side expression of the assignment
 static void getAccessIDFromAssignment(const iir::StencilMetaInformation& metadata,
-                                      iir::AssignmentExpr* assignment, std::set<int>& LHSAccessIDs,
+                                      ast::AssignmentExpr* assignment, std::set<int>& LHSAccessIDs,
                                       std::set<int>& RHSAccessIDs) {
-  auto computeAccessIDs = [&](const std::shared_ptr<iir::Expr>& expr, std::set<int>& AccessIDs) {
+  auto computeAccessIDs = [&](const std::shared_ptr<ast::Expr>& expr, std::set<int>& AccessIDs) {
     AccessIDGetter getter{metadata};
     expr->accept(getter);
     AccessIDs = std::move(getter.AccessIDs);
@@ -69,10 +69,10 @@ static bool isHorizontalStencilOrCounterLoopOrderExtent(const iir::Extents& exte
 }
 
 /// @brief Report a race condition in the given `statement`
-static void reportRaceCondition(const iir::Stmt& statement,
+static void reportRaceCondition(const ast::Stmt& statement,
                                 iir::StencilInstantiation& instantiation) {
   std::stringstream ss;
-  if(isa<iir::IfStmt>(&statement)) {
+  if(isa<ast::IfStmt>(&statement)) {
     ss << "Unresolvable race-condition in body of if-statement\n";
   } else {
     ss << "Unresolvable race-condition in statement\n";
@@ -163,7 +163,7 @@ PassFieldVersioning::RCKind PassFieldVersioning::fixRaceCondition(
   using Vertex = iir::DependencyGraphAccesses::Vertex;
   using Edge = iir::DependencyGraphAccesses::Edge;
 
-  iir::Stmt& statement = *doMethod.getAST().getStatements()[index];
+  ast::Stmt& statement = *doMethod.getAST().getStatements()[index];
 
   int numRenames = 0;
 
@@ -233,9 +233,9 @@ PassFieldVersioning::RCKind PassFieldVersioning::fixRaceCondition(
   // Check whether our statement is an `ExprStmt` and contains an `AssignmentExpr`. If not,
   // we cannot perform any double buffering (e.g if there is a problem inside an `IfStmt`, nothing
   // we can do (yet ;))
-  iir::AssignmentExpr* assignment = nullptr;
-  if(iir::ExprStmt* stmt = dyn_cast<iir::ExprStmt>(&statement))
-    assignment = dyn_cast<iir::AssignmentExpr>(stmt->getExpr().get());
+  ast::AssignmentExpr* assignment = nullptr;
+  if(ast::ExprStmt* stmt = dyn_cast<ast::ExprStmt>(&statement))
+    assignment = dyn_cast<ast::AssignmentExpr>(stmt->getExpr().get());
 
   if(!assignment) {
     if(dump)

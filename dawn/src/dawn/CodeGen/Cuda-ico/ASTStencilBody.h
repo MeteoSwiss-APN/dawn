@@ -35,16 +35,16 @@ class StencilMetaInformation;
 namespace codegen {
 namespace cudaico {
 
-class FindReduceOverNeighborExpr : public dawn::ast::ASTVisitorForwarding {
-  std::vector<std::shared_ptr<dawn::iir::ReductionOverNeighborExpr>> foundReductions_;
+class FindReduceOverNeighborExpr : public ast::ASTVisitorForwarding {
+  std::vector<std::shared_ptr<ast::ReductionOverNeighborExpr>> foundReductions_;
 
 public:
-  void visit(const std::shared_ptr<dawn::iir::ReductionOverNeighborExpr>& expr) override {
+  void visit(const std::shared_ptr<ast::ReductionOverNeighborExpr>& expr) override {
     foundReductions_.push_back(expr);
     return;
   }
   bool hasReduceOverNeighborExpr() const { return !foundReductions_.empty(); }
-  const std::vector<std::shared_ptr<dawn::iir::ReductionOverNeighborExpr>>&
+  const std::vector<std::shared_ptr<ast::ReductionOverNeighborExpr>>&
   reduceOverNeighborExprs() const {
     return foundReductions_;
   }
@@ -69,7 +69,7 @@ protected:
   /// Nesting level of argument lists of stencil function *calls*
   int nestingOfStencilFunArgLists_;
 
-  std::string makeIndexString(const std::shared_ptr<iir::FieldAccessExpr>& expr, std::string kiter);
+  std::string makeIndexString(const std::shared_ptr<ast::FieldAccessExpr>& expr, std::string kiter);
 
 public:
   using Base = ASTCodeGenCXX;
@@ -85,29 +85,29 @@ public:
 
   /// @name Statement implementation
   /// @{
-  void visit(const std::shared_ptr<iir::BlockStmt>& stmt) override;
-  void visit(const std::shared_ptr<iir::ReturnStmt>& stmt) override;
-  void visit(const std::shared_ptr<iir::LoopStmt>& stmt) override;
-  void visit(const std::shared_ptr<iir::VerticalRegionDeclStmt>& stmt) override;
-  void visit(const std::shared_ptr<iir::StencilCallDeclStmt>& stmt) override;
-  void visit(const std::shared_ptr<iir::BoundaryConditionDeclStmt>& stmt) override;
-  void visit(const std::shared_ptr<iir::IfStmt>& stmt) override;
+  void visit(const std::shared_ptr<ast::BlockStmt>& stmt) override;
+  void visit(const std::shared_ptr<ast::ReturnStmt>& stmt) override;
+  void visit(const std::shared_ptr<ast::LoopStmt>& stmt) override;
+  void visit(const std::shared_ptr<ast::VerticalRegionDeclStmt>& stmt) override;
+  void visit(const std::shared_ptr<ast::StencilCallDeclStmt>& stmt) override;
+  void visit(const std::shared_ptr<ast::BoundaryConditionDeclStmt>& stmt) override;
+  void visit(const std::shared_ptr<ast::IfStmt>& stmt) override;
   /// @}
 
   /// @name Expression implementation
   /// @{
-  void visit(const std::shared_ptr<iir::FunCallExpr>& expr) override;
-  void visit(const std::shared_ptr<iir::StencilFunCallExpr>& expr) override;
-  void visit(const std::shared_ptr<iir::StencilFunArgExpr>& expr) override;
-  void visit(const std::shared_ptr<iir::VarAccessExpr>& expr) override;
-  void visit(const std::shared_ptr<iir::FieldAccessExpr>& expr) override;
-  void visit(const std::shared_ptr<iir::ReductionOverNeighborExpr>& expr) override;
-  void visit(const std::shared_ptr<iir::AssignmentExpr>& expr) override;
+  void visit(const std::shared_ptr<ast::FunCallExpr>& expr) override;
+  void visit(const std::shared_ptr<ast::StencilFunCallExpr>& expr) override;
+  void visit(const std::shared_ptr<ast::StencilFunArgExpr>& expr) override;
+  void visit(const std::shared_ptr<ast::VarAccessExpr>& expr) override;
+  void visit(const std::shared_ptr<ast::FieldAccessExpr>& expr) override;
+  void visit(const std::shared_ptr<ast::ReductionOverNeighborExpr>& expr) override;
+  void visit(const std::shared_ptr<ast::AssignmentExpr>& expr) override;
   /// @}
 
   /// @brief Mapping of VarDeclStmt and Var/FieldAccessExpr to their name
-  std::string getName(const std::shared_ptr<iir::Expr>& expr) const override;
-  std::string getName(const std::shared_ptr<iir::VarDeclStmt>& stmt) const override;
+  std::string getName(const std::shared_ptr<ast::Expr>& expr) const override;
+  std::string getName(const std::shared_ptr<ast::VarDeclStmt>& stmt) const override;
 };
 
 } // namespace cudaico
