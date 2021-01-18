@@ -485,7 +485,7 @@ TEST(IntervalTest, undefined) {
                ".*contains\\(\\) of undefined interval requested.*");
   EXPECT_DEATH(undef.adjacent(Interval{0, 7, 1, -1}),
                ".*adjacent\\(\\) of undefined interval requested.*");
-  EXPECT_DEATH(undef.asASTInterval(), ".*undefined interval not representable in SIR.*");
+  EXPECT_DEATH(undef.asASTInterval(), ".*undefined interval not representable in AST.*");
   EXPECT_DEATH(undef.levelIsEnd(Interval::Bound::upper),
                ".*levelIsEnd\\(\\) of undefined interval requested.*");
   EXPECT_DEATH(undef.overEnd(), ".*overEnd\\(\\) of undefined interval requested.*");
