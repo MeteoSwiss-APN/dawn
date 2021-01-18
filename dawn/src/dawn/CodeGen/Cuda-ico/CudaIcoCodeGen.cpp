@@ -144,8 +144,8 @@ void CudaIcoCodeGen::generateGpuMesh(
   }
   {
     auto gpuMeshDefaultCtor = gpuMeshClass.addConstructor();
-    gpuMeshDafultCtor.startBody();
-    gpuMeshDafultCtor.commit();
+    gpuMeshDefaultCtor.startBody();
+    gpuMeshDefaultCtor.commit();
   }
   {
     auto gpuMeshFromGlobalCtor = gpuMeshClass.addConstructor();
@@ -739,22 +739,16 @@ void CudaIcoCodeGen::generateAllAPIRunFunctions(
       if(!globalsMap.empty()) {
         apiRunFuns[0]->addArg("globals globals");
       }
-      addExplodedGlobals(globalsMap, *apiRunFuns[1]);
-      for(auto& apiRunFun : apiRunFuns) {
-        for(auto accessID : stencilInstantiation->getMetaData().getAPIFields()) {
-          apiRunFun->addArg("::dawn::float_type *" +
-                            stencilInstantiation->getMetaData().getNameFromAccessID(accessID));
-        }
-      }
+      addExplodedGlobals(globalsMap, *apiRunFuns[1]);      
     } else {
       addExplodedGlobals(globalsMap, *apiRunFuns[0]);
-      for(auto& apiRunFun : apiRunFuns) {
+    }
+    for(auto& apiRunFun : apiRunFuns) {
         for(auto accessID : stencilInstantiation->getMetaData().getAPIFields()) {
           apiRunFun->addArg("::dawn::float_type *" +
                             stencilInstantiation->getMetaData().getNameFromAccessID(accessID));
         }
       }
-    }
     for(auto& apiRunFun : apiRunFuns) {
       apiRunFun->finishArgs();
     }
@@ -858,11 +852,11 @@ void CudaIcoCodeGen::generateAllAPIRunFunctions(
       }
 
     } else {
-      for(auto& apiRunFun : apiRunFuns) {
-        apiRunFun->commit();
-      }
       for(const auto& stream : apiRunFunStreams) {
         ssSW << stream.str() << ";\n";
+      }
+      for(auto& apiRunFun : apiRunFuns) {
+        apiRunFun->commit();
       }
     }
   }
@@ -884,10 +878,10 @@ void CudaIcoCodeGen::generateMemMgmtFunctions(
   if(!onlyDecl) {
     setupFun.addStatement(fullStencilName + "::setup(mesh, k_size)");
   }
-  setupFun.commit();
   if(onlyDecl) {
     ssSW << ";";
   }
+  setupFun.commit();
 
   MemberFunction freeFun("void", "free_" + wrapperName, ssSW, 0, onlyDecl);
   freeFun.finishArgs();
@@ -895,10 +889,10 @@ void CudaIcoCodeGen::generateMemMgmtFunctions(
     freeFun.startBody();
     freeFun.addStatement(fullStencilName + "::free()");
   }
-  freeFun.commit();
   if(onlyDecl) {
     ssSW << ";";
   }
+  freeFun.commit();
 }
 
 void CudaIcoCodeGen::generateStaticMembersTrailer(
@@ -1191,7 +1185,7 @@ generateF90InterfaceSI(FortranInterfaceModuleGen& fimGen,
   auto globalTypeToFortType = [](const sir::Global& global) {
     switch(global.getType()) {
     case sir::Value::Kind::Boolean:
-      return FortranInterfaceAPI::InterfaceType::CHAR;
+      return FortranInterfaceAPI::InterfaceType::BOOLEAN;
     case sir::Value::Kind::Double:
       return FortranInterfaceAPI::InterfaceType::DOUBLE;
     case sir::Value::Kind::Float:

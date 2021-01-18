@@ -74,7 +74,7 @@ public:
 
 class FortranInterfaceAPI {
 public:
-  enum class InterfaceType { INTEGER, FLOAT, DOUBLE, CHAR, OBJ };
+  enum class InterfaceType { INTEGER, FLOAT, DOUBLE, CHAR, BOOLEAN, OBJ };
   FortranInterfaceAPI(std::string name, std::optional<InterfaceType> returnType = std::nullopt)
       : name_(name) {
     if(returnType) {
@@ -96,6 +96,8 @@ protected:
       return "real(c_float)";
     case InterfaceType::CHAR:
       return "character(kind=c_char)";
+    case InterfaceType::BOOLEAN:
+      return "logical(c_bool)";
     case InterfaceType::OBJ:
       return "type(c_ptr)";
     }
