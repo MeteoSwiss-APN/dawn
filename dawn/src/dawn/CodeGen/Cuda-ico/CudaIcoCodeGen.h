@@ -78,6 +78,16 @@ private:
                              CodeGenProperties& codeGenProperties, bool fromHost,
                              bool onlyDecl = false) const;
 
+  void
+  generateMemMgmtFunctions(std::stringstream& ssSW,
+                           const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation,
+                           CodeGenProperties& codeGenProperties, bool onlyDecl = false) const;
+
+  void generateStaticMembersTrailer(
+      std::stringstream& ssSW,
+      const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation,
+      CodeGenProperties& codeGenProperties) const;
+
   void generateGpuMesh(const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation,
                        Class& stencilWrapperClass, CodeGenProperties& codeGenProperties);
 
@@ -86,18 +96,8 @@ private:
 
   void generateGridFun(MemberFunction& runFun);
 
-  void generateStencilClassCtr(MemberFunction& stencilClassCtor, const iir::Stencil& stencil,
-                               const ast::GlobalVariableMap& globalsMap,
-                               CodeGenProperties& codeGenProperties) const;
-
-  void generateStencilClassDtr(MemberFunction& stencilClassDtor, const iir::Stencil& stencil);
-
-  void generateStencilClassCtrMinimal(MemberFunction& stencilClassCtor, const iir::Stencil& stencil,
-                                      const ast::GlobalVariableMap& globalsMap,
-                                      CodeGenProperties& codeGenProperties) const;
-
-  void generateStencilClassRawPtrCtr(MemberFunction& stencilClassCtor, const iir::Stencil& stencil,
-                                     CodeGenProperties& codeGenProperties) const;
+  void generateStencilFree(MemberFunction& stencilClassDtor, const iir::Stencil& stencil);
+  void generateStencilSetup(MemberFunction& stencilClassDtor, const iir::Stencil& stencil);
 
   void generateCopyBackFun(MemberFunction& copyBackFun, const iir::Stencil& stencil,
                            bool rawPtrs) const;
