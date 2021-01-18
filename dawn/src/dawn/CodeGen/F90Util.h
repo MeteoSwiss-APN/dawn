@@ -130,7 +130,20 @@ protected:
       if(std::get<2>(arg) == 0) {
         ss << "value";
       } else {
-        ss << "dimension(*)";               
+        ss << "dimension(*)";
+        // NOTE: this is what we would want. However, this leads to seg faults when being called
+        //       from  a FORTRAN host (but not with OpenACC ptrs for reasons currentyl not well
+        //       understood). We can re-introduce rank safety on the wrap() / verify() level
+        //
+        // ss << "dimension(";
+        // {
+        //   std::string sep;
+        //   for(int c = 0; c < std::get<2>(arg); ++c) {
+        //     ss << sep << ":";
+        //     sep = ",";
+        //   }
+        // }
+        // ss << ")";
       }
       ss << ", target :: " << std::get<0>(arg) << endline;
     });
