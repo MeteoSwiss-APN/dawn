@@ -1241,7 +1241,7 @@ generateF90InterfaceSI(FortranInterfaceModuleGen& fimGen,
 
   // memory management functions for production interface
   FortranInterfaceAPI setup("setup_" + stencilInstantiation->getName(), std::nullopt);
-  FortranInterfaceAPI free("free_" + stencilInstantiation->getName(), std::nullopt);
+  FortranInterfaceAPI free("free_" + stencilInstantiation->getName());
   setup.addArg("mesh", FortranInterfaceAPI::InterfaceType::OBJ);
   setup.addArg("k_size", FortranInterfaceAPI::InterfaceType::INTEGER);
 
