@@ -175,7 +175,6 @@ void CudaIcoCodeGen::generateRunFun(
 
   const auto& globalsMap = stencilInstantiation->getIIR()->getGlobalVariableMap();
 
-  // runFun.addBlockStatement();
   runFun.addBlockStatement("if (!is_setup_)", [&]() {
     std::string stencilName = stencilInstantiation->getName();
     runFun.addStatement("printf(\"" + stencilName +
