@@ -5,53 +5,6 @@
 
 namespace dawn {
 
-CompareResult sir::VerticalRegion::comparison(const sir::VerticalRegion& rhs) const {
-  std::string output;
-  if(LoopOrder != rhs.LoopOrder) {
-    output += dawn::format("[VerticalRegion mismatch] Loop order does not match\n"
-                           "  Actual:\n"
-                           "    %s\n"
-                           "  Expected:\n"
-                           "    %s",
-                           static_cast<int>(LoopOrder), static_cast<int>(rhs.LoopOrder));
-    return CompareResult{output, false};
-  }
-
-  auto intervalComp = VerticalInterval->comparison(*(rhs.VerticalInterval));
-  if(!static_cast<bool>(intervalComp)) {
-    output += "[VerticalRegion mismatch] Intervals do not match\n";
-    output += intervalComp.why();
-    return CompareResult{output, false};
-  } else if(IterationSpace[0] != rhs.IterationSpace[0]) {
-    output += "[VerticalRegion mismatch] iteration space in i do not match\n";
-    return CompareResult{output, false};
-  } else if(IterationSpace[1] != rhs.IterationSpace[1]) {
-    output += "[VerticalRegion mismatch] iteration space in j do not match\n";
-    return CompareResult{output, false};
-  }
-
-  auto astComp = compareAst(Ast, rhs.Ast);
-  if(!astComp.second) {
-    output += "[VerticalRegion mismatch] ASTs do not match\n";
-    output += astComp.first;
-    return CompareResult{output, false};
-  } else {
-    return CompareResult{output, true};
-  }
-}
-
-bool sir::VerticalRegion::operator==(const sir::VerticalRegion& rhs) const {
-  // casted to bool by return statement
-  return this->comparison(rhs);
-}
-
-std::shared_ptr<sir::VerticalRegion> sir::VerticalRegion::clone() const {
-  auto retval =
-      std::make_shared<sir::VerticalRegion>(Ast->clone(), VerticalInterval, LoopOrder, Loc);
-  retval->IterationSpace = IterationSpace;
-  return retval;
-}
-
 namespace {
 /// @brief Allow direct comparison of the Stmts of an AST
 class DiffWriter final : public ast::ASTVisitorForwarding {
@@ -118,6 +71,53 @@ private:
 } // namespace
 
 namespace sir {
+
+CompareResult VerticalRegion::comparison(const VerticalRegion& rhs) const {
+  std::string output;
+  if(LoopOrder != rhs.LoopOrder) {
+    output += dawn::format("[VerticalRegion mismatch] Loop order does not match\n"
+                           "  Actual:\n"
+                           "    %s\n"
+                           "  Expected:\n"
+                           "    %s",
+                           static_cast<int>(LoopOrder), static_cast<int>(rhs.LoopOrder));
+    return CompareResult{output, false};
+  }
+
+  auto intervalComp = VerticalInterval->comparison(*(rhs.VerticalInterval));
+  if(!static_cast<bool>(intervalComp)) {
+    output += "[VerticalRegion mismatch] Intervals do not match\n";
+    output += intervalComp.why();
+    return CompareResult{output, false};
+  } else if(IterationSpace[0] != rhs.IterationSpace[0]) {
+    output += "[VerticalRegion mismatch] iteration space in i do not match\n";
+    return CompareResult{output, false};
+  } else if(IterationSpace[1] != rhs.IterationSpace[1]) {
+    output += "[VerticalRegion mismatch] iteration space in j do not match\n";
+    return CompareResult{output, false};
+  }
+
+  auto astComp = compareAst(Ast, rhs.Ast);
+  if(!astComp.second) {
+    output += "[VerticalRegion mismatch] ASTs do not match\n";
+    output += astComp.first;
+    return CompareResult{output, false};
+  } else {
+    return CompareResult{output, true};
+  }
+}
+
+bool VerticalRegion::operator==(const VerticalRegion& rhs) const {
+  // casted to bool by return statement
+  return this->comparison(rhs);
+}
+
+std::shared_ptr<VerticalRegion> VerticalRegion::clone() const {
+  auto retval =
+      std::make_shared<VerticalRegion>(Ast->clone(), VerticalInterval, LoopOrder, Loc);
+  retval->IterationSpace = IterationSpace;
+  return retval;
+}
 
 /// @brief Compares two ASTs
 std::pair<std::string, bool> compareAst(const std::shared_ptr<ast::AST>& lhs,

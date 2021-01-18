@@ -33,12 +33,12 @@
 namespace dawn {
 
 namespace {
-ast::Interval intervalToSIRInterval(iir::Interval interval) {
+ast::Interval intervalToASTInterval(iir::Interval interval) {
   return ast::Interval(interval.lowerLevel(), interval.upperLevel(), interval.lowerOffset(),
                        interval.upperOffset());
 }
 
-iir::Interval sirIntervalToInterval(ast::Interval interval) {
+iir::Interval astIntervalToInterval(ast::Interval interval) {
   return iir::Interval(interval.LowerLevel, interval.UpperLevel, interval.LowerOffset,
                        interval.UpperOffset);
 }
@@ -149,7 +149,7 @@ std::string makeOnTheFlyFunctionName(const std::shared_ptr<ast::FieldAccessExpr>
 
 std::string makeOnTheFlyFunctionCandidateName(const std::string fieldName,
                                               const ast::Interval& interval) {
-  return fieldName + "_OnTheFly_" + sirIntervalToInterval(interval).toStringGen();
+  return fieldName + "_OnTheFly_" + astIntervalToInterval(interval).toStringGen();
 }
 
 /// @brief visitor that will detect assignment (i.e. computations) to a temporary,
@@ -322,7 +322,7 @@ public:
       : stencilInstantiation_(stencilInstantiation), metadata_(stencilInstantiation->getMetaData()),
         options_(options),
         temporaryFieldAccessIDToFunctionCall_(temporaryFieldAccessIDToFunctionCall),
-        interval_(interval), sirInterval_(intervalToSIRInterval(interval)),
+        interval_(interval), sirInterval_(intervalToASTInterval(interval)),
         stackTrace_(stackTrace) {}
 
   virtual ~TmpReplacement() {}
@@ -639,7 +639,7 @@ bool PassTemporaryToStencilFunction::run(
               {
                 // TODO catch a temp expr
                 const iir::Interval& doMethodInterval = doMethodPtr->getInterval();
-                const ast::Interval sirInterval = intervalToSIRInterval(interval);
+                const ast::Interval sirInterval = intervalToASTInterval(interval);
 
                 DAWN_ASSERT(stmt->getData<iir::IIRStmtData>().StackTrace);
 
