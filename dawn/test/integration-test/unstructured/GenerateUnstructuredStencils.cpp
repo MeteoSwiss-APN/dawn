@@ -1161,8 +1161,9 @@ int main() {
                                                b.stmt(b.assignExpr(b.at(c_f), b.lit(1.))))),
             b.stage(LocType::Edges, b.doMethod(dawn::sir::Interval::Start, dawn::sir::Interval::End,
                                                b.stmt(b.assignExpr(b.at(e_f), b.lit(1.))))),
-            b.stage(LocType::Vertices, b.doMethod(dawn::sir::Interval::Start, dawn::sir::Interval::End,
-                                               b.stmt(b.assignExpr(b.at(v_f), b.lit(1.))))))));
+            b.stage(LocType::Vertices,
+                    b.doMethod(dawn::sir::Interval::Start, dawn::sir::Interval::End,
+                               b.stmt(b.assignExpr(b.at(v_f), b.lit(1.))))))));
 
     std::ofstream of("generated/generated_" + stencilName + ".hpp");
     DAWN_ASSERT_MSG(of, "couldn't open output file!\n");

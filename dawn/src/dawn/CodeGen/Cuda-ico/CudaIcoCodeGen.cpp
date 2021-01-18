@@ -18,6 +18,7 @@
 #include "dawn/AST/ASTExpr.h"
 #include "dawn/AST/IterationSpace.h"
 #include "dawn/AST/LocationType.h"
+#include "dawn/CodeGen/CXXUtil.h"
 #include "dawn/CodeGen/Cuda-ico/LocToStringUtils.h"
 #include "dawn/CodeGen/Cuda/CodeGeneratorHelper.h"
 #include "dawn/CodeGen/F90Util.h"
@@ -38,6 +39,7 @@
 #include <fstream>
 #include <memory>
 #include <numeric>
+#include <optional>
 #include <sstream>
 #include <string>
 #include <vector>
@@ -140,23 +142,10 @@ void CudaIcoCodeGen::generateGpuMesh(
   for(auto space : spaces) {
     gpuMeshClass.addMember("int*", chainToTableString(space));
   }
-
   {
-    auto gpuMeshFromLibCtor = gpuMeshClass.addConstructor();
-    gpuMeshFromLibCtor.addArg("const dawn::mesh_t<LibTag>& mesh");
-    gpuMeshFromLibCtor.addStatement("NumVertices = mesh.nodes().size()");
-    gpuMeshFromLibCtor.addStatement("NumCells = mesh.cells().size()");
-    gpuMeshFromLibCtor.addStatement("NumEdges = mesh.edges().size()");
-    for(auto space : spaces) {
-      gpuMeshFromLibCtor.addStatement("gpuErrchk(cudaMalloc((void**)&" + chainToTableString(space) +
-                                      ", sizeof(int) * " + chainToDenseSizeStringHostMesh(space) +
-                                      "* " + chainToSparseSizeString(space) + "))");
-      gpuMeshFromLibCtor.addStatement(
-          "dawn::generateNbhTable<LibTag>(mesh, " + chainToVectorString(space) + ", " +
-          chainToDenseSizeStringHostMesh(space) + ", " + chainToSparseSizeString(space) + ", " +
-          chainToTableString(space) + ", /*include center*/" + std::to_string(space.IncludeCenter) +
-          ")");
-    }
+    auto gpuMeshDefaultCtor = gpuMeshClass.addConstructor();
+    gpuMeshDefaultCtor.startBody();
+    gpuMeshDefaultCtor.commit();
   }
   {
     auto gpuMeshFromGlobalCtor = gpuMeshClass.addConstructor();
@@ -185,6 +174,13 @@ void CudaIcoCodeGen::generateRunFun(
     CodeGenProperties& codeGenProperties) {
 
   const auto& globalsMap = stencilInstantiation->getIIR()->getGlobalVariableMap();
+
+  runFun.addBlockStatement("if (!is_setup_)", [&]() {
+    std::string stencilName = stencilInstantiation->getName();
+    runFun.addStatement("printf(\"" + stencilName +
+                        "has not been set up! make sure setup() is called before run!\\n\")");
+    runFun.addStatement("return");
+  });
 
   // find block sizes to generate
   std::set<ast::LocationType> stageLocType;
@@ -338,7 +334,8 @@ void CudaIcoCodeGen::generateRunFun(
       }
       kernelCall << numElString << ", ";
 
-      // which loc size args (int CellIdx, int EdgeIdx, int CellIdx) need to be passed additionally?
+      // which loc size args (int CellIdx, int EdgeIdx, int CellIdx) need to be passed
+      // additionally?
       std::set<std::string> locArgs;
       for(auto field : fields) {
         if(field.second.getFieldDimensions().isVertical()) {
@@ -425,102 +422,26 @@ static void allocTempFields(MemberFunction& ctor, const iir::Stencil& stencil, P
   }
 }
 
-void CudaIcoCodeGen::generateStencilClassCtr(MemberFunction& ctor, const iir::Stencil& stencil,
-                                             const sir::GlobalVariableMap& globalsMap,
-                                             CodeGenProperties& codeGenProperties) const {
-
-  // arguments: mesh, kSize, fields
-  if(!globalsMap.empty()) {
-    ctor.addArg("globals globals");
-  }
-
-  const auto& APIFields = stencil.getMetadata().getAPIFields();
-
-  ctor.addArg("const dawn::mesh_t<LibTag>& mesh");
-  ctor.addArg("int kSize");
-  for(auto field : APIFields) {
-    auto dims = stencil.getMetadata().getFieldDimensions(field);
-    auto fieldName = stencil.getMetadata().getFieldNameFromAccessID(field);
-    if(dims.isVertical()) {
-      ctor.addArg("dawn::vertical_field_t<LibTag, ::dawn::float_type>& " + fieldName);
-      continue;
-    }
-    auto hdims = sir::dimension_cast<sir::UnstructuredFieldDimension const&>(
-        dims.getHorizontalFieldDimension());
-    if(hdims.isDense()) {
-      ctor.addArg(locToDenseTypeString(hdims.getDenseLocationType()) + "& " + fieldName);
-    } else {
-      ctor.addArg(locToSparseTypeString(hdims.getDenseLocationType()) + "& " + fieldName);
-    }
-  }
-
-  // initializers for base class, mesh, kSize
-  std::string stencilName =
-      codeGenProperties.getStencilName(StencilContext::SC_Stencil, stencil.getStencilID());
-  ctor.addInit("sbase(\"" + stencilName + "\")");
-  ctor.addInit("mesh_(mesh)");
-  ctor.addInit("kSize_(kSize)");
-  if(!globalsMap.empty()) {
-    ctor.addInit("m_globals(globals)");
-  }
-
-  std::stringstream fieldsStr;
-  {
-    bool first = true;
-    for(auto fieldID : APIFields) {
-      if(!first) {
-        fieldsStr << ", ";
-      }
-      fieldsStr << stencil.getMetadata().getFieldNameFromAccessID(fieldID) + ".data()";
-      first = false;
-    }
-  }
-  ctor.addStatement("copy_memory(" + fieldsStr.str() + ", true)");
-  allocTempFields(ctor, stencil, codeGenOptions.UnstrPadding);
-}
-
-void CudaIcoCodeGen::generateStencilClassDtr(MemberFunction& stencilClassDtor,
-                                             const iir::Stencil& stencil) {
-  bool requriesDtor = stencil.getMetadata()
-                          .hasAccessesOfType<iir::FieldAccessType::InterStencilTemporary,
-                                             iir::FieldAccessType::StencilTemporary>();
-  DAWN_ASSERT_MSG(requriesDtor, "only generate dtor for stencils with temporaries!");
+void CudaIcoCodeGen::generateStencilFree(MemberFunction& stencilFree, const iir::Stencil& stencil) {
+  stencilFree.startBody();
   for(auto accessID : stencil.getMetadata()
                           .getAccessesOfType<iir::FieldAccessType::InterStencilTemporary,
                                              iir::FieldAccessType::StencilTemporary>()) {
     auto fname = stencil.getMetadata().getFieldNameFromAccessID(accessID);
-    stencilClassDtor.addStatement("gpuErrchk(cudaFree(" + fname + "_))");
+    stencilFree.addStatement("gpuErrchk(cudaFree(" + fname + "_))");
   }
 }
 
-void CudaIcoCodeGen::generateStencilClassCtrMinimal(MemberFunction& ctor,
-                                                    const iir::Stencil& stencil,
-                                                    const sir::GlobalVariableMap& globalsMap,
-                                                    CodeGenProperties& codeGenProperties) const {
-
-  if(!globalsMap.empty()) {
-    ctor.addArg("globals globals");
-  }
-  // arguments: mesh, kSize, fields
-  ctor.addArg("const dawn::GlobalGpuTriMesh *mesh");
-  ctor.addArg("int kSize");
-
-  // initializers for base class, mesh, kSize
-  std::string stencilName =
-      codeGenProperties.getStencilName(StencilContext::SC_Stencil, stencil.getStencilID());
-  ctor.addInit("sbase(\"" + stencilName + "\")");
-  ctor.addInit("mesh_(mesh)");
-  if(!globalsMap.empty()) {
-    ctor.addInit("m_globals(globals)");
-  }
-  ctor.addInit("kSize_(kSize)");
-
-  allocTempFields(ctor, stencil, codeGenOptions.UnstrPadding);
+void CudaIcoCodeGen::generateStencilSetup(MemberFunction& stencilSetup,
+                                          const iir::Stencil& stencil) {
+  stencilSetup.addStatement("mesh_ = GpuTriMesh(mesh)");
+  stencilSetup.addStatement("kSize_ = kSize");
+  stencilSetup.addStatement("is_setup_ = true");
+  allocTempFields(stencilSetup, stencil, codeGenOptions.UnstrPadding);
 }
 
 void CudaIcoCodeGen::generateCopyMemoryFun(MemberFunction& copyFun,
                                            const iir::Stencil& stencil) const {
-
   const auto& APIFields = stencil.getMetadata().getAPIFields();
   const auto& stenFields = stencil.getOrderedFields();
   auto usedAPIFields = makeRange(APIFields, [&stenFields](int f) { return stenFields.count(f); });
@@ -561,7 +482,6 @@ void CudaIcoCodeGen::generateCopyMemoryFun(MemberFunction& copyFun,
 
 void CudaIcoCodeGen::generateCopyPtrFun(MemberFunction& copyFun,
                                         const iir::Stencil& stencil) const {
-
   const auto& APIFields = stencil.getMetadata().getAPIFields();
   const auto& stenFields = stencil.getOrderedFields();
   auto usedAPIFields = makeRange(APIFields, [&stenFields](int f) { return stenFields.count(f); });
@@ -693,7 +613,6 @@ void CudaIcoCodeGen::generateCopyBackFun(MemberFunction& copyBackFun, const iir:
 void CudaIcoCodeGen::generateStencilClasses(
     const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation,
     Class& stencilWrapperClass, CodeGenProperties& codeGenProperties) {
-
   const auto& stencils = stencilInstantiation->getStencils();
   const auto& globalsMap = stencilInstantiation->getIIR()->getGlobalVariableMap();
 
@@ -711,11 +630,19 @@ void CudaIcoCodeGen::generateStencilClasses(
 
     // generate members (fields + kSize + gpuMesh)
     stencilClass.changeAccessibility("private");
+    auto temporaries = stencil.getMetadata()
+                           .getAccessesOfType<iir::FieldAccessType::InterStencilTemporary,
+                                              iir::FieldAccessType::StencilTemporary>();
     for(auto field : support::orderMap(stencil.getFields())) {
-      stencilClass.addMember("::dawn::float_type*", field.second.Name + "_");
+      if(temporaries.count(stencil.getMetadata().getAccessIDFromName(field.second.Name))) {
+        stencilClass.addMember("static ::dawn::float_type*", field.second.Name + "_");
+      } else {
+        stencilClass.addMember("::dawn::float_type*", field.second.Name + "_");
+      }
     }
-    stencilClass.addMember("int", "kSize_ = 0");
-    stencilClass.addMember("GpuTriMesh", "mesh_");
+    stencilClass.addMember("static int", "kSize_");
+    stencilClass.addMember("static GpuTriMesh", "mesh_");
+    stencilClass.addMember("static bool", "is_setup_");
 
     stencilClass.changeAccessibility("public");
 
@@ -724,17 +651,15 @@ void CudaIcoCodeGen::generateStencilClasses(
     }
 
     // constructor from library
-    auto stencilClassConstructor = stencilClass.addConstructor();
-    generateStencilClassCtr(stencilClassConstructor, stencil, globalsMap, codeGenProperties);
-    stencilClassConstructor.commit();
+    auto stencilClassFree = stencilClass.addMemberFunction("static void", "free");
+    generateStencilFree(stencilClassFree, stencil);
+    stencilClassFree.commit();
 
-    if(stencil.getMetadata()
-           .hasAccessesOfType<iir::FieldAccessType::InterStencilTemporary,
-                              iir::FieldAccessType::StencilTemporary>()) {
-      auto stencilClassDestructor = stencilClass.addDestructor(false /*isVirtual*/);
-      generateStencilClassDtr(stencilClassDestructor, stencil);
-      stencilClassDestructor.commit();
-    }
+    auto stencilClassSetup = stencilClass.addMemberFunction("static void", "setup");
+    stencilClassSetup.addArg("const dawn::GlobalGpuTriMesh *mesh");
+    stencilClassSetup.addArg("int kSize");
+    generateStencilSetup(stencilClassSetup, stencil);
+    stencilClassSetup.commit();
 
     // grid helper fun
     //    can not be placed in cuda utils sinze it needs LEVELS_PER_THREAD and BLOCK_SIZE, which
@@ -746,10 +671,10 @@ void CudaIcoCodeGen::generateStencilClasses(
     gridFun.commit();
 
     // minmal ctor
-    auto stencilClassMinimalConstructor = stencilClass.addConstructor();
-    generateStencilClassCtrMinimal(stencilClassMinimalConstructor, stencil, globalsMap,
-                                   codeGenProperties);
-    stencilClassMinimalConstructor.commit();
+    auto stencilClassDefaultConstructor = stencilClass.addConstructor();
+    stencilClassDefaultConstructor.addInit("sbase(\"" + stencilName + "\")");
+    stencilClassDefaultConstructor.startBody();
+    stencilClassDefaultConstructor.commit();
 
     // run method
     auto runFun = stencilClass.addMemberFunction("void", "run");
@@ -757,12 +682,8 @@ void CudaIcoCodeGen::generateStencilClasses(
     runFun.commit();
 
     // copy back fun
-    auto copyBackFunInterface = stencilClass.addMemberFunction("void", "CopyResultToHost");
-    generateCopyBackFun(copyBackFunInterface, stencil, true);
-    copyBackFunInterface.commit();
-
     auto copyBackFunRawPtr = stencilClass.addMemberFunction("void", "CopyResultToHost");
-    generateCopyBackFun(copyBackFunRawPtr, stencil, false);
+    generateCopyBackFun(copyBackFunRawPtr, stencil, true);
     copyBackFunRawPtr.commit();
 
     // copy to funs
@@ -808,13 +729,34 @@ void CudaIcoCodeGen::generateAllAPIRunFunctions(
           "double", "run_" + wrapperName, apiRunFunStreams[0], /*indent level*/ 0, onlyDecl));
     }
 
+    const auto& globalsMap = stencilInstantiation->getIIR()->getGlobalVariableMap();
+    auto addExplodedGlobals = [](const sir::GlobalVariableMap& globalsMap, MemberFunction& fun) {
+      for(const auto& global : globalsMap) {
+        std::string Name = global.first;
+        std::string Type = sir::Value::typeToString(global.second.getType());
+        fun.addArg(Type + " " + Name);
+      }
+    };
+
+    if(fromHost) {
+      for(auto& apiRunFun : apiRunFuns) {
+        apiRunFun->addArg("dawn::GlobalGpuTriMesh *mesh");
+        apiRunFun->addArg("int k_size");
+      }
+      if(!globalsMap.empty()) {
+        apiRunFuns[0]->addArg("globals globals");
+      }
+      addExplodedGlobals(globalsMap, *apiRunFuns[1]);
+    } else {
+      addExplodedGlobals(globalsMap, *apiRunFuns[0]);
+    }
     for(auto& apiRunFun : apiRunFuns) {
-      apiRunFun->addArg("dawn::GlobalGpuTriMesh *mesh");
-      apiRunFun->addArg("int k_size");
       for(auto accessID : stencilInstantiation->getMetaData().getAPIFields()) {
         apiRunFun->addArg("::dawn::float_type *" +
                           stencilInstantiation->getMetaData().getNameFromAccessID(accessID));
       }
+    }
+    for(auto& apiRunFun : apiRunFuns) {
       apiRunFun->finishArgs();
     }
 
@@ -865,18 +807,34 @@ void CudaIcoCodeGen::generateAllAPIRunFunctions(
 
         const std::string stencilName =
             codeGenProperties.getStencilName(StencilContext::SC_Stencil, stencil.getStencilID());
+        const std::string fullStencilName =
+            "dawn_generated::cuda_ico::" + wrapperName + "::" + stencilName;
+
+        auto copyGlobals = [](const sir::GlobalVariableMap& globalsMap, MemberFunction& fun,
+                              bool wrapped) {
+          for(const auto& global : globalsMap) {
+            std::string Name = global.first;
+            std::string Type = sir::Value::typeToString(global.second.getType());
+            fun.addStatement("s.set_" + Name + "(" + (wrapped ? "globals." + Name : Name) + ")");
+          }
+        };
 
         for(auto& apiRunFun : apiRunFuns) {
-          apiRunFun->addStatement("dawn_generated::cuda_ico::" + wrapperName +
-                                  "<dawn::NoLibTag>::" + stencilName + " s(mesh, k_size)");
+          apiRunFun->addStatement(fullStencilName + " s");
         }
         if(fromHost) {
+          for(auto& apiRunFun : apiRunFuns) {
+            apiRunFun->addStatement(fullStencilName + "::setup(mesh, k_size)");
+          }
           // depending if we are calling from c or from fortran, we need to transpose the data or
           // not
           apiRunFuns[0]->addStatement("s.copy_memory(" + fieldsStr.str() + ", true)");
           apiRunFuns[1]->addStatement("s.copy_memory(" + fieldsStr.str() + ", false)");
+          copyGlobals(globalsMap, *apiRunFuns[0], true);
+          copyGlobals(globalsMap, *apiRunFuns[1], false);
         } else {
           apiRunFuns[0]->addStatement("s.copy_pointers(" + fieldsStr.str() + ")");
+          copyGlobals(globalsMap, *apiRunFuns[0], false);
         }
         for(auto& apiRunFun : apiRunFuns) {
           apiRunFun->addStatement("s.run()");
@@ -886,6 +844,9 @@ void CudaIcoCodeGen::generateAllAPIRunFunctions(
         if(fromHost) {
           apiRunFuns[0]->addStatement("s.CopyResultToHost(" + ioFieldStr.str() + ", true)");
           apiRunFuns[1]->addStatement("s.CopyResultToHost(" + ioFieldStr.str() + ", false)");
+          for(auto& apiRunFun : apiRunFuns) {
+            apiRunFun->addStatement(fullStencilName + "::free()");
+          }
         }
         for(auto& apiRunFun : apiRunFuns) {
           apiRunFun->addStatement("return time");
@@ -898,20 +859,76 @@ void CudaIcoCodeGen::generateAllAPIRunFunctions(
       }
 
     } else {
-      for(auto& apiRunFun : apiRunFuns) {
-        apiRunFun->commit();
-      }
       for(const auto& stream : apiRunFunStreams) {
         ssSW << stream.str() << ";\n";
+      }
+      for(auto& apiRunFun : apiRunFuns) {
+        apiRunFun->commit();
       }
     }
   }
 }
 
+void CudaIcoCodeGen::generateMemMgmtFunctions(
+    std::stringstream& ssSW, const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation,
+    CodeGenProperties& codeGenProperties, bool onlyDecl) const {
+  const std::string wrapperName = stencilInstantiation->getName();
+  std::string stencilName = codeGenProperties.getStencilName(
+      StencilContext::SC_Stencil, stencilInstantiation->getStencils()[0]->getStencilID());
+  const std::string fullStencilName =
+      "dawn_generated::cuda_ico::" + wrapperName + "::" + stencilName;
+
+  MemberFunction setupFun("void", "setup_" + wrapperName, ssSW, 0, onlyDecl);
+  setupFun.addArg("dawn::GlobalGpuTriMesh *mesh");
+  setupFun.addArg("int k_size");
+  setupFun.finishArgs();
+  if(!onlyDecl) {
+    setupFun.addStatement(fullStencilName + "::setup(mesh, k_size)");
+  }
+  if(onlyDecl) {
+    ssSW << ";";
+  }
+  setupFun.commit();
+
+  MemberFunction freeFun("void", "free_" + wrapperName, ssSW, 0, onlyDecl);
+  freeFun.finishArgs();
+  if(!onlyDecl) {
+    freeFun.startBody();
+    freeFun.addStatement(fullStencilName + "::free()");
+  }
+  if(onlyDecl) {
+    ssSW << ";";
+  }
+  freeFun.commit();
+}
+
+void CudaIcoCodeGen::generateStaticMembersTrailer(
+    std::stringstream& ssSW, const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation,
+    CodeGenProperties& codeGenProperties) const {
+  auto& stencil = stencilInstantiation->getStencils()[0];
+  const std::string wrapperName = stencilInstantiation->getName();
+  std::string stencilName =
+      codeGenProperties.getStencilName(StencilContext::SC_Stencil, stencil->getStencilID());
+  const std::string fullStencilName =
+      "dawn_generated::cuda_ico::" + wrapperName + "::" + stencilName;
+
+  for(auto accessID : stencil->getMetadata()
+                          .getAccessesOfType<iir::FieldAccessType::InterStencilTemporary,
+                                             iir::FieldAccessType::StencilTemporary>()) {
+    auto fname = stencil->getMetadata().getFieldNameFromAccessID(accessID);
+    ssSW << "::dawn::float_type *" << fullStencilName << "::" << fname << "_;\n";
+  }
+  ssSW << "int " << fullStencilName << "::"
+       << "kSize_;\n";
+  ssSW << "bool " << fullStencilName << "::"
+       << "is_setup_ = false;\n";
+  ssSW << "dawn_generated::cuda_ico::" + wrapperName << "::GpuTriMesh " << fullStencilName << "::"
+       << "mesh_;\n";
+}
+
 void CudaIcoCodeGen::generateAllCudaKernels(
     std::stringstream& ssSW,
     const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation) {
-
   ASTStencilBody stencilBodyCXXVisitor(stencilInstantiation->getMetaData(),
                                        codeGenOptions.UnstrPadding);
   const auto& globalsMap = stencilInstantiation->getIIR()->getGlobalVariableMap();
@@ -1067,7 +1084,6 @@ void CudaIcoCodeGen::generateAllCudaKernels(
 
 std::string CudaIcoCodeGen::generateStencilInstantiation(
     const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation) {
-
   using namespace codegen;
 
   std::stringstream ssSW;
@@ -1092,7 +1108,7 @@ std::string CudaIcoCodeGen::generateStencilInstantiation(
     ss << "int " + chainToSparseSizeString(space) << " ";
     first = false;
   }
-  Class stencilWrapperClass(stencilInstantiation->getName(), ssSW, "typename LibTag");
+  Class stencilWrapperClass(stencilInstantiation->getName(), ssSW);
   for(auto space : spaces) {
     std::string spaceStr = std::to_string(ICOChainSize(space));
     if(space.IncludeCenter) {
@@ -1130,7 +1146,9 @@ std::string CudaIcoCodeGen::generateStencilInstantiation(
   bool fromHost = true;
   generateAllAPIRunFunctions(ssSW, stencilInstantiation, codeGenProperties, fromHost);
   generateAllAPIRunFunctions(ssSW, stencilInstantiation, codeGenProperties, !fromHost);
+  generateMemMgmtFunctions(ssSW, stencilInstantiation, codeGenProperties);
   ssSW << "}\n";
+  generateStaticMembersTrailer(ssSW, stencilInstantiation, codeGenProperties);
 
   return ssSW.str();
 }
@@ -1148,6 +1166,7 @@ void CudaIcoCodeGen::generateCHeaderSI(
                              /*onlyDecl=*/true);
   generateAllAPIRunFunctions(ssSW, stencilInstantiation, codeGenProperties, !fromHost,
                              /*onlyDecl=*/true);
+  generateMemMgmtFunctions(ssSW, stencilInstantiation, codeGenProperties, /*onlyDecl=*/true);
   ssSW << "}\n";
 }
 
@@ -1169,11 +1188,27 @@ static void
 generateF90InterfaceSI(FortranInterfaceModuleGen& fimGen,
                        const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation) {
   const auto& stencils = stencilInstantiation->getStencils();
+  const auto& globalsMap = stencilInstantiation->getIIR()->getGlobalVariableMap();
+  auto globalTypeToFortType = [](const sir::Global& global) {
+    switch(global.getType()) {
+    case sir::Value::Kind::Boolean:
+      return FortranInterfaceAPI::InterfaceType::BOOLEAN;
+    case sir::Value::Kind::Double:
+      return FortranInterfaceAPI::InterfaceType::DOUBLE;
+    case sir::Value::Kind::Float:
+      return FortranInterfaceAPI::InterfaceType::FLOAT;
+    case sir::Value::Kind::Integer:
+      return FortranInterfaceAPI::InterfaceType::INTEGER;
+    case sir::Value::Kind::String:
+    default:
+      throw std::runtime_error("string globals not supported in cuda ico backend");
+    }
+  };
 
   // The following assert is needed because we have only one (user-defined) name for a stencil
   // instantiation (stencilInstantiation->getName()). We could compute a per-stencil name (
-  // codeGenProperties.getStencilName(StencilContext::SC_Stencil, stencil.getStencilID()) ) however
-  // the interface would not be very useful if the name is generated.
+  // codeGenProperties.getStencilName(StencilContext::SC_Stencil, stencil.getStencilID()) )
+  // however the interface would not be very useful if the name is generated.
   DAWN_ASSERT_MSG(stencils.size() <= 1,
                   "Unable to generate interface. More than one stencil in stencil instantiation.");
 
@@ -1182,11 +1217,15 @@ generateF90InterfaceSI(FortranInterfaceModuleGen& fimGen,
                           FortranInterfaceAPI::InterfaceType::DOUBLE),
       FortranInterfaceAPI("run_" + stencilInstantiation->getName() + "_from_fort_host",
                           FortranInterfaceAPI::InterfaceType::DOUBLE)};
-  for(auto&& api : apis) {
-    api.addArg("mesh", FortranInterfaceAPI::InterfaceType::OBJ);
-    api.addArg("k_size", FortranInterfaceAPI::InterfaceType::INTEGER);
-    for(auto fieldID : stencilInstantiation->getMetaData().getAPIFields()) {
 
+  // only from host convenience wrapper takes mesh and k_size
+  apis[1].addArg("mesh", FortranInterfaceAPI::InterfaceType::OBJ);
+  apis[1].addArg("k_size", FortranInterfaceAPI::InterfaceType::INTEGER);
+  for(auto&& api : apis) {
+    for(const auto& global : globalsMap) {
+      api.addArg(global.first, globalTypeToFortType(global.second));
+    }
+    for(auto fieldID : stencilInstantiation->getMetaData().getAPIFields()) {
       api.addArg(
           stencilInstantiation->getMetaData().getNameFromAccessID(fieldID),
           FortranInterfaceAPI::InterfaceType::DOUBLE /* Unfortunately we need to know at codegen
@@ -1197,6 +1236,15 @@ generateF90InterfaceSI(FortranInterfaceModuleGen& fimGen,
 
     fimGen.addAPI(std::move(api));
   }
+
+  // memory management functions for production interface
+  FortranInterfaceAPI setup("setup_" + stencilInstantiation->getName());
+  FortranInterfaceAPI free("free_" + stencilInstantiation->getName());
+  setup.addArg("mesh", FortranInterfaceAPI::InterfaceType::OBJ);
+  setup.addArg("k_size", FortranInterfaceAPI::InterfaceType::INTEGER);
+
+  fimGen.addAPI(std::move(setup));
+  fimGen.addAPI(std::move(free));
 }
 
 std::string CudaIcoCodeGen::generateF90Interface(std::string moduleName) const {
@@ -1216,7 +1264,6 @@ std::string CudaIcoCodeGen::generateF90Interface(std::string moduleName) const {
 }
 
 std::unique_ptr<TranslationUnit> CudaIcoCodeGen::generateCode() {
-
   DAWN_LOG(INFO) << "Starting code generation for ...";
 
   // Generate code for StencilInstantiations
@@ -1276,7 +1323,6 @@ std::unique_ptr<TranslationUnit> CudaIcoCodeGen::generateCode() {
   return std::make_unique<TranslationUnit>(filename, std::move(ppDefines), std::move(stencils),
                                            std::move(globals));
 }
-
 } // namespace cudaico
 } // namespace codegen
 } // namespace dawn
