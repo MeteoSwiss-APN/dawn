@@ -143,7 +143,7 @@ void CudaIcoCodeGen::generateGpuMesh(
     gpuMeshClass.addMember("int*", chainToTableString(space));
   }
   {
-    auto gpuMeshDafultCtor = gpuMeshClass.addConstructor();
+    auto gpuMeshDefaultCtor = gpuMeshClass.addConstructor();
     gpuMeshDafultCtor.startBody();
     gpuMeshDafultCtor.commit();
   }
