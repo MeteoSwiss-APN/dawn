@@ -643,10 +643,7 @@ void CudaIcoCodeGen::generateStencilClasses(
       stencilClass.addMember("globals", "m_globals");
     }
 
-    // constructor from library
-    // auto stencilClassConstructor = stencilClass.addConstructor();
-    // generateStencilClassCtr(stencilClassConstructor, stencil, globalsMap, codeGenProperties);
-    // stencilClassConstructor.commit();
+    // constructor from library    
     auto stencilClassFree = stencilClass.addMemberFunction("static void", "free");
     generateStencilFree(stencilClassFree, stencil);
     stencilClassFree.commit();
