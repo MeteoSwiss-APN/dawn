@@ -16,6 +16,7 @@
 
 #include "ASTStencilBody.h"
 #include "dawn/AST/ASTExpr.h"
+#include "dawn/AST/ASTVisitor.h"
 #include "dawn/AST/IterationSpace.h"
 #include "dawn/AST/LocationType.h"
 #include "dawn/CodeGen/CXXUtil.h"
@@ -23,7 +24,6 @@
 #include "dawn/CodeGen/Cuda/CodeGeneratorHelper.h"
 #include "dawn/CodeGen/F90Util.h"
 #include "dawn/CodeGen/IcoChainSizes.h"
-#include "dawn/AST/ASTVisitor.h"
 #include "dawn/IIR/Field.h"
 #include "dawn/IIR/Interval.h"
 #include "dawn/IIR/MultiStage.h"
@@ -742,7 +742,7 @@ void CudaIcoCodeGen::generateAllAPIRunFunctions(
         apiRunFun->addArg("dawn::GlobalGpuTriMesh *mesh");
         apiRunFun->addArg("int k_size");
         addExplodedGlobals(globalsMap, *apiRunFun);
-      }            
+      }
     } else {
       addExplodedGlobals(globalsMap, *apiRunFuns[0]);
     }
@@ -806,10 +806,10 @@ void CudaIcoCodeGen::generateAllAPIRunFunctions(
         const std::string fullStencilName =
             "dawn_generated::cuda_ico::" + wrapperName + "::" + stencilName;
 
-        auto copyGlobals = [](const sir::GlobalVariableMap& globalsMap, MemberFunction& fun) {
+        auto copyGlobals = [](const dawn::ast::GlobalVariableMap& globalsMap, MemberFunction& fun) {
           for(const auto& global : globalsMap) {
             std::string Name = global.first;
-            std::string Type = sir::Value::typeToString(global.second.getType());
+            std::string Type = dawn::ast::Value::typeToString(global.second.getType());
             fun.addStatement("s.set_" + Name + "(" + Name + ")");
           }
         };
@@ -827,7 +827,7 @@ void CudaIcoCodeGen::generateAllAPIRunFunctions(
           apiRunFuns[1]->addStatement("s.copy_memory(" + fieldsStr.str() + ", false)");
           for(auto& apiRunFun : apiRunFuns) {
             copyGlobals(globalsMap, *apiRunFun);
-          }          
+          }
         } else {
           apiRunFuns[0]->addStatement("s.copy_pointers(" + fieldsStr.str() + ")");
           copyGlobals(globalsMap, *apiRunFuns[0]);
