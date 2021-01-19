@@ -742,11 +742,8 @@ void CudaIcoCodeGen::generateAllAPIRunFunctions(
       for(auto& apiRunFun : apiRunFuns) {
         apiRunFun->addArg("dawn::GlobalGpuTriMesh *mesh");
         apiRunFun->addArg("int k_size");
-      }
-      if(!globalsMap.empty()) {
-        apiRunFuns[0]->addArg("globals globals");
-      }
-      addExplodedGlobals(globalsMap, *apiRunFuns[1]);
+        addExplodedGlobals(globalsMap, *apiRunFun);
+      }            
     } else {
       addExplodedGlobals(globalsMap, *apiRunFuns[0]);
     }
@@ -810,12 +807,11 @@ void CudaIcoCodeGen::generateAllAPIRunFunctions(
         const std::string fullStencilName =
             "dawn_generated::cuda_ico::" + wrapperName + "::" + stencilName;
 
-        auto copyGlobals = [](const sir::GlobalVariableMap& globalsMap, MemberFunction& fun,
-                              bool wrapped) {
+        auto copyGlobals = [](const sir::GlobalVariableMap& globalsMap, MemberFunction& fun) {
           for(const auto& global : globalsMap) {
             std::string Name = global.first;
             std::string Type = sir::Value::typeToString(global.second.getType());
-            fun.addStatement("s.set_" + Name + "(" + (wrapped ? "globals." + Name : Name) + ")");
+            fun.addStatement("s.set_" + Name + "(" + Name + ")");
           }
         };
 
@@ -830,11 +826,12 @@ void CudaIcoCodeGen::generateAllAPIRunFunctions(
           // not
           apiRunFuns[0]->addStatement("s.copy_memory(" + fieldsStr.str() + ", true)");
           apiRunFuns[1]->addStatement("s.copy_memory(" + fieldsStr.str() + ", false)");
-          copyGlobals(globalsMap, *apiRunFuns[0], true);
-          copyGlobals(globalsMap, *apiRunFuns[1], false);
+          for(auto& apiRunFun : apiRunFuns) {
+            copyGlobals(globalsMap, *apiRunFun);
+          }          
         } else {
           apiRunFuns[0]->addStatement("s.copy_pointers(" + fieldsStr.str() + ")");
-          copyGlobals(globalsMap, *apiRunFuns[0], false);
+          copyGlobals(globalsMap, *apiRunFuns[0]);
         }
         for(auto& apiRunFun : apiRunFuns) {
           apiRunFun->addStatement("s.run()");
