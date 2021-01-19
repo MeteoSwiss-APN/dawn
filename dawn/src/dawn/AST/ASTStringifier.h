@@ -14,7 +14,9 @@
 
 #pragma once
 
-#include "dawn/AST/ASTFwd.h"
+#include "dawn/AST/ASTStmt.h"
+#include "dawn/AST/ASTExpr.h"
+#include "dawn/AST/AST.h"
 #include <iosfwd>
 #include <memory>
 #include <string>

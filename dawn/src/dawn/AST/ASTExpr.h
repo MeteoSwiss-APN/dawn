@@ -21,7 +21,6 @@
 
 #include "dawn/Support/Array.h"
 #include "dawn/Support/ArrayRef.h"
-#include "dawn/Support/SourceLocation.h"
 #include "dawn/Support/Type.h"
 #include "dawn/Support/UIDGenerator.h"
 #include <array>
@@ -647,7 +646,7 @@ private:
   // due to current design limitations (getChildren() returning a view into memory), the operands
   // hold a copy of the (shared pointer to) the weights
   std::vector<std::shared_ptr<Expr>> operands_ = std::vector<std::shared_ptr<Expr>>(2);
-  bool chainIsValid() const;  
+  bool chainIsValid() const;
 
 public:
   /// @name Constructor & Destructor

@@ -16,7 +16,7 @@
 
 #ifndef GTCLANG_UNITTEST_SIRGENERATOR_H
 #define GTCLANG_UNITTEST_SIRGENERATOR_H
-#include "dawn/SIR/ASTExpr.h"
+#include "dawn/AST/ASTExpr.h"
 #include "dawn/SIR/ASTStmt.h"
 #include "gtclang/Unittest/ParsedString.h"
 #include <string>
@@ -50,9 +50,9 @@ public:
   /// and and empty string if we have a mismatch, we get a human-readable message of what failed and
   /// false
   /// @{
-  CompareResult compare(const ParsedString& ps, const std::shared_ptr<dawn::sir::Stmt>& stmt);
+  CompareResult compare(const ParsedString& ps, const std::shared_ptr<dawn::ast::Stmt>& stmt);
 
-  CompareResult compare(const ParsedString& ps, const std::shared_ptr<dawn::sir::Expr>& expr);
+  CompareResult compare(const ParsedString& ps, const std::shared_ptr<dawn::ast::Expr>& expr);
   ///@}
 
   /// @brief get singleton instance
@@ -60,7 +60,7 @@ public:
 
 private:
   void wrapStatementInStencil(std::unique_ptr<dawn::SIR>& sir,
-                              const std::shared_ptr<dawn::sir::Stmt>& stmt);
+                              const std::shared_ptr<dawn::ast::Stmt>& stmt);
   static ParsingComparison* instance_;
 };
 

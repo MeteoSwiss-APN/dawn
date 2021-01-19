@@ -17,7 +17,6 @@
 #include "dawn/AST/IterationSpace.h"
 #include "dawn/AST/LocationType.h"
 #include "dawn/IIR/ASTExpr.h"
-#include "dawn/IIR/ASTFwd.h"
 #include "dawn/IIR/DoMethod.h"
 #include "dawn/IIR/IIR.h"
 #include "dawn/IIR/IIRNodeIterator.h"
@@ -52,16 +51,16 @@ private:
                                    const sir::FieldDimensions& right);
 
   public:
-    void visit(const std::shared_ptr<iir::FieldAccessExpr>& stmt) override;
-    void visit(const std::shared_ptr<iir::BinaryOperator>& stmt) override;
-    void visit(const std::shared_ptr<iir::AssignmentExpr>& stmt) override;
-    void visit(const std::shared_ptr<iir::ReductionOverNeighborExpr>& stmt) override;
-    void visit(const std::shared_ptr<iir::LoopStmt>& stmt) override;
-    void visit(const std::shared_ptr<iir::VarDeclStmt>& stmt) override;
-    void visit(const std::shared_ptr<iir::VarAccessExpr>& stmt) override;
-    void visit(const std::shared_ptr<iir::IfStmt>& stmt) override;
-    void visit(const std::shared_ptr<iir::BlockStmt>& stmt) override;
-    void visit(const std::shared_ptr<iir::Stmt>& stmt);
+    void visit(const std::shared_ptr<ast::FieldAccessExpr>& stmt) override;
+    void visit(const std::shared_ptr<ast::BinaryOperator>& stmt) override;
+    void visit(const std::shared_ptr<ast::AssignmentExpr>& stmt) override;
+    void visit(const std::shared_ptr<ast::ReductionOverNeighborExpr>& stmt) override;
+    void visit(const std::shared_ptr<ast::LoopStmt>& stmt) override;
+    void visit(const std::shared_ptr<ast::VarDeclStmt>& stmt) override;
+    void visit(const std::shared_ptr<ast::VarAccessExpr>& stmt) override;
+    void visit(const std::shared_ptr<ast::IfStmt>& stmt) override;
+    void visit(const std::shared_ptr<ast::BlockStmt>& stmt) override;
+    void visit(const std::shared_ptr<ast::Stmt>& stmt);
 
     void setCurDimensionFromLocType(iir::LocalVariableType&& type);
     bool isConsistent() const { return dimensionsConsistent_; }

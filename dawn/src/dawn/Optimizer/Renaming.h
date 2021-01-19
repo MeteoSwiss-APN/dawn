@@ -14,7 +14,6 @@
 
 #pragma once
 
-#include "dawn/IIR/ASTFwd.h"
 #include "dawn/IIR/DoMethod.h"
 #include "dawn/Support/ArrayRef.h"
 #include <memory>
@@ -44,11 +43,11 @@ class Stencil;
 /// @ingroup optimizer
 /// @{
 void renameAccessIDInStmts(iir::StencilMetaInformation* instantiation, int oldAccessID,
-                           int newAccessID, ArrayRef<std::shared_ptr<iir::Stmt>> stmts);
+                           int newAccessID, ArrayRef<std::shared_ptr<ast::Stmt>> stmts);
 void renameAccessIDInStmts(iir::StencilFunctionInstantiation* instantiation, int oldAccessID,
-                           int newAccessID, ArrayRef<std::shared_ptr<iir::Stmt>> stmts);
+                           int newAccessID, ArrayRef<std::shared_ptr<ast::Stmt>> stmts);
 void renameAccessIDInExpr(iir::StencilInstantiation* instantiation, int oldAccessID,
-                          int newAccessID, std::shared_ptr<iir::Expr>& expr);
+                          int newAccessID, std::shared_ptr<ast::Expr>& expr);
 /// @}
 
 /// @brief Rename all occurrences of `oldAccessID` to `newAccessID` in the in the stencil or
@@ -62,9 +61,9 @@ void renameAccessIDInExpr(iir::StencilInstantiation* instantiation, int oldAcces
 ///
 /// @ingroup optimizer
 void renameAccessIDInAccesses(const iir::StencilMetaInformation* metadata, int oldAccessID,
-                              int newAccessID, ArrayRef<std::shared_ptr<iir::Stmt>> stmts);
+                              int newAccessID, ArrayRef<std::shared_ptr<ast::Stmt>> stmts);
 void renameAccessIDInAccesses(iir::StencilFunctionInstantiation* instantiation, int oldAccessID,
-                              int newAccessID, ArrayRef<std::shared_ptr<iir::Stmt>> stmts);
+                              int newAccessID, ArrayRef<std::shared_ptr<ast::Stmt>> stmts);
 /// @}
 
 void renameAccessIDInMultiStage(iir::MultiStage* multiStage, int oldAccessID, int newAccessID);

@@ -20,7 +20,7 @@ iir::DoMethod& getFirstDoMethod(std::shared_ptr<iir::StencilInstantiation>& si) 
   return **iterateIIROver<iir::DoMethod>(*si->getIIR()).begin();
 }
 
-std::shared_ptr<iir::Stmt> getNthStmt(iir::DoMethod& doMethod, int n) {
+std::shared_ptr<ast::Stmt> getNthStmt(iir::DoMethod& doMethod, int n) {
   return doMethod.getAST().getStatements()[n];
 }
 } // namespace dawn

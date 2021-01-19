@@ -19,7 +19,6 @@
 #include "dawn/IIR/Stage.h"
 #include "dawn/IIR/StencilInstantiation.h"
 #include <deque>
-#include <iterator>
 
 namespace dawn {
 

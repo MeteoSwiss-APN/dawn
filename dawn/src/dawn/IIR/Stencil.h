@@ -36,7 +36,7 @@ class StencilMetaInformation;
 /// @ingroup optimizer
 class Stencil : public IIRNode<IIR, Stencil, MultiStage, impl::StdList> {
   const StencilMetaInformation& metadata_;
-  sir::Attr stencilAttributes_;
+  ast::Attr stencilAttributes_;
 
   /// Identifier of the stencil. Note that this ID is only for code-generation to associate the
   /// stencil with a stencil-call in the run() method
@@ -176,7 +176,7 @@ public:
 
   /// @name Constructors and Assignment
   /// @{
-  Stencil(const StencilMetaInformation& metadata, sir::Attr attributes, int StencilID);
+  Stencil(const StencilMetaInformation& metadata, ast::Attr attributes, int StencilID);
 
   Stencil(Stencil&&) = default;
   /// @}
@@ -235,9 +235,9 @@ public:
   /// @param func           Function to run on all statements of each Do-Method
   /// @param updateFields   Update the fields afterwards
   /// @{
-  void forEachStatement(std::function<void(ArrayRef<std::shared_ptr<iir::Stmt>>)> func,
+  void forEachStatement(std::function<void(ArrayRef<std::shared_ptr<ast::Stmt>>)> func,
                         bool updateFields = false);
-  void forEachStatement(std::function<void(ArrayRef<std::shared_ptr<iir::Stmt>>)> func,
+  void forEachStatement(std::function<void(ArrayRef<std::shared_ptr<ast::Stmt>>)> func,
                         const Lifetime& lifetime, bool updateFields = false);
   /// @}
 
@@ -278,7 +278,7 @@ public:
   const std::shared_ptr<sir::Stencil> getSIRStencil() const;
 
   /// @brief Apply the visitor to all statements in the stencil
-  void accept(iir::ASTVisitor& visitor);
+  void accept(ast::ASTVisitor& visitor);
 
   /// @brief Get the pair <AccessID, field> for the fields used within the multi-stage
   const std::unordered_map<int, FieldInfo>& getFields() const { return derivedInfo_.fields_; }
@@ -298,10 +298,10 @@ public:
   bool compareDerivedInfo() const;
 
   ///@brief Get the Attributes of the Stencil as specified in the user-code
-  sir::Attr& getStencilAttributes();
+  ast::Attr& getStencilAttributes();
 
 private:
-  void forEachStatementImpl(std::function<void(ArrayRef<std::shared_ptr<iir::Stmt>>)> func,
+  void forEachStatementImpl(std::function<void(ArrayRef<std::shared_ptr<ast::Stmt>>)> func,
                             int startStageIdx, int endStageIdx, bool updateFields);
   void updateFieldsImpl(int startStageIdx, int endStageIdx);
 };

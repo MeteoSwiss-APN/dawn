@@ -39,7 +39,7 @@ TEST(UnstructuredDimensionCheckerTest, AssignmentCase0) {
           b.stencil(b.multistage(
               LoopOrderKind::Parallel,
               b.stage(b.doMethod(
-                  dawn::sir::Interval::Start, dawn::sir::Interval::End,
+                  dawn::ast::Interval::Start, dawn::ast::Interval::End,
                   b.loopStmtChain(b.stmt(b.assignExpr(b.at(sparse_field1), b.at(sparse_field2))),
                                   {LocType::Edges, LocType::Cells, LocType::Vertices})))))),
       ".*Dimensions consistency check failed.*");
@@ -57,7 +57,7 @@ TEST(UnstructuredDimensionCheckerTest, AssignmentCase1) {
       b.build("fail",
               b.stencil(b.multistage(
                   LoopOrderKind::Parallel,
-                  b.stage(b.doMethod(dawn::sir::Interval::Start, dawn::sir::Interval::End,
+                  b.stage(b.doMethod(dawn::ast::Interval::Start, dawn::ast::Interval::End,
                                      b.loopStmtChain(b.stmt(b.assignExpr(b.at(sparse_field1),
                                                                          b.at(sparse_field2))),
                                                      {LocType::Edges, LocType::Cells})))))),
@@ -76,7 +76,7 @@ TEST(UnstructuredDimensionCheckerTest, AssignmentCase2) {
               b.stencil(b.multistage(
                   LoopOrderKind::Parallel,
                   b.stage(b.doMethod(
-                      dawn::sir::Interval::Start, dawn::sir::Interval::End,
+                      dawn::ast::Interval::Start, dawn::ast::Interval::End,
                       b.loopStmtChain(b.stmt(b.assignExpr(b.at(sparse_field), b.at(dense_field))),
                                       {ast::LocationType::Edges, ast::LocationType::Cells,
                                        ast::LocationType::Vertices})))))),
@@ -93,7 +93,7 @@ TEST(UnstructuredDimensionCheckerTest, AssignmentCase3) {
   EXPECT_DEATH(
       b.build("fail", b.stencil(b.multistage(
                           LoopOrderKind::Parallel,
-                          b.stage(b.doMethod(dawn::sir::Interval::Start, dawn::sir::Interval::End,
+                          b.stage(b.doMethod(dawn::ast::Interval::Start, dawn::ast::Interval::End,
                                              b.stmt(b.assignExpr(b.at(cell_f), b.at(edge_f)))))))),
       ".*Dimensions consistency check failed.*");
 }
@@ -110,7 +110,7 @@ TEST(UnstructuredDimensionCheckerTest, AssignmentCase4) {
           "fail",
           b.stencil(b.multistage(
               LoopOrderKind::Parallel,
-              b.stage(b.doMethod(dawn::sir::Interval::Start, dawn::sir::Interval::End,
+              b.stage(b.doMethod(dawn::ast::Interval::Start, dawn::ast::Interval::End,
                                  b.stmt(b.assignExpr(b.at(dense_field), b.at(sparse_field)))))))),
       ".*Dimensions consistency check failed.*");
 }
@@ -128,7 +128,7 @@ TEST(UnstructuredDimensionCheckerTest, AssignmentCase5) {
       b.stencil(b.multistage(
           LoopOrderKind::Parallel,
           b.stage(b.doMethod(
-              dawn::sir::Interval::Start, dawn::sir::Interval::End,
+              dawn::ast::Interval::Start, dawn::ast::Interval::End,
               b.loopStmtChain(
                   b.stmt(b.assignExpr(
                       b.at(sparse_field),
@@ -157,7 +157,7 @@ TEST(UnstructuredDimensionCheckerTest, BinaryOpCase0) {
               b.stencil(b.multistage(
                   LoopOrderKind::Parallel,
                   b.stage(b.doMethod(
-                      dawn::sir::Interval::Start, dawn::sir::Interval::End,
+                      dawn::ast::Interval::Start, dawn::ast::Interval::End,
                       b.stmt(b.binaryExpr(b.at(sparse_field1), b.at(sparse_field2), Op::plus))))))),
       ".*Dimensions consistency check failed.*");
 }
@@ -175,7 +175,7 @@ TEST(UnstructuredDimensionCheckerTest, BinaryOpCase1) {
               b.stencil(b.multistage(
                   LoopOrderKind::Parallel,
                   b.stage(b.doMethod(
-                      dawn::sir::Interval::Start, dawn::sir::Interval::End,
+                      dawn::ast::Interval::Start, dawn::ast::Interval::End,
                       b.stmt(b.binaryExpr(b.at(sparse_field1), b.at(sparse_field2), Op::plus))))))),
       ".*Dimensions consistency check failed.*");
 }
@@ -194,7 +194,7 @@ TEST(UnstructuredDimensionCheckerTest, BinaryOpCase2) {
           b.stencil(b.multistage(
               LoopOrderKind::Parallel,
               b.stage(b.doMethod(
-                  dawn::sir::Interval::Start, dawn::sir::Interval::End,
+                  dawn::ast::Interval::Start, dawn::ast::Interval::End,
                   b.stmt(b.assignExpr(
                       b.at(out_field),
                       b.reduceOverNeighborExpr(
@@ -215,7 +215,7 @@ TEST(UnstructuredDimensionCheckerTest, BinaryOpCase3) {
       b.stencil(b.multistage(
           LoopOrderKind::Parallel,
           b.stage(b.doMethod(
-              dawn::sir::Interval::Start, dawn::sir::Interval::End,
+              dawn::ast::Interval::Start, dawn::ast::Interval::End,
               b.stmt(b.assignExpr(
                   b.at(dense_field),
                   b.reduceOverNeighborExpr(
@@ -238,7 +238,7 @@ TEST(UnstructuredDimensionCheckerTest, BinaryOpCase4) {
           "fail",
           b.stencil(b.multistage(
               LoopOrderKind::Parallel,
-              b.stage(b.doMethod(dawn::sir::Interval::Start, dawn::sir::Interval::End,
+              b.stage(b.doMethod(dawn::ast::Interval::Start, dawn::ast::Interval::End,
                                  b.stmt(b.binaryExpr(b.at(cell_f), b.at(edge_f), Op::plus))))))),
       ".*Dimensions consistency check failed.*");
 }
@@ -254,7 +254,7 @@ TEST(UnstructuredDimensionCheckerTest, ReduceDense0) {
       b.build("fail",
               b.stencil(b.multistage(
                   LoopOrderKind::Parallel,
-                  b.stage(b.doMethod(dawn::sir::Interval::Start, dawn::sir::Interval::End,
+                  b.stage(b.doMethod(dawn::ast::Interval::Start, dawn::ast::Interval::End,
                                      b.stmt(b.assignExpr(
                                          b.at(cell_field),
                                          b.reduceOverNeighborExpr(
@@ -274,7 +274,7 @@ TEST(UnstructuredDimensionCheckerTest, ReduceDense1) {
       b.build("fail",
               b.stencil(b.multistage(
                   LoopOrderKind::Parallel,
-                  b.stage(b.doMethod(dawn::sir::Interval::Start, dawn::sir::Interval::End,
+                  b.stage(b.doMethod(dawn::ast::Interval::Start, dawn::ast::Interval::End,
                                      b.stmt(b.assignExpr(
                                          b.at(edge_field),
                                          b.reduceOverNeighborExpr(
@@ -295,7 +295,7 @@ TEST(UnstructuredDimensionCheckerTest, ReduceDense_2) {
       b.build("fail",
               b.stencil(b.multistage(
                   LoopOrderKind::Parallel,
-                  b.stage(b.doMethod(dawn::sir::Interval::Start, dawn::sir::Interval::End,
+                  b.stage(b.doMethod(dawn::ast::Interval::Start, dawn::ast::Interval::End,
                                      b.stmt(b.assignExpr(
                                          b.at(edge_field),
                                          b.reduceOverNeighborExpr(
@@ -318,7 +318,7 @@ TEST(UnstructuredDimensionCheckerTest, ReduceSparse_0) {
           b.stencil(b.multistage(
               LoopOrderKind::Parallel,
               b.stage(b.doMethod(
-                  dawn::sir::Interval::Start, dawn::sir::Interval::End,
+                  dawn::ast::Interval::Start, dawn::ast::Interval::End,
                   b.stmt(b.assignExpr(b.at(cell_field),
                                       b.reduceOverNeighborExpr(
                                           Op::plus, b.at(sparse_field, HOffsetType::withOffset, 0),
@@ -339,7 +339,7 @@ TEST(UnstructuredDimensionCheckerTest, ReduceSparse1) {
           b.stencil(b.multistage(
               LoopOrderKind::Parallel,
               b.stage(b.doMethod(
-                  dawn::sir::Interval::Start, dawn::sir::Interval::End,
+                  dawn::ast::Interval::Start, dawn::ast::Interval::End,
                   b.stmt(b.assignExpr(b.at(edge_field),
                                       b.reduceOverNeighborExpr(
                                           Op::plus, b.at(sparse_field, HOffsetType::withOffset, 0),
@@ -361,7 +361,7 @@ TEST(UnstructuredDimensionCheckerTest, Loop0) {
       b.stencil(b.multistage(
           dawn::iir::LoopOrderKind::Parallel,
           b.stage(LocType::Edges,
-                  b.doMethod(dawn::sir::Interval::Start, dawn::sir::Interval::End,
+                  b.doMethod(dawn::ast::Interval::Start, dawn::ast::Interval::End,
                              b.loopStmtChain(
                                  b.stmt(b.assignExpr(
                                      b.at(sparse_f),
@@ -387,7 +387,7 @@ TEST(UnstructuredDimensionCheckerTest, Loop1) {
               b.stencil(b.multistage(
                   dawn::iir::LoopOrderKind::Parallel,
                   b.stage(LocType::Edges,
-                          b.doMethod(dawn::sir::Interval::Start, dawn::sir::Interval::End,
+                          b.doMethod(dawn::ast::Interval::Start, dawn::ast::Interval::End,
                                      b.loopStmtChain(
                                          b.stmt(b.assignExpr(
                                              b.at(sparse_f),
@@ -413,7 +413,7 @@ TEST(UnstructuredDimensionCheckerTest, NestedReduce0) {
           dawn::iir::LoopOrderKind::Parallel,
           b.stage(LocType::Cells,
                   b.doMethod(
-                      dawn::sir::Interval::Start, dawn::sir::Interval::End,
+                      dawn::ast::Interval::Start, dawn::ast::Interval::End,
                       b.loopStmtChain(b.stmt(b.assignExpr(
                                           b.at(sparse_f),
                                           b.reduceOverNeighborExpr(
@@ -445,7 +445,7 @@ TEST(UnstructuredDimensionCheckerTest, NestedReduce1) {
           b.stencil(b.multistage(
               dawn::iir::LoopOrderKind::Parallel,
               b.stage(LocType::Cells,
-                      b.doMethod(dawn::sir::Interval::Start, dawn::sir::Interval::End,
+                      b.doMethod(dawn::ast::Interval::Start, dawn::ast::Interval::End,
                                  b.loopStmtChain(
                                      b.stmt(b.assignExpr(
                                          b.at(sparse_f),
@@ -473,7 +473,7 @@ TEST(UnstructuredDimensionCheckerTest, StageLocType_1) {
       "fail",
       b.stencil(b.multistage(
           LoopOrderKind::Parallel,
-          b.stage(LocType::Edges, b.doMethod(dawn::sir::Interval::Start, dawn::sir::Interval::End,
+          b.stage(LocType::Edges, b.doMethod(dawn::ast::Interval::Start, dawn::ast::Interval::End,
                                              b.stmt(b.assignExpr(b.at(f_c_out), b.at(f_c_in))))))));
   auto result = UnstructuredDimensionChecker::checkStageLocTypeConsistency(*stencil->getIIR(),
                                                                            stencil->getMetaData());
@@ -493,7 +493,7 @@ TEST(UnstructuredDimensionCheckerTest, StageLocType_2) {
       "fail",
       b.stencil(b.multistage(
           LoopOrderKind::Parallel,
-          b.stage(LocType::Cells, b.doMethod(dawn::sir::Interval::Start, dawn::sir::Interval::End,
+          b.stage(LocType::Cells, b.doMethod(dawn::ast::Interval::Start, dawn::ast::Interval::End,
                                              b.stmt(b.assignExpr(b.at(f_c_out), b.at(f_c_in))),
                                              b.stmt(b.assignExpr(b.at(f_e_out), b.at(f_e_in))))))));
   auto result = UnstructuredDimensionChecker::checkStageLocTypeConsistency(*stencil->getIIR(),
@@ -512,7 +512,7 @@ TEST(UnstructuredDimensionCheckerTest, StageLocType_3) {
       b.build("pass", b.stencil(b.multistage(
                           LoopOrderKind::Parallel,
                           b.stage(LocType::Vertices,
-                                  b.doMethod(dawn::sir::Interval::Start, dawn::sir::Interval::End,
+                                  b.doMethod(dawn::ast::Interval::Start, dawn::ast::Interval::End,
                                              b.stmt(b.assignExpr(b.at(f_v_out), b.at(f_v_in))))))));
   auto result = UnstructuredDimensionChecker::checkStageLocTypeConsistency(*stencil->getIIR(),
                                                                            stencil->getMetaData());
@@ -532,7 +532,7 @@ TEST(UnstructuredDimensionCheckerTest, VarAccessType) {
       b.stencil(b.multistage(
           LoopOrderKind::Parallel,
           b.stage(LocType::Edges,
-                  b.doMethod(dawn::sir::Interval::Start, dawn::sir::Interval::End,
+                  b.doMethod(dawn::ast::Interval::Start, dawn::ast::Interval::End,
                              b.declareVar(varB), b.stmt(b.assignExpr(b.at(varB), b.lit(2.0))))))));
   auto result = UnstructuredDimensionChecker::checkStageLocTypeConsistency(*stencil->getIIR(),
                                                                            stencil->getMetaData());
@@ -552,7 +552,7 @@ TEST(UnstructuredDimensionCheckerTest, VerticalIndirection) {
           "fail", b.stencil(b.multistage(
                       LoopOrderKind::Parallel,
                       b.stage(b.doMethod(
-                          dawn::sir::Interval::Start, dawn::sir::Interval::End,
+                          dawn::ast::Interval::Start, dawn::ast::Interval::End,
                           b.stmt(b.assignExpr(b.at(out), b.at(in, AccessType::r,
                                                               ast::Offsets{ast::unstructured, false,
                                                                            1, "kidx"})))))))),
@@ -571,7 +571,7 @@ TEST(UnstructuredDimensionCheckerTest, IfStmt) {
           "fail", b.stencil(b.multistage(
                       LoopOrderKind::Parallel,
                       b.stage(b.doMethod(
-                          dawn::sir::Interval::Start, dawn::sir::Interval::End,
+                          dawn::ast::Interval::Start, dawn::ast::Interval::End,
                           b.ifStmt(b.at(cond), b.stmt(b.assignExpr(b.at(body), b.lit(1.))))))))),
       ".*Dimensions consistency check failed.*");
 }
@@ -590,7 +590,7 @@ TEST(UnstructuredDimensionCheckerTest, IfStmtNest) {
           "fail", b.stencil(b.multistage(
                       LoopOrderKind::Parallel,
                       b.stage(b.doMethod(
-                          dawn::sir::Interval::Start, dawn::sir::Interval::End,
+                          dawn::ast::Interval::Start, dawn::ast::Interval::End,
                           b.ifStmt(b.at(cond), b.ifStmt(b.at(inner_cond),
                                                         b.stmt(b.assignExpr(b.at(inner_body),
                                                                             b.lit(1.)))))))))),
@@ -610,7 +610,7 @@ TEST(UnstructuredDimensionCheckerTest, IfStmtNestPass) {
       "pass",
       b.stencil(b.multistage(
           LoopOrderKind::Parallel,
-          b.stage(b.doMethod(dawn::sir::Interval::Start, dawn::sir::Interval::End,
+          b.stage(b.doMethod(dawn::ast::Interval::Start, dawn::ast::Interval::End,
                              b.ifStmt(b.at(cond), b.ifStmt(b.at(inner_cond),
                                                            b.stmt(b.assignExpr(b.at(inner_body),
                                                                                b.lit(1.))))))))));
@@ -634,7 +634,7 @@ TEST(UnstructuredDimensionCheckerTest, IfStmtNestPassVert) {
       b.stencil(b.multistage(
           LoopOrderKind::Parallel,
           b.stage(LocType::Edges,
-                  b.doMethod(dawn::sir::Interval::Start, dawn::sir::Interval::End,
+                  b.doMethod(dawn::ast::Interval::Start, dawn::ast::Interval::End,
                              b.ifStmt(b.at(cond), b.ifStmt(b.at(inner_cond),
                                                            b.stmt(b.assignExpr(b.at(inner_body),
                                                                                b.lit(1.))))))))));
@@ -676,7 +676,7 @@ TEST(UnstructuredDimensionCheckerTest, IfStmtVarAccess) {
           b.stencil(b.multistage(
               dawn::iir::LoopOrderKind::Forward,
               b.stage(b.doMethod(
-                  dawn::sir::Interval::Start, dawn::sir::Interval::End, b.declareVar(varA),
+                  dawn::ast::Interval::Start, dawn::ast::Interval::End, b.declareVar(varA),
                   b.ifStmt(b.binaryExpr(b.at(f_e), b.lit(0.0), Op::greater),
                            b.block(b.ifStmt(
                                b.binaryExpr(b.at(f_c), b.lit(0.0), Op::greater),
@@ -699,7 +699,7 @@ TEST(UnstructuredDimensionCheckerTest, IfStmtThenBlock) {
           b.stencil(b.multistage(
               LoopOrderKind::Parallel,
               b.stage(b.doMethod(
-                  dawn::sir::Interval::Start, dawn::sir::Interval::End,
+                  dawn::ast::Interval::Start, dawn::ast::Interval::End,
                   b.ifStmt(b.at(f_c), b.block(b.stmt(b.assignExpr(b.at(f_e_1), b.lit(1.0))),
                                               b.stmt(b.assignExpr(b.at(f_e_2), b.lit(2.0)))))))))),
       ".*Dimensions consistency check failed.*");
@@ -720,7 +720,7 @@ TEST(UnstructuredDimensionCheckerTest, IfStmtElseBlock) {
           b.stencil(b.multistage(
               LoopOrderKind::Parallel,
               b.stage(b.doMethod(
-                  dawn::sir::Interval::Start, dawn::sir::Interval::End,
+                  dawn::ast::Interval::Start, dawn::ast::Interval::End,
                   b.ifStmt(b.at(f_c), b.block(b.stmt(b.assignExpr(b.at(f_e_1), b.lit(0.0)))),
                            b.block(b.stmt(b.assignExpr(b.at(f_e_1), b.lit(1.0))),
                                    b.stmt(b.assignExpr(b.at(f_e_2), b.lit(2.0)))))))))),
@@ -741,7 +741,7 @@ TEST(UnstructuredDimensionCheckerTest, ThenBlockInconsistent) {
           "fail", b.stencil(b.multistage(
                       LoopOrderKind::Parallel,
                       b.stage(b.doMethod(
-                          dawn::sir::Interval::Start, dawn::sir::Interval::End,
+                          dawn::ast::Interval::Start, dawn::ast::Interval::End,
                           b.ifStmt(b.at(f_vertical),
                                    b.block(b.stmt(b.assignExpr(b.at(f_c), b.lit(1.0))),
                                            b.stmt(b.assignExpr(b.at(f_e), b.lit(2.0)))))))))),
@@ -763,7 +763,7 @@ TEST(UnstructuredDimensionCheckerTest, ThenBlockElseBlockInconsistent) {
           b.stencil(b.multistage(
               LoopOrderKind::Parallel,
               b.stage(b.doMethod(
-                  dawn::sir::Interval::Start, dawn::sir::Interval::End,
+                  dawn::ast::Interval::Start, dawn::ast::Interval::End,
                   b.ifStmt(b.at(f_vertical), b.block(b.stmt(b.assignExpr(b.at(f_c), b.lit(1.0)))),
                            b.block(b.stmt(b.assignExpr(b.at(f_e), b.lit(2.0)))))))))),
       ".*Dimensions consistency check failed.*");
@@ -782,7 +782,7 @@ TEST(UnstructuredDimensionCheckerTest, ThenBlockVertical) {
       "pass", b.stencil(b.multistage(
                   LoopOrderKind::Parallel,
                   b.stage(b.doMethod(
-                      dawn::sir::Interval::Start, dawn::sir::Interval::End,
+                      dawn::ast::Interval::Start, dawn::ast::Interval::End,
                       b.ifStmt(b.at(f_vertical),
                                b.block(b.stmt(b.assignExpr(b.at(f_vertical_in), b.lit(1.0)))),
                                b.block(b.stmt(b.assignExpr(b.at(f_e), b.lit(2.0))))))))));
@@ -808,7 +808,7 @@ TEST(UnstructuredDimensionCheckerTest, ElseBlockVertical) {
       b.stencil(b.multistage(
           LoopOrderKind::Parallel,
           b.stage(b.doMethod(
-              dawn::sir::Interval::Start, dawn::sir::Interval::End,
+              dawn::ast::Interval::Start, dawn::ast::Interval::End,
               b.ifStmt(b.at(f_vertical), b.block(b.stmt(b.assignExpr(b.at(f_e), b.lit(1.0)))),
                        b.block(b.stmt(b.assignExpr(b.at(f_vertical_in), b.lit(2.0))))))))));
   {
@@ -834,7 +834,7 @@ TEST(UnstructuredDimensionCheckerTest, DimsWithCenterCorrect) {
       b.stencil(b.multistage(
           LoopOrderKind::Parallel,
           b.stage(LocType::Cells,
-                  b.doMethod(dawn::sir::Interval::Start, dawn::sir::Interval::End,
+                  b.doMethod(dawn::ast::Interval::Start, dawn::ast::Interval::End,
                              b.loopStmtChain(b.stmt(b.assignExpr(b.at(sparse_f), b.lit(2.))),
                                              {LocType::Cells, LocType::Edges, LocType::Cells},
                                              /*include center*/ true),
@@ -870,7 +870,7 @@ TEST(UnstructuredDimensionCheckerTest, DimsWithCenterFailFill) {
           b.stencil(b.multistage(
               LoopOrderKind::Parallel,
               b.stage(LocType::Cells,
-                      b.doMethod(dawn::sir::Interval::Start, dawn::sir::Interval::End,
+                      b.doMethod(dawn::ast::Interval::Start, dawn::ast::Interval::End,
                                  b.loopStmtChain(b.stmt(b.assignExpr(b.at(sparse_f), b.lit(2.))),
                                                  {LocType::Cells, LocType::Edges, LocType::Cells},
                                                  /*include center*/ true)))))),
@@ -893,7 +893,7 @@ TEST(UnstructuredDimensionCheckerTest, DimsWithCenterFailReduce) {
                   LoopOrderKind::Parallel,
                   b.stage(LocType::Cells,
                           b.doMethod(
-                              dawn::sir::Interval::Start, dawn::sir::Interval::End,
+                              dawn::ast::Interval::Start, dawn::ast::Interval::End,
                               b.stmt(b.assignExpr(
                                   b.at(cout_f),
                                   b.reduceOverNeighborExpr(

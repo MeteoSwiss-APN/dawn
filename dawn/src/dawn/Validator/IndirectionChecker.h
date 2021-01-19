@@ -30,8 +30,8 @@ class IndirectionChecker {
     bool lhs_ = false;
 
   public:
-    void visit(const std::shared_ptr<iir::FieldAccessExpr>& expr);
-    void visit(const std::shared_ptr<iir::AssignmentExpr>& expr);
+    void visit(const std::shared_ptr<ast::FieldAccessExpr>& expr);
+    void visit(const std::shared_ptr<ast::AssignmentExpr>& expr);
     bool indirectionsAreValid() const { return indirectionsValid_; }
   };
 

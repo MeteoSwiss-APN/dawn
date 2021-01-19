@@ -23,7 +23,7 @@
 #include "dawn/CodeGen/Cuda/CodeGeneratorHelper.h"
 #include "dawn/CodeGen/F90Util.h"
 #include "dawn/CodeGen/IcoChainSizes.h"
-#include "dawn/IIR/ASTVisitor.h"
+#include "dawn/AST/ASTVisitor.h"
 #include "dawn/IIR/Field.h"
 #include "dawn/IIR/Interval.h"
 #include "dawn/IIR/MultiStage.h"
@@ -36,7 +36,6 @@
 #include "driver-includes/unstructured_interface.hpp"
 
 #include <algorithm>
-#include <fstream>
 #include <memory>
 #include <numeric>
 #include <optional>
@@ -89,7 +88,7 @@ CudaIcoCodeGen::CudaIcoCodeGen(const StencilInstantiationContext& ctx, int maxHa
 
 CudaIcoCodeGen::~CudaIcoCodeGen() {}
 
-class CollectIterationSpaces : public iir::ASTVisitorForwarding {
+class CollectIterationSpaces : public ast::ASTVisitorForwarding {
 
 public:
   struct IterSpaceHash {
@@ -100,14 +99,14 @@ public:
     }
   };
 
-  void visit(const std::shared_ptr<iir::ReductionOverNeighborExpr>& expr) override {
+  void visit(const std::shared_ptr<ast::ReductionOverNeighborExpr>& expr) override {
     spaces_.insert(expr->getIterSpace());
     for(auto c : expr->getChildren()) {
       c->accept(*this);
     }
   }
 
-  void visit(const std::shared_ptr<iir::LoopStmt>& stmt) override {
+  void visit(const std::shared_ptr<ast::LoopStmt>& stmt) override {
     auto chainDescr = dynamic_cast<const ast::ChainIterationDescr*>(stmt->getIterationDescrPtr());
     spaces_.insert(chainDescr->getIterSpace());
     for(auto c : stmt->getChildren()) {
@@ -730,10 +729,10 @@ void CudaIcoCodeGen::generateAllAPIRunFunctions(
     }
 
     const auto& globalsMap = stencilInstantiation->getIIR()->getGlobalVariableMap();
-    auto addExplodedGlobals = [](const sir::GlobalVariableMap& globalsMap, MemberFunction& fun) {
+    auto addExplodedGlobals = [](const ast::GlobalVariableMap& globalsMap, MemberFunction& fun) {
       for(const auto& global : globalsMap) {
         std::string Name = global.first;
-        std::string Type = sir::Value::typeToString(global.second.getType());
+        std::string Type = ast::Value::typeToString(global.second.getType());
         fun.addArg(Type + " " + Name);
       }
     };
@@ -810,11 +809,11 @@ void CudaIcoCodeGen::generateAllAPIRunFunctions(
         const std::string fullStencilName =
             "dawn_generated::cuda_ico::" + wrapperName + "::" + stencilName;
 
-        auto copyGlobals = [](const sir::GlobalVariableMap& globalsMap, MemberFunction& fun,
+        auto copyGlobals = [](const ast::GlobalVariableMap& globalsMap, MemberFunction& fun,
                               bool wrapped) {
           for(const auto& global : globalsMap) {
             std::string Name = global.first;
-            std::string Type = sir::Value::typeToString(global.second.getType());
+            std::string Type = ast::Value::typeToString(global.second.getType());
             fun.addStatement("s.set_" + Name + "(" + (wrapped ? "globals." + Name : Name) + ")");
           }
         };
@@ -1189,17 +1188,17 @@ generateF90InterfaceSI(FortranInterfaceModuleGen& fimGen,
                        const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation) {
   const auto& stencils = stencilInstantiation->getStencils();
   const auto& globalsMap = stencilInstantiation->getIIR()->getGlobalVariableMap();
-  auto globalTypeToFortType = [](const sir::Global& global) {
+  auto globalTypeToFortType = [](const ast::Global& global) {
     switch(global.getType()) {
-    case sir::Value::Kind::Boolean:
+    case ast::Value::Kind::Boolean:
       return FortranInterfaceAPI::InterfaceType::BOOLEAN;
-    case sir::Value::Kind::Double:
+    case ast::Value::Kind::Double:
       return FortranInterfaceAPI::InterfaceType::DOUBLE;
-    case sir::Value::Kind::Float:
+    case ast::Value::Kind::Float:
       return FortranInterfaceAPI::InterfaceType::FLOAT;
-    case sir::Value::Kind::Integer:
+    case ast::Value::Kind::Integer:
       return FortranInterfaceAPI::InterfaceType::INTEGER;
-    case sir::Value::Kind::String:
+    case ast::Value::Kind::String:
     default:
       throw std::runtime_error("string globals not supported in cuda ico backend");
     }

@@ -57,27 +57,27 @@ public:
 
   /// @name Statement implementation
   /// @{
-  virtual void visit(const std::shared_ptr<iir::ReturnStmt>& stmt) override;
-  virtual void visit(const std::shared_ptr<iir::VerticalRegionDeclStmt>& stmt) override;
-  virtual void visit(const std::shared_ptr<iir::StencilCallDeclStmt>& stmt) override;
-  virtual void visit(const std::shared_ptr<iir::BoundaryConditionDeclStmt>& stmt) override;
+  virtual void visit(const std::shared_ptr<ast::ReturnStmt>& stmt) override;
+  virtual void visit(const std::shared_ptr<ast::VerticalRegionDeclStmt>& stmt) override;
+  virtual void visit(const std::shared_ptr<ast::StencilCallDeclStmt>& stmt) override;
+  virtual void visit(const std::shared_ptr<ast::BoundaryConditionDeclStmt>& stmt) override;
   /// @}
 
   /// @name Expression implementation
   /// @{
-  virtual void visit(const std::shared_ptr<iir::StencilFunCallExpr>& expr) override;
-  virtual void visit(const std::shared_ptr<iir::StencilFunArgExpr>& expr) override;
-  virtual void visit(const std::shared_ptr<iir::VarAccessExpr>& expr) override;
-  virtual void visit(const std::shared_ptr<iir::FieldAccessExpr>& expr) override;
+  virtual void visit(const std::shared_ptr<ast::StencilFunCallExpr>& expr) override;
+  virtual void visit(const std::shared_ptr<ast::StencilFunArgExpr>& expr) override;
+  virtual void visit(const std::shared_ptr<ast::VarAccessExpr>& expr) override;
+  virtual void visit(const std::shared_ptr<ast::FieldAccessExpr>& expr) override;
   /// @}
 
   /// @brief Mapping of VarDeclStmt and Var/FieldAccessExpr to their name
-  std::string getName(const std::shared_ptr<iir::Expr>& expr) const override;
-  std::string getName(const std::shared_ptr<iir::VarDeclStmt>& stmt) const override;
+  std::string getName(const std::shared_ptr<ast::Expr>& expr) const override;
+  std::string getName(const std::shared_ptr<ast::VarDeclStmt>& stmt) const override;
 
 private:
-  void derefIJCache(const std::shared_ptr<iir::FieldAccessExpr>& expr);
-  void derefKCache(const std::shared_ptr<iir::FieldAccessExpr>& expr);
+  void derefIJCache(const std::shared_ptr<ast::FieldAccessExpr>& expr);
+  void derefKCache(const std::shared_ptr<ast::FieldAccessExpr>& expr);
 };
 
 } // namespace cuda

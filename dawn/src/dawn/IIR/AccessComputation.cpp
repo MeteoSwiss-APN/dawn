@@ -13,10 +13,9 @@
 //===------------------------------------------------------------------------------------------===//
 
 #include "dawn/IIR/AccessComputation.h"
-#include "dawn/IIR/AST.h"
 #include "dawn/IIR/ASTExpr.h"
 #include "dawn/IIR/ASTStmt.h"
-#include "dawn/IIR/ASTVisitor.h"
+#include "dawn/AST/ASTVisitor.h"
 #include "dawn/IIR/Accesses.h"
 #include "dawn/IIR/StencilFunctionInstantiation.h"
 #include "dawn/IIR/StencilInstantiation.h"
@@ -29,21 +28,21 @@ namespace dawn {
 namespace {
 
 /// @brief Compute and fill the access map of the given statement
-class AccessMapper : public iir::ASTVisitor {
+class AccessMapper : public ast::ASTVisitor {
   const iir::StencilMetaInformation& metadata_;
 
   /// Keep track of the current statement
   struct CurrentStatement {
-    CurrentStatement(const std::shared_ptr<iir::Stmt>& stmt) : Stmt(stmt), IfCondExpr(nullptr) {}
+    CurrentStatement(const std::shared_ptr<ast::Stmt>& stmt) : Stmt(stmt), IfCondExpr(nullptr) {}
 
     /// Reference to the stmt we are currently working on.
-    const std::shared_ptr<iir::Stmt>& Stmt;
+    const std::shared_ptr<ast::Stmt>& Stmt;
 
     /// Access of the condition of the if-statement (this will be added to all subsequent accesses)
     /// For example:
     ///   if(true)
     ///     in = 5.0;   // Accesses:  W:in, R:5.0, R:true   (true is part of the read-access)
-    std::shared_ptr<iir::Expr> IfCondExpr;
+    std::shared_ptr<ast::Expr> IfCondExpr;
   };
   std::vector<std::unique_ptr<CurrentStatement>> curStatementStack_;
 
@@ -68,7 +67,7 @@ class AccessMapper : public iir::ASTVisitor {
   std::stack<std::unique_ptr<StencilFunctionCallScope>> stencilFunCalls_;
 
 public:
-  AccessMapper(const iir::StencilMetaInformation& metadata, const std::shared_ptr<iir::Stmt>& stmt,
+  AccessMapper(const iir::StencilMetaInformation& metadata, const std::shared_ptr<ast::Stmt>& stmt,
                std::shared_ptr<iir::StencilFunctionInstantiation> stencilFun = nullptr)
       : metadata_(metadata), stencilFun_(stencilFun) {
     curStatementStack_.push_back(std::make_unique<CurrentStatement>(stmt));
@@ -76,7 +75,7 @@ public:
 
   /// @brief Get the stencil function instantiation from the `StencilFunCallExpr`
   std::shared_ptr<iir::StencilFunctionInstantiation>
-  getStencilFunctionInstantiation(const std::shared_ptr<iir::StencilFunCallExpr>& expr) {
+  getStencilFunctionInstantiation(const std::shared_ptr<ast::StencilFunCallExpr>& expr) {
     return stencilFun_ ? stencilFun_->getStencilFunctionInstantiation(expr)
                        : metadata_.getStencilFunctionInstantiation(expr);
   }
@@ -117,7 +116,7 @@ public:
 
   /// @brief Add a write extent/offset to the caller and callee accesses
   /// @{
-  void mergeWriteOffset(const std::shared_ptr<iir::FieldAccessExpr>& field) {
+  void mergeWriteOffset(const std::shared_ptr<ast::FieldAccessExpr>& field) {
     auto getOffset = [&](bool computeInitialOffset) {
       return stencilFun_ ? stencilFun_->evalOffsetOfFieldAccessExpr(field, computeInitialOffset)
                          : field->getOffset();
@@ -130,7 +129,7 @@ public:
       calleeAccesses->mergeWriteOffset(iir::getAccessID(field), getOffset(false));
   }
 
-  void mergeWriteOffset(const std::shared_ptr<iir::VarAccessExpr>& var) {
+  void mergeWriteOffset(const std::shared_ptr<ast::VarAccessExpr>& var) {
     for(auto& callerAccesses : callerAccessesList_)
       callerAccesses->mergeWriteOffset(iir::getAccessID(var), ast::Offsets{});
 
@@ -138,7 +137,7 @@ public:
       calleeAccesses->mergeWriteOffset(iir::getAccessID(var), ast::Offsets{});
   }
 
-  void mergeWriteOffset(const std::shared_ptr<iir::VarDeclStmt>& var) {
+  void mergeWriteOffset(const std::shared_ptr<ast::VarDeclStmt>& var) {
     for(auto& callerAccesses : callerAccessesList_)
       callerAccesses->mergeWriteOffset(iir::getAccessID(var), ast::Offsets{});
 
@@ -146,7 +145,7 @@ public:
       calleeAccesses->mergeWriteOffset(iir::getAccessID(var), ast::Offsets{});
   }
 
-  void mergeWriteExtent(const std::shared_ptr<iir::FieldAccessExpr>& field,
+  void mergeWriteExtent(const std::shared_ptr<ast::FieldAccessExpr>& field,
                         const iir::Extents& extent) {
     for(auto& callerAccesses : callerAccessesList_)
       callerAccesses->mergeWriteExtent(iir::getAccessID(field), extent);
@@ -158,7 +157,7 @@ public:
 
   /// @brief Add a read offset/extent to the caller and callee accesses
   /// @{
-  void mergeReadOffset(const std::shared_ptr<iir::FieldAccessExpr>& field) {
+  void mergeReadOffset(const std::shared_ptr<ast::FieldAccessExpr>& field) {
     auto getOffset = [&](bool computeInitialOffset) {
       return (stencilFun_ ? stencilFun_->evalOffsetOfFieldAccessExpr(field, computeInitialOffset)
                           : field->getOffset());
@@ -171,7 +170,7 @@ public:
       calleeAccesses->mergeReadOffset(iir::getAccessID(field), getOffset(false));
   }
 
-  void mergeReadOffset(const std::shared_ptr<iir::VarAccessExpr>& var) {
+  void mergeReadOffset(const std::shared_ptr<ast::VarAccessExpr>& var) {
     for(auto& callerAccesses : callerAccessesList_)
       callerAccesses->mergeReadOffset(iir::getAccessID(var), ast::Offsets{});
 
@@ -179,7 +178,7 @@ public:
       calleeAccesses->mergeReadOffset(iir::getAccessID(var), ast::Offsets{});
   }
 
-  void mergeReadOffset(const std::shared_ptr<iir::LiteralAccessExpr>& lit) {
+  void mergeReadOffset(const std::shared_ptr<ast::LiteralAccessExpr>& lit) {
     for(auto& callerAccesses : callerAccessesList_)
       callerAccesses->mergeReadOffset(iir::getAccessID(lit), ast::Offsets{});
 
@@ -187,7 +186,7 @@ public:
       calleeAccesses->mergeReadOffset(iir::getAccessID(lit), ast::Offsets{});
   }
 
-  void mergeReadExtent(const std::shared_ptr<iir::FieldAccessExpr>& field,
+  void mergeReadExtent(const std::shared_ptr<ast::FieldAccessExpr>& field,
                        const iir::Extents& extent) {
     for(auto& callerAccesses : callerAccessesList_)
       callerAccesses->mergeReadExtent(iir::getAccessID(field), extent);
@@ -234,7 +233,7 @@ public:
     }
   }
 
-  virtual void visit(const std::shared_ptr<iir::BlockStmt>& stmt) override {
+  virtual void visit(const std::shared_ptr<ast::BlockStmt>& stmt) override {
     appendNewAccesses();
     for(const auto& s : stmt->getStatements()) {
 
@@ -250,23 +249,23 @@ public:
     removeLastChildAccesses();
   }
 
-  virtual void visit(const std::shared_ptr<iir::LoopStmt>& stmt) override {
+  virtual void visit(const std::shared_ptr<ast::LoopStmt>& stmt) override {
     stmt->getBlockStmt()->accept(*this);
   }
 
-  virtual void visit(const std::shared_ptr<iir::ExprStmt>& stmt) override {
+  virtual void visit(const std::shared_ptr<ast::ExprStmt>& stmt) override {
     appendNewAccesses();
     stmt->getExpr()->accept(*this);
     removeLastChildAccesses();
   }
 
-  virtual void visit(const std::shared_ptr<iir::ReturnStmt>& stmt) override {
+  virtual void visit(const std::shared_ptr<ast::ReturnStmt>& stmt) override {
     appendNewAccesses();
     stmt->getExpr()->accept(*this);
     removeLastChildAccesses();
   }
 
-  void visit(const std::shared_ptr<iir::IfStmt>& stmt) override {
+  void visit(const std::shared_ptr<ast::IfStmt>& stmt) override {
     appendNewAccesses();
 
     curStatementStack_.push_back(std::make_unique<CurrentStatement>(stmt->getCondStmt()));
@@ -288,7 +287,7 @@ public:
     removeLastChildAccesses();
   }
 
-  virtual void visit(const std::shared_ptr<iir::VarDeclStmt>& stmt) override {
+  virtual void visit(const std::shared_ptr<ast::VarDeclStmt>& stmt) override {
     appendNewAccesses();
 
     // Declaration of variables are by defintion writes
@@ -299,28 +298,28 @@ public:
 
     removeLastChildAccesses();
   }
-  virtual void visit(const std::shared_ptr<iir::ReductionOverNeighborExpr>& expr) override {
+  virtual void visit(const std::shared_ptr<ast::ReductionOverNeighborExpr>& expr) override {
     for(auto& s : expr->getChildren())
       s->accept(*this);
   }
 
-  virtual void visit(const std::shared_ptr<iir::VerticalRegionDeclStmt>& stmt) override {
+  virtual void visit(const std::shared_ptr<ast::VerticalRegionDeclStmt>& stmt) override {
     DAWN_ASSERT_MSG(0, "VerticalRegionDeclStmt not allowed in this context");
   }
-  virtual void visit(const std::shared_ptr<iir::StencilCallDeclStmt>& stmt) override {
+  virtual void visit(const std::shared_ptr<ast::StencilCallDeclStmt>& stmt) override {
     DAWN_ASSERT_MSG(0, "StencilCallDeclStmt not allowed in this context");
   }
 
-  virtual void visit(const std::shared_ptr<iir::BoundaryConditionDeclStmt>& stmt) override {
+  virtual void visit(const std::shared_ptr<ast::BoundaryConditionDeclStmt>& stmt) override {
     DAWN_ASSERT_MSG(0, "BoundaryConditionDeclStmt not allowed in this context");
   }
 
-  virtual void visit(const std::shared_ptr<iir::FunCallExpr>& expr) override {
+  virtual void visit(const std::shared_ptr<ast::FunCallExpr>& expr) override {
     for(auto& s : expr->getChildren())
       s->accept(*this);
   }
 
-  virtual void visit(const std::shared_ptr<iir::StencilFunCallExpr>& expr) override {
+  virtual void visit(const std::shared_ptr<ast::StencilFunCallExpr>& expr) override {
 
     StencilFunctionCallScope* previousStencilFunCallScope = nullptr;
     if(!stencilFunCalls_.empty()) {
@@ -365,19 +364,19 @@ public:
     stencilFunCalls_.pop();
   }
 
-  virtual void visit(const std::shared_ptr<iir::StencilFunArgExpr>& expr) override {
+  virtual void visit(const std::shared_ptr<ast::StencilFunArgExpr>& expr) override {
     stencilFunCalls_.top()->ArgumentIndex += 1;
   }
 
-  void visit(const std::shared_ptr<iir::AssignmentExpr>& expr) override {
+  void visit(const std::shared_ptr<ast::AssignmentExpr>& expr) override {
     // LHS is a write, we resolve this manually as we only care about FieldAccessExpr and
     // VarAccessExpr. However, if we have an expression `a += 5` we need to register the access as
     // write and read!
     bool readAndWrite = expr->getOp() == "+=" || expr->getOp() == "-=" || expr->getOp() == "/=" ||
                         expr->getOp() == "*=" || expr->getOp() == "|=" || expr->getOp() == "&=";
 
-    if(isa<iir::FieldAccessExpr>(expr->getLeft().get())) {
-      auto field = std::static_pointer_cast<iir::FieldAccessExpr>(expr->getLeft());
+    if(isa<ast::FieldAccessExpr>(expr->getLeft().get())) {
+      auto field = std::static_pointer_cast<ast::FieldAccessExpr>(expr->getLeft());
       if(readAndWrite)
         mergeReadOffset(field);
       mergeWriteOffset(field);
@@ -385,14 +384,14 @@ public:
       // this is not legal, but we need to register this write access to generate meaningful error
       // messages later on
       if(field->getOffset().hasVerticalIndirection()) {
-        auto innerField = std::static_pointer_cast<iir::FieldAccessExpr>(
+        auto innerField = std::static_pointer_cast<ast::FieldAccessExpr>(
             field->getOffset().getVerticalIndirectionFieldAsExpr());
         if(readAndWrite)
           mergeReadOffset(innerField);
         mergeWriteOffset(innerField);
       }
-    } else if(isa<iir::VarAccessExpr>(expr->getLeft().get())) {
-      auto var = std::static_pointer_cast<iir::VarAccessExpr>(expr->getLeft());
+    } else if(isa<ast::VarAccessExpr>(expr->getLeft().get())) {
+      auto var = std::static_pointer_cast<ast::VarAccessExpr>(expr->getLeft());
       if(readAndWrite)
         mergeReadOffset(var);
 
@@ -403,22 +402,22 @@ public:
     expr->getRight()->accept(*this);
   }
 
-  void visit(const std::shared_ptr<iir::UnaryOperator>& expr) override {
+  void visit(const std::shared_ptr<ast::UnaryOperator>& expr) override {
     for(auto& s : expr->getChildren())
       s->accept(*this);
   }
 
-  void visit(const std::shared_ptr<iir::BinaryOperator>& expr) override {
+  void visit(const std::shared_ptr<ast::BinaryOperator>& expr) override {
     for(auto& s : expr->getChildren())
       s->accept(*this);
   }
 
-  void visit(const std::shared_ptr<iir::TernaryOperator>& expr) override {
+  void visit(const std::shared_ptr<ast::TernaryOperator>& expr) override {
     for(auto& s : expr->getChildren())
       s->accept(*this);
   }
 
-  void visit(const std::shared_ptr<iir::VarAccessExpr>& expr) override {
+  void visit(const std::shared_ptr<ast::VarAccessExpr>& expr) override {
     // This is always a read access (writes are resolved in handling of the declaration of the
     // variable and in the assignment)
     mergeReadOffset(expr);
@@ -428,12 +427,12 @@ public:
       expr->getIndex()->accept(*this);
   }
 
-  void visit(const std::shared_ptr<iir::LiteralAccessExpr>& expr) override {
+  void visit(const std::shared_ptr<ast::LiteralAccessExpr>& expr) override {
     // Literals can, by defintion, only be read
     mergeReadOffset(expr);
   }
 
-  void visit(const std::shared_ptr<iir::FieldAccessExpr>& expr) override {
+  void visit(const std::shared_ptr<ast::FieldAccessExpr>& expr) override {
     if(!stencilFunCalls_.empty()) {
 
       std::shared_ptr<iir::StencilFunctionInstantiation> functionInstantiation =
@@ -468,7 +467,7 @@ public:
 } // anonymous namespace
 
 void computeAccesses(const iir::StencilMetaInformation& metadata,
-                     ArrayRef<std::shared_ptr<iir::Stmt>> stmts) {
+                     ArrayRef<std::shared_ptr<ast::Stmt>> stmts) {
   for(const auto& stmt : stmts) {
     AccessMapper mapper(metadata, stmt, nullptr);
     stmt->accept(mapper);
@@ -477,7 +476,7 @@ void computeAccesses(const iir::StencilMetaInformation& metadata,
 
 void computeAccesses(
     std::shared_ptr<iir::StencilFunctionInstantiation> stencilFunctionInstantiation,
-    ArrayRef<std::shared_ptr<iir::Stmt>> stmts) {
+    ArrayRef<std::shared_ptr<ast::Stmt>> stmts) {
   for(const auto& stmt : stmts) {
     AccessMapper mapper(stencilFunctionInstantiation->getStencilInstantiation()->getMetaData(),
                         stmt, stencilFunctionInstantiation);

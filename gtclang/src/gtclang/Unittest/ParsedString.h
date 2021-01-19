@@ -16,9 +16,9 @@
 
 #ifndef GTCLANG_UNITTEST_PARSEDSTRING_H
 #define GTCLANG_UNITTEST_PARSEDSTRING_H
-#include "dawn/SIR/ASTExpr.h"
+#include "dawn/AST/ASTExpr.h"
 #include "dawn/SIR/ASTStmt.h"
-#include "dawn/SIR/ASTVisitor.h"
+#include "dawn/AST/ASTVisitor.h"
 #include "dawn/SIR/SIR.h"
 #include "dawn/Support/Array.h"
 #include "dawn/Support/Casting.h"
@@ -51,7 +51,7 @@ public:
   /// @brief recursive argument parsing to read all the fields given to specify the function call
   /// @{
   template <typename... Args>
-  void argumentParsing(const std::shared_ptr<dawn::sir::Expr>& argument, Args&&... args) {
+  void argumentParsing(const std::shared_ptr<dawn::ast::Expr>& argument, Args&&... args) {
     argumentParsingImpl(argument);
     argumentParsing(std::forward<Args>(args)...);
   }
@@ -69,7 +69,7 @@ private:
   void addVariable(const std::string& variable) { variables_.push_back(variable); }
 
   /// @brief recursive argument parsing to read all the fields given to specify the function call
-  void argumentParsingImpl(const std::shared_ptr<dawn::sir::Expr>& argument);
+  void argumentParsingImpl(const std::shared_ptr<dawn::ast::Expr>& argument);
 
   std::vector<std::string> fields_;
   std::vector<std::string> variables_;

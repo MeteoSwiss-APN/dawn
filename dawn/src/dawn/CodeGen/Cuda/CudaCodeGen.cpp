@@ -15,7 +15,6 @@
 #include "dawn/CodeGen/Cuda/CudaCodeGen.h"
 #include "dawn/CodeGen/CXXUtil.h"
 #include "dawn/CodeGen/CodeGenProperties.h"
-#include "dawn/CodeGen/Cuda/ASTStencilBody.h"
 #include "dawn/CodeGen/Cuda/ASTStencilDesc.h"
 #include "dawn/CodeGen/Cuda/CacheProperties.h"
 #include "dawn/CodeGen/Cuda/CodeGeneratorHelper.h"
@@ -240,7 +239,7 @@ void CudaCodeGen::generateStencilClasses(
 }
 
 void CudaCodeGen::generateStencilClassMembers(
-    Structure& stencilClass, const iir::Stencil& stencil, const sir::GlobalVariableMap& globalsMap,
+    Structure& stencilClass, const iir::Stencil& stencil, const ast::GlobalVariableMap& globalsMap,
     IndexRange<const std::map<int, iir::Stencil::FieldInfo>>& nonTempFields,
     IndexRange<const std::map<int, iir::Stencil::FieldInfo>>& tempFields,
     std::shared_ptr<StencilProperties> stencilProperties) const {
@@ -266,7 +265,7 @@ void CudaCodeGen::generateStencilClassMembers(
 }
 
 void CudaCodeGen::generateStencilClassCtr(
-    Structure& stencilClass, const iir::Stencil& stencil, const sir::GlobalVariableMap& globalsMap,
+    Structure& stencilClass, const iir::Stencil& stencil, const ast::GlobalVariableMap& globalsMap,
     IndexRange<const std::map<int, iir::Stencil::FieldInfo>>& nonTempFields,
     IndexRange<const std::map<int, iir::Stencil::FieldInfo>>& tempFields,
     std::shared_ptr<StencilProperties> stencilProperties) const {
@@ -463,7 +462,7 @@ void CudaCodeGen::generateStencilRunMethod(
     const std::shared_ptr<StencilProperties>& stencilProperties,
     const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation,
     const std::unordered_map<std::string, std::string>& paramNameToType,
-    const sir::GlobalVariableMap& globalsMap) const {
+    const ast::GlobalVariableMap& globalsMap) const {
   MemberFunction stencilRunMethod = stencilClass.addMemberFunction("void", "run", "");
   const auto& metadata = stencilInstantiation->getMetaData();
 

@@ -19,7 +19,6 @@
 #include "dawn/Optimizer/PassManager.h"
 #include "dawn/SIR/SIR.h"
 #include "dawn/Support/Exception.h"
-#include "dawn/Support/Iterator.h"
 #include "dawn/Support/Logger.h"
 #include "dawn/Support/StringSwitch.h"
 
@@ -29,13 +28,11 @@
 #include "dawn/Optimizer/PassInlining.h"
 #include "dawn/Optimizer/PassIntervalPartitioning.h"
 #include "dawn/Optimizer/PassLocalVarType.h"
-#include "dawn/Optimizer/PassManager.h"
 #include "dawn/Optimizer/PassMultiStageMerger.h"
 #include "dawn/Optimizer/PassPrintStencilGraph.h"
 #include "dawn/Optimizer/PassRemoveScalars.h"
 #include "dawn/Optimizer/PassSSA.h"
 #include "dawn/Optimizer/PassSetBlockSize.h"
-#include "dawn/Optimizer/PassSetBoundaryCondition.h"
 #include "dawn/Optimizer/PassSetCaches.h"
 #include "dawn/Optimizer/PassSetDependencyGraph.h"
 #include "dawn/Optimizer/PassSetLoopOrder.h"
@@ -48,15 +45,11 @@
 #include "dawn/Optimizer/PassStageReordering.h"
 #include "dawn/Optimizer/PassStageSplitAllStatements.h"
 #include "dawn/Optimizer/PassStageSplitter.h"
-#include "dawn/Optimizer/PassStencilSplitter.h"
-#include "dawn/Optimizer/PassTemporaryFirstAccess.h"
 #include "dawn/Optimizer/PassTemporaryMerger.h"
 #include "dawn/Optimizer/PassTemporaryToStencilFunction.h"
 #include "dawn/Optimizer/PassTemporaryType.h"
 #include "dawn/Optimizer/PassValidation.h"
 
-#include <algorithm>
-#include <iterator>
 #include <stdexcept>
 #include <string>
 

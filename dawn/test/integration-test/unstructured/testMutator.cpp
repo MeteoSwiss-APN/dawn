@@ -1,14 +1,9 @@
 #include "testMutator.h"
-#include "dawn/AST/ASTFwd.h"
 #include "dawn/AST/ASTVisitor.h"
 #include "dawn/IIR/ASTExpr.h"
-#include "dawn/IIR/ASTStmt.h"
 #include "dawn/IIR/AccessComputation.h"
 #include "dawn/IIR/DoMethod.h"
 #include "dawn/IIR/FieldAccessMetadata.h"
-#include "dawn/IIR/IIR.h"
-#include "dawn/IIR/Stage.h"
-#include "dawn/IIR/StencilMetaInformation.h"
 #include "dawn/Optimizer/Lowering.h"
 #include "dawn/Support/ArrayRef.h"
 #include "testMutator.h"
@@ -47,9 +42,9 @@ void injectRedirectedReads(std::shared_ptr<dawn::iir::StencilInstantiation> sten
     stencil->accept(mutator);
 
     // this means the accesses of the statements changed. recompute them.
-    std::vector<std::shared_ptr<dawn::iir::Stmt>> stmtsVec =
+    std::vector<std::shared_ptr<dawn::ast::Stmt>> stmtsVec =
         dawn::iterateIIROverStmt(*stencilInstantiation->getIIR());
-    dawn::ArrayRef<std::shared_ptr<dawn::iir::Stmt>> stmts(stmtsVec.data(), stmtsVec.size());
+    dawn::ArrayRef<std::shared_ptr<dawn::ast::Stmt>> stmts(stmtsVec.data(), stmtsVec.size());
     dawn::computeAccesses(stencilInstantiation->getMetaData(), stmts);
 
     // this info needs to be propagated updwards

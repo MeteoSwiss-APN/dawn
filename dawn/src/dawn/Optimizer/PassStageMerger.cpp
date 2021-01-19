@@ -27,7 +27,7 @@ bool PassStageMerger::run(const std::shared_ptr<iir::StencilInstantiation>& sten
   bool stencilNeedsMergePass = false;
   for(const auto& stencilPtr : stencilInstantiation->getStencils())
     stencilNeedsMergePass |= stencilPtr->getStencilAttributes().hasOneOf(
-        sir::Attr::Kind::MergeStages, sir::Attr::Kind::MergeDoMethods);
+        ast::Attr::Kind::MergeStages, ast::Attr::Kind::MergeDoMethods);
 
   // ... Nope
   if(!options.MergeDoMethods && !stencilNeedsMergePass)
@@ -54,7 +54,7 @@ bool PassStageMerger::run(const std::shared_ptr<iir::StencilInstantiation>& sten
 
     // Do we need to run the analysis for this stencil?
     bool mergeDoMethodsOfStencil =
-        attributes.has(sir::Attr::Kind::MergeDoMethods) || options.MergeDoMethods;
+        attributes.has(ast::Attr::Kind::MergeDoMethods) || options.MergeDoMethods;
 
     // Note that the underlying assumption is that stages in the same multi-stage are guaranteed to
     // have no counter loop-oorder vertical dependencies. We can thus treat each multi-stage in

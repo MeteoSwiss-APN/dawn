@@ -34,11 +34,11 @@ ASTStencilDesc::ASTStencilDesc(
 
 ASTStencilDesc::~ASTStencilDesc() {}
 
-std::string ASTStencilDesc::getName(const std::shared_ptr<iir::VarDeclStmt>& stmt) const {
+std::string ASTStencilDesc::getName(const std::shared_ptr<ast::VarDeclStmt>& stmt) const {
   return metadata_.getFieldNameFromAccessID(iir::getAccessID(stmt));
 }
 
-std::string ASTStencilDesc::getName(const std::shared_ptr<iir::Expr>& expr) const {
+std::string ASTStencilDesc::getName(const std::shared_ptr<ast::Expr>& expr) const {
   return metadata_.getFieldNameFromAccessID(iir::getAccessID(expr));
 }
 
@@ -46,15 +46,15 @@ std::string ASTStencilDesc::getName(const std::shared_ptr<iir::Expr>& expr) cons
 //     Stmt
 //===------------------------------------------------------------------------------------------===//
 
-void ASTStencilDesc::visit(const std::shared_ptr<iir::ReturnStmt>& stmt) {
+void ASTStencilDesc::visit(const std::shared_ptr<ast::ReturnStmt>& stmt) {
   dawn_unreachable("ReturnStmt not allowed in StencilDesc AST");
 }
 
-void ASTStencilDesc::visit(const std::shared_ptr<iir::VerticalRegionDeclStmt>& stmt) {
+void ASTStencilDesc::visit(const std::shared_ptr<ast::VerticalRegionDeclStmt>& stmt) {
   dawn_unreachable("VerticalRegionDeclStmt not allowed in StencilDesc AST");
 }
 
-void ASTStencilDesc::visit(const std::shared_ptr<iir::StencilCallDeclStmt>& stmt) {
+void ASTStencilDesc::visit(const std::shared_ptr<ast::StencilCallDeclStmt>& stmt) {
   int stencilID = metadata_.getStencilIDFromStencilCallStmt(stmt);
 
   const auto& stencil = instantiation_->getIIR()->getStencil(stencilID);
@@ -68,7 +68,7 @@ void ASTStencilDesc::visit(const std::shared_ptr<iir::StencilCallDeclStmt>& stmt
       << ".get_stencil()->run(" + RangeToString(",", "", "")(plchdrs) + "); " << std::endl;
 }
 
-void ASTStencilDesc::visit(const std::shared_ptr<iir::BoundaryConditionDeclStmt>& stmt) {
+void ASTStencilDesc::visit(const std::shared_ptr<ast::BoundaryConditionDeclStmt>& stmt) {
   BCGenerator bcGen(metadata_, ss_);
   bcGen.generate(stmt);
 }
@@ -79,15 +79,15 @@ void ASTStencilDesc::visit(const std::shared_ptr<iir::BoundaryConditionDeclStmt>
 
 // TODO use the forwarding visitor?
 
-void ASTStencilDesc::visit(const std::shared_ptr<iir::StencilFunCallExpr>& expr) {
+void ASTStencilDesc::visit(const std::shared_ptr<ast::StencilFunCallExpr>& expr) {
   dawn_unreachable("StencilFunCallExpr not allowed in StencilDesc AST");
 }
 
-void ASTStencilDesc::visit(const std::shared_ptr<iir::StencilFunArgExpr>& expr) {
+void ASTStencilDesc::visit(const std::shared_ptr<ast::StencilFunArgExpr>& expr) {
   dawn_unreachable("StencilFunArgExpr not allowed in StencilDesc AST");
 }
 
-void ASTStencilDesc::visit(const std::shared_ptr<iir::VarAccessExpr>& expr) {
+void ASTStencilDesc::visit(const std::shared_ptr<ast::VarAccessExpr>& expr) {
   if(metadata_.isAccessType(iir::FieldAccessType::GlobalVariable, iir::getAccessID(expr)))
     ss_ << "m_globals.";
 
@@ -100,7 +100,7 @@ void ASTStencilDesc::visit(const std::shared_ptr<iir::VarAccessExpr>& expr) {
   }
 }
 
-void ASTStencilDesc::visit(const std::shared_ptr<iir::FieldAccessExpr>& expr) {
+void ASTStencilDesc::visit(const std::shared_ptr<ast::FieldAccessExpr>& expr) {
   dawn_unreachable("FieldAccessExpr not allowed in StencilDesc AST");
 }
 

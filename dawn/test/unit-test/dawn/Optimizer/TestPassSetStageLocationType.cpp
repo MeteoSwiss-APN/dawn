@@ -13,8 +13,6 @@
 //===------------------------------------------------------------------------------------------===//
 
 #include "dawn/AST/LocationType.h"
-#include "dawn/IIR/ASTFwd.h"
-#include "dawn/IIR/IIR.h"
 #include "dawn/IIR/StencilInstantiation.h"
 #include "dawn/Optimizer/Lowering.h"
 #include "dawn/Optimizer/PassLocalVarType.h"
@@ -23,13 +21,9 @@
 #include "dawn/Optimizer/PassStageSplitAllStatements.h"
 #include "dawn/Serialization/IIRSerializer.h"
 #include "dawn/Serialization/SIRSerializer.h"
-#include "dawn/Support/FileSystem.h"
 #include "dawn/Support/Logger.h"
-#include "dawn/Unittest/UnittestUtils.h"
 
-#include <fstream>
 #include <gtest/gtest.h>
-#include <iterator>
 #include <memory>
 
 using namespace dawn;

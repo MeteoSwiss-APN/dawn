@@ -339,16 +339,16 @@ TEST(IntervalTest, PartitionIntervals4) {
 }
 
 TEST(IntervalTest, Construction) {
-  Interval I0(sir::Interval::Start, sir::Interval::End);
-  Interval I1(sir::Interval::Start, sir::Interval::End, -1, -2);
-  Interval I2(0, sir::Interval::End, -4, +2);
+  Interval I0(ast::Interval::Start, ast::Interval::End);
+  Interval I1(ast::Interval::Start, ast::Interval::End, -1, -2);
+  Interval I2(0, ast::Interval::End, -4, +2);
 
-  EXPECT_EQ(I0.lowerBound(), sir::Interval::Start);
-  EXPECT_EQ(I0.upperBound(), sir::Interval::End);
-  EXPECT_EQ(I1.lowerBound(), sir::Interval::Start - 1);
-  EXPECT_EQ(I1.upperBound(), sir::Interval::End - 2);
+  EXPECT_EQ(I0.lowerBound(), ast::Interval::Start);
+  EXPECT_EQ(I0.upperBound(), ast::Interval::End);
+  EXPECT_EQ(I1.lowerBound(), ast::Interval::Start - 1);
+  EXPECT_EQ(I1.upperBound(), ast::Interval::End - 2);
   EXPECT_EQ(I2.lowerBound(), -4);
-  EXPECT_EQ(I2.upperBound(), sir::Interval::End + 2);
+  EXPECT_EQ(I2.upperBound(), ast::Interval::End + 2);
 
   // Copy assign
   I0 = I2;
@@ -401,8 +401,8 @@ TEST(IntervalTest, Substract) {
   }
 
   {
-    Interval I1{0, sir::Interval::End - 4};
-    Interval I2{1, sir::Interval::End - 4};
+    Interval I1{0, ast::Interval::End - 4};
+    Interval I2{1, ast::Interval::End - 4};
 
     EXPECT_EQ((substract(I1, I2)), (MultiInterval{Interval{0, 0}}));
   }
@@ -414,10 +414,10 @@ TEST(IntervalTest, Distance) {
   EXPECT_EQ((distance(b, a)), (IntervalDiff{IntervalDiff::RangeType::literal, -2}));
 
   EXPECT_EQ(
-      (distance(Interval::IntervalLevel{1, 1}, Interval::IntervalLevel{sir::Interval::End, 1})),
+      (distance(Interval::IntervalLevel{1, 1}, Interval::IntervalLevel{ast::Interval::End, 1})),
       (IntervalDiff{IntervalDiff::RangeType::fullRange, -1}));
   EXPECT_EQ(
-      (distance(Interval::IntervalLevel{sir::Interval::End, 1}, Interval::IntervalLevel{1, 1})),
+      (distance(Interval::IntervalLevel{ast::Interval::End, 1}, Interval::IntervalLevel{1, 1})),
       (IntervalDiff{IntervalDiff::RangeType::minusFullRange, 1}));
 }
 
@@ -426,7 +426,7 @@ TEST(IntervalTest, CodeGenName) {
 
   EXPECT_EQ(Interval::makeCodeGenName(I1), "interval_start_plus_1_2_minus_1");
 
-  Interval I2(sir::Interval::End, sir::Interval::End, 1, -2);
+  Interval I2(ast::Interval::End, ast::Interval::End, 1, -2);
 
   EXPECT_EQ(Interval::makeCodeGenName(I2), "interval_end_plus_1_end_minus_2");
 }
@@ -435,7 +435,7 @@ TEST(IntervalTest, toStringGen) {
 
   EXPECT_EQ(I1.toStringGen(), "start_plus_1_2_minus_1");
 
-  Interval I2(sir::Interval::End, sir::Interval::End, 1, -2);
+  Interval I2(ast::Interval::End, ast::Interval::End, 1, -2);
 
   EXPECT_EQ(I2.toStringGen(), "end_plus_1_end_minus_2");
 }
@@ -485,7 +485,7 @@ TEST(IntervalTest, undefined) {
                ".*contains\\(\\) of undefined interval requested.*");
   EXPECT_DEATH(undef.adjacent(Interval{0, 7, 1, -1}),
                ".*adjacent\\(\\) of undefined interval requested.*");
-  EXPECT_DEATH(undef.asSIRInterval(), ".*undefined interval not representable in SIR.*");
+  EXPECT_DEATH(undef.asASTInterval(), ".*undefined interval not representable in AST.*");
   EXPECT_DEATH(undef.levelIsEnd(Interval::Bound::upper),
                ".*levelIsEnd\\(\\) of undefined interval requested.*");
   EXPECT_DEATH(undef.overEnd(), ".*overEnd\\(\\) of undefined interval requested.*");

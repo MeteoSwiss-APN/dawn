@@ -55,18 +55,18 @@ void promoteLocalVariableToTemporaryField(iir::StencilInstantiation* instantiati
 
   // Replace all variable accesses with field accesses
   stencil->forEachStatement(
-      [&](ArrayRef<std::shared_ptr<iir::Stmt>> stmt) -> void {
+      [&](ArrayRef<std::shared_ptr<ast::Stmt>> stmt) -> void {
         replaceVarWithFieldAccessInStmts(stencil, accessID, fieldname, stmt);
       },
       lifetime);
 
   // Replace the the variable declaration with an assignment to the temporary field
-  iir::BlockStmt& blockStmt = stencil->getStage(lifetime.Begin.StagePos)
+  ast::BlockStmt& blockStmt = stencil->getStage(lifetime.Begin.StagePos)
                                   ->getChildren()
                                   .at(lifetime.Begin.DoMethodIndex)
                                   ->getAST();
 
-  const std::shared_ptr<iir::Stmt> oldStatement =
+  const std::shared_ptr<ast::Stmt> oldStatement =
       blockStmt.getStatements()[lifetime.Begin.StatementIndex];
 
   // The oldStmt has to be a `VarDeclStmt`. For example
@@ -77,7 +77,7 @@ void promoteLocalVariableToTemporaryField(iir::StencilInstantiation* instantiati
   //
   //   __tmp_foo(0, 0, 0) = ...
   //
-  iir::VarDeclStmt* varDeclStmt = dyn_cast<iir::VarDeclStmt>(oldStatement.get());
+  ast::VarDeclStmt* varDeclStmt = dyn_cast<ast::VarDeclStmt>(oldStatement.get());
   // If the TemporaryScope is within this stencil, then a VarDecl should be found (otherwise we have
   // a bug)
   DAWN_ASSERT_MSG((varDeclStmt || instantiation->isIDAccessedMultipleStencils(accessID)),
@@ -91,10 +91,10 @@ void promoteLocalVariableToTemporaryField(iir::StencilInstantiation* instantiati
   if(varDeclStmt) {
     DAWN_ASSERT_MSG(!varDeclStmt->isArray(), "cannot promote local array to temporary field");
 
-    auto fieldAccessExpr = std::make_shared<iir::FieldAccessExpr>(fieldname);
+    auto fieldAccessExpr = std::make_shared<ast::FieldAccessExpr>(fieldname);
     fieldAccessExpr->getData<iir::IIRAccessExprData>().AccessID = std::make_optional(accessID);
     auto assignmentExpr =
-        std::make_shared<iir::AssignmentExpr>(fieldAccessExpr, varDeclStmt->getInitList().front());
+        std::make_shared<ast::AssignmentExpr>(fieldAccessExpr, varDeclStmt->getInitList().front());
     auto exprStmt = iir::makeExprStmt(assignmentExpr);
 
     // Replace the statement
@@ -130,17 +130,17 @@ void demoteTemporaryFieldToLocalVariable(iir::StencilInstantiation* instantiatio
 
   // Replace all field accesses with variable accesses
   stencil->forEachStatement(
-      [&](ArrayRef<std::shared_ptr<iir::Stmt>> stmts) -> void {
+      [&](ArrayRef<std::shared_ptr<ast::Stmt>> stmts) -> void {
         replaceFieldWithVarAccessInStmts(stencil, AccessID, varname, stmts);
       },
       lifetime);
 
   // Replace the first access to the field with a VarDeclStmt
-  iir::BlockStmt& blockStmt = stencil->getStage(lifetime.Begin.StagePos)
+  ast::BlockStmt& blockStmt = stencil->getStage(lifetime.Begin.StagePos)
                                   ->getChildren()
                                   .at(lifetime.Begin.DoMethodIndex)
                                   ->getAST();
-  const std::shared_ptr<iir::Stmt> oldStatement =
+  const std::shared_ptr<ast::Stmt> oldStatement =
       blockStmt.getStatements()[lifetime.Begin.StatementIndex];
 
   // The oldStmt has to be an `ExprStmt` with an `AssignmentExpr`. For example
@@ -151,11 +151,11 @@ void demoteTemporaryFieldToLocalVariable(iir::StencilInstantiation* instantiatio
   //
   //   double __local_foo = ...
   //
-  iir::ExprStmt* exprStmt = dyn_cast<iir::ExprStmt>(oldStatement.get());
+  ast::ExprStmt* exprStmt = dyn_cast<ast::ExprStmt>(oldStatement.get());
   DAWN_ASSERT_MSG(
       exprStmt,
       "first access of temp field to be demoted (i.e lifetime.Begin) is not an `ExprStmt`");
-  iir::AssignmentExpr* assignmentExpr = dyn_cast<iir::AssignmentExpr>(exprStmt->getExpr().get());
+  ast::AssignmentExpr* assignmentExpr = dyn_cast<ast::AssignmentExpr>(exprStmt->getExpr().get());
   DAWN_ASSERT_MSG(assignmentExpr, "first access of temp field to be demoted (i.e "
                                   "lifetime.Begin) is not an `AssignmentExpr`");
 
@@ -163,7 +163,7 @@ void demoteTemporaryFieldToLocalVariable(iir::StencilInstantiation* instantiatio
   instantiation->getMetaData().removeAccessID(AccessID);
 
   // Create the new `VarDeclStmt` which will replace the old `ExprStmt` and register the variable
-  std::shared_ptr<iir::Stmt> varDeclStmt = instantiation->getMetaData().declareVar(
+  std::shared_ptr<ast::Stmt> varDeclStmt = instantiation->getMetaData().declareVar(
       true, varname, Type(BuiltinTypeID::Float), assignmentExpr->getRight(), AccessID);
 
   // Replace the statement

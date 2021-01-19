@@ -28,7 +28,7 @@ struct CodeGenUtils {
   static std::vector<std::string>
   buildPlaceholderList(const iir::StencilMetaInformation& metadata,
                        const std::map<int, iir::Stencil::FieldInfo>& stencilFields,
-                       const sir::GlobalVariableMap& globalsMap, bool buildPair = false);
+                       const ast::GlobalVariableMap& globalsMap, bool buildPair = false);
 };
 
 } // namespace gt

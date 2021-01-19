@@ -90,12 +90,12 @@ const clang::DiagnosticsEngine& GTClangContext::getDiagnosticsEngine() const {
   return diagnostics_->getDiagnosticsEngine();
 }
 
-dawn::sir::Attr GTClangContext::getStencilAttribute(const std::string& name) const {
+dawn::ast::Attr GTClangContext::getStencilAttribute(const std::string& name) const {
   auto it = stencilNameToAttributeMap_.find(name);
-  return it != stencilNameToAttributeMap_.end() ? it->second : dawn::sir::Attr();
+  return it != stencilNameToAttributeMap_.end() ? it->second : dawn::ast::Attr();
 }
 
-void GTClangContext::setStencilAttribute(const std::string& name, dawn::sir::Attr attr) {
+void GTClangContext::setStencilAttribute(const std::string& name, dawn::ast::Attr attr) {
   stencilNameToAttributeMap_.emplace(name, attr);
 }
 

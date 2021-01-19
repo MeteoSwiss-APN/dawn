@@ -15,7 +15,7 @@
 #include "dawn/Optimizer/PassTemporaryType.h"
 #include "dawn/AST/GridType.h"
 #include "dawn/IIR/ASTExpr.h"
-#include "dawn/IIR/ASTVisitor.h"
+#include "dawn/AST/ASTVisitor.h"
 #include "dawn/IIR/IIRNodeIterator.h"
 #include "dawn/IIR/NodeUpdateType.h"
 #include "dawn/IIR/Stencil.h"
@@ -31,7 +31,7 @@ namespace dawn {
 
 namespace {
 
-class StencilFunArgumentDetector : public iir::ASTVisitorForwarding {
+class StencilFunArgumentDetector : public ast::ASTVisitorForwarding {
   int AccessID_;
 
   int argListNesting_;
@@ -41,13 +41,13 @@ public:
   StencilFunArgumentDetector(int AccessID)
       : AccessID_(AccessID), argListNesting_(0), usedInStencilFun_(false) {}
 
-  virtual void visit(const std::shared_ptr<iir::StencilFunCallExpr>& expr) override {
+  virtual void visit(const std::shared_ptr<ast::StencilFunCallExpr>& expr) override {
     argListNesting_++;
-    iir::ASTVisitorForwarding::visit(expr);
+    ast::ASTVisitorForwarding::visit(expr);
     argListNesting_--;
   }
 
-  virtual void visit(const std::shared_ptr<iir::FieldAccessExpr>& expr) override {
+  virtual void visit(const std::shared_ptr<ast::FieldAccessExpr>& expr) override {
     if(argListNesting_ > 0 && iir::getAccessID(expr) == AccessID_)
       usedInStencilFun_ = true;
   }

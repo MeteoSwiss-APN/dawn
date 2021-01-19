@@ -86,7 +86,7 @@ bool VarDeclStmtData::equals(ast::StmtData const* other) const {
 //     computeMaximumExtents
 //===------------------------------------------------------------------------------------------===//
 
-std::optional<Extents> computeMaximumExtents(Stmt& stmt, const int accessID) {
+std::optional<Extents> computeMaximumExtents(ast::Stmt& stmt, const int accessID) {
   std::optional<Extents> extents;
 
   const auto& callerAccesses = stmt.getData<IIRStmtData>().CallerAccesses;
@@ -112,7 +112,7 @@ std::optional<Extents> computeMaximumExtents(Stmt& stmt, const int accessID) {
   return extents;
 }
 
-int getAccessID(const std::shared_ptr<VarDeclStmt>& stmt) {
+int getAccessID(const std::shared_ptr<ast::VarDeclStmt>& stmt) {
   return *stmt->getData<VarDeclStmtData>().AccessID;
 }
 

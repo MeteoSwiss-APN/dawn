@@ -14,7 +14,7 @@
 
 #pragma once
 
-#include "dawn/IIR/ASTFwd.h"
+#include "dawn/IIR/ASTExpr.h"
 #include <memory>
 
 namespace dawn {
@@ -61,6 +61,6 @@ enum class RenameDirection {
 /// @returns AccessID of the new field
 int createVersionAndRename(iir::StencilInstantiation* instantiation, int AccessID,
                            iir::Stencil* stencil, int curStageIdx, int curStmtIdx,
-                           std::shared_ptr<iir::Expr>& expr, RenameDirection dir);
+                           std::shared_ptr<ast::Expr>& expr, RenameDirection dir);
 
 } // namespace dawn

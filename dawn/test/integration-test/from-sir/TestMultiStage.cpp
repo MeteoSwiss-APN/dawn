@@ -132,26 +132,26 @@ TEST_F(TestMultiStage, test_compute_ordered_do_methods) {
   EXPECT_EQ(orderedDoMethods[1]->getInterval(), (iir::Interval{0, 0}));
   EXPECT_EQ(orderedDoMethods[1]->getID(), do1_0->getID());
 
-  EXPECT_EQ(orderedDoMethods[2]->getInterval(), (iir::Interval{1, sir::Interval::End - 4}));
+  EXPECT_EQ(orderedDoMethods[2]->getInterval(), (iir::Interval{1, ast::Interval::End - 4}));
   EXPECT_EQ(orderedDoMethods[2]->getID(), do0_1->getID());
 
-  EXPECT_EQ(orderedDoMethods[3]->getInterval(), (iir::Interval{1, sir::Interval::End - 4}));
+  EXPECT_EQ(orderedDoMethods[3]->getInterval(), (iir::Interval{1, ast::Interval::End - 4}));
   EXPECT_EQ(orderedDoMethods[3]->getID(), do1_1->getID());
 
   EXPECT_EQ(orderedDoMethods[4]->getInterval(),
-            (iir::Interval{sir::Interval::End - 3, sir::Interval::End - 1}));
+            (iir::Interval{ast::Interval::End - 3, ast::Interval::End - 1}));
   EXPECT_EQ(orderedDoMethods[4]->getID(), do0_1->getID());
 
   EXPECT_EQ(orderedDoMethods[5]->getInterval(),
-            (iir::Interval{sir::Interval::End - 3, sir::Interval::End - 1}));
+            (iir::Interval{ast::Interval::End - 3, ast::Interval::End - 1}));
   EXPECT_EQ(orderedDoMethods[5]->getID(), do2_0->getID());
 
   EXPECT_EQ(orderedDoMethods[6]->getInterval(),
-            (iir::Interval{sir::Interval::End, sir::Interval::End}));
+            (iir::Interval{ast::Interval::End, ast::Interval::End}));
   EXPECT_EQ(orderedDoMethods[6]->getID(), do1_2->getID());
 
   EXPECT_EQ(orderedDoMethods[7]->getInterval(),
-            (iir::Interval{sir::Interval::End, sir::Interval::End}));
+            (iir::Interval{ast::Interval::End, ast::Interval::End}));
   EXPECT_EQ(orderedDoMethods[7]->getID(), do2_0->getID());
 }
 
@@ -269,7 +269,7 @@ TEST_F(TestMultiStage, DISABLED_test_compute_read_access_interval_02) {
 
   EXPECT_EQ(interval,
             (iir::MultiInterval{iir::Interval{0, 1},
-                                iir::Interval{sir::Interval::End - 2, sir::Interval::End + 1}}));
+                                iir::Interval{ast::Interval::End - 2, ast::Interval::End + 1}}));
 }
 
 TEST_F(TestMultiStage, test_field_access_interval_04) {
@@ -365,12 +365,12 @@ TEST_F(TestMultiStage, test_compute_read_access_interval_03) {
   int accessID = stencilInstantiation->getMetaData().getAccessIDFromName("tmp");
   auto interval0 = mss0->computeReadAccessInterval(accessID);
 
-  EXPECT_EQ(interval0, (iir::MultiInterval{iir::Interval{1, sir::Interval::End - 1}}));
+  EXPECT_EQ(interval0, (iir::MultiInterval{iir::Interval{1, ast::Interval::End - 1}}));
 
   auto const& mss1 = *(std::next(mss0it));
   auto interval1 = mss1->computeReadAccessInterval(accessID);
 
-  EXPECT_EQ(interval1, (iir::MultiInterval{iir::Interval{sir::Interval::End, sir::Interval::End}}));
+  EXPECT_EQ(interval1, (iir::MultiInterval{iir::Interval{ast::Interval::End, ast::Interval::End}}));
 }
 
 TEST_F(TestMultiStage, test_compute_read_access_interval_04) {
@@ -403,12 +403,12 @@ TEST_F(TestMultiStage, test_compute_read_access_interval_04) {
   const auto& metadata = instantiation->getMetaData();
 
   auto a2_interval = mss->computeReadAccessInterval(metadata.getAccessIDFromName("a2"));
-  auto multinterval = iir::MultiInterval{iir::Interval{0, sir::Interval::End, 0, 0}};
+  auto multinterval = iir::MultiInterval{iir::Interval{0, ast::Interval::End, 0, 0}};
   ASSERT_EQ(a2_interval, multinterval);
 
   auto b1_interval = mss->computeReadAccessInterval(metadata.getAccessIDFromName("b1"));
   multinterval =
-      iir::MultiInterval{iir::Interval{0, 0, -1, -1}, iir::Interval{0, sir::Interval::End, 1, 1}};
+      iir::MultiInterval{iir::Interval{0, 0, -1, -1}, iir::Interval{0, ast::Interval::End, 1, 1}};
   ASSERT_EQ(b1_interval, multinterval);
 }
 

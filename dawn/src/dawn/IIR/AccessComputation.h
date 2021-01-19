@@ -14,8 +14,8 @@
 
 #pragma once
 
-#include "dawn/IIR/ASTFwd.h"
 #include "dawn/Support/ArrayRef.h"
+#include "dawn/AST/ASTStmt.h"
 #include <memory>
 #include <vector>
 
@@ -35,7 +35,7 @@ class StencilMetaInformation;
 /// @brief Compute the Accesses of `stmts`.
 /// @ingroup optimizer
 void computeAccesses(const iir::StencilMetaInformation& metadata,
-                     ArrayRef<std::shared_ptr<iir::Stmt>> stmts);
+                     ArrayRef<std::shared_ptr<ast::Stmt>> stmts);
 
 /// @fn computeAccesses
 /// @brief Compute the caller and callee Accesses of `stmts`
@@ -47,7 +47,7 @@ void computeAccesses(const iir::StencilMetaInformation& metadata,
 /// @ingroup optimizer
 void computeAccesses(
     std::shared_ptr<iir::StencilFunctionInstantiation> stencilFunctionInstantiation,
-    ArrayRef<std::shared_ptr<iir::Stmt>> stmts);
+    ArrayRef<std::shared_ptr<ast::Stmt>> stmts);
 
 /// @}
 

@@ -14,37 +14,34 @@
 
 #include "dawn/IIR/DoMethod.h"
 #include "dawn/IIR/ASTExpr.h"
-#include "dawn/IIR/ASTFwd.h"
 #include "dawn/IIR/ASTStmt.h"
-#include "dawn/IIR/ASTStringifier.h"
-#include "dawn/IIR/ASTVisitor.h"
+#include "dawn/AST/ASTStringifier.h"
+#include "dawn/AST/ASTVisitor.h"
 #include "dawn/IIR/AccessToNameMapper.h"
 #include "dawn/IIR/AccessUtils.h"
 #include "dawn/IIR/Accesses.h"
 #include "dawn/IIR/DependencyGraphAccesses.h"
 #include "dawn/IIR/IIR.h"
-#include "dawn/IIR/IIRNodeIterator.h"
 #include "dawn/IIR/MultiStage.h"
 #include "dawn/IIR/Stage.h"
 #include "dawn/IIR/Stencil.h"
 #include "dawn/IIR/StencilMetaInformation.h"
 #include "dawn/Support/IndexGenerator.h"
 #include "dawn/Support/Logger.h"
-#include <limits>
 #include <memory>
 
 namespace dawn {
 namespace iir {
 
 namespace {
-class ReplaceNamesVisitor : public iir::ASTVisitorForwarding, public NonCopyable {
+class ReplaceNamesVisitor : public ast::ASTVisitorForwarding, public NonCopyable {
   const StencilMetaInformation& metadata_;
 
 public:
   ReplaceNamesVisitor(const StencilMetaInformation& metadata) : metadata_(metadata) {}
   virtual ~ReplaceNamesVisitor() override {}
 
-  void visit(const std::shared_ptr<VarDeclStmt>& stmt) override {
+  void visit(const std::shared_ptr<ast::VarDeclStmt>& stmt) override {
     auto data = stmt->getData<iir::IIRStmtData>();
     auto accesses = data.CallerAccesses;
     auto accessmap = accesses->getWriteAccesses();
@@ -54,12 +51,12 @@ public:
     for(const auto& expr : stmt->getInitList())
       expr->accept(*this);
   }
-  void visit(const std::shared_ptr<VarAccessExpr>& expr) override {
+  void visit(const std::shared_ptr<ast::VarAccessExpr>& expr) override {
     int accessID = iir::getAccessID(expr);
     std::string realName = metadata_.getNameFromAccessID(accessID);
     expr->setName(realName);
   }
-  void visit(const std::shared_ptr<FieldAccessExpr>& expr) override {
+  void visit(const std::shared_ptr<ast::FieldAccessExpr>& expr) override {
     int accessID = iir::getAccessID(expr);
     std::string realName = metadata_.getNameFromAccessID(accessID);
     expr->setName(realName);
@@ -69,14 +66,14 @@ public:
 
 DoMethod::DoMethod(Interval interval, const StencilMetaInformation& metaData)
     : interval_(interval), id_(IndexGenerator::Instance().getIndex()), metaData_(metaData),
-      ast_(std::make_shared<BlockStmt>(std::make_unique<iir::IIRStmtData>())) {}
+      ast_(std::make_shared<ast::BlockStmt>(std::make_unique<iir::IIRStmtData>())) {}
 
 std::unique_ptr<DoMethod> DoMethod::clone() const {
   auto cloneMS = std::make_unique<DoMethod>(interval_, metaData_);
 
   cloneMS->setID(id_);
   cloneMS->derivedInfo_ = derivedInfo_.clone();
-  cloneMS->ast_ = std::make_shared<BlockStmt>(*ast_.get());
+  cloneMS->ast_ = std::make_shared<ast::BlockStmt>(*ast_.get());
 
   return cloneMS;
 }
@@ -180,7 +177,7 @@ json::json DoMethod::jsonDump(const StencilMetaInformation& metaData) const {
   json::json stmtsJson;
   for(const auto& stmt : getAST().getStatements()) {
     json::json stmtNode;
-    stmtNode["stmt"] = ASTStringifier::toString(stmt, 0);
+    stmtNode["stmt"] = ast::ASTStringifier::toString(stmt, 0);
 
     AccessToNameMapper accessToNameMapper(metaData);
     stmt->accept(accessToNameMapper);
@@ -296,7 +293,7 @@ void DoMethod::updateLevel() {
   }
 }
 
-class CheckNonNullStatementVisitor : public iir::ASTVisitorForwarding, public NonCopyable {
+class CheckNonNullStatementVisitor : public ast::ASTVisitorForwarding, public NonCopyable {
 private:
   bool result_ = false;
 
@@ -306,18 +303,18 @@ public:
 
   bool getResult() const { return result_; }
 
-  virtual void visit(const std::shared_ptr<iir::ExprStmt>& expr) override {
-    if(!isa<iir::NOPExpr>(expr->getExpr().get()))
+  virtual void visit(const std::shared_ptr<ast::ExprStmt>& expr) override {
+    if(!isa<ast::NOPExpr>(expr->getExpr().get()))
       result_ = true;
     else {
-      iir::ASTVisitorForwarding::visit(expr);
+      ast::ASTVisitorForwarding::visit(expr);
     }
   }
 };
 
 bool DoMethod::isEmptyOrNullStmt() const {
   for(auto const& stmt : getAST().getStatements()) {
-    const std::shared_ptr<iir::Stmt>& root = stmt;
+    const std::shared_ptr<ast::Stmt>& root = stmt;
     CheckNonNullStatementVisitor checker;
     root->accept(checker);
 

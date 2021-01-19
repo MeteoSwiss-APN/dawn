@@ -31,7 +31,7 @@ class GTClangContext;
 /// @ingroup frontend
 class GlobalVariableParser : dawn::NonCopyable {
   GTClangContext* context_;
-  std::shared_ptr<dawn::sir::GlobalVariableMap> variableMap_;
+  std::shared_ptr<dawn::ast::GlobalVariableMap> variableMap_;
   std::shared_ptr<dawn::json::json> configFile_;
   clang::CXXRecordDecl* recordDecl_;
 
@@ -39,7 +39,7 @@ public:
   GlobalVariableParser(GTClangContext* context);
 
   /// @brief Get the parsed global variable map
-  const std::shared_ptr<dawn::sir::GlobalVariableMap>& getGlobalVariableMap() const;
+  const std::shared_ptr<dawn::ast::GlobalVariableMap>& getGlobalVariableMap() const;
 
   /// @brief Check if global variable exists
   bool has(const std::string& name) const;

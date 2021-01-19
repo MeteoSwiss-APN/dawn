@@ -49,13 +49,8 @@ add_library(DawnIIR
   ASTConverter.h
   ASTExpr.cpp
   ASTExpr.h
-  ASTFwd.h
   ASTStmt.h
   ASTStmt.cpp
-  ASTStringifier.h
-  ASTUtil.h
-  ASTUtil.cpp
-  ASTVisitor.h
   ASTMatcher.cpp
   ASTMatcher.h
   Accesses.cpp

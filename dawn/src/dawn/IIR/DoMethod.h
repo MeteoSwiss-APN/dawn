@@ -14,7 +14,6 @@
 
 #pragma once
 
-#include "dawn/IIR/ASTFwd.h"
 #include "dawn/IIR/DependencyGraphAccesses.h"
 #include "dawn/IIR/Field.h"
 #include "dawn/IIR/IIRNode.h"
@@ -50,7 +49,7 @@ class DoMethod : public IIRNode<Stage, DoMethod, void> {
 
   const StencilMetaInformation& metaData_;
   DerivedInfo derivedInfo_;
-  std::shared_ptr<iir::BlockStmt> ast_;
+  std::shared_ptr<ast::BlockStmt> ast_;
 
 public:
   static constexpr const char* name = "DoMethod";
@@ -129,17 +128,17 @@ public:
   /// therefore the method is empty
   inline virtual void updateFromChildren() override {}
 
-  void setAST(std::shared_ptr<BlockStmt> ast) { ast_ = ast; }
-  iir::BlockStmt const& getAST() const { return *ast_; }
-  iir::BlockStmt& getAST() { return *ast_; }
-  std::shared_ptr<iir::BlockStmt> getASTPtr() { return ast_; }
+  void setAST(std::shared_ptr<ast::BlockStmt> ast) { ast_ = ast; }
+  ast::BlockStmt const& getAST() const { return *ast_; }
+  ast::BlockStmt& getAST() { return *ast_; }
+  std::shared_ptr<ast::BlockStmt> getASTPtr() { return ast_; }
 };
 
 } // namespace iir
 
 template <typename RootNode>
 auto iterateIIROverStmt(const RootNode& root) {
-  std::vector<std::shared_ptr<iir::Stmt>> allStmts;
+  std::vector<std::shared_ptr<ast::Stmt>> allStmts;
   for(auto& doMethod : iterateIIROver<iir::DoMethod>(root)) {
     std::copy(doMethod->getAST().getStatements().begin(), doMethod->getAST().getStatements().end(),
               std::back_inserter(allStmts));

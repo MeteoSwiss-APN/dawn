@@ -32,7 +32,7 @@ namespace cxxnaiveico {
 /// @brief ASTVisitor to generate C++ naive backend code for the parameters of the stencil function
 /// calls
 /// @ingroup cxxnaiveico
-class ASTStencilFunctionParamVisitor : public iir::ASTVisitorDisabled, public NonCopyable {
+class ASTStencilFunctionParamVisitor : public ast::ASTVisitorDisabled, public NonCopyable {
 protected:
   const iir::StencilMetaInformation& metadata_;
   const std::shared_ptr<iir::StencilFunctionInstantiation>& currentFunction_;
@@ -40,7 +40,7 @@ protected:
   std::stringstream ss_;
 
 public:
-  using Base = iir::ASTVisitorDisabled;
+  using Base = ast::ASTVisitorDisabled;
 
   ASTStencilFunctionParamVisitor(const std::shared_ptr<iir::StencilFunctionInstantiation>& function,
                                  const iir::StencilMetaInformation& metadata);
@@ -48,15 +48,15 @@ public:
 
   std::string getCodeAndResetStream();
 
-  std::string getName(const std::shared_ptr<iir::Expr>& expr) const;
+  std::string getName(const std::shared_ptr<ast::Expr>& expr) const;
 
   /// @name Expression implementation
   /// @{
-  virtual void visit(const std::shared_ptr<iir::VarAccessExpr>& expr) override;
-  virtual void visit(const std::shared_ptr<iir::StencilFunArgExpr>& expr) override;
-  virtual void visit(const std::shared_ptr<iir::LiteralAccessExpr>& expr) override;
-  virtual void visit(const std::shared_ptr<iir::FieldAccessExpr>& expr) override;
-  virtual void visit(const std::shared_ptr<iir::StencilFunCallExpr>& expr) override;
+  virtual void visit(const std::shared_ptr<ast::VarAccessExpr>& expr) override;
+  virtual void visit(const std::shared_ptr<ast::StencilFunArgExpr>& expr) override;
+  virtual void visit(const std::shared_ptr<ast::LiteralAccessExpr>& expr) override;
+  virtual void visit(const std::shared_ptr<ast::FieldAccessExpr>& expr) override;
+  virtual void visit(const std::shared_ptr<ast::StencilFunCallExpr>& expr) override;
   /// @}
 };
 

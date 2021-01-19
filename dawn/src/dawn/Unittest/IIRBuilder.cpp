@@ -110,31 +110,31 @@ IIRBuilder::build(std::string const& name, std::unique_ptr<iir::Stencil> stencil
   return si_;
 }
 
-std::shared_ptr<iir::Expr> IIRBuilder::reduceOverNeighborExpr(
-    Op operation, std::shared_ptr<iir::Expr>&& rhs, std::shared_ptr<iir::Expr>&& init,
+std::shared_ptr<ast::Expr> IIRBuilder::reduceOverNeighborExpr(
+    Op operation, std::shared_ptr<ast::Expr>&& rhs, std::shared_ptr<ast::Expr>&& init,
     const std::vector<ast::LocationType>& chain, bool includeCenter) {
-  auto expr = std::make_shared<iir::ReductionOverNeighborExpr>(
+  auto expr = std::make_shared<ast::ReductionOverNeighborExpr>(
       toStr(operation, {Op::multiply, Op::plus, Op::minus, Op::assign, Op::divide}), std::move(rhs),
       std::move(init), chain, includeCenter);
   expr->setID(si_->nextUID());
   return expr;
 }
 
-std::shared_ptr<iir::Expr> IIRBuilder::reduceOverNeighborExpr(
-    Op operation, std::shared_ptr<iir::Expr>&& rhs, std::shared_ptr<iir::Expr>&& init,
+std::shared_ptr<ast::Expr> IIRBuilder::reduceOverNeighborExpr(
+    Op operation, std::shared_ptr<ast::Expr>&& rhs, std::shared_ptr<ast::Expr>&& init,
     const std::vector<ast::LocationType>& chain,
-    const std::vector<std::shared_ptr<iir::Expr>>&& weights, bool includeCenter) {
-  auto expr = std::make_shared<iir::ReductionOverNeighborExpr>(
+    const std::vector<std::shared_ptr<ast::Expr>>&& weights, bool includeCenter) {
+  auto expr = std::make_shared<ast::ReductionOverNeighborExpr>(
       toStr(operation, {Op::multiply, Op::plus, Op::minus, Op::assign, Op::divide}), std::move(rhs),
       std::move(init), move(weights), chain, includeCenter);
   expr->setID(si_->nextUID());
   return expr;
 }
 
-std::shared_ptr<iir::Expr> IIRBuilder::binaryExpr(std::shared_ptr<iir::Expr>&& lhs,
-                                                  std::shared_ptr<iir::Expr>&& rhs, Op operation) {
+std::shared_ptr<ast::Expr> IIRBuilder::binaryExpr(std::shared_ptr<ast::Expr>&& lhs,
+                                                  std::shared_ptr<ast::Expr>&& rhs, Op operation) {
   DAWN_ASSERT(si_);
-  auto binop = std::make_shared<iir::BinaryOperator>(
+  auto binop = std::make_shared<ast::BinaryOperator>(
       std::move(lhs),
       toStr(operation,
             {Op::multiply, Op::plus, Op::minus, Op::divide, Op::equal, Op::notEqual, Op::greater,
@@ -143,34 +143,34 @@ std::shared_ptr<iir::Expr> IIRBuilder::binaryExpr(std::shared_ptr<iir::Expr>&& l
   binop->setID(si_->nextUID());
   return binop;
 }
-std::shared_ptr<iir::Expr> IIRBuilder::unaryExpr(std::shared_ptr<iir::Expr>&& expr, Op operation) {
+std::shared_ptr<ast::Expr> IIRBuilder::unaryExpr(std::shared_ptr<ast::Expr>&& expr, Op operation) {
   DAWN_ASSERT(si_);
-  auto ret = std::make_shared<iir::UnaryOperator>(
+  auto ret = std::make_shared<ast::UnaryOperator>(
       std::move(expr),
       toStr(operation, {Op::plus, Op::minus, Op::increment, Op::decrement, Op::logicalNot}));
   ret->setID(si_->nextUID());
   return ret;
 }
-std::shared_ptr<iir::Expr> IIRBuilder::conditionalExpr(std::shared_ptr<iir::Expr>&& cond,
-                                                       std::shared_ptr<iir::Expr>&& caseThen,
-                                                       std::shared_ptr<iir::Expr>&& caseElse) {
+std::shared_ptr<ast::Expr> IIRBuilder::conditionalExpr(std::shared_ptr<ast::Expr>&& cond,
+                                                       std::shared_ptr<ast::Expr>&& caseThen,
+                                                       std::shared_ptr<ast::Expr>&& caseElse) {
   DAWN_ASSERT(si_);
-  auto ret = std::make_shared<iir::TernaryOperator>(std::move(cond), std::move(caseThen),
+  auto ret = std::make_shared<ast::TernaryOperator>(std::move(cond), std::move(caseThen),
                                                     std::move(caseElse));
   ret->setID(si_->nextUID());
   return ret;
 }
-std::shared_ptr<iir::Expr> IIRBuilder::assignExpr(std::shared_ptr<iir::Expr>&& lhs,
-                                                  std::shared_ptr<iir::Expr>&& rhs, Op operation) {
+std::shared_ptr<ast::Expr> IIRBuilder::assignExpr(std::shared_ptr<ast::Expr>&& lhs,
+                                                  std::shared_ptr<ast::Expr>&& rhs, Op operation) {
   DAWN_ASSERT(si_);
-  auto binop = std::make_shared<iir::AssignmentExpr>(
+  auto binop = std::make_shared<ast::AssignmentExpr>(
       std::move(lhs), std::move(rhs),
       toStr(operation, {Op::assign, Op::multiply, Op::plus, Op::minus, Op::divide}) + "=");
   binop->setID(si_->nextUID());
   return binop;
 }
 IIRBuilder::LocalVar IIRBuilder::localvar(std::string const& name, BuiltinTypeID dataType,
-                                          std::vector<std::shared_ptr<iir::Expr>>&& initList,
+                                          std::vector<std::shared_ptr<ast::Expr>>&& initList,
                                           std::optional<LocalVariableType> localVarType) {
   DAWN_ASSERT(si_);
   auto iirStmt = makeVarDeclStmt(Type{dataType}, name, 0, "=", std::move(initList));
@@ -180,10 +180,10 @@ IIRBuilder::LocalVar IIRBuilder::localvar(std::string const& name, BuiltinTypeID
   }
   return {id, name, iirStmt};
 }
-std::shared_ptr<iir::Expr> IIRBuilder::at(Field const& field, AccessType access,
+std::shared_ptr<ast::Expr> IIRBuilder::at(Field const& field, AccessType access,
                                           ast::Offsets const& offset) {
   DAWN_ASSERT(si_);
-  auto expr = std::make_shared<iir::FieldAccessExpr>(field.name, offset);
+  auto expr = std::make_shared<ast::FieldAccessExpr>(field.name, offset);
   expr->setID(si_->nextUID());
   if(offset.hasVerticalIndirection()) {
     expr->getOffset().setVerticalIndirectionAccessID(
@@ -192,34 +192,34 @@ std::shared_ptr<iir::Expr> IIRBuilder::at(Field const& field, AccessType access,
   expr->getData<iir::IIRAccessExprData>().AccessID = std::make_optional(field.id);
   return expr;
 }
-std::shared_ptr<iir::Expr> IIRBuilder::at(IIRBuilder::GlobalVar const& var) {
+std::shared_ptr<ast::Expr> IIRBuilder::at(IIRBuilder::GlobalVar const& var) {
   DAWN_ASSERT(si_);
-  auto expr = std::make_shared<iir::VarAccessExpr>(var.name);
+  auto expr = std::make_shared<ast::VarAccessExpr>(var.name);
   expr->setIsExternal(true);
   expr->setID(si_->nextUID());
   expr->getData<iir::IIRAccessExprData>().AccessID = std::make_optional(var.id);
   return expr;
 }
-std::shared_ptr<iir::Expr> IIRBuilder::at(IIRBuilder::LocalVar const& var) {
+std::shared_ptr<ast::Expr> IIRBuilder::at(IIRBuilder::LocalVar const& var) {
   DAWN_ASSERT(si_);
-  auto expr = std::make_shared<iir::VarAccessExpr>(var.name);
+  auto expr = std::make_shared<ast::VarAccessExpr>(var.name);
   expr->setID(si_->nextUID());
   expr->getData<iir::IIRAccessExprData>().AccessID = std::make_optional(var.id);
   return expr;
 }
-std::shared_ptr<iir::Stmt> IIRBuilder::stmt(std::shared_ptr<iir::Expr>&& expr) {
+std::shared_ptr<ast::Stmt> IIRBuilder::stmt(std::shared_ptr<ast::Expr>&& expr) {
   auto stmt = iir::makeExprStmt(std::move(expr));
   return stmt;
 }
-std::shared_ptr<iir::Stmt> IIRBuilder::ifStmt(std::shared_ptr<iir::Expr>&& cond,
-                                              std::shared_ptr<iir::Stmt>&& caseThen,
-                                              std::shared_ptr<iir::Stmt>&& caseElse) {
+std::shared_ptr<ast::Stmt> IIRBuilder::ifStmt(std::shared_ptr<ast::Expr>&& cond,
+                                              std::shared_ptr<ast::Stmt>&& caseThen,
+                                              std::shared_ptr<ast::Stmt>&& caseElse) {
   DAWN_ASSERT(si_);
   auto condStmt = iir::makeExprStmt(std::move(cond));
   auto stmt = iir::makeIfStmt(condStmt, std::move(caseThen), std::move(caseElse));
   return stmt;
 }
-std::shared_ptr<iir::Stmt> IIRBuilder::loopStmtChain(std::shared_ptr<iir::BlockStmt>&& body,
+std::shared_ptr<ast::Stmt> IIRBuilder::loopStmtChain(std::shared_ptr<ast::BlockStmt>&& body,
                                                      std::vector<ast::LocationType>&& chain,
                                                      bool includeCenter) {
   DAWN_ASSERT(si_);
@@ -227,16 +227,16 @@ std::shared_ptr<iir::Stmt> IIRBuilder::loopStmtChain(std::shared_ptr<iir::BlockS
   return stmt;
 }
 
-std::shared_ptr<iir::Stmt> IIRBuilder::loopStmtChain(std::shared_ptr<iir::Stmt>&& body,
+std::shared_ptr<ast::Stmt> IIRBuilder::loopStmtChain(std::shared_ptr<ast::Stmt>&& body,
                                                      std::vector<ast::LocationType>&& chain,
                                                      bool includeCenter) {
   DAWN_ASSERT(si_);
-  auto bStmt = iir::makeBlockStmt(std::vector<std::shared_ptr<iir::Stmt>>{body});
+  auto bStmt = iir::makeBlockStmt(std::vector<std::shared_ptr<ast::Stmt>>{body});
   auto stmt = iir::makeLoopStmt(std::move(chain), includeCenter, std::move(bStmt));
   return stmt;
 }
 
-std::shared_ptr<iir::Stmt> IIRBuilder::declareVar(IIRBuilder::LocalVar& var) {
+std::shared_ptr<ast::Stmt> IIRBuilder::declareVar(IIRBuilder::LocalVar& var) {
   DAWN_ASSERT(si_);
   DAWN_ASSERT(var.decl);
   return var.decl;
@@ -266,14 +266,14 @@ IIRBuilder::Field CartesianIIRBuilder::tmpField(const std::string& name, FieldTy
   return {id, newName};
 }
 
-std::shared_ptr<iir::Expr> CartesianIIRBuilder::at(Field const& field, AccessType access) {
+std::shared_ptr<ast::Expr> CartesianIIRBuilder::at(Field const& field, AccessType access) {
   return at(field, access, ast::Offsets{ast::cartesian});
 }
-std::shared_ptr<iir::Expr> CartesianIIRBuilder::at(IIRBuilder::Field const& field,
+std::shared_ptr<ast::Expr> CartesianIIRBuilder::at(IIRBuilder::Field const& field,
                                                    Array3i const& offset) {
   return at(field, AccessType::r, offset);
 }
-std::shared_ptr<iir::Expr> CartesianIIRBuilder::at(IIRBuilder::Field const& field,
+std::shared_ptr<ast::Expr> CartesianIIRBuilder::at(IIRBuilder::Field const& field,
                                                    AccessType access, Array3i const& offset) {
   return at(field, AccessType::r, ast::Offsets{ast::cartesian, offset});
 }
@@ -328,16 +328,16 @@ IIRBuilder::Field UnstructuredIIRBuilder::vertical_field(std::string const& name
   return {id, name};
 }
 
-std::shared_ptr<iir::Expr> UnstructuredIIRBuilder::at(Field const& field, AccessType access) {
+std::shared_ptr<ast::Expr> UnstructuredIIRBuilder::at(Field const& field, AccessType access) {
   return at(field, access, ast::Offsets{ast::unstructured});
 }
 
-std::shared_ptr<iir::Expr> UnstructuredIIRBuilder::at(IIRBuilder::Field const& field,
+std::shared_ptr<ast::Expr> UnstructuredIIRBuilder::at(IIRBuilder::Field const& field,
                                                       HOffsetType hOffset, int vOffset) {
   DAWN_ASSERT(si_);
   return at(field, AccessType::r, hOffset, vOffset);
 }
-std::shared_ptr<iir::Expr> UnstructuredIIRBuilder::at(IIRBuilder::Field const& field,
+std::shared_ptr<ast::Expr> UnstructuredIIRBuilder::at(IIRBuilder::Field const& field,
                                                       AccessType access, HOffsetType hOffset,
                                                       int vOffset) {
   return at(field, AccessType::r,

@@ -15,7 +15,7 @@
 #include "dawn/AST/ASTStringifier.h"
 #include "dawn/AST/AST.h"
 #include "dawn/AST/ASTVisitor.h"
-#include "dawn/SIR/SIR.h"
+#include "dawn/SIR/VerticalRegion.h"
 #include "dawn/Support/Printing.h"
 #include "dawn/Support/StringUtil.h"
 #include "dawn/Support/Type.h"
