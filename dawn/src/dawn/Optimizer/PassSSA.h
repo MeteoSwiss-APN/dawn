@@ -12,8 +12,7 @@
 //
 //===------------------------------------------------------------------------------------------===//
 
-#ifndef DAWN_OPTIMIZER_PASSSSA_H
-#define DAWN_OPTIMIZER_PASSSSA_H
+#pragma once
 
 #include "dawn/Optimizer/Pass.h"
 
@@ -27,12 +26,11 @@ namespace dawn {
 /// This pass is not necessary to create legal code and is hence not in the debug-group
 class PassSSA : public Pass {
 public:
-  PassSSA(OptimizerContext& context);
+  PassSSA() : Pass("PassSSA") {}
 
   /// @brief Pass implementation
-  bool run(const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation) override;
+  bool run(const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation,
+           const Options& options = {}) override;
 };
 
 } // namespace dawn
-
-#endif

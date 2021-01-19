@@ -12,10 +12,10 @@
 //
 //===------------------------------------------------------------------------------------------===//
 
-#ifndef DAWN_AST_ASTEXPR_H
-#define DAWN_AST_ASTEXPR_H
+#pragma once
 
 #include "ASTVisitorHelpers.h"
+#include "IterationSpace.h"
 #include "LocationType.h"
 #include "Offsets.h"
 
@@ -94,7 +94,9 @@ public:
   /// @brief Compare for equality
   /// @{
   virtual bool equals(const std::shared_ptr<Expr>& other) const { return equals(other.get()); }
-  virtual bool equals(const Expr* other) const { return kind_ == other->kind_; }
+  virtual bool equals(const Expr* other, bool compareData = true) const {
+    return kind_ == other->kind_;
+  }
   /// @}
 
   /// @name Operators
@@ -144,10 +146,10 @@ public:
 
   void setOperand(const std::shared_ptr<Expr>& operand) { operand_ = operand; }
   const std::shared_ptr<Expr>& getOperand() const { return operand_; }
-  const char* getOp() const { return op_.c_str(); }
+  const std::string& getOp() const { return op_; }
 
   virtual std::shared_ptr<Expr> clone() const override;
-  virtual bool equals(const Expr* other) const override;
+  virtual bool equals(const Expr* other, bool compareData = true) const override;
   static bool classof(const Expr* expr) { return expr->getKind() == Kind::UnaryOperator; }
   virtual ExprRangeType getChildren() override { return ExprRangeType(operand_); }
   virtual void replaceChildren(const std::shared_ptr<Expr>& oldExpr,
@@ -185,10 +187,10 @@ public:
   const std::shared_ptr<Expr>& getRight() const { return operands_[Right]; }
   std::shared_ptr<Expr>& getRight() { return operands_[Right]; }
 
-  const char* getOp() const { return op_.c_str(); }
+  const std::string& getOp() const { return op_; }
 
   virtual std::shared_ptr<Expr> clone() const override;
-  virtual bool equals(const Expr* other) const override;
+  virtual bool equals(const Expr* other, bool compareData = true) const override;
   static bool classof(const Expr* expr) { return expr->getKind() == Kind::BinaryOperator; }
   virtual ExprRangeType getChildren() override { return ExprRangeType(operands_); }
   virtual void replaceChildren(const std::shared_ptr<Expr>& oldExpr,
@@ -215,7 +217,7 @@ public:
   /// @}
 
   virtual std::shared_ptr<Expr> clone() const override;
-  virtual bool equals(const Expr* other) const override;
+  virtual bool equals(const Expr* other, bool compareData = true) const override;
   static bool classof(const Expr* expr) { return expr->getKind() == Kind::AssignmentExpr; }
   ACCEPTVISITOR(Expr, AssignmentExpr)
 };
@@ -237,7 +239,7 @@ public:
   /// @}
 
   virtual std::shared_ptr<Expr> clone() const override;
-  virtual bool equals(const Expr* other) const override;
+  virtual bool equals(const Expr* other, bool compareData = true) const override;
   static bool classof(const Expr* expr) { return expr->getKind() == Kind::NOPExpr; }
   ACCEPTVISITOR(Expr, NOPExpr)
 };
@@ -275,11 +277,11 @@ public:
   const std::shared_ptr<Expr>& getRight() const { return operands_[Right]; }
   std::shared_ptr<Expr>& getRight() { return operands_[Right]; }
 
-  const char* getOp() const { return "?"; }
-  const char* getSeperator() const { return ":"; }
+  const std::string getOp() const { return "?"; }
+  const std::string getSeperator() const { return ":"; }
 
   virtual std::shared_ptr<Expr> clone() const override;
-  virtual bool equals(const Expr* other) const override;
+  virtual bool equals(const Expr* other, bool compareData = true) const override;
   static bool classof(const Expr* expr) { return expr->getKind() == Kind::TernaryOperator; }
   virtual ExprRangeType getChildren() override { return ExprRangeType(operands_); }
   virtual void replaceChildren(const std::shared_ptr<Expr>& oldExpr,
@@ -325,7 +327,7 @@ public:
   }
 
   virtual std::shared_ptr<Expr> clone() const override;
-  virtual bool equals(const Expr* other) const override;
+  virtual bool equals(const Expr* other, bool compareData = true) const override;
   static bool classof(const Expr* expr) { return expr->getKind() == Kind::FunCallExpr; }
   virtual ExprRangeType getChildren() override { return ExprRangeType(arguments_); }
   virtual void replaceChildren(const std::shared_ptr<Expr>& oldExpr,
@@ -351,7 +353,7 @@ public:
 
   //  void setName(std::string name);
   virtual std::shared_ptr<Expr> clone() const override;
-  virtual bool equals(const Expr* other) const override;
+  virtual bool equals(const Expr* other, bool compareData = true) const override;
   static bool classof(const Expr* expr) { return expr->getKind() == Kind::StencilFunCallExpr; }
   ACCEPTVISITOR(Expr, StencilFunCallExpr)
 };
@@ -392,7 +394,7 @@ public:
   int getArgumentIndex() const { return argumentIndex_; }
 
   virtual std::shared_ptr<Expr> clone() const override;
-  virtual bool equals(const Expr* other) const override;
+  virtual bool equals(const Expr* other, bool compareData = true) const override;
   static bool classof(const Expr* expr) { return expr->getKind() == Kind::StencilFunArgExpr; }
   ACCEPTVISITOR(Expr, StencilFunArgExpr)
 };
@@ -440,6 +442,8 @@ public:
     return dynamic_cast<DataType&>(*data_.get());
   }
 
+  bool hasData() const { return data_ != nullptr; }
+
   const std::string& getName() const { return name_; }
 
   void setName(std::string name) { name_ = name; }
@@ -458,7 +462,7 @@ public:
   void setIndex(const std::shared_ptr<Expr>& index) { index_ = index; }
 
   virtual std::shared_ptr<Expr> clone() const override;
-  virtual bool equals(const Expr* other) const override;
+  virtual bool equals(const Expr* other, bool compareData = true) const override;
   static bool classof(const Expr* expr) { return expr->getKind() == Kind::VarAccessExpr; }
   virtual ExprRangeType getChildren() override {
     return (isArrayAccess() ? ExprRangeType(index_) : ExprRangeType());
@@ -538,6 +542,8 @@ public:
     return (argumentMap_[0] != -1 || argumentMap_[1] != -1 || argumentMap_[2] != -1);
   }
 
+  ExprRangeType getChildren() override;
+
   /// @brief Set the `offset` and reset the argument and argument-offset maps
   ///
   /// This function is used during the inlining when we now all the offsets.
@@ -561,6 +567,7 @@ public:
   void setName(std::string name) { name_ = name; }
 
   const Offsets& getOffset() const { return offset_; }
+  Offsets& getOffset() { return offset_; }
 
   const Array3i& getArgumentMap() const { return argumentMap_; }
   Array3i& getArgumentMap() { return argumentMap_; }
@@ -575,7 +582,7 @@ public:
   void setArgumentOffset(Array3i const& argOffset) { argumentOffset_ = argOffset; }
 
   virtual std::shared_ptr<Expr> clone() const override;
-  virtual bool equals(const Expr* other) const override;
+  virtual bool equals(const Expr* other, bool compareData = true) const override;
   static bool classof(const Expr* expr) { return expr->getKind() == Kind::FieldAccessExpr; }
   ACCEPTVISITOR(Expr, FieldAccessExpr)
 };
@@ -619,7 +626,7 @@ public:
   BuiltinTypeID& getBuiltinType() { return builtinType_; }
 
   virtual std::shared_ptr<Expr> clone() const override;
-  virtual bool equals(const Expr* other) const override;
+  virtual bool equals(const Expr* other, bool compareData = true) const override;
   static bool classof(const Expr* expr) { return expr->getKind() == Kind::LiteralAccessExpr; }
   ACCEPTVISITOR(Expr, LiteralAccessExpr)
 };
@@ -635,20 +642,23 @@ private:
   enum OperandKind { Rhs = 0, Init };
 
   std::string op_ = "+";
-  std::optional<std::vector<sir::Value>> weights_;
-  ast::LocationType lhs_location_;
-  ast::LocationType rhs_location_;
-  std::array<std::shared_ptr<Expr>, 2> operands_;
+  std::optional<std::vector<std::shared_ptr<Expr>>> weights_;
+  ast::UnstructuredIterationSpace iterSpace_;
+  // due to current design limitations (getChildren() returning a view into memory), the operands
+  // hold a copy of the (shared pointer to) the weights
+  std::vector<std::shared_ptr<Expr>> operands_ = std::vector<std::shared_ptr<Expr>>(2);
+  bool chainIsValid() const;  
 
 public:
   /// @name Constructor & Destructor
   /// @{
   ReductionOverNeighborExpr(std::string const& op, std::shared_ptr<Expr> const& rhs,
-                            std::shared_ptr<Expr> const& init, ast::LocationType lhs_location,
-                            ast::LocationType rhs_location, SourceLocation loc = SourceLocation());
+                            std::shared_ptr<Expr> const& init, std::vector<ast::LocationType> chain,
+                            bool includeCenter = false, SourceLocation loc = SourceLocation());
   ReductionOverNeighborExpr(std::string const& op, std::shared_ptr<Expr> const& rhs,
-                            std::shared_ptr<Expr> const& init, std::vector<sir::Value> weights,
-                            ast::LocationType lhs_location, ast::LocationType rhs_location,
+                            std::shared_ptr<Expr> const& init,
+                            std::vector<std::shared_ptr<Expr>> weights,
+                            std::vector<ast::LocationType> chain, bool includeCenter = false,
                             SourceLocation loc = SourceLocation());
   ReductionOverNeighborExpr(ReductionOverNeighborExpr const& stmt);
   ReductionOverNeighborExpr& operator=(ReductionOverNeighborExpr const& stmt);
@@ -659,23 +669,23 @@ public:
   std::string const& getOp() const { return op_; }
   std::shared_ptr<Expr> const& getRhs() const { return operands_[Rhs]; }
   void setRhs(std::shared_ptr<Expr> rhs) { operands_[Rhs] = std::move(rhs); }
-  ast::LocationType getRhsLocation() const { return rhs_location_; };
-  ast::LocationType getLhsLocation() const { return lhs_location_; };
-  const std::optional<std::vector<sir::Value>>& getWeights() const { return weights_; };
+  std::vector<ast::LocationType> getNbhChain() const { return iterSpace_; };
+  ast::LocationType getLhsLocation() const { return iterSpace_.Chain.front(); };
+  const std::optional<std::vector<std::shared_ptr<Expr>>>& getWeights() const { return weights_; };
+  bool getIncludeCenter() const { return iterSpace_.IncludeCenter; };
+  ast::UnstructuredIterationSpace getIterSpace() const { return iterSpace_; }
 
-  ExprRangeType getChildren() override { return ExprRangeType(operands_); }
+  ExprRangeType getChildren() override;
 
   static bool classof(const Expr* expr) {
     return expr->getKind() == Kind::ReductionOverNeighborExpr;
   }
 
   std::shared_ptr<Expr> clone() const override;
-  bool equals(const Expr* other) const override;
+  bool equals(const Expr* other, bool compareData = true) const override;
 
   ACCEPTVISITOR(Expr, ReductionOverNeighborExpr)
 };
 
 } // namespace ast
 } // namespace dawn
-
-#endif

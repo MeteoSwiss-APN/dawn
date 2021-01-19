@@ -12,8 +12,7 @@
 //
 //===------------------------------------------------------------------------------------------===//
 
-#ifndef DAWN_SIR_ASTSTMT_H
-#define DAWN_SIR_ASTSTMT_H
+#pragma once
 
 #include "dawn/AST/ASTStmt.h"
 
@@ -67,6 +66,11 @@ std::shared_ptr<ast::IfStmt> makeIfStmt(Args&&... args) {
   return std::make_shared<ast::IfStmt>(std::make_unique<SIRStmtData>(),
                                        std::forward<Args>(args)...);
 }
+template <typename... Args>
+std::shared_ptr<ast::LoopStmt> makeLoopStmt(Args&&... args) {
+  return std::make_shared<ast::LoopStmt>(std::make_unique<SIRStmtData>(),
+                                         std::forward<Args>(args)...);
+}
 //
 // TODO refactor_AST: this is TEMPORARY, will be removed in the future
 //
@@ -79,8 +83,7 @@ using VerticalRegionDeclStmt = ast::VerticalRegionDeclStmt;
 using StencilCallDeclStmt = ast::StencilCallDeclStmt;
 using BoundaryConditionDeclStmt = ast::BoundaryConditionDeclStmt;
 using IfStmt = ast::IfStmt;
+using LoopStmt = ast::LoopStmt;
 
 } // namespace sir
 } // namespace dawn
-
-#endif

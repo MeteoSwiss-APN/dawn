@@ -16,10 +16,12 @@
 #include "dawn/IIR/ASTVisitor.h"
 #include "dawn/IIR/IIRNodeIterator.h"
 #include "dawn/IIR/StencilInstantiation.h"
-#include "dawn/Optimizer/OptimizerContext.h"
+#include "dawn/Support/Exception.h"
 #include "dawn/Support/IndexRange.h"
+#include "dawn/Support/Logger.h"
 #include <algorithm>
 #include <set>
+#include <sstream>
 #include <stack>
 #include <unordered_map>
 
@@ -64,11 +66,9 @@ public:
 
 } // anonymous namespace
 
-PassTemporaryFirstAccess::PassTemporaryFirstAccess(OptimizerContext& context)
-    : Pass(context, "PassTemporaryFirstAccess", true) {}
-
 bool PassTemporaryFirstAccess::run(
-    const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation) {
+    const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation,
+    const Options& options) {
   for(const auto& stencilPtr : stencilInstantiation->getStencils()) {
     std::unordered_map<int, iir::Stencil::FieldInfo> fields = stencilPtr->getFields();
     std::set<int> temporaryFields;
@@ -114,19 +114,17 @@ bool PassTemporaryFirstAccess::run(
         // Report the error
         auto nameLocPair =
             stencilInstantiation->getOriginalNameAndLocationsFromAccessID(AccessID, stmt);
-        DiagnosticsBuilder diagError(DiagnosticsKind::Error, nameLocPair.second[0]);
 
-        diagError << "access to uninitialized temporary storage '" << nameLocPair.first << "'";
-        context_.getDiagnostics().report(diagError);
+        std::stringstream ss;
+        ss << "Access to uninitialized temporary storage '" << nameLocPair.first << "'";
 
+        dawn::DiagnosticStack stack;
         // Report notes where the temporary is referenced
-        for(int i = 1; i < nameLocPair.second.size(); ++i) {
-          DiagnosticsBuilder diagNote(DiagnosticsKind::Note, nameLocPair.second[i]);
-          diagNote << "'" << nameLocPair.first << "' referenced here";
-          context_.getDiagnostics().report(diagNote);
+        for(const auto& loc : nameLocPair.second) {
+          stack.emplace(std::make_tuple(nameLocPair.first, loc));
         }
 
-        return false;
+        throw SemanticError(ss.str() + createDiagnosticStackTrace("referenced here", stack));
       }
     }
   }

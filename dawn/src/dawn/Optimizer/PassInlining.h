@@ -12,8 +12,7 @@
 //
 //===------------------------------------------------------------------------------------------===//
 
-#ifndef DAWN_OPTIMIZER_PASSINLINING_H
-#define DAWN_OPTIMIZER_PASSINLINING_H
+#pragma once
 
 #include "dawn/Optimizer/Pass.h"
 
@@ -39,16 +38,14 @@ public:
     ComputationsOnTheFly ///< Inline stencil functions as computations on the fly
   };
 
-  PassInlining(OptimizerContext& context, bool activate, InlineStrategy strategy);
+  PassInlining(InlineStrategy strategy) : Pass("PassInlining"), strategy_(strategy) {}
 
   /// @brief Pass implementation
-  bool run(const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation) override;
+  bool run(const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation,
+           const Options& options = {}) override;
 
 private:
-  bool activate_;
   InlineStrategy strategy_;
 };
 
 } // namespace dawn
-
-#endif

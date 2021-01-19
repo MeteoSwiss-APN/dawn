@@ -12,12 +12,12 @@
 //
 //===------------------------------------------------------------------------------------------===//
 
-#ifndef DAWN_CODEGEN_CUDA_CUDACODEGEN_H
-#define DAWN_CODEGEN_CUDA_CUDACODEGEN_H
+#pragma once
 
 #include "dawn/CodeGen/CodeGen.h"
 #include "dawn/CodeGen/CodeGenProperties.h"
 #include "dawn/CodeGen/Cuda/CacheProperties.h"
+#include "dawn/CodeGen/Options.h"
 #include "dawn/Support/Array.h"
 #include "dawn/Support/IndexRange.h"
 #include <unordered_map>
@@ -30,6 +30,12 @@ class StencilInstantiation;
 namespace codegen {
 namespace cuda {
 
+/// @brief Run the Cuda code generation
+std::unique_ptr<TranslationUnit>
+run(const std::map<std::string, std::shared_ptr<iir::StencilInstantiation>>&
+        stencilInstantiationMap,
+    const Options& options = {});
+
 /// @brief CUDA code generation for cartesian grids
 /// @ingroup cxxnaive cartesian
 class CudaCodeGen : public CodeGen {
@@ -37,8 +43,8 @@ class CudaCodeGen : public CodeGen {
 
 public:
   ///@brief constructor
-  CudaCodeGen(const stencilInstantiationContext& ctx, DiagnosticsEngine& engine, int maxHaloPoints,
-              int nsms, int maxBlocksPerSM, const Array3i& domainSize);
+  CudaCodeGen(const StencilInstantiationContext& ctx, int maxHaloPoints, int nsms,
+              int maxBlocksPerSM, const Array3i& domainSize, bool runWithSync = true);
   virtual ~CudaCodeGen();
   virtual std::unique_ptr<TranslationUnit> generateCode() override;
 
@@ -46,6 +52,7 @@ public:
     int nsms;
     int maxBlocksPerSM;
     Array3i domainSize;
+    bool runWithSync;
   };
 
 private:
@@ -58,6 +65,9 @@ private:
   void addTmpStorageInit(
       MemberFunction& ctr, iir::Stencil const& stencil,
       IndexRange<const std::map<int, iir::Stencil::FieldInfo>>& tempFields) const override;
+
+  void addCudaCopySymbol(MemberFunction& runMethod, const std::string& arrName,
+                         const std::string dataType) const;
 
   void
   generateCudaKernelCode(std::stringstream& ssSW,
@@ -116,8 +126,7 @@ private:
   CudaCodeGenOptions codeGenOptions_;
   bool iterationSpaceSet_;
 };
+
 } // namespace cuda
 } // namespace codegen
 } // namespace dawn
-
-#endif

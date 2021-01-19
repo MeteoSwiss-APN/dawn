@@ -12,10 +12,11 @@
 //
 //===------------------------------------------------------------------------------------------===//
 
-#ifndef DAWN_AST_ASTSTMT_H
-#define DAWN_AST_ASTSTMT_H
+#pragma once
 
 #include "dawn/AST/ASTVisitorHelpers.h"
+#include "dawn/AST/IterationSpace.h"
+#include "dawn/AST/LocationType.h"
 #include "dawn/Support/ArrayRef.h"
 #include "dawn/Support/Assert.h"
 #include "dawn/Support/Casting.h"
@@ -24,6 +25,7 @@
 #include "dawn/Support/Type.h"
 #include "dawn/Support/UIDGenerator.h"
 #include <memory>
+#include <sstream>
 #include <vector>
 
 namespace dawn {
@@ -57,7 +59,8 @@ public:
     StencilCallDeclStmt,
     VerticalRegionDeclStmt,
     BoundaryConditionDeclStmt,
-    IfStmt
+    IfStmt,
+    LoopStmt,
   };
 
   using StmtRangeType = MutableArrayRef<std::shared_ptr<Stmt>>;
@@ -116,8 +119,9 @@ public:
                                std::shared_ptr<Stmt> const& newStmt) {}
 
   /// @brief Compare for equality
-  virtual bool equals(const Stmt* other) const {
-    return kind_ == other->kind_ && checkSameDataType(*other) && data_->equals(other->data_.get());
+  virtual bool equals(const Stmt* other, bool compareData = true) const {
+    return kind_ == other->kind_ &&
+           (compareData ? checkSameDataType(*other) && data_->equals(other->data_.get()) : true);
   }
 
   /// @brief Is the statement used for stencil description and has no real analogon in C++
@@ -223,7 +227,7 @@ public:
   const std::vector<std::shared_ptr<Stmt>>& getStatements() const { return statements_; }
 
   virtual std::shared_ptr<Stmt> clone() const override;
-  virtual bool equals(const Stmt* other) const override;
+  virtual bool equals(const Stmt* other, bool compareData = true) const override;
   static bool classof(const Stmt* stmt) { return stmt->getKind() == Kind::BlockStmt; }
   virtual StmtRangeType getChildren() override { return StmtRangeType(statements_); }
   virtual void replaceChildren(const std::shared_ptr<Stmt>& oldStmt,
@@ -265,7 +269,7 @@ public:
 #pragma GCC diagnostic pop
 
   virtual std::shared_ptr<Stmt> clone() const override;
-  virtual bool equals(const Stmt* other) const override;
+  virtual bool equals(const Stmt* other, bool compareData = true) const override;
   static bool classof(const Stmt* stmt) { return stmt->getKind() == Kind::ExprStmt; }
   ACCEPTVISITOR(Stmt, ExprStmt)
 };
@@ -300,7 +304,7 @@ public:
 #pragma GCC diagnostic pop
 
   virtual std::shared_ptr<Stmt> clone() const override;
-  virtual bool equals(const Stmt* other) const override;
+  virtual bool equals(const Stmt* other, bool compareData = true) const override;
   static bool classof(const Stmt* stmt) { return stmt->getKind() == Kind::ReturnStmt; }
   ACCEPTVISITOR(Stmt, ReturnStmt)
 };
@@ -318,7 +322,7 @@ public:
   /// @name Constructor & Destructor
   /// @{
   VarDeclStmt(std::unique_ptr<StmtData> data, const Type& type, const std::string& name,
-              int dimension, const char* op, InitList initList,
+              int dimension, const std::string& op, InitList initList,
               SourceLocation loc = SourceLocation());
   VarDeclStmt(const VarDeclStmt& stmt);
   VarDeclStmt& operator=(VarDeclStmt stmt);
@@ -331,7 +335,7 @@ public:
   const std::string& getName() const { return name_; }
   std::string& getName() { return name_; }
 
-  const char* getOp() const { return op_.c_str(); }
+  const std::string& getOp() const { return op_; }
   int getDimension() const { return dimension_; }
 
   bool isArray() const { return (dimension_ > 0); }
@@ -346,7 +350,7 @@ public:
 #pragma GCC diagnostic pop
 
   virtual std::shared_ptr<Stmt> clone() const override;
-  virtual bool equals(const Stmt* other) const override;
+  virtual bool equals(const Stmt* other, bool compareData = true) const override;
   static bool classof(const Stmt* stmt) { return stmt->getKind() == Kind::VarDeclStmt; }
   ACCEPTVISITOR(Stmt, VarDeclStmt)
 
@@ -386,7 +390,7 @@ public:
 
   virtual bool isStencilDesc() const override { return true; }
   virtual std::shared_ptr<Stmt> clone() const override;
-  virtual bool equals(const Stmt* other) const override;
+  virtual bool equals(const Stmt* other, bool compareData = true) const override;
   static bool classof(const Stmt* stmt) { return stmt->getKind() == Kind::VerticalRegionDeclStmt; }
   ACCEPTVISITOR(Stmt, VerticalRegionDeclStmt)
 };
@@ -437,7 +441,7 @@ public:
 
   virtual bool isStencilDesc() const override { return true; }
   virtual std::shared_ptr<Stmt> clone() const override;
-  virtual bool equals(const Stmt* other) const override;
+  virtual bool equals(const Stmt* other, bool compareData = true) const override;
   static bool classof(const Stmt* stmt) { return stmt->getKind() == Kind::StencilCallDeclStmt; }
   ACCEPTVISITOR(Stmt, StencilCallDeclStmt)
 };
@@ -469,7 +473,7 @@ public:
 
   virtual bool isStencilDesc() const override { return true; }
   virtual std::shared_ptr<Stmt> clone() const override;
-  virtual bool equals(const Stmt* other) const override;
+  virtual bool equals(const Stmt* other, bool compareData = true) const override;
   static bool classof(const Stmt* stmt) {
     return stmt->getKind() == Kind::BoundaryConditionDeclStmt;
   }
@@ -528,7 +532,7 @@ public:
   }
 
   virtual std::shared_ptr<Stmt> clone() const override;
-  virtual bool equals(const Stmt* other) const override;
+  virtual bool equals(const Stmt* other, bool compareData = true) const override;
   static bool classof(const Stmt* stmt) { return stmt->getKind() == Kind::IfStmt; }
   virtual StmtRangeType getChildren() override {
     return hasElse() ? StmtRangeType(subStmts_) : StmtRangeType(&subStmts_[0], End - 1);
@@ -537,7 +541,60 @@ public:
                                const std::shared_ptr<Stmt>& newStmt) override;
   ACCEPTVISITOR(Stmt, IfStmt)
 };
+
+//===------------------------------------------------------------------------------------------===//
+//     Loop
+//===------------------------------------------------------------------------------------------===//
+
+class IterationDescr {
+public:
+  virtual ~IterationDescr() = 0;
+  virtual std::unique_ptr<IterationDescr> clone() const = 0;
+  virtual std::string toString() const = 0;
+  virtual bool equals(const IterationDescr*) const = 0;
+};
+
+class ChainIterationDescr : public IterationDescr {
+  ast::UnstructuredIterationSpace iterSpace_;
+
+public:
+  ChainIterationDescr(ast::NeighborChain&& chain, bool includeCenter = false);
+  ast::NeighborChain getChain() const;
+  bool getIncludeCenter() const { return iterSpace_.IncludeCenter; }
+  ast::UnstructuredIterationSpace getIterSpace() const { return iterSpace_; }
+  std::unique_ptr<IterationDescr> clone() const override;
+  std::string toString() const override;
+  bool equals(const IterationDescr* otherPtr) const override;
+};
+
+class LoopStmt : public Stmt {
+  std::shared_ptr<BlockStmt> blockStmt_;
+  std::unique_ptr<IterationDescr> iterationDescr_;
+
+public:
+  LoopStmt(std::unique_ptr<StmtData> data, ast::NeighborChain&& chain, bool includeCenter,
+           std::shared_ptr<BlockStmt> stmt, SourceLocation loc = SourceLocation());
+  LoopStmt(std::unique_ptr<StmtData> data, ast::NeighborChain&& chain,
+           std::shared_ptr<BlockStmt> stmt, SourceLocation loc = SourceLocation());
+  LoopStmt(const LoopStmt& stmt);
+  LoopStmt& operator=(LoopStmt const& stmt);
+  virtual ~LoopStmt();
+
+  const std::shared_ptr<BlockStmt>& getBlockStmt() const;
+  std::shared_ptr<BlockStmt>& getBlockStmt();
+
+  std::shared_ptr<Stmt> clone() const override;
+  bool equals(const Stmt* other, bool compareData = true) const override;
+  static bool classof(const Stmt* stmt) { return stmt->getKind() == Kind::LoopStmt; }
+  virtual StmtRangeType getChildren() override;
+  virtual void replaceChildren(const std::shared_ptr<Stmt>& oldStmt,
+                               const std::shared_ptr<Stmt>& newStmt) override;
+
+  const IterationDescr& getIterationDescr() const;
+  const IterationDescr* getIterationDescrPtr() const;
+
+  ACCEPTVISITOR(Stmt, LoopStmt)
+};
+
 } // namespace ast
 } // namespace dawn
-
-#endif

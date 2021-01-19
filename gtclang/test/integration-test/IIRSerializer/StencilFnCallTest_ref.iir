@@ -66,7 +66,7 @@
    "Line": 29,
    "Column": 8
   },
-  "stencilName": "Test"
+  "stencilName": "StencilFnCallTest"
  },
  "internalIR": {
   "gridType": "Cartesian",
@@ -98,7 +98,8 @@
                 {
                  "field_access_expr": {
                   "name": "a",
-                  "vertical_offset": 0,
+                  "vertical_shift": 0,
+                  "vertical_indirection": "",
                   "zero_offset": {},
                   "argument_map": [
                    -1,
@@ -118,7 +119,7 @@
                   "data": {
                    "accessID": 16
                   },
-                  "ID": 41
+                  "ID": 33
                  }
                 }
                ],
@@ -133,7 +134,8 @@
                    "zero_extent": {},
                    "vertical_extent": {
                     "minus": 0,
-                    "plus": 0
+                    "plus": 0,
+                    "undefined": false
                    }
                   }
                  },
@@ -142,7 +144,8 @@
                    "zero_extent": {},
                    "vertical_extent": {
                     "minus": 0,
-                    "plus": 0
+                    "plus": 0,
+                    "undefined": false
                    }
                   }
                  }
@@ -151,7 +154,7 @@
                "var_decl_stmt_data": {
                 "accessID": 36
                },
-               "ID": 40
+               "ID": 37
               }
              },
              {
@@ -161,7 +164,8 @@
                  "left": {
                   "field_access_expr": {
                    "name": "b",
-                   "vertical_offset": 0,
+                   "vertical_shift": 0,
+                   "vertical_indirection": "",
                    "zero_offset": {},
                    "argument_map": [
                     -1,
@@ -181,7 +185,7 @@
                    "data": {
                     "accessID": 17
                    },
-                   "ID": 44
+                   "ID": 22
                   }
                  },
                  "op": "=",
@@ -196,14 +200,14 @@
                    "data": {
                     "accessID": 36
                    },
-                   "ID": 43
+                   "ID": 38
                   }
                  },
                  "loc": {
                   "Line": 32,
                   "Column": 59
                  },
-                 "ID": 45
+                 "ID": 23
                 }
                },
                "loc": {
@@ -217,7 +221,8 @@
                    "zero_extent": {},
                    "vertical_extent": {
                     "minus": 0,
-                    "plus": 0
+                    "plus": 0,
+                    "undefined": false
                    }
                   }
                  },
@@ -226,13 +231,14 @@
                    "zero_extent": {},
                    "vertical_extent": {
                     "minus": 0,
-                    "plus": 0
+                    "plus": 0,
+                    "undefined": false
                    }
                   }
                  }
                 }
                },
-               "ID": 42
+               "ID": 24
               }
              }
             ],
@@ -241,7 +247,7 @@
              "Column": -1
             },
             "data": {},
-            "ID": 39
+            "ID": 30
            }
           },
           "doMethodID": 0,
@@ -253,10 +259,11 @@
           }
          }
         ],
-        "stageID": 29
+        "stageID": 29,
+        "locationType": "LocationTypeUnknown"
        }
       ],
-      "loopOrder": "Parallel",
+      "loopOrder": "Forward",
       "multiStageID": 35,
       "Caches": {}
      }
@@ -289,5 +296,5 @@
   ],
   "boundaryConditions": []
  },
- "filename": "/home/giacomo/dawn/gtclang/test/integration-test/IIRSerializer/StencilFnCallTest.cpp"
+ "filename": "StencilFnCallTest.cpp"
 }

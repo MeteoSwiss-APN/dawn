@@ -11,6 +11,31 @@
 ##  See LICENSE.txt for details.
 ##
 ##===------------------------------------------------------------------------------------------===##
+include(GoogleTest)
 
-add_subdirectory(Cuda)
-add_subdirectory(Naive)
+file(COPY input DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
+file(COPY reference DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
+
+foreach(backend IN ITEMS Cuda Naive Opt)
+  set(executable ${PROJECT_NAME}UnittestCodeGen${backend})
+  add_executable(${executable} ${backend}/Test${backend}CodeGen.cpp Stencils.cpp)
+  target_add_dawn_standard_props(${executable})
+  target_include_directories(${executable} PRIVATE $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>)
+  target_link_libraries(${executable} DawnUnittest gtest gtest_main)
+  gtest_discover_tests(${executable} TEST_PREFIX "Dawn::Unit::CodeGen::"
+    WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+    DISCOVERY_TIMEOUT 30
+  )
+endforeach()
+
+foreach(backend IN ITEMS Cuda-Ico Naive-Ico)
+  set(executable ${PROJECT_NAME}UnittestCodeGen${backend})
+  add_executable(${executable} ${backend}/Test${backend}CodeGen.cpp UnstructuredStencils.cpp)
+  target_add_dawn_standard_props(${executable})
+  target_include_directories(${executable} PRIVATE $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>)
+  target_link_libraries(${executable} DawnUnittest gtest gtest_main)
+  gtest_discover_tests(${executable} TEST_PREFIX "Dawn::Unit::UnstructuredCodeGen::"
+    WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+    DISCOVERY_TIMEOUT 30
+  )
+endforeach()

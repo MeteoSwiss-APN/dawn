@@ -15,29 +15,24 @@
 #include "dawn/Optimizer/PassManager.h"
 #include "dawn/AST/GridType.h"
 #include "dawn/IIR/StencilInstantiation.h"
-#include "dawn/Optimizer/OptimizerContext.h"
-#include "dawn/Support/Logging.h"
-#include "dawn/Validator/GridTypeChecker.h"
-#include "dawn/Validator/UnstructuredDimensionChecker.h"
+#include "dawn/Support/Exception.h"
+#include "dawn/Support/Logger.h"
 #include <vector>
 
 namespace dawn {
 
 bool PassManager::runAllPassesOnStencilInstantiation(
-    OptimizerContext& context, const std::shared_ptr<iir::StencilInstantiation>& instantiation) {
+    const std::shared_ptr<iir::StencilInstantiation>& instantiation, const Options& options) {
   std::vector<std::string> passesRan;
 
   for(auto& pass : passes_) {
     for(const auto& dependency : pass->getDependencies())
       if(std::find(passesRan.begin(), passesRan.end(), dependency) == passesRan.end()) {
-        DiagnosticsBuilder diag(DiagnosticsKind::Error);
-        diag << "invalid pass registration: optimizer pass '" << pass->getName() << "' depends on '"
-             << dependency << "'";
-        context.getDiagnostics().report(diag);
-        return false;
+        throw LogicError(std::string("Invalid pass registration: optimizer pass '") +
+                         pass->getName() + "' depends on '" + dependency + "'");
       }
 
-    if(!runPassOnStencilInstantiation(context, instantiation, pass.get()))
+    if(!runPassOnStencilInstantiation(instantiation, options, pass.get()))
       return false;
 
     passesRan.emplace_back(pass->getName());
@@ -46,29 +41,19 @@ bool PassManager::runAllPassesOnStencilInstantiation(
 }
 
 bool PassManager::runPassOnStencilInstantiation(
-    OptimizerContext& context, const std::shared_ptr<iir::StencilInstantiation>& instantiation,
+    const std::shared_ptr<iir::StencilInstantiation>& instantiation, const Options& options,
     Pass* pass) {
   DAWN_LOG(INFO) << "Starting " << pass->getName() << " ...";
 
-  if(!pass->run(instantiation)) {
+  if(!pass->run(instantiation, options)) {
     DAWN_LOG(WARNING) << "Done with " << pass->getName() << " : FAIL";
     return false;
   }
 
-  if(context.getOptions().PassVerbose) {
+  if(options.WriteStencilInstantiation) {
     instantiation->jsonDump(pass->getName() + "_" + std::to_string(passCounter_[pass->getName()]) +
                             "_Log.json");
   }
-
-  // Run validation pass after each optimization pass
-  PassValidation validationPass(context);
-  validationPass.run(instantiation, "for pass " + pass->getName());
-
-#ifndef NDEBUG
-  for(const auto& stencil : instantiation->getIIR()->getChildren()) {
-    DAWN_ASSERT(stencil->compareDerivedInfo());
-  }
-#endif
 
   passCounter_[pass->getName()]++;
   DAWN_LOG(INFO) << "Done with " << pass->getName() << " : Success";

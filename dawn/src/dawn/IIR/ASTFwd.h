@@ -12,8 +12,7 @@
 //
 //===------------------------------------------------------------------------------------------===//
 
-#ifndef DAWN_IIR_ASTFWD_H
-#define DAWN_IIR_ASTFWD_H
+#pragma once
 
 #include "dawn/AST/ASTFwd.h"
 
@@ -33,6 +32,7 @@ using VerticalRegionDeclStmt = ast::VerticalRegionDeclStmt;
 using StencilCallDeclStmt = ast::StencilCallDeclStmt;
 using BoundaryConditionDeclStmt = ast::BoundaryConditionDeclStmt;
 using IfStmt = ast::IfStmt;
+using LoopStmt = ast::LoopStmt;
 
 using Expr = ast::Expr;
 using NOPExpr = ast::NOPExpr;
@@ -52,5 +52,3 @@ using ASTHelper = ast::ASTHelper;
 using ASTVisitor = ast::ASTVisitor;
 } // namespace iir
 } // namespace dawn
-
-#endif

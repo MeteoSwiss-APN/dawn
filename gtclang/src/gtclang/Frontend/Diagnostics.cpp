@@ -52,35 +52,6 @@ clang::DiagnosticBuilder Diagnostics::report(clang::SourceRange range, DiagKind 
   return (diags_->Report(clang::SourceLocation(), StaticDiagInfo[kind].ID) << range);
 }
 
-void Diagnostics::report(const dawn::DiagnosticsMessage& diagMsg) {
-
-  auto& SM = diags_->getSourceManager();
-  auto& diagsID = diags_->getDiagnosticIDs();
-
-  auto makeCustomDiag = [&](dawn::DiagnosticsKind kind, const std::string& msg) -> unsigned {
-    switch(kind) {
-    case dawn::DiagnosticsKind::Note:
-      return diagsID->getCustomDiagID(clang::DiagnosticIDs::Level::Note, msg);
-    case dawn::DiagnosticsKind::Warning:
-      return diagsID->getCustomDiagID(clang::DiagnosticIDs::Level::Warning, msg);
-    case dawn::DiagnosticsKind::Error:
-      return diagsID->getCustomDiagID(clang::DiagnosticIDs::Level::Error, msg);
-    default:
-      llvm_unreachable("invalid diag ID");
-    }
-  };
-
-  auto makeSourceLocation = [&](const dawn::SourceLocation& loc) -> clang::SourceLocation {
-    if(!loc.isValid())
-      return clang::SourceLocation();
-    else
-      return SM.translateLineCol(SM.getMainFileID(), loc.Line, loc.Column);
-  };
-
-  diags_->Report(makeSourceLocation(diagMsg.getSourceLocation()),
-                 makeCustomDiag(diagMsg.getDiagKind(), diagMsg.getMessage()));
-}
-
 void Diagnostics::reportRaw(clang::DiagnosticsEngine& diag, clang::SourceLocation loc,
                             clang::DiagnosticIDs::Level level, const std::string& msg) {
   auto& diagsID = diag.getDiagnosticIDs();

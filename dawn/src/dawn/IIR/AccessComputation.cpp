@@ -20,7 +20,8 @@
 #include "dawn/IIR/Accesses.h"
 #include "dawn/IIR/StencilFunctionInstantiation.h"
 #include "dawn/IIR/StencilInstantiation.h"
-#include <iostream>
+#include "dawn/IIR/StencilMetaInformation.h"
+
 #include <stack>
 
 namespace dawn {
@@ -249,6 +250,10 @@ public:
     removeLastChildAccesses();
   }
 
+  virtual void visit(const std::shared_ptr<iir::LoopStmt>& stmt) override {
+    stmt->getBlockStmt()->accept(*this);
+  }
+
   virtual void visit(const std::shared_ptr<iir::ExprStmt>& stmt) override {
     appendNewAccesses();
     stmt->getExpr()->accept(*this);
@@ -368,16 +373,24 @@ public:
     // LHS is a write, we resolve this manually as we only care about FieldAccessExpr and
     // VarAccessExpr. However, if we have an expression `a += 5` we need to register the access as
     // write and read!
-    bool readAndWrite = StringRef(expr->getOp()) == "+=" || StringRef(expr->getOp()) == "-=" ||
-                        StringRef(expr->getOp()) == "/=" || StringRef(expr->getOp()) == "*=" ||
-                        StringRef(expr->getOp()) == "|=" || StringRef(expr->getOp()) == "&=";
+    bool readAndWrite = expr->getOp() == "+=" || expr->getOp() == "-=" || expr->getOp() == "/=" ||
+                        expr->getOp() == "*=" || expr->getOp() == "|=" || expr->getOp() == "&=";
 
     if(isa<iir::FieldAccessExpr>(expr->getLeft().get())) {
       auto field = std::static_pointer_cast<iir::FieldAccessExpr>(expr->getLeft());
       if(readAndWrite)
         mergeReadOffset(field);
-
       mergeWriteOffset(field);
+
+      // this is not legal, but we need to register this write access to generate meaningful error
+      // messages later on
+      if(field->getOffset().hasVerticalIndirection()) {
+        auto innerField = std::static_pointer_cast<iir::FieldAccessExpr>(
+            field->getOffset().getVerticalIndirectionFieldAsExpr());
+        if(readAndWrite)
+          mergeReadOffset(innerField);
+        mergeWriteOffset(innerField);
+      }
     } else if(isa<iir::VarAccessExpr>(expr->getLeft().get())) {
       auto var = std::static_pointer_cast<iir::VarAccessExpr>(expr->getLeft());
       if(readAndWrite)
@@ -445,16 +458,19 @@ public:
       // This is always a read access (writes are resolved in the the assignment)
       mergeReadOffset(expr);
     }
+
+    for(auto& s : expr->getChildren()) {
+      s->accept(*this);
+    }
   }
 };
 
 } // anonymous namespace
 
-void computeAccesses(iir::StencilInstantiation* instantiation,
+void computeAccesses(const iir::StencilMetaInformation& metadata,
                      ArrayRef<std::shared_ptr<iir::Stmt>> stmts) {
   for(const auto& stmt : stmts) {
-    DAWN_ASSERT(instantiation);
-    AccessMapper mapper(instantiation->getMetaData(), stmt, nullptr);
+    AccessMapper mapper(metadata, stmt, nullptr);
     stmt->accept(mapper);
   }
 }

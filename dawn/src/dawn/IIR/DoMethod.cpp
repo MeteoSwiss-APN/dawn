@@ -29,7 +29,7 @@
 #include "dawn/IIR/Stencil.h"
 #include "dawn/IIR/StencilMetaInformation.h"
 #include "dawn/Support/IndexGenerator.h"
-#include "dawn/Support/Logging.h"
+#include "dawn/Support/Logger.h"
 #include <limits>
 #include <memory>
 
@@ -55,8 +55,13 @@ public:
       expr->accept(*this);
   }
   void visit(const std::shared_ptr<VarAccessExpr>& expr) override {
-    auto data = expr->getData<iir::IIRAccessExprData>();
-    std::string realName = metadata_.getNameFromAccessID(data.AccessID.value());
+    int accessID = iir::getAccessID(expr);
+    std::string realName = metadata_.getNameFromAccessID(accessID);
+    expr->setName(realName);
+  }
+  void visit(const std::shared_ptr<FieldAccessExpr>& expr) override {
+    int accessID = iir::getAccessID(expr);
+    std::string realName = metadata_.getNameFromAccessID(accessID);
     expr->setName(realName);
   }
 };
@@ -80,8 +85,8 @@ Interval& DoMethod::getInterval() { return interval_; }
 
 const Interval& DoMethod::getInterval() const { return interval_; }
 
-void DoMethod::setDependencyGraph(const std::shared_ptr<DependencyGraphAccesses>& DG) {
-  derivedInfo_.dependencyGraph_ = DG;
+void DoMethod::setDependencyGraph(DependencyGraphAccesses&& DG) {
+  derivedInfo_.dependencyGraph_ = std::move(DG);
 }
 
 std::optional<Extents> DoMethod::computeMaximumExtents(const int accessID) const {
@@ -118,14 +123,14 @@ DoMethod::computeEnclosingAccessInterval(const int accessID, const bool mergeWit
 
 void DoMethod::setInterval(const Interval& interval) { interval_ = interval; }
 
-const std::shared_ptr<DependencyGraphAccesses>& DoMethod::getDependencyGraph() const {
+const std::optional<DependencyGraphAccesses>& DoMethod::getDependencyGraph() const {
   return derivedInfo_.dependencyGraph_;
 }
 
 DoMethod::DerivedInfo DoMethod::DerivedInfo::clone() const {
   DerivedInfo clone;
   clone.fields_ = fields_;
-  clone.dependencyGraph_ = dependencyGraph_ ? dependencyGraph_->clone() : nullptr;
+  clone.dependencyGraph_ = dependencyGraph_;
   return clone;
 }
 

@@ -12,8 +12,7 @@
 //
 //===------------------------------------------------------------------------------------------===//
 
-#ifndef DAWN_IIR_STENCILFUNCTIONINSTANTIATION_H
-#define DAWN_IIR_STENCILFUNCTIONINSTANTIATION_H
+#pragma once
 
 #include "dawn/IIR/DoMethod.h"
 #include "dawn/IIR/Extents.h"
@@ -23,6 +22,7 @@
 #include "dawn/Support/Array.h"
 #include "dawn/Support/Unreachable.h"
 #include <memory>
+#include <ostream>
 #include <set>
 #include <string>
 #include <unordered_map>
@@ -422,10 +422,8 @@ public:
   void checkFunctionBindings() const;
 
   /// @brief Dump the stencil function instantiation to stdout
-  void dump() const;
+  void dump(std::ostream& os) const;
 };
 
 } // namespace iir
 } // namespace dawn
-
-#endif

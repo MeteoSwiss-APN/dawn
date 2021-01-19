@@ -12,8 +12,7 @@
 //
 //===------------------------------------------------------------------------------------------===//
 
-#ifndef DAWN_CODEGEN_CUDA_ASTSTENCILBODY_H
-#define DAWN_CODEGEN_CUDA_ASTSTENCILBODY_H
+#pragma once
 
 #include "dawn/CodeGen/ASTCodeGenCXX.h"
 #include "dawn/CodeGen/CodeGenProperties.h"
@@ -84,5 +83,3 @@ private:
 } // namespace cuda
 } // namespace codegen
 } // namespace dawn
-
-#endif

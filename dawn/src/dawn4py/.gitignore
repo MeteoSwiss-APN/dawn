@@ -3,6 +3,7 @@ _local_
 
 ### Dawn ####
 _external_src/driver-includes/*
+_external_src/interface/*
 
 ### Python ###
 # Byte-compiled / optimized / DLL files
@@ -106,3 +107,6 @@ venv.bak/
 
 # mypy
 .mypy_cache/
+
+# Version
+version.txt

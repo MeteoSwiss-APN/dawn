@@ -13,17 +13,24 @@
 //===------------------------------------------------------------------------------------------===//
 
 #include "dawn/Optimizer/PassValidation.h"
+#include "dawn/Support/Exception.h"
+#include "dawn/Validator/GridTypeChecker.h"
+#include "dawn/Validator/IndirectionChecker.h"
+#include "dawn/Validator/IntegrityChecker.h"
+#include "dawn/Validator/MultiStageChecker.h"
+#include "dawn/Validator/UnstructuredDimensionChecker.h"
+#include "dawn/Validator/WeightChecker.h"
 
 namespace dawn {
 
-PassValidation::PassValidation(OptimizerContext& context) : Pass(context, "PassValidation") {}
-
-bool PassValidation::run(const std::shared_ptr<iir::StencilInstantiation>& instantiation) {
-  return run(instantiation, "");
+bool PassValidation::run(const std::shared_ptr<iir::StencilInstantiation>& instantiation,
+                         const Options& options) {
+  return run(instantiation, options, "");
 }
 
+// TODO: explain what description is
 bool PassValidation::run(const std::shared_ptr<iir::StencilInstantiation>& instantiation,
-                         const std::string& description) {
+                         const Options& options, const std::string& description) {
   const auto& iir = instantiation->getIIR();
   const auto& metadata = instantiation->getMetaData();
 
@@ -31,34 +38,71 @@ bool PassValidation::run(const std::shared_ptr<iir::StencilInstantiation>& insta
     throw SemanticError("Tree consistency check failed " + description, metadata.getFileName());
 
   if(iir->getGridType() == ast::GridType::Unstructured) {
-    UnstructuredDimensionChecker dimensionsChecker;
-    DAWN_ASSERT_MSG(dimensionsChecker.checkDimensionsConsistency(*iir, metadata),
-                    ("Dimensions consistency check failed " + description).c_str());
+    auto [dimsConsistent, dimsConsistencyErrorLocation] =
+        UnstructuredDimensionChecker::checkDimensionsConsistency(*iir, metadata);
+    if(!dimsConsistent)
+      throw SemanticError("Dimensions consistency check failed at line " +
+                          std::to_string(dimsConsistencyErrorLocation.Line) + " " + description);
+    auto [stageConsistent, stageConsistencyErrorLocation] =
+        UnstructuredDimensionChecker::checkStageLocTypeConsistency(*iir, metadata);
+    if(!stageConsistent)
+      throw SemanticError("Stage location type consistency check failed at line " +
+                          std::to_string(stageConsistencyErrorLocation.Line) + " " + description);
+    ;
+    auto [weightsValid, weightValidErrorLocation] = WeightChecker::CheckWeights(*iir, metadata);
+    if(!weightsValid)
+      throw SemanticError("Found invalid weights at line " +
+                          std::to_string(weightValidErrorLocation.Line) + " " + description);
   }
 
-  GridTypeChecker gridChecker;
-  DAWN_ASSERT_MSG(gridChecker.checkGridTypeConsistency(*iir),
-                  ("Grid type consistency check failed " + description).c_str());
+  auto [indirectionsValid, indirectionsValidErrorLocation] =
+      IndirectionChecker::checkIndirections(*iir);
+  if(!indirectionsValid)
+    throw SemanticError("Found invalid indirection at line " +
+                        std::to_string(indirectionsValidErrorLocation.Line) + " " + description);
 
-  IntegrityChecker checker(instantiation.get());
-  try {
-    checker.run();
-  } catch(CompileError& error) {
-    DAWN_ASSERT_MSG(false, error.getMessage().c_str());
+  if(!GridTypeChecker::checkGridTypeConsistency(*iir))
+    throw SemanticError("Grid type consistency check failed " + description);
+
+  IntegrityChecker integrityChecker(instantiation.get());
+  integrityChecker.run();
+
+  if(iir->getGridType() != ast::GridType::Unstructured) {
+    MultiStageChecker multiStageChecker;
+    multiStageChecker.run(instantiation.get(), options.MaxHaloPoints);
   }
+
+#ifndef NDEBUG
+  for(const auto& stencil : instantiation->getIIR()->getChildren()) {
+    DAWN_ASSERT(stencil->compareDerivedInfo());
+  }
+#endif
   return true;
 }
 
 bool PassValidation::run(const std::shared_ptr<dawn::SIR>& sir) {
   if(sir->GridType == ast::GridType::Unstructured) {
-    UnstructuredDimensionChecker dimensionsChecker;
-    DAWN_ASSERT_MSG(dimensionsChecker.checkDimensionsConsistency(*sir),
-                    "Dimensions in SIR are not consistent");
+    auto [checkResultDimensions, errorLocationDimensions] =
+        UnstructuredDimensionChecker::checkDimensionsConsistency(*sir);
+    if(!checkResultDimensions)
+      throw SemanticError("Dimensions in SIR are not consistent at line " +
+                          std::to_string(errorLocationDimensions.Line));
+    
+    auto [checkResultWeights, errorLocationWeights] =
+        UnstructuredDimensionChecker::checkDimensionsConsistency(*sir);
+    if(!checkResultWeights)
+      throw SemanticError("Found invalid weights at line " +
+                          std::to_string(errorLocationWeights.Line));
   }
 
-  GridTypeChecker gridChecker;
-  DAWN_ASSERT_MSG(gridChecker.checkGridTypeConsistency(*sir),
-                  "Grid types in SIR are not consistent");
+  auto [indirectionsValid, indirectionsValidErrorLocation] =
+      IndirectionChecker::checkIndirections(*sir);
+  if(!indirectionsValid)
+    throw SemanticError("Found invalid indirection at line " +
+                        std::to_string(indirectionsValidErrorLocation.Line));
+
+  if(!GridTypeChecker::checkGridTypeConsistency(*sir))
+    throw SemanticError("Grid types in SIR are not consistent");
 
   return true;
 }

@@ -11,8 +11,7 @@
 //  See LICENSE.txt for details.
 //
 //===------------------------------------------------------------------------------------------===//
-#ifndef DAWN_AST_ASTVISITORHELPERS_H
-#define DAWN_AST_ASTVISITORHELPERS_H
+#pragma once
 #include "dawn/AST/ASTVisitor.h"
 
 #define ACCEPTVISITOR(subtype, type)                                                               \
@@ -26,5 +25,3 @@
       override {                                                                                   \
     return visitor.visitAndReplace(std::static_pointer_cast<type>(shared_from_this()));            \
   }
-
-#endif

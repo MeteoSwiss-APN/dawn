@@ -5,8 +5,8 @@
    "20": "b"
   },
   "accessIDToType": {
-   "19": 6,
-   "20": 6
+   "20": 6,
+   "19": 6
   },
   "literalIDToName": {},
   "fieldAccessIDs": [
@@ -24,14 +24,14 @@
   },
   "fieldnameToBoundaryCondition": {},
   "fieldIDtoDimensions": {
-   "19": {
+   "20": {
     "cartesian_horizontal_dimension": {
      "mask_cart_i": 1,
      "mask_cart_j": 1
     },
     "mask_k": 1
    },
-   "20": {
+   "19": {
     "cartesian_horizontal_dimension": {
      "mask_cart_i": 1,
      "mask_cart_j": 1
@@ -65,7 +65,7 @@
    "Line": 24,
    "Column": 8
   },
-  "stencilName": "Test"
+  "stencilName": "AccessTest"
  },
  "internalIR": {
   "gridType": "Cartesian",
@@ -88,7 +88,8 @@
                  "left": {
                   "field_access_expr": {
                    "name": "b",
-                   "vertical_offset": 0,
+                   "vertical_shift": 0,
+                   "vertical_indirection": "",
                    "zero_offset": {},
                    "argument_map": [
                     -1,
@@ -108,7 +109,7 @@
                    "data": {
                     "accessID": 20
                    },
-                   "ID": 57
+                   "ID": 34
                   }
                  },
                  "op": "=",
@@ -125,7 +126,8 @@
                            "left": {
                             "field_access_expr": {
                              "name": "a",
-                             "vertical_offset": 0,
+                             "vertical_shift": 0,
+                             "vertical_indirection": "",
                              "cartesian_offset": {
                               "i_offset": 1,
                               "j_offset": 0
@@ -148,14 +150,15 @@
                              "data": {
                               "accessID": 19
                              },
-                             "ID": 51
+                             "ID": 28
                             }
                            },
                            "op": "+",
                            "right": {
                             "field_access_expr": {
                              "name": "a",
-                             "vertical_offset": 0,
+                             "vertical_shift": 0,
+                             "vertical_indirection": "",
                              "cartesian_offset": {
                               "i_offset": -1,
                               "j_offset": 0
@@ -178,21 +181,22 @@
                              "data": {
                               "accessID": 19
                              },
-                             "ID": 52
+                             "ID": 29
                             }
                            },
                            "loc": {
                             "Line": 29,
                             "Column": 9
                            },
-                           "ID": 50
+                           "ID": 27
                           }
                          },
                          "op": "+",
                          "right": {
                           "field_access_expr": {
                            "name": "a",
-                           "vertical_offset": 0,
+                           "vertical_shift": 0,
+                           "vertical_indirection": "",
                            "cartesian_offset": {
                             "i_offset": 0,
                             "j_offset": 1
@@ -215,21 +219,22 @@
                            "data": {
                             "accessID": 19
                            },
-                           "ID": 53
+                           "ID": 30
                           }
                          },
                          "loc": {
                           "Line": 29,
                           "Column": 9
                          },
-                         "ID": 49
+                         "ID": 26
                         }
                        },
                        "op": "+",
                        "right": {
                         "field_access_expr": {
                          "name": "a",
-                         "vertical_offset": 0,
+                         "vertical_shift": 0,
+                         "vertical_indirection": "",
                          "cartesian_offset": {
                           "i_offset": 0,
                           "j_offset": -1
@@ -252,21 +257,22 @@
                          "data": {
                           "accessID": 19
                          },
-                         "ID": 54
+                         "ID": 31
                         }
                        },
                        "loc": {
                         "Line": 29,
                         "Column": 9
                        },
-                       "ID": 48
+                       "ID": 25
                       }
                      },
                      "op": "+",
                      "right": {
                       "field_access_expr": {
                        "name": "a",
-                       "vertical_offset": -1,
+                       "vertical_shift": -1,
+                       "vertical_indirection": "",
                        "zero_offset": {},
                        "argument_map": [
                         -1,
@@ -286,21 +292,22 @@
                        "data": {
                         "accessID": 19
                        },
-                       "ID": 55
+                       "ID": 32
                       }
                      },
                      "loc": {
                       "Line": 29,
                       "Column": 9
                      },
-                     "ID": 47
+                     "ID": 24
                     }
                    },
                    "op": "+",
                    "right": {
                     "field_access_expr": {
                      "name": "a",
-                     "vertical_offset": 1,
+                     "vertical_shift": 1,
+                     "vertical_indirection": "",
                      "cartesian_offset": {
                       "i_offset": 0,
                       "j_offset": 1
@@ -323,21 +330,21 @@
                      "data": {
                       "accessID": 19
                      },
-                     "ID": 56
+                     "ID": 33
                     }
                    },
                    "loc": {
                     "Line": 29,
                     "Column": 9
                    },
-                   "ID": 46
+                   "ID": 23
                   }
                  },
                  "loc": {
                   "Line": 28,
                   "Column": 48
                  },
-                 "ID": 58
+                 "ID": 35
                 }
                },
                "loc": {
@@ -351,7 +358,8 @@
                    "zero_extent": {},
                    "vertical_extent": {
                     "minus": 0,
-                    "plus": 0
+                    "plus": 0,
+                    "undefined": false
                    }
                   }
                  },
@@ -360,22 +368,25 @@
                    "cartesian_extent": {
                     "i_extent": {
                      "minus": -1,
-                     "plus": 1
+                     "plus": 1,
+                     "undefined": false
                     },
                     "j_extent": {
                      "minus": -1,
-                     "plus": 1
+                     "plus": 1,
+                     "undefined": false
                     }
                    },
                    "vertical_extent": {
                     "minus": -1,
-                    "plus": 1
+                    "plus": 1,
+                    "undefined": false
                    }
                   }
                  }
                 }
                },
-               "ID": 45
+               "ID": 36
               }
              }
             ],
@@ -384,7 +395,7 @@
              "Column": -1
             },
             "data": {},
-            "ID": 44
+            "ID": 42
            }
           },
           "doMethodID": 0,
@@ -396,10 +407,11 @@
           }
          }
         ],
-        "stageID": 41
+        "stageID": 41,
+        "locationType": "LocationTypeUnknown"
        }
       ],
-      "loopOrder": "Parallel",
+      "loopOrder": "Forward",
       "multiStageID": 43,
       "Caches": {}
      }
@@ -432,5 +444,5 @@
   ],
   "boundaryConditions": []
  },
- "filename": "/home/giacomo/dawn/gtclang/test/integration-test/IIRSerializer/AccessTest.cpp"
+ "filename": "AccessTest.cpp"
 }

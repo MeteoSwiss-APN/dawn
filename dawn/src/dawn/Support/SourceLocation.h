@@ -12,10 +12,10 @@
 //
 //===------------------------------------------------------------------------------------------===//
 
-#ifndef DAWN_SUPPORT_SOURCELOCATION_H
-#define DAWN_SUPPORT_SOURCELOCATION_H
+#pragma once
 
 #include <iosfwd>
+#include <ostream>
 
 namespace dawn {
 
@@ -36,7 +36,9 @@ struct SourceLocation {
   SourceLocation& operator=(SourceLocation&&) = default;
   /// @}
 
-  bool isValid() const { return (Line != -1 && Column != -1); }
+  bool isValid() const { return (Line >= 0 && Column >= 0); }
+
+  explicit operator std::string() const;
 
   int Line;
   int Column;
@@ -47,5 +49,3 @@ extern bool operator!=(const SourceLocation& a, const SourceLocation& b);
 extern std::ostream& operator<<(std::ostream& os, const SourceLocation& sourceLocation);
 
 } // namespace dawn
-
-#endif

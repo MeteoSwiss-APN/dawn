@@ -1,9 +1,9 @@
 {
  "metadata": {
   "accessIDToName": {
+   "23": "input",
    "24": "in",
-   "25": "out",
-   "23": "input"
+   "25": "out"
   },
   "accessIDToType": {
    "24": 6,
@@ -121,7 +121,7 @@
                  "left": {
                   "field_access_expr": {
                    "name": "out",
-                   "vertical_offset": 0,
+                   "vertical_shift": 0,
                    "zero_offset": {},
                    "argument_map": [
                     -1,
@@ -150,7 +150,7 @@
                    "left": {
                     "field_access_expr": {
                      "name": "in",
-                     "vertical_offset": 0,
+                     "vertical_shift": 0,
                      "zero_offset": {},
                      "argument_map": [
                       -1,
@@ -220,14 +220,14 @@
                   }
                  },
                  "readAccess": {
-                  "-53": {
+                  "24": {
                    "zero_extent": {},
                    "vertical_extent": {
                     "minus": 0,
                     "plus": 0
                    }
                   },
-                  "24": {
+                  "-53": {
                    "zero_extent": {},
                    "vertical_extent": {
                     "minus": 0,
@@ -288,7 +288,7 @@
                  "left": {
                   "field_access_expr": {
                    "name": "out",
-                   "vertical_offset": 0,
+                   "vertical_shift": 0,
                    "zero_offset": {},
                    "argument_map": [
                     -1,
@@ -317,7 +317,7 @@
                    "left": {
                     "field_access_expr": {
                      "name": "in",
-                     "vertical_offset": 0,
+                     "vertical_shift": 0,
                      "zero_offset": {},
                      "argument_map": [
                       -1,
@@ -387,14 +387,14 @@
                   }
                  },
                  "readAccess": {
-                  "24": {
+                  "-63": {
                    "zero_extent": {},
                    "vertical_extent": {
                     "minus": 0,
                     "plus": 0
                    }
                   },
-                  "-63": {
+                  "24": {
                    "zero_extent": {},
                    "vertical_extent": {
                     "minus": 0,
@@ -531,5 +531,5 @@
   ],
   "boundaryConditions": []
  },
- "filename": "globals_opt_away.cpp"
+ "filename": "samples/globals_opt_away.cpp"
 }

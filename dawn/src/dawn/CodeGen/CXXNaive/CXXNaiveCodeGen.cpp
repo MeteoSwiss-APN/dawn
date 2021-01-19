@@ -13,6 +13,7 @@
 //===------------------------------------------------------------------------------------------===//
 
 #include "dawn/CodeGen/CXXNaive/CXXNaiveCodeGen.h"
+#include "dawn/AST/GridType.h"
 #include "dawn/AST/Offsets.h"
 #include "dawn/CodeGen/CXXNaive/ASTStencilBody.h"
 #include "dawn/CodeGen/CXXNaive/ASTStencilDesc.h"
@@ -25,7 +26,8 @@
 #include "dawn/IIR/StencilInstantiation.h"
 #include "dawn/SIR/SIR.h"
 #include "dawn/Support/Assert.h"
-#include "dawn/Support/Logging.h"
+#include "dawn/Support/Exception.h"
+#include "dawn/Support/Logger.h"
 #include "dawn/Support/StringUtil.h"
 #include <algorithm>
 #include <string>
@@ -83,9 +85,17 @@ std::string makeKLoop(bool isBackward, iir::Interval const& interval) {
 }
 } // namespace
 
-CXXNaiveCodeGen::CXXNaiveCodeGen(const stencilInstantiationContext& ctx, DiagnosticsEngine& engine,
-                                 int maxHaloPoint)
-    : CodeGen(ctx, engine, maxHaloPoint) {}
+std::unique_ptr<TranslationUnit>
+run(const std::map<std::string, std::shared_ptr<iir::StencilInstantiation>>&
+        stencilInstantiationMap,
+    const Options& options) {
+  CXXNaiveCodeGen CG(stencilInstantiationMap, options.MaxHaloSize);
+
+  return CG.generateCode();
+}
+
+CXXNaiveCodeGen::CXXNaiveCodeGen(const StencilInstantiationContext& ctx, int maxHaloPoint)
+    : CodeGen(ctx, maxHaloPoint) {}
 
 CXXNaiveCodeGen::~CXXNaiveCodeGen() {}
 
@@ -113,7 +123,7 @@ std::string CXXNaiveCodeGen::generateStencilInstantiation(
 
   generateStencilWrapperCtr(stencilWrapperClass, stencilInstantiation, codeGenProperties);
 
-  generateGlobalsAPI(*stencilInstantiation, stencilWrapperClass, globalsMap, codeGenProperties);
+  generateGlobalsAPI(stencilWrapperClass, globalsMap, codeGenProperties);
 
   generateStencilWrapperRun(stencilWrapperClass, stencilInstantiation, codeGenProperties);
 
@@ -135,7 +145,7 @@ void CXXNaiveCodeGen::generateStencilWrapperRun(
   // Generate the run method by generate code for the stencil description AST
   MemberFunction runMethod = stencilWrapperClass.addMemberFunction("void", "run", "");
 
-  for(const auto& fieldID : metadata.getAccessesOfType<iir::FieldAccessType::APIField>()) {
+  for(const auto& fieldID : metadata.getAPIFields()) {
     std::string name = metadata.getFieldNameFromAccessID(fieldID);
     runMethod.addArg(codeGenProperties.getParamType(stencilInstantiation, name) + " " + name);
   }
@@ -168,7 +178,7 @@ void CXXNaiveCodeGen::generateStencilWrapperCtr(
   // Generate stencil wrapper constructor
   auto StencilWrapperConstructor = stencilWrapperClass.addConstructor();
 
-  StencilWrapperConstructor.addArg("const " + c_dgt() + "domain& dom");
+  StencilWrapperConstructor.addArg("const " + c_dgt + "domain& dom");
   StencilWrapperConstructor.addArg("int rank = 1");
   StencilWrapperConstructor.addArg("int xcols = 1");
   StencilWrapperConstructor.addArg("int ycols = 1");
@@ -220,7 +230,7 @@ void CXXNaiveCodeGen::generateStencilWrapperMembers(
   const auto& globalsMap = stencilInstantiation->getIIR()->getGlobalVariableMap();
 
   stencilWrapperClass.addMember("static constexpr const char* s_name =",
-                                Twine("\"") + stencilWrapperClass.getName() + Twine("\""));
+                                "\"" + stencilWrapperClass.getName() + "\"");
 
   if(!globalsMap.empty()) {
     stencilWrapperClass.addMember("globals", "m_globals");
@@ -241,10 +251,10 @@ void CXXNaiveCodeGen::generateStencilWrapperMembers(
   if(metadata.hasAccessesOfType<iir::FieldAccessType::InterStencilTemporary>()) {
     stencilWrapperClass.addComment("Members");
 
-    stencilWrapperClass.addMember(c_dgt() + "meta_data_t", "m_meta_data");
+    stencilWrapperClass.addMember(c_dgt + "meta_data_t", "m_meta_data");
 
     for(int AccessID : metadata.getAccessesOfType<iir::FieldAccessType::InterStencilTemporary>())
-      stencilWrapperClass.addMember(c_dgt() + "storage_t",
+      stencilWrapperClass.addMember(c_dgt + "storage_t",
                                     "m_" + metadata.getFieldNameFromAccessID(AccessID));
   }
 }
@@ -295,7 +305,7 @@ void CXXNaiveCodeGen::generateStencilClasses(
     stencilClass.addComment("Temporary storages");
     addTempStorageTypedef(stencilClass, stencil);
 
-    stencilClass.addMember("const " + c_dgt() + "domain", "m_dom");
+    stencilClass.addMember("const " + c_dgt + "domain", "m_dom");
 
     if(!globalsMap.empty()) {
       stencilClass.addMember("const globals&", "m_globals");
@@ -309,9 +319,9 @@ void CXXNaiveCodeGen::generateStencilClasses(
 
     auto stencilClassCtr = stencilClass.addConstructor();
 
-    stencilClassCtr.addArg("const " + c_dgt() + "domain& dom_");
+    stencilClassCtr.addArg("const " + c_dgt + "domain& dom_");
     if(!globalsMap.empty()) {
-      stencilClassCtr.addArg("const globals& globals_");
+      stencilClassCtr.addArg("globals& globals_");
     }
     stencilClassCtr.addArg("int rank");
     stencilClassCtr.addArg("int xcols");
@@ -355,6 +365,9 @@ void CXXNaiveCodeGen::generateStencilClasses(
 
     // synchronize storages method
 
+    // accumulated extents of API fields
+    generateFieldExtentsInfo(stencilClass, nonTempFields, ast::GridType::Cartesian);
+
     //
     // Run-Method
     //
@@ -386,14 +399,14 @@ void CXXNaiveCodeGen::generateStencilClasses(
       for(auto it = nonTempFields.begin(); it != nonTempFields.end(); ++it) {
         const auto fieldName = (*it).second.Name;
         std::string type = stencilProperties->paramNameToType_.at(fieldName);
-        stencilRunMethod.addStatement(c_gt() + "data_view<" + type + "> " + fieldName + "= " +
-                                      c_gt() + "make_host_view(" + fieldName + "_)");
+        stencilRunMethod.addStatement(c_gt + "data_view<" + type + "> " + fieldName + "= " + c_gt +
+                                      "make_host_view(" + fieldName + "_)");
         stencilRunMethod.addStatement("std::array<int,3> " + fieldName + "_offsets{0,0,0}");
       }
       for(const auto& fieldPair : tempFields) {
         const auto fieldName = fieldPair.second.Name;
-        stencilRunMethod.addStatement(c_gt() + "data_view<tmp_storage_t> " + fieldName + "= " +
-                                      c_gt() + "make_host_view(m_" + fieldName + ")");
+        stencilRunMethod.addStatement(c_gt + "data_view<tmp_storage_t> " + fieldName + "= " + c_gt +
+                                      "make_host_view(m_" + fieldName + ")");
         stencilRunMethod.addStatement("std::array<int,3> " + fieldName + "_offsets{0,0,0}");
       }
 
@@ -503,12 +516,11 @@ void CXXNaiveCodeGen::generateStencilFunctions(
       const auto& fields = stencilFun->getCalleeFields();
 
       if(fields.empty()) {
-        DiagnosticsBuilder diag(DiagnosticsKind::Error,
-                                stencilInstantiation->getMetaData().getStencilLocation());
-        diag << "no storages referenced in stencil '" << stencilInstantiation->getName()
-             << "', this would result in invalid gridtools code";
-        diagEngine.report(diag);
-        return;
+        throw SemanticError(std::string("No storages referenced in stencil '") +
+                                stencilInstantiation->getName() +
+                                "', this would result in invalid gridtools code",
+                            stencilInstantiation->getMetaData().getFileName(),
+                            stencilInstantiation->getMetaData().getStencilLocation());
       }
 
       // list of template names of the stencil function declaration
@@ -524,11 +536,11 @@ void CXXNaiveCodeGen::generateStencilFunctions(
                                       [](const std::string& str) { return "class " + str; }));
 
       if(fields.empty() && !stencilFun->hasReturn()) {
-        DiagnosticsBuilder diag(DiagnosticsKind::Error, stencilFun->getStencilFunction()->Loc);
-        diag << "no storages referenced in stencil function '" << stencilFun->getName()
-             << "', this would result in invalid gridtools code";
-        diagEngine.report(diag);
-        return;
+        throw SemanticError(std::string("No storages referenced in stencil function '") +
+                                stencilInstantiation->getName() +
+                                "', this would result in invalid gridtools code",
+                            stencilInstantiation->getMetaData().getFileName(),
+                            stencilFun->getStencilFunction()->Loc);
       }
 
       // Each stencil function call will pass the (i,j,k) position
@@ -551,13 +563,13 @@ void CXXNaiveCodeGen::generateStencilFunctions(
         // that contains the storage and the offset, in order to resolve offset passed to the
         // storage during the function call. For example:
         // fn_call(v(i+1), v(j-1))
-        stencilFunMethod.addArg("param_wrapper<" + c_gt() + "data_view<" + argType + ">> pw_" +
+        stencilFunMethod.addArg("param_wrapper<" + c_gt + "data_view<" + argType + ">> pw_" +
                                 argName);
       }
 
       // add global parameter
       if(stencilFun->hasGlobalVariables()) {
-        stencilFunMethod.addArg("const globals& m_globals");
+        stencilFunMethod.addArg("globals m_globals");
       }
       ASTStencilBody stencilBodyCXXVisitor(stencilInstantiation->getMetaData(),
                                            StencilContext::SC_StencilFunction);
@@ -569,8 +581,8 @@ void CXXNaiveCodeGen::generateStencilFunctions(
         std::string paramName =
             stencilFun->getOriginalNameFromCallerAccessID(fields[m].getAccessID());
 
-        stencilFunMethod << c_gt() << "data_view<StorageType" + std::to_string(m) + "> "
-                         << paramName << " = pw_" << paramName << ".dview_;";
+        stencilFunMethod << c_gt << "data_view<StorageType" + std::to_string(m) + "> " << paramName
+                         << " = pw_" << paramName << ".dview_;";
         stencilFunMethod << "auto " << paramName << "_offsets = pw_" << paramName << ".offsets_;";
       }
       stencilBodyCXXVisitor.setCurrentStencilFunction(stencilFun);
@@ -607,6 +619,7 @@ std::unique_ptr<TranslationUnit> CXXNaiveCodeGen::generateCode() {
   };
 
   ppDefines.push_back(makeDefine("DAWN_GENERATED", 1));
+  ppDefines.push_back("#undef DAWN_BACKEND_T");
   ppDefines.push_back("#define DAWN_BACKEND_T CXXNAIVE");
   // ==============------------------------------------------------------------------------------===
   // BENCHMARKTODO: since we're importing two cpp files into the benchmark API we need to set

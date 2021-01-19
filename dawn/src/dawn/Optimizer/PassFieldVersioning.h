@@ -12,8 +12,7 @@
 //
 //===------------------------------------------------------------------------------------------===//
 
-#ifndef DAWN_OPTIMIZER_PASSFIELDVERSIONING_H
-#define DAWN_OPTIMIZER_PASSFIELDVERSIONING_H
+#pragma once
 
 #include "dawn/IIR/LoopOrder.h"
 #include "dawn/Optimizer/Pass.h"
@@ -35,12 +34,6 @@ class PassFieldVersioning : public Pass {
 
 private:
   int numRenames_;
-
-public:
-  PassFieldVersioning(OptimizerContext& context);
-
-  /// @brief Pass implementation
-  bool run(const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation) override;
 
   /// @brief Kind of race condition encountered
   enum class RCKind {
@@ -78,12 +71,18 @@ public:
   /// @param loopOrder  Current loop order of the stage
   /// @param stageIdx   @b Linear index of the stage in the stencil
   /// @param stmtIdx    Index of the statement inside the stage
+  /// @param dump       If true, dumps race condition graph to DOT file
   RCKind fixRaceCondition(const std::shared_ptr<iir::StencilInstantiation> instantiation,
-                          const iir::DependencyGraphAccesses* graph, iir::Stencil& stencil,
+                          const iir::DependencyGraphAccesses& graph, iir::Stencil& stencil,
                           iir::DoMethod& doMethod, iir::LoopOrderKind loopOrder, int stageIdx,
-                          int stmtIdx);
+                          int stmtIdx, bool dump);
+
+public:
+  PassFieldVersioning() : Pass("PassFieldVersioning"), numRenames_(0) {}
+
+  /// @brief Pass implementation
+  bool run(const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation,
+           const Options& options = {}) override;
 };
 
 } // namespace dawn
-
-#endif

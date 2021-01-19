@@ -19,7 +19,7 @@
 #include "dawn/Support/Array.h"
 #include "dawn/Support/Assert.h"
 #include "dawn/Support/Casting.h"
-#include "dawn/Support/Logging.h"
+#include "dawn/Support/Logger.h"
 #include "dawn/Support/StringSwitch.h"
 #include "gtclang/Frontend/ClangASTStmtResolver.h"
 #include "gtclang/Frontend/GTClangContext.h"

@@ -21,11 +21,10 @@
 #include "dawn/IIR/IIRNodeIterator.h"
 #include "dawn/IIR/Stencil.h"
 #include "dawn/IIR/StencilInstantiation.h"
-#include "dawn/Optimizer/OptimizerContext.h"
 #include "dawn/Support/Assert.h"
-#include "dawn/Support/Logging.h"
-#include <iostream>
+#include "dawn/Support/Logger.h"
 #include <set>
+#include <sstream>
 #include <unordered_map>
 #include <vector>
 
@@ -115,24 +114,18 @@ public:
   void reset() { stencilCallsToReplace_.clear(); }
 };
 
-PassSetBoundaryCondition::PassSetBoundaryCondition(OptimizerContext& context)
-    : Pass(context, "PassSetBoundaryCondition") {
-  dependencies_.push_back("PassComputeStageExtents");
-}
-
 bool PassSetBoundaryCondition::run(
-    const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation) {
-
-  iir::StencilMetaInformation& metadata = stencilInstantiation->getMetaData();
-
+    const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation,
+    const Options& options) {
   // check if we need to run this pass
   if(stencilInstantiation->getStencils().size() == 1) {
-    if(context_.getOptions().ReportBoundaryConditions) {
-      std::cout << "\nPASS: " << getName() << ": " << stencilInstantiation->getName() << " :";
-      std::cout << " No boundary conditions applied\n";
-    }
+    DAWN_LOG(INFO) << stencilInstantiation->getName() << " : No boundary conditions applied";
     return true;
   }
+
+  iir::StencilMetaInformation& metadata = stencilInstantiation->getMetaData();
+  stencilInstantiation->computeDerivedInfo();
+
   // returns the original ID of a variable
   auto getOriginalID = [&](int ID) -> int {
     // This checks if the field was orignially defined and is not a versioned field, a chached field
@@ -325,17 +318,16 @@ bool PassSetBoundaryCondition::run(
   }
 
   // Output
-  if(context_.getOptions().ReportBoundaryConditions) {
-    std::cout << "\nPASS: " << getName() << ": " << stencilInstantiation->getName() << " :";
-    if(boundaryConditionInserted_.size() == 0) {
-      std::cout << " No boundary conditions applied\n";
-    }
-    for(const auto& ID : boundaryConditionInserted_) {
-      std::cout << " Boundary Condition for field '"
-                << stencilInstantiation->getOriginalNameFromAccessID(ID) << "' inserted"
-                << std::endl;
-    }
+  std::ostringstream ss;
+  if(boundaryConditionInserted_.size() == 0) {
+    ss << " No boundary conditions applied";
   }
+  for(const auto& ID : boundaryConditionInserted_) {
+    ss << " Boundary Condition for field '" << stencilInstantiation->getOriginalNameFromAccessID(ID)
+       << "' inserted";
+  }
+
+  DAWN_LOG(INFO) << stencilInstantiation->getName() << ": " << ss.str();
 
   return true;
 }

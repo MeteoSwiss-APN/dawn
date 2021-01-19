@@ -13,15 +13,15 @@
 //===------------------------------------------------------------------------------------------===//
 
 #include "dawn/Optimizer/PassTemporaryType.h"
+#include "dawn/AST/GridType.h"
 #include "dawn/IIR/ASTExpr.h"
 #include "dawn/IIR/ASTVisitor.h"
 #include "dawn/IIR/IIRNodeIterator.h"
 #include "dawn/IIR/NodeUpdateType.h"
 #include "dawn/IIR/Stencil.h"
 #include "dawn/IIR/StencilInstantiation.h"
-#include "dawn/Optimizer/OptimizerContext.h"
 #include "dawn/Optimizer/TemporaryHandling.h"
-#include <iostream>
+#include "dawn/Support/Logger.h"
 #include <memory>
 #include <stack>
 #include <unordered_map>
@@ -81,20 +81,18 @@ struct Temporary {
   // TODO remove the dump and should tne lifetime go into the Field as derived info?
   /// @brief Dump the temporary
   void dump(const std::shared_ptr<iir::StencilInstantiation>& instantiation) const {
-    std::cout << "Temporary : " << instantiation->getMetaData().getNameFromAccessID(accessID_)
-              << " {"
-              << "\n  Type="
-              << (type_ == iir::TemporaryScope::LocalVariable ? "LocalVariable" : "Field")
-              << ",\n  Lifetime=" << lifetime_ << ",\n  Extent=" << extent_ << "\n}\n";
+    DAWN_LOG(INFO) << "Temporary : " << instantiation->getMetaData().getNameFromAccessID(accessID_)
+                   << " {"
+                   << "\n  Type="
+                   << (type_ == iir::TemporaryScope::LocalVariable ? "LocalVariable" : "Field")
+                   << ",\n  Lifetime=" << lifetime_ << ",\n  Extent=" << extent_ << "\n}";
   }
 };
 
 } // anonymous namespace
 
-PassTemporaryType::PassTemporaryType(OptimizerContext& context)
-    : Pass(context, "PassTemporaryType", true) {}
-
-bool PassTemporaryType::run(const std::shared_ptr<iir::StencilInstantiation>& instantiation) {
+bool PassTemporaryType::run(const std::shared_ptr<iir::StencilInstantiation>& instantiation,
+                            const Options& options) {
   const auto& metadata = instantiation->getMetaData();
 
   report_.clear();
@@ -155,8 +153,8 @@ bool PassTemporaryType::run(const std::shared_ptr<iir::StencilInstantiation>& in
       const Temporary& temporary = AccessIDTemporaryPair.second;
 
       auto report = [&](const char* action) {
-        std::cout << "\nPASS: " << getName() << ": " << instantiation->getName() << ": " << action
-                  << ":" << instantiation->getOriginalNameFromAccessID(accessID) << std::endl;
+        DAWN_LOG(INFO) << instantiation->getName() << ": " << action << ": "
+                       << instantiation->getOriginalNameFromAccessID(accessID);
       };
 
       // we promote local variables into temporary fields if they are accessed out
@@ -168,23 +166,31 @@ bool PassTemporaryType::run(const std::shared_ptr<iir::StencilInstantiation>& in
         if(!temporary.lifetime_.Begin.inSameDoMethod(temporary.lifetime_.End) ||
            instantiation->isIDAccessedMultipleMSs(accessID)) {
 
-          if(context_.getOptions().ReportPassTemporaryType)
-            report("promote");
+          report("promote");
 
           report_.push_back(Report{accessID, TmpActionMod::promote});
           promoteLocalVariableToTemporaryField(instantiation.get(), stencilPtr.get(), accessID,
                                                temporary.lifetime_, temporary.type_);
         }
       } else {
-        // If the field is only accessed within the same Do-Method, does not have an extent and is
-        // not argument to a stencil function, we can demote it to a local variable
+        // If the field is only accessed within the same Do-Method, does not have an extent, isn't
+        // sparse and is not argument to a stencil function, we can demote it to a local variable
         // Also solver accesses can not be demoted to local variable
+
+        bool sparse = false;
+        if(metadata.getFieldIDToDimsMap().count(temporary.accessID_)) {
+          auto hDims =
+              metadata.getFieldIDToDimsMap().at(temporary.accessID_).getHorizontalFieldDimension();
+          if(hDims.getType() == ast::GridType::Unstructured) {
+            sparse = sir::dimension_cast<sir::UnstructuredFieldDimension const&>(hDims).isSparse();
+          }
+        }
         if(temporary.lifetime_.Begin.inSameDoMethod(temporary.lifetime_.End) &&
-           temporary.extent_.isPointwise() && !usedAsArgumentInStencilFun(stencilPtr, accessID) &&
+           temporary.extent_.isPointwise() && !sparse &&
+           !usedAsArgumentInStencilFun(stencilPtr, accessID) &&
            !instantiation->isIDAccessedMultipleMSs(accessID)) {
 
-          if(context_.getOptions().ReportPassTemporaryType)
-            report("demote");
+          report("demote");
 
           report_.push_back(Report{accessID, TmpActionMod::demote});
           demoteTemporaryFieldToLocalVariable(instantiation.get(), stencilPtr.get(), accessID,

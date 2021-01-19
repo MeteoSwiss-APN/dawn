@@ -1,6 +1,6 @@
 {
  "gridType": "Cartesian",
- "filename": "/home/matthias/workspace/dawn/gtclang/test/integration-test/SIR/AccessTest.cpp",
+ "filename": "AccessTest.cpp",
  "stencils": [
   {
    "name": "Test",
@@ -30,7 +30,8 @@
                   "left": {
                    "field_access_expr": {
                     "name": "b",
-                    "vertical_offset": 0,
+                    "vertical_shift": 0,
+                    "vertical_indirection": "",
                     "zero_offset": {},
                     "argument_map": [
                      -1,
@@ -65,7 +66,8 @@
                             "left": {
                              "field_access_expr": {
                               "name": "a",
-                              "vertical_offset": 0,
+                              "vertical_shift": 0,
+                              "vertical_indirection": "",
                               "cartesian_offset": {
                                "i_offset": 1,
                                "j_offset": 0
@@ -93,7 +95,8 @@
                             "right": {
                              "field_access_expr": {
                               "name": "a",
-                              "vertical_offset": 0,
+                              "vertical_shift": 0,
+                              "vertical_indirection": "",
                               "cartesian_offset": {
                                "i_offset": -1,
                                "j_offset": 0
@@ -128,7 +131,8 @@
                           "right": {
                            "field_access_expr": {
                             "name": "a",
-                            "vertical_offset": 0,
+                            "vertical_shift": 0,
+                            "vertical_indirection": "",
                             "cartesian_offset": {
                              "i_offset": 0,
                              "j_offset": 1
@@ -163,7 +167,8 @@
                         "right": {
                          "field_access_expr": {
                           "name": "a",
-                          "vertical_offset": 0,
+                          "vertical_shift": 0,
+                          "vertical_indirection": "",
                           "cartesian_offset": {
                            "i_offset": 0,
                            "j_offset": -1
@@ -198,7 +203,8 @@
                       "right": {
                        "field_access_expr": {
                         "name": "a",
-                        "vertical_offset": -1,
+                        "vertical_shift": -1,
+                        "vertical_indirection": "",
                         "zero_offset": {},
                         "argument_map": [
                          -1,
@@ -230,7 +236,8 @@
                     "right": {
                      "field_access_expr": {
                       "name": "a",
-                      "vertical_offset": 1,
+                      "vertical_shift": 1,
+                      "vertical_indirection": "",
                       "cartesian_offset": {
                        "i_offset": 0,
                        "j_offset": 1

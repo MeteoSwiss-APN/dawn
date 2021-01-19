@@ -12,6 +12,7 @@
 //
 //===------------------------------------------------------------------------------------------===//
 
+#include "dawn/IIR/Extents.h"
 #include "dawn/IIR/Interval.h"
 #include "dawn/IIR/IntervalAlgorithms.h"
 #include "dawn/IIR/MultiInterval.h"
@@ -453,6 +454,65 @@ TEST(IntervalTest, intersect) {
   EXPECT_EQ(I1.intersect(Interval{0, 1, 0, 4}), (Interval{1, 5, 0, 0}));
   EXPECT_EQ(I1.intersect(Interval{0, 7, 0, 2}), (Interval{1, 6, 0, 0}));
   EXPECT_TRUE(!I1.intersect(Interval{0, 0, 0, 0}).valid());
+}
+TEST(IntervalTest, undefined) {
+  Interval undef(UndefinedInterval{});
+
+  // prohibited operations and queries
+  EXPECT_DEATH(undef.lowerLevel(), ".*lower level of undefined interval requested.*");
+  EXPECT_DEATH(undef.upperLevel(), ".*upper level of undefined interval requested.*");
+  EXPECT_DEATH(undef.lowerOffset(), ".*lower offset of undefined interval requested.*");
+  EXPECT_DEATH(undef.upperOffset(), ".*upper offset of undefined interval requested.*");
+  EXPECT_DEATH(undef.invert(), ".*trying to invert undefined interval.*");
+  EXPECT_DEATH(undef.upperIntervalLevel(),
+               ".*upperIntervalLevel\\(\\) of undefined interval requested.*");
+  EXPECT_DEATH(undef.lowerIntervalLevel(),
+               ".*lowerIntervalLevel\\(\\) of undefined interval requested.*");
+  EXPECT_DEATH(undef.upperBound(), ".*upperBound\\(\\) of undefined interval requested.*");
+  EXPECT_DEATH(undef.lowerBound(), ".*lowerBound\\(\\) of undefined interval requested.*");
+  EXPECT_DEATH(undef.intersect(Interval{0, 7, 1, -1}),
+               ".*trying to intersect undefined interval.*");
+  EXPECT_DEATH(undef.crop(Interval::Bound::upper, {0, 0}), ".*trying to crop undefined interval.*");
+  EXPECT_DEATH(undef.offset(Interval::Bound::upper),
+               ".*offset\\(\\) of undefined interval requested.*");
+  EXPECT_DEATH(undef.level(Interval::Bound::upper),
+               ".*level\\(\\) of undefined interval requested.*");
+  EXPECT_DEATH(undef.bound(Interval::Bound::upper),
+               ".*bound\\(\\) of undefined interval requested.*");
+  EXPECT_DEATH(undef.overlaps(Interval{0, 7, 1, -1}),
+               ".*overlaps\\(\\) of undefined interval requested.*");
+  EXPECT_DEATH(undef.contains(Interval{0, 7, 1, -1}),
+               ".*contains\\(\\) of undefined interval requested.*");
+  EXPECT_DEATH(undef.adjacent(Interval{0, 7, 1, -1}),
+               ".*adjacent\\(\\) of undefined interval requested.*");
+  EXPECT_DEATH(undef.asSIRInterval(), ".*undefined interval not representable in SIR.*");
+  EXPECT_DEATH(undef.levelIsEnd(Interval::Bound::upper),
+               ".*levelIsEnd\\(\\) of undefined interval requested.*");
+  EXPECT_DEATH(undef.overEnd(), ".*overEnd\\(\\) of undefined interval requested.*");
+  EXPECT_DEATH(undef.belowBegin(), ".*belowBegin\\(\\) of undefined interval requested.*");
+  EXPECT_DEATH(undef.lowerLevelIsEnd(),
+               ".*lowerLevelIsEnd\\(\\) of undefined interval requested.*");
+  EXPECT_DEATH(undef.upperLevelIsEnd(),
+               ".*upperLevelIsEnd\\(\\) of undefined interval requested.*");
+  EXPECT_DEATH(Interval::computeGapIntervals(
+                   undef, std::vector<Interval>{Interval(0, 10, 0, 0), Interval{0, 8, 0, 0}}),
+               ".*axis is undefined.*");
+  EXPECT_DEATH(Interval::computeGapIntervals(Interval(0, 10, 0, 0),
+                                             std::vector<Interval>{undef, Interval{0, 8, 0, 0}}),
+               ".*trying to compute gap intervals of \\(partially\\) undefined interval.*");
+  EXPECT_DEATH(Interval::computePartition(std::vector<Interval>{undef, Interval{0, 8, 0, 0}}),
+               ".*trying to compute the partition of \\(partially\\) undefined interval.*");
+  EXPECT_DEATH(Interval::computeLevelUnion(std::vector<Interval>{undef, Interval{0, 8, 0, 0}}),
+               ".*trying to compute the level union of \\(partially\\) undefined interval.*");
+
+  // propagating operations
+  Interval I1{0, 8, 0, 0};
+  I1.merge(undef);
+  EXPECT_TRUE(I1.isUndefined());
+  Extent undefExt(UndefinedExtent{});
+  Interval I2{0, 8, 0, 0};
+  Interval I3 = I2.extendInterval(undefExt);
+  EXPECT_TRUE(I3.isUndefined());
 }
 
 } // anonymous namespace

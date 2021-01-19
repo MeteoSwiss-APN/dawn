@@ -12,8 +12,7 @@
 //
 //===------------------------------------------------------------------------------------------===//
 
-#ifndef DAWN_IIR_ASTCONVERTER_H
-#define DAWN_IIR_ASTCONVERTER_H
+#pragma once
 
 #include "dawn/IIR/ASTStmt.h"
 #include "dawn/SIR/ASTStmt.h"
@@ -46,11 +45,10 @@ public:
   void visit(const std::shared_ptr<sir::StencilCallDeclStmt>& stmt) override;
   void visit(const std::shared_ptr<sir::BoundaryConditionDeclStmt>& bcStmt) override;
   void visit(const std::shared_ptr<sir::IfStmt>& stmt) override;
+  void visit(const std::shared_ptr<sir::LoopStmt>& stmt) override;
 
 private:
   StmtMap stmtMap_; // TODO: make it a pointer to first visited element
 };
 
 } // namespace dawn
-
-#endif

@@ -68,12 +68,13 @@ void BlockStmt::substitute(StmtConstIterator position, std::shared_ptr<Stmt>&& r
 
 std::shared_ptr<Stmt> BlockStmt::clone() const { return std::make_shared<BlockStmt>(*this); }
 
-bool BlockStmt::equals(const Stmt* other) const {
+bool BlockStmt::equals(const Stmt* other, bool compareData) const {
   const BlockStmt* otherPtr = dyn_cast<BlockStmt>(other);
-  return otherPtr && Stmt::equals(other) && otherPtr->statements_.size() == statements_.size() &&
+  return otherPtr && Stmt::equals(other, compareData) &&
+         otherPtr->statements_.size() == statements_.size() &&
          std::equal(statements_.begin(), statements_.end(), otherPtr->statements_.begin(),
-                    [](const std::shared_ptr<Stmt>& a, const std::shared_ptr<Stmt>& b) {
-                      return a->equals(b.get());
+                    [compareData](const std::shared_ptr<Stmt>& a, const std::shared_ptr<Stmt>& b) {
+                      return a->equals(b.get(), compareData);
                     });
 }
 
@@ -105,9 +106,10 @@ ExprStmt::~ExprStmt() {}
 
 std::shared_ptr<Stmt> ExprStmt::clone() const { return std::make_shared<ExprStmt>(*this); }
 
-bool ExprStmt::equals(const Stmt* other) const {
+bool ExprStmt::equals(const Stmt* other, bool compareData) const {
   const ExprStmt* otherPtr = dyn_cast<ExprStmt>(other);
-  return otherPtr && Stmt::equals(other) && expr_->equals(otherPtr->expr_.get());
+  return otherPtr && Stmt::equals(other, compareData) &&
+         expr_->equals(otherPtr->expr_.get(), compareData);
 }
 
 void ExprStmt::replaceChildren(std::shared_ptr<Expr> const& oldExpr,
@@ -137,9 +139,10 @@ ReturnStmt::~ReturnStmt() {}
 
 std::shared_ptr<Stmt> ReturnStmt::clone() const { return std::make_shared<ReturnStmt>(*this); }
 
-bool ReturnStmt::equals(const Stmt* other) const {
+bool ReturnStmt::equals(const Stmt* other, bool compareData) const {
   const ReturnStmt* otherPtr = dyn_cast<ReturnStmt>(other);
-  return otherPtr && Stmt::equals(other) && expr_->equals(otherPtr->expr_.get());
+  return otherPtr && Stmt::equals(other, compareData) &&
+         expr_->equals(otherPtr->expr_.get(), compareData);
 }
 
 void ReturnStmt::replaceChildren(std::shared_ptr<Expr> const& oldExpr,
@@ -153,7 +156,8 @@ void ReturnStmt::replaceChildren(std::shared_ptr<Expr> const& oldExpr,
 //===------------------------------------------------------------------------------------------===//
 
 VarDeclStmt::VarDeclStmt(std::unique_ptr<StmtData> data, const Type& type, const std::string& name,
-                         int dimension, const char* op, InitList initList, SourceLocation loc)
+                         int dimension, const std::string& op, InitList initList,
+                         SourceLocation loc)
     : Stmt(std::move(data), Kind::VarDeclStmt, loc), type_(type), name_(name),
       dimension_(dimension), op_(op), initList_(std::move(initList)) {}
 
@@ -178,14 +182,14 @@ VarDeclStmt::~VarDeclStmt() {}
 
 std::shared_ptr<Stmt> VarDeclStmt::clone() const { return std::make_shared<VarDeclStmt>(*this); }
 
-bool VarDeclStmt::equals(const Stmt* other) const {
+bool VarDeclStmt::equals(const Stmt* other, bool compareData) const {
   const VarDeclStmt* otherPtr = dyn_cast<VarDeclStmt>(other);
-  return otherPtr && Stmt::equals(other) && type_ == otherPtr->type_ && name_ == otherPtr->name_ &&
-         dimension_ == otherPtr->dimension_ && op_ == otherPtr->op_ &&
+  return otherPtr && Stmt::equals(other, compareData) && type_ == otherPtr->type_ &&
+         name_ == otherPtr->name_ && dimension_ == otherPtr->dimension_ && op_ == otherPtr->op_ &&
          initList_.size() == otherPtr->initList_.size() &&
          std::equal(initList_.begin(), initList_.end(), otherPtr->initList_.begin(),
-                    [](const std::shared_ptr<Expr>& a, const std::shared_ptr<Expr>& b) {
-                      return a->equals(b.get());
+                    [compareData](const std::shared_ptr<Expr>& a, const std::shared_ptr<Expr>& b) {
+                      return a->equals(b.get(), compareData);
                     });
 }
 
@@ -222,9 +226,9 @@ std::shared_ptr<Stmt> VerticalRegionDeclStmt::clone() const {
   return std::make_shared<VerticalRegionDeclStmt>(*this);
 }
 
-bool VerticalRegionDeclStmt::equals(const Stmt* other) const {
+bool VerticalRegionDeclStmt::equals(const Stmt* other, bool compareData) const {
   const VerticalRegionDeclStmt* otherPtr = dyn_cast<VerticalRegionDeclStmt>(other);
-  return otherPtr && Stmt::equals(other) &&
+  return otherPtr && Stmt::equals(other, compareData) &&
          *(verticalRegion_.get()) == *(otherPtr->verticalRegion_.get());
 }
 
@@ -286,7 +290,7 @@ std::shared_ptr<Stmt> StencilCallDeclStmt::clone() const {
   return std::make_shared<StencilCallDeclStmt>(*this);
 }
 
-bool StencilCallDeclStmt::equals(const Stmt* other) const {
+bool StencilCallDeclStmt::equals(const Stmt* other, bool compareData) const {
   const StencilCallDeclStmt* otherPtr = dyn_cast<StencilCallDeclStmt>(other);
   if(otherPtr) {
     if(stencilCall_) {
@@ -295,7 +299,7 @@ bool StencilCallDeclStmt::equals(const Stmt* other) const {
         return false;
       }
     }
-    return Stmt::equals(other);
+    return Stmt::equals(other, compareData);
   }
   return false;
 }
@@ -324,9 +328,9 @@ std::shared_ptr<Stmt> BoundaryConditionDeclStmt::clone() const {
   return std::make_shared<BoundaryConditionDeclStmt>(*this);
 }
 
-bool BoundaryConditionDeclStmt::equals(const Stmt* other) const {
+bool BoundaryConditionDeclStmt::equals(const Stmt* other, bool compareData) const {
   const BoundaryConditionDeclStmt* otherPtr = dyn_cast<BoundaryConditionDeclStmt>(other);
-  return otherPtr && Stmt::equals(other) && functor_ == otherPtr->functor_ &&
+  return otherPtr && Stmt::equals(other, compareData) && functor_ == otherPtr->functor_ &&
          fields_.size() == otherPtr->fields_.size() &&
          std::equal(fields_.begin(), fields_.end(), otherPtr->fields_.begin(),
                     [](const std::string& a, const std::string& b) { return a == b; });
@@ -361,16 +365,19 @@ IfStmt::~IfStmt() {}
 
 std::shared_ptr<Stmt> IfStmt::clone() const { return std::make_shared<IfStmt>(*this); }
 
-bool IfStmt::equals(const Stmt* other) const {
+bool IfStmt::equals(const Stmt* other, bool compareData) const {
   const IfStmt* otherPtr = dyn_cast<IfStmt>(other);
   bool sameElse;
   if(hasElse() && otherPtr->hasElse())
-    sameElse = subStmts_[OperandKind::Else]->equals(otherPtr->subStmts_[OperandKind::Else].get());
+    sameElse = subStmts_[OperandKind::Else]->equals(otherPtr->subStmts_[OperandKind::Else].get(),
+                                                    compareData);
   else
     sameElse = !(hasElse() ^ otherPtr->hasElse());
-  return otherPtr && Stmt::equals(other) &&
-         subStmts_[OperandKind::Cond]->equals(otherPtr->subStmts_[OperandKind::Cond].get()) &&
-         subStmts_[OperandKind::Then]->equals(otherPtr->subStmts_[OperandKind::Then].get()) &&
+  return otherPtr && Stmt::equals(other, compareData) &&
+         subStmts_[OperandKind::Cond]->equals(otherPtr->subStmts_[OperandKind::Cond].get(),
+                                              compareData) &&
+         subStmts_[OperandKind::Then]->equals(otherPtr->subStmts_[OperandKind::Then].get(),
+                                              compareData) &&
          sameElse;
 }
 void IfStmt::replaceChildren(std::shared_ptr<Stmt> const& oldStmt,
@@ -390,5 +397,94 @@ void IfStmt::replaceChildren(std::shared_ptr<Stmt> const& oldStmt,
   }
   DAWN_ASSERT_MSG((false), ("Expression not found"));
 }
+
+//===------------------------------------------------------------------------------------------===//
+//     Loop
+//===------------------------------------------------------------------------------------------===//
+
+IterationDescr::~IterationDescr() {}
+
+ChainIterationDescr::ChainIterationDescr(ast::NeighborChain&& chain, bool includeCenter)
+    : iterSpace_(std::move(chain), includeCenter) {}
+ast::NeighborChain ChainIterationDescr::getChain() const { return iterSpace_.Chain; }
+std::unique_ptr<IterationDescr> ChainIterationDescr::clone() const {
+  return std::make_unique<ChainIterationDescr>(*this);
+}
+std::string ChainIterationDescr::toString() const {
+  std::stringstream ss;
+  auto locString = [](ast::LocationType type) -> std::string {
+    switch(type) {
+    case ast::LocationType::Cells:
+      return "Cell";
+    case ast::LocationType::Edges:
+      return "Edges";
+    case ast::LocationType::Vertices:
+      return "Vertices";
+    default:
+      dawn_unreachable("invalid location type");
+    };
+  };
+  ss << "{";
+  bool first = true;
+  for(const auto it : iterSpace_.Chain) {
+    if(!first) {
+      ss << ", ";
+    }
+    first = false;
+    ss << (first && getIncludeCenter() ? "[" + locString(it) + "]" : locString(it));
+  }
+  return ss.str();
+}
+bool ChainIterationDescr::equals(const IterationDescr* otherPtr) const {
+  const ChainIterationDescr* chainPtr = dynamic_cast<const ChainIterationDescr*>(otherPtr);
+  return chainPtr && iterSpace_ == chainPtr->iterSpace_;
+}
+
+LoopStmt::LoopStmt(std::unique_ptr<StmtData> data, ast::NeighborChain&& chain, bool includeCenter,
+                   std::shared_ptr<BlockStmt> body, SourceLocation loc)
+    : Stmt(std::move(data), Kind::LoopStmt, loc), blockStmt_(body) {
+  iterationDescr_ = std::make_unique<ChainIterationDescr>(std::move(chain), includeCenter);
+  for(const auto& stmtPtr : body->getStatements()) {
+    DAWN_ASSERT_MSG(stmtPtr->getKind() == ast::Stmt::Kind::ExprStmt,
+                    "only expression statements allowed in loop body");
+    DAWN_ASSERT_MSG(dyn_pointer_cast<ExprStmt>(stmtPtr)->getExpr()->getKind() ==
+                        ast::Expr::Kind::AssignmentExpr,
+                    "only assignments allowed in loop body");
+  }
+}
+LoopStmt::LoopStmt(std::unique_ptr<StmtData> data, ast::NeighborChain&& chain,
+                   std::shared_ptr<BlockStmt> body, SourceLocation loc)
+    : LoopStmt(std::move(data), std::move(chain), false, body, loc) {}
+LoopStmt::LoopStmt(const LoopStmt& stmt)
+    : Stmt(stmt), blockStmt_(std::dynamic_pointer_cast<BlockStmt>(stmt.getBlockStmt()->clone())),
+      iterationDescr_(stmt.getIterationDescr().clone()) {}
+LoopStmt& LoopStmt::operator=(LoopStmt const& stmt) {
+  assign(stmt);
+  blockStmt_ = stmt.blockStmt_;
+  iterationDescr_ = stmt.getIterationDescr().clone();
+  return *this;
+}
+LoopStmt::~LoopStmt() {}
+
+const std::shared_ptr<BlockStmt>& LoopStmt::getBlockStmt() const { return blockStmt_; }
+std::shared_ptr<BlockStmt>& LoopStmt::getBlockStmt() { return blockStmt_; }
+
+std::shared_ptr<Stmt> LoopStmt::clone() const { return std::make_shared<LoopStmt>(*this); }
+bool LoopStmt::equals(const Stmt* other, bool compareData) const {
+  const LoopStmt* otherPtr = dynamic_cast<const LoopStmt*>(other);
+  return otherPtr && Stmt::equals(other, compareData) &&
+         getBlockStmt()->equals(otherPtr->getBlockStmt().get(), compareData) &&
+         iterationDescr_->equals(otherPtr->iterationDescr_.get());
+}
+
+MutableArrayRef<std::shared_ptr<Stmt>> LoopStmt::getChildren() { return blockStmt_->getChildren(); }
+void LoopStmt::replaceChildren(const std::shared_ptr<Stmt>& oldStmt,
+                               const std::shared_ptr<Stmt>& newStmt) {
+  blockStmt_->replaceChildren(oldStmt, newStmt);
+}
+
+const IterationDescr& LoopStmt::getIterationDescr() const { return *iterationDescr_; }
+const IterationDescr* LoopStmt::getIterationDescrPtr() const { return iterationDescr_.get(); }
+
 } // namespace ast
 } // namespace dawn

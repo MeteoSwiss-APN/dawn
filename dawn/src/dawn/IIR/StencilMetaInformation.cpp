@@ -21,13 +21,12 @@
 #include "dawn/IIR/StencilFunctionInstantiation.h"
 #include "dawn/SIR/SIR.h"
 #include "dawn/Support/Casting.h"
-#include "dawn/Support/FileUtil.h"
 #include "dawn/Support/Format.h"
 #include "dawn/Support/Json.h"
+
 #include <cstdlib>
 #include <fstream>
 #include <functional>
-#include <iostream>
 #include <stack>
 
 namespace dawn {
@@ -70,6 +69,7 @@ const std::string& StencilMetaInformation::getNameFromLiteralAccessID(int Access
 const std::string& StencilMetaInformation::getFieldNameFromAccessID(int accessID) const {
   if(accessID < 0)
     return getNameFromLiteralAccessID(accessID);
+  DAWN_ASSERT_MSG(AccessIDToNameMap_.getDirectMap().count(accessID), "Unregistered access id");
   return AccessIDToNameMap_.directAt(accessID);
 }
 
@@ -281,22 +281,51 @@ void StencilMetaInformation::insertAccessOfType(FieldAccessType type, int Access
   }
 }
 
-int StencilMetaInformation::addStmt(bool keepVarNames, const std::shared_ptr<VarDeclStmt>& stmt) {
+int StencilMetaInformation::addStmt(bool keepVarName, const std::shared_ptr<VarDeclStmt>& stmt) {
   int accessID = UIDGenerator::getInstance()->get();
 
   std::string globalName;
-  if(keepVarNames) {
+  if(keepVarName) {
     globalName = stmt->getName();
   } else {
     globalName = InstantiationHelper::makeLocalVariablename(stmt->getName(), accessID);
   }
 
   addAccessIDNamePair(accessID, globalName);
+  // Add empty data object for local variable
+  addAccessIDToLocalVariableDataPair(accessID, LocalVariableData{});
 
   DAWN_ASSERT(!stmt->getData<iir::VarDeclStmtData>().AccessID);
   stmt->getData<iir::VarDeclStmtData>().AccessID = std::make_optional(accessID);
 
   return accessID;
+}
+
+std::shared_ptr<VarDeclStmt>
+StencilMetaInformation::declareVar(bool keepVarName, std::string varName, Type type, int accessID) {
+  return declareVar(keepVarName, varName, type, nullptr, accessID);
+}
+std::shared_ptr<VarDeclStmt> StencilMetaInformation::declareVar(bool keepVarName,
+                                                                std::string varName, Type type,
+                                                                std::shared_ptr<Expr> rhs,
+                                                                int accessID) {
+  // TODO: find a way to reuse code from addStmt
+  std::string globalName =
+      keepVarName ? varName : InstantiationHelper::makeLocalVariablename(varName, accessID);
+  // Construct the variable declaration
+  std::vector<std::shared_ptr<iir::Expr>> initList;
+  if(rhs != nullptr) { // If nullptr, declaration without initialization (overload)
+    initList.push_back(rhs);
+  }
+  auto varDeclStmt = iir::makeVarDeclStmt(type, globalName, 0, "=", std::move(initList));
+  // Update id to name map
+  addAccessIDNamePair(accessID, globalName);
+  // Add empty data object for local variable
+  addAccessIDToLocalVariableDataPair(accessID, LocalVariableData{});
+  // Update varDeclStmt's data
+  varDeclStmt->getData<iir::VarDeclStmtData>().AccessID = std::make_optional(accessID);
+
+  return varDeclStmt;
 }
 
 bool StencilMetaInformation::isFieldType(FieldAccessType accessType) const {
@@ -373,6 +402,11 @@ int StencilMetaInformation::addTmpField(FieldAccessType type, const std::string&
   return *accessID;
 }
 ast::LocationType StencilMetaInformation::getDenseLocationTypeFromAccessID(int AccessID) const {
+  // if the access id is not present in the initialized dimensions map it may have been renamed by
+  // the PassFieldVersioning. Let's check
+  if(!fieldIDToInitializedDimensionsMap_.count(AccessID)) {
+    AccessID = fieldAccessMetadata_.variableVersions_.getOriginalVersionOfAccessID(AccessID);
+  }
   DAWN_ASSERT_MSG(
       sir::dimension_isa<sir::UnstructuredFieldDimension>(
           fieldIDToInitializedDimensionsMap_.at(AccessID).getHorizontalFieldDimension()),
@@ -389,6 +423,10 @@ void StencilMetaInformation::removeAccessID(int AccessID) {
   // literals
   DAWN_ASSERT(isAccessType(FieldAccessType::Field, AccessID) ||
               isAccessType(FieldAccessType::LocalVariable, AccessID));
+
+  if(isAccessType(FieldAccessType::LocalVariable, AccessID)) {
+    accessIDToLocalVariableDataMap_.erase(AccessID);
+  }
 
   fieldAccessMetadata_.FieldAccessIDSet_.erase(AccessID);
   if(isAccessType(FieldAccessType::InterStencilTemporary, AccessID)) {
@@ -529,6 +567,31 @@ int StencilMetaInformation::getStencilIDFromStencilCallStmt(
 void StencilMetaInformation::addStencilCallStmt(std::shared_ptr<StencilCallDeclStmt> stmt,
                                                 int stencilID) {
   StencilIDToStencilCallMap_.add(stencilID, stmt);
+}
+
+void StencilMetaInformation::addAccessIDToLocalVariableDataPair(int accessID,
+                                                                LocalVariableData&& data) {
+  DAWN_ASSERT(isAccessType(FieldAccessType::LocalVariable, accessID));
+  accessIDToLocalVariableDataMap_.emplace(accessID, std::move(data));
+}
+
+iir::LocalVariableData& StencilMetaInformation::getLocalVariableDataFromAccessID(int accessID) {
+  DAWN_ASSERT(isAccessType(FieldAccessType::LocalVariable, accessID));
+  DAWN_ASSERT(accessIDToLocalVariableDataMap_.count(accessID));
+  return accessIDToLocalVariableDataMap_.at(accessID);
+}
+
+const iir::LocalVariableData&
+StencilMetaInformation::getLocalVariableDataFromAccessID(int accessID) const {
+  DAWN_ASSERT(isAccessType(FieldAccessType::LocalVariable, accessID));
+  DAWN_ASSERT(accessIDToLocalVariableDataMap_.count(accessID));
+  return accessIDToLocalVariableDataMap_.at(accessID);
+}
+
+void StencilMetaInformation::resetLocalVarTypes() {
+  for(auto& pair : accessIDToLocalVariableDataMap_) {
+    pair.second = iir::LocalVariableData{};
+  }
 }
 
 } // namespace iir

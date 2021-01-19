@@ -12,8 +12,7 @@
 //
 //===------------------------------------------------------------------------------------------===//
 
-#ifndef DAWN_IIR_NODEUPDATETYPE_H
-#define DAWN_IIR_NODEUPDATETYPE_H
+#pragma once
 
 namespace dawn {
 namespace iir {
@@ -36,5 +35,3 @@ bool updateTreeBelow(NodeUpdateType updateType);
 } // namespace impl
 } // namespace iir
 } // namespace dawn
-
-#endif

@@ -13,12 +13,10 @@
 ##===------------------------------------------------------------------------------------------===##
 
 add_library(DawnUnittest
-  CompilerUtil.cpp
-  CompilerUtil.h
   IIRBuilder.h
   IIRBuilder.cpp
-  UnittestLogger.cpp
-  UnittestLogger.h
+  UnittestUtils.h
+  UnittestUtils.cpp
 )
 
 target_add_dawn_standard_props(DawnUnittest)

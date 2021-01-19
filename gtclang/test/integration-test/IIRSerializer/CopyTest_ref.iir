@@ -1,8 +1,8 @@
 {
  "metadata": {
   "accessIDToName": {
-   "10": "field_b",
-   "9": "field_a"
+   "9": "field_a",
+   "10": "field_b"
   },
   "accessIDToType": {
    "9": 6,
@@ -65,7 +65,7 @@
    "Line": 24,
    "Column": 8
   },
-  "stencilName": "Test"
+  "stencilName": "CopyTest"
  },
  "internalIR": {
   "gridType": "Cartesian",
@@ -88,7 +88,8 @@
                  "left": {
                   "field_access_expr": {
                    "name": "field_a",
-                   "vertical_offset": 0,
+                   "vertical_shift": 0,
+                   "vertical_indirection": "",
                    "zero_offset": {},
                    "argument_map": [
                     -1,
@@ -108,14 +109,15 @@
                    "data": {
                     "accessID": 9
                    },
-                   "ID": 27
+                   "ID": 14
                   }
                  },
                  "op": "=",
                  "right": {
                   "field_access_expr": {
                    "name": "field_b",
-                   "vertical_offset": 0,
+                   "vertical_shift": 0,
+                   "vertical_indirection": "",
                    "zero_offset": {},
                    "argument_map": [
                     -1,
@@ -135,14 +137,14 @@
                    "data": {
                     "accessID": 10
                    },
-                   "ID": 26
+                   "ID": 13
                   }
                  },
                  "loc": {
                   "Line": 28,
                   "Column": 50
                  },
-                 "ID": 28
+                 "ID": 15
                 }
                },
                "loc": {
@@ -156,7 +158,8 @@
                    "zero_extent": {},
                    "vertical_extent": {
                     "minus": 0,
-                    "plus": 0
+                    "plus": 0,
+                    "undefined": false
                    }
                   }
                  },
@@ -165,13 +168,14 @@
                    "zero_extent": {},
                    "vertical_extent": {
                     "minus": 0,
-                    "plus": 0
+                    "plus": 0,
+                    "undefined": false
                    }
                   }
                  }
                 }
                },
-               "ID": 25
+               "ID": 16
               }
              }
             ],
@@ -180,7 +184,7 @@
              "Column": -1
             },
             "data": {},
-            "ID": 24
+            "ID": 22
            }
           },
           "doMethodID": 0,
@@ -192,10 +196,11 @@
           }
          }
         ],
-        "stageID": 21
+        "stageID": 21,
+        "locationType": "LocationTypeUnknown"
        }
       ],
-      "loopOrder": "Parallel",
+      "loopOrder": "Forward",
       "multiStageID": 23,
       "Caches": {}
      }
@@ -228,5 +233,5 @@
   ],
   "boundaryConditions": []
  },
- "filename": "/home/giacomo/dawn/gtclang/test/integration-test/IIRSerializer/CopyTest.cpp"
+ "filename": "CopyTest.cpp"
 }

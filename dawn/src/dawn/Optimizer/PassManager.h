@@ -12,8 +12,7 @@
 //
 //===------------------------------------------------------------------------------------------===//
 
-#ifndef DAWN_OPTIMIZER_PASSMANAGER_H
-#define DAWN_OPTIMIZER_PASSMANAGER_H
+#pragma once
 
 #include "dawn/Optimizer/Pass.h"
 #include "dawn/Optimizer/PassValidation.h"
@@ -38,26 +37,20 @@ public:
   /// @brief Create a new pass at the end of the pass list
   template <class T, typename... Args>
   void pushBackPass(Args&&... args) {
-    return passes_.emplace_back(std::make_unique<T>(std::forward<Args>(args)...));
-  }
-
-  /// @brief Create a new pass at the start of the pass list
-  template <class T, typename... Args>
-  void pushFrontPass(Args&&... args) {
-    return passes_.emplace_front(std::make_unique<T>(std::forward<Args>(args)...));
+    std::unique_ptr<T> pass = std::make_unique<T>(std::forward<Args>(args)...);
+    passes_.push_back(std::move(pass));
   }
 
   /// @brief Run all passes on the `instantiation`
   /// @returns `true` on success, `false` otherwise
   bool runAllPassesOnStencilInstantiation(
-      OptimizerContext& context, const std::shared_ptr<iir::StencilInstantiation>& instantiation);
+      const std::shared_ptr<iir::StencilInstantiation>& instantiation, const Options& options);
 
   /// @brief Run the given pass on the `instantiation`
   /// @returns `true` on success, `false` otherwise
   bool
-  runPassOnStencilInstantiation(OptimizerContext& context,
-                                const std::shared_ptr<iir::StencilInstantiation>& instantiation,
-                                Pass* pass);
+  runPassOnStencilInstantiation(const std::shared_ptr<iir::StencilInstantiation>& instantiation,
+                                const Options& options, Pass* pass);
 
   /// @brief Get all registered passes
   std::list<std::unique_ptr<Pass>>& getPasses() { return passes_; }
@@ -65,5 +58,3 @@ public:
 };
 
 } // namespace dawn
-
-#endif

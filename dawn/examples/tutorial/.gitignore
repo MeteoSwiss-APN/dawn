@@ -1,0 +1,8 @@
+build/
+dawn-tutorial-venv/
+laplacian_stencil_cxx_naive.cpp
+laplacian_stencil_from_python.cpp
+laplacian_stencil_from_python.sir
+laplacian_stencil_from_toolchain.cpp
+in.vtk
+out.vtk

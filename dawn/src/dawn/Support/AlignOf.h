@@ -12,8 +12,7 @@
 //
 //===------------------------------------------------------------------------------------------===//
 
-#ifndef DAWN_SUPPORT_ALIGNOF_H
-#define DAWN_SUPPORT_ALIGNOF_H
+#pragma once
 
 #include "dawn/Support/Compiler.h"
 #include <cstddef>
@@ -75,5 +74,3 @@ struct AlignedCharArrayUnion
                        sizeof(internal::SizerImpl<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10>)> {};
 
 } // namespace dawn
-
-#endif

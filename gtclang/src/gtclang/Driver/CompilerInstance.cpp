@@ -31,7 +31,7 @@
 #include "llvm/ADT/SmallString.h"
 #include "llvm/Support/FileSystem.h"
 #include "llvm/Support/Host.h"
-#include <iostream>
+
 #include <memory>
 #include <string>
 #include <utility>
@@ -93,6 +93,8 @@ clang::CompilerInstance* createCompilerInstance(llvm::SmallVectorImpl<const char
   // Set the root where system headers are located.
   ccArgs.push_back("-internal-isystem");
   ccArgs.push_back(GTCLANG_CLANG_RESSOURCE_INCLUDE_PATH "/../../../../include/c++/v1/");
+  ccArgs.push_back("-internal-isystem");
+  ccArgs.push_back("/Library/Developer/CommandLineTools/usr/include/c++/v1");
   // 20191208: -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk does not work, so we
   // add the full path manually
   ccArgs.push_back("-internal-isystem");

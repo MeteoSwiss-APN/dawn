@@ -1,9 +1,28 @@
+//===--------------------------------------------------------------------------------*- C++ -*-===//
+//                          _
+//                         | |
+//                       __| | __ ___      ___ ___
+//                      / _` |/ _` \ \ /\ / / '_  |
+//                     | (_| | (_| |\ V  V /| | | |
+//                      \__,_|\__,_| \_/\_/ |_| |_| - Compiler Toolchain
+//
+//
+//  This file is distributed under the MIT License (MIT).
+//  See LICENSE.txt for details.
+//
+//===------------------------------------------------------------------------------------------===//
+
 #include "dawn/CodeGen/CodeGen.h"
 #include "dawn/CodeGen/StencilFunctionAsBCGenerator.h"
+#include "dawn/IIR/Extents.h"
 #include <optional>
 
 namespace dawn {
 namespace codegen {
+
+CodeGen::CodeGen(const StencilInstantiationContext& ctx, int maxHaloPoints, Padding padding)
+    : context_(ctx), codeGenOptions{maxHaloPoints, padding} {}
+
 size_t CodeGen::getVerticalTmpHaloSize(iir::Stencil const& stencil) {
   std::optional<iir::Interval> tmpInterval = stencil.getEnclosingIntervalTemporaries();
   return tmpInterval ? std::max(tmpInterval->overEnd(), tmpInterval->belowBegin()) : 0;
@@ -24,7 +43,7 @@ size_t CodeGen::getVerticalTmpHaloSizeForMultipleStencils(
   return fullIntervals ? std::max(fullIntervals->overEnd(), fullIntervals->belowBegin()) : 0;
 }
 
-std::string CodeGen::generateGlobals(const stencilInstantiationContext& context,
+std::string CodeGen::generateGlobals(const StencilInstantiationContext& context,
                                      std::string outer_namespace_, std::string inner_namespace_) {
 
   std::stringstream ss;
@@ -37,7 +56,7 @@ std::string CodeGen::generateGlobals(const stencilInstantiationContext& context,
   return ss.str();
 }
 
-std::string CodeGen::generateGlobals(const stencilInstantiationContext& context,
+std::string CodeGen::generateGlobals(const StencilInstantiationContext& context,
                                      std::string namespace_) {
   if(context.size() > 0) {
     const auto& globalsMap = context.begin()->second->getIIR()->getGlobalVariableMap();
@@ -45,6 +64,7 @@ std::string CodeGen::generateGlobals(const stencilInstantiationContext& context,
   }
   return "";
 }
+
 std::string CodeGen::generateGlobals(const sir::GlobalVariableMap& globalsMap,
                                      std::string namespace_) const {
 
@@ -87,8 +107,7 @@ std::string CodeGen::generateGlobals(const sir::GlobalVariableMap& globalsMap,
   return ss.str();
 }
 
-void CodeGen::generateGlobalsAPI(const iir::StencilInstantiation& stencilInstantiation,
-                                 Class& stencilWrapperClass,
+void CodeGen::generateGlobalsAPI(Structure& stencilWrapperClass,
                                  const sir::GlobalVariableMap& globalsMap,
                                  const CodeGenProperties& codeGenProperties) const {
 
@@ -126,7 +145,7 @@ void CodeGen::generateBoundaryConditionFunctions(
     for(const auto& sf : stencilInstantiation->getIIR()->getStencilFunctions()) {
       if(sf->Name == usedBoundaryCondition.second->getFunctor()) {
 
-        Structure BoundaryCondition = stencilWrapperClass.addStruct(Twine(sf->Name));
+        Structure BoundaryCondition = stencilWrapperClass.addStruct(sf->Name);
         std::string templatefunctions = "typename Direction ";
         std::string functionargs = "Direction ";
 
@@ -136,8 +155,8 @@ void CodeGen::generateBoundaryConditionFunctions(
           functionargs += dawn::format(", DataField_%i &data_field_%i", i, i);
         }
         functionargs += ", int i , int j, int k";
-        auto BC = BoundaryCondition.addMemberFunction(
-            Twine("GT_FUNCTION void"), Twine("operator()"), Twine(templatefunctions));
+        auto BC = BoundaryCondition.addMemberFunction("GT_FUNCTION void", "operator()",
+                                                      templatefunctions);
         BC.isConst(true);
         BC.addArg(functionargs);
         BC.startBody();
@@ -229,7 +248,7 @@ CodeGen::computeCodeGenProperties(const iir::StencilInstantiation* stencilInstan
       }
 
       for(const auto& field : tempFields) {
-        paramNameToType.emplace(field.second.Name, c_dgt().str() + "storage_t");
+        paramNameToType.emplace(field.second.Name, c_dgt + "storage_t");
       }
     }
   }
@@ -237,7 +256,7 @@ CodeGen::computeCodeGenProperties(const iir::StencilInstantiation* stencilInstan
   // TODO not supported for unstructured
   if(stencilInstantiation->getIIR()->getGridType() != ast::GridType::Unstructured) {
     int i = 0;
-    for(const auto& fieldID : metadata.getAccessesOfType<iir::FieldAccessType::APIField>()) {
+    for(const auto& fieldID : metadata.getAPIFields()) {
       codeGenProperties.insertParam(i, metadata.getFieldNameFromAccessID(fieldID),
                                     getStorageType(metadata.getFieldDimensions(fieldID)));
       ++i;
@@ -331,8 +350,31 @@ void CodeGen::addTmpStorageInit(
     MemberFunction& ctr, iir::Stencil const& stencil,
     IndexRange<const std::map<int, iir::Stencil::FieldInfo>>& tempFields) const {
   if(!(tempFields.empty())) {
-    ctr.addInit(tmpMetadataName_ + "(dom_.isize(), dom_.jsize(), dom_.ksize() + 2*" +
-                std::to_string(getVerticalTmpHaloSize(stencil)) + ")");
+    iir::Extents maxExtents{ast::cartesian};
+    for(const auto& multiStage : stencil.getChildren())
+      for(const auto& stage : multiStage->getChildren())
+        maxExtents.merge(stage->getExtents());
+
+    int iMax, jMax;
+    try {
+      iir::CartesianExtent hMaxExtents =
+          iir::extent_cast<iir::CartesianExtent const&>(maxExtents.horizontalExtent());
+      iMax = hMaxExtents.iPlus();
+      jMax = hMaxExtents.jPlus();
+    } catch(const std::bad_cast& error) {
+      iMax = jMax = 0;
+    }
+
+    std::string tmpMetadataInit = tmpMetadataName_ + "(dom_.isize()";
+    if(iMax > 0)
+      tmpMetadataInit += " + " + std::to_string(iMax);
+    tmpMetadataInit += ", dom_.jsize()";
+    if(jMax > 0)
+      tmpMetadataInit += " + " + std::to_string(jMax);
+    tmpMetadataInit +=
+        ", dom_.ksize() + 2*" + std::to_string(getVerticalTmpHaloSize(stencil)) + ")";
+
+    ctr.addInit(tmpMetadataInit);
     for(const auto& field : tempFields) {
       ctr.addInit("m_" + field.second.Name + "(" + tmpMetadataName_ + ")");
     }
@@ -375,7 +417,7 @@ void CodeGen::addMplIfdefs(std::vector<std::string>& ppDefines, int mplContainer
       makeIfNotDefinedString("BOOST_MPL_LIMIT_VECTOR_SIZE", "GT_VECTOR_LIMIT_SIZE"));
 }
 
-std::string CodeGen::generateFileName(const stencilInstantiationContext& context) const {
+std::string CodeGen::generateFileName(const StencilInstantiationContext& context) const {
   if(context.size() > 0) {
     return context_.begin()->second->getMetaData().getFileName();
   }
@@ -418,7 +460,7 @@ void CodeGen::generateGlobalIndices(const iir::Stencil& stencil, Structure& sten
   stencilClass.addMember("std::array<unsigned int, 2>", "globalOffsets");
   auto globalOffsetFunc =
       stencilClass.addMemberFunction("static std::array<unsigned int, 2>", "computeGlobalOffsets");
-  globalOffsetFunc.addArg("int rank, const " + c_dgt() + "domain& dom, int xcols, int ycols");
+  globalOffsetFunc.addArg("int rank, const " + c_dgt + "domain& dom, int xcols, int ycols");
   globalOffsetFunc.startBody();
   globalOffsetFunc.addStatement("unsigned int rankOnDefaultFace = rank % (xcols * ycols)");
   globalOffsetFunc.addStatement("unsigned int row = rankOnDefaultFace / xcols");
@@ -435,6 +477,47 @@ void CodeGen::generateGlobalIndices(const iir::Stencil& stencil, Structure& sten
     checkOffsetFunc.startBody();
     checkOffsetFunc.addStatement("return (min <= val && val < max)");
     checkOffsetFunc.commit();
+  }
+}
+
+namespace {
+std::string extentToString(iir::Extents const& extents, ast::GridType const& gridType) {
+  std::string result = "";
+  if(gridType == ast::GridType::Cartesian) {
+    auto const& hExtents =
+        iir::extent_cast<iir::CartesianExtent const&>(extents.horizontalExtent());
+    result += std::to_string(hExtents.iMinus()) + "," + std::to_string(hExtents.iPlus()) + ", " +
+              std::to_string(hExtents.jMinus()) + "," + std::to_string(hExtents.jPlus());
+  } else {
+    auto const& hExtents =
+        iir::extent_cast<iir::UnstructuredExtent const&>(extents.horizontalExtent());
+    if(hExtents.hasExtent())
+      result += "true";
+    else
+      result += "false";
+  }
+  auto const& vExtents = extents.verticalExtent();
+  if(!vExtents.isUndefined()) {
+    result += ", " + std::to_string(vExtents.minus()) + "," + std::to_string(vExtents.plus());
+  } else {
+    result += ", std::numeric_limits<int>::min() , std::numeric_limits<int>::max()";
+  }
+  return result;
+}
+} // namespace
+
+void CodeGen::generateFieldExtentsInfo(
+    Structure& stencilClass,
+    IndexRange<const std::map<int, iir::Stencil::FieldInfo>>& nonTempFields,
+    ast::GridType const& gridType) const {
+  std::string extents_type = gridType == ast::GridType::Cartesian
+                                 ? "::dawn::driver::cartesian_extent"
+                                 : "::dawn::driver::unstructured_extent";
+
+  for([[maybe_unused]] auto const& [ignored, fieldInfo] : nonTempFields) {
+    stencilClass.addStatement("static constexpr " + extents_type + " " + fieldInfo.Name +
+                              "_extent = {" +
+                              extentToString(fieldInfo.field.getExtentsRB(), gridType) + "}");
   }
 }
 

@@ -12,8 +12,7 @@
 //
 //===------------------------------------------------------------------------------------------===//
 
-#ifndef DAWN_SUPPORT_ASTSERIALIZER_H
-#define DAWN_SUPPORT_ASTSERIALIZER_H
+#pragma once
 
 #include "dawn/AST/ASTFwd.h"
 #include "dawn/AST/ASTStmt.h"
@@ -73,6 +72,8 @@ public:
   dawn::proto::statements::Expr* getCurrentExprProto();
 
   void visit(const std::shared_ptr<ast::BlockStmt>& stmt) override;
+
+  void visit(const std::shared_ptr<ast::LoopStmt>& stmt) override;
 
   void visit(const std::shared_ptr<ast::ExprStmt>& stmt) override;
 
@@ -136,12 +137,10 @@ std::shared_ptr<sir::Offset> makeOffset(const proto::statements::Offset& offsetP
 std::shared_ptr<sir::Interval> makeInterval(const proto::statements::Interval& intervalProto);
 
 std::shared_ptr<ast::Expr> makeExpr(const proto::statements::Expr& expressionProto,
-                                    ast::StmtData::DataType dataType);
+                                    ast::StmtData::DataType dataType, int& maxID);
 
 std::shared_ptr<ast::Stmt> makeStmt(const proto::statements::Stmt& statementProto,
-                                    ast::StmtData::DataType dataType);
+                                    ast::StmtData::DataType dataType, int& maxID);
 
 std::shared_ptr<ast::AST> makeAST(const dawn::proto::statements::AST& astProto,
-                                  ast::StmtData::DataType dataType);
-
-#endif // DAWN_SUPPORT_ASTSERIALIZER_H
+                                  ast::StmtData::DataType dataType, int& maxID);

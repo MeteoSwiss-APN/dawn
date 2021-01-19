@@ -1,0 +1,16 @@
+version: 2
+jobs:
+  dawn:
+    docker:
+      - image: gtclang/dawn-env-ubuntu19.10
+    steps:
+      - checkout:
+          path: /usr/src/dawn
+      - run:
+          name: Dawn configure
+          command: |
+            /usr/src/dawn/scripts/build-and-test \
+              --dawn-install-dir /usr/local/dawn \
+              --parallel $(nproc) \
+              --docker-env \
+              -DCMAKE_BUILD_TYPE=Debug

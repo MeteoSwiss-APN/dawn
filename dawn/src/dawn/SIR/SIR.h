@@ -12,10 +12,10 @@
 //
 //===------------------------------------------------------------------------------------------===//
 
-#ifndef DAWN_SIR_SIR_H
-#define DAWN_SIR_SIR_H
+#pragma once
 
 #include "dawn/AST/GridType.h"
+#include "dawn/AST/IterationSpace.h"
 #include "dawn/AST/Tags.h"
 #include "dawn/SIR/AST.h"
 #include "dawn/Support/Assert.h"
@@ -28,10 +28,11 @@
 #include "dawn/Support/Type.h"
 #include <algorithm>
 #include <iosfwd>
+#include <map>
 #include <memory>
 #include <optional>
+#include <ostream>
 #include <string>
-#include <unordered_map>
 #include <variant>
 #include <vector>
 
@@ -150,6 +151,7 @@ struct StencilFunctionArg {
   SourceLocation Loc; ///< Source location
 
   bool operator==(const StencilFunctionArg& rhs) const;
+
   CompareResult comparison(const sir::StencilFunctionArg& rhs) const;
 };
 
@@ -197,27 +199,27 @@ public:
 /// @ingroup sir
 class UnstructuredFieldDimension : public FieldDimensionImpl {
   std::unique_ptr<FieldDimensionImpl> cloneImpl() const override {
-    return std::make_unique<UnstructuredFieldDimension>(neighborChain_);
+    return std::make_unique<UnstructuredFieldDimension>(iterSpace_.Chain, iterSpace_.IncludeCenter);
   }
   virtual bool equalityImpl(const FieldDimensionImpl& other) const override {
     auto const& otherUnstructured = dynamic_cast<UnstructuredFieldDimension const&>(other);
-    return std::equal(neighborChain_.begin(), neighborChain_.end(),
-                      otherUnstructured.neighborChain_.begin());
+    return iterSpace_ == otherUnstructured.iterSpace_;
   }
-
-  const ast::NeighborChain neighborChain_;
+  const ast::UnstructuredIterationSpace iterSpace_;
 
 public:
-  explicit UnstructuredFieldDimension(const ast::NeighborChain neighborChain);
+  explicit UnstructuredFieldDimension(ast::NeighborChain neighborChain, bool includeCenter = false);
   /// @brief Returns the neighbor chain encoding the sparse part (isSparse() must be true!).
   const ast::NeighborChain& getNeighborChain() const;
   /// @brief Returns the dense location (always present)
-  ast::LocationType getDenseLocationType() const { return neighborChain_[0]; }
+  ast::LocationType getDenseLocationType() const { return iterSpace_.Chain[0]; }
   /// @brief Returns the last sparse location type if there is a sparse part, otherwise returns the
   /// dense part.
-  ast::LocationType getLastSparseLocationType() const { return neighborChain_.back(); }
-  bool isSparse() const { return neighborChain_.size() > 1; }
+  ast::LocationType getLastSparseLocationType() const { return iterSpace_.Chain.back(); }
+  bool isSparse() const { return iterSpace_.Chain.size() > 1; }
   bool isDense() const { return !isSparse(); }
+  bool getIncludeCenter() const { return iterSpace_.IncludeCenter; }
+  ast::UnstructuredIterationSpace getIterSpace() const { return iterSpace_; }
   std::string toString() const;
 };
 
@@ -228,13 +230,17 @@ public:
   // Construct a Cartesian horizontal field dimension with specified ij mask.
   HorizontalFieldDimension(dawn::ast::cartesian_, std::array<bool, 2> mask)
       : impl_(std::make_unique<CartesianFieldDimension>(mask)) {}
+
   // Construct a Unstructured horizontal field sparse dimension with specified neighbor chain
   // (sparse part). Dense part is the first element of the chain.
-  HorizontalFieldDimension(dawn::ast::unstructured_, ast::NeighborChain neighborChain)
-      : impl_(std::make_unique<UnstructuredFieldDimension>(neighborChain)) {}
+  HorizontalFieldDimension(dawn::ast::unstructured_, ast::NeighborChain neighborChain,
+                           bool includeCenter = false)
+      : impl_(std::make_unique<UnstructuredFieldDimension>(neighborChain, includeCenter)) {}
   // Construct a Unstructured horizontal field dense dimension with specified (dense) location type.
-  HorizontalFieldDimension(dawn::ast::unstructured_, ast::LocationType locationType)
-      : impl_(std::make_unique<UnstructuredFieldDimension>(ast::NeighborChain{locationType})) {}
+  HorizontalFieldDimension(dawn::ast::unstructured_, ast::LocationType locationType,
+                           bool includeCenter = false)
+      : impl_(std::make_unique<UnstructuredFieldDimension>(ast::NeighborChain{locationType},
+                                                           includeCenter)) {}
 
   HorizontalFieldDimension(const HorizontalFieldDimension& other) { *this = other; }
   HorizontalFieldDimension(HorizontalFieldDimension&& other) { *this = other; };
@@ -250,35 +256,12 @@ public:
 
   bool operator==(const HorizontalFieldDimension& other) const { return *impl_ == *other.impl_; }
 
+  ast::GridType getType() const;
+
   template <typename T>
   friend T dimension_cast(HorizontalFieldDimension const& dimension);
   template <typename T>
   friend bool dimension_isa(HorizontalFieldDimension const& dimension);
-};
-
-class FieldDimensions {
-public:
-  FieldDimensions(HorizontalFieldDimension&& horizontalFieldDimension, bool maskK)
-      : horizontalFieldDimension_(horizontalFieldDimension), maskK_(maskK) {}
-  FieldDimensions(const FieldDimensions&) = default;
-  FieldDimensions(FieldDimensions&&) = default;
-
-  FieldDimensions& operator=(const FieldDimensions&) = default;
-  FieldDimensions& operator=(FieldDimensions&&) = default;
-
-  bool operator==(const FieldDimensions& other) const {
-    return (maskK_ == other.maskK_ && horizontalFieldDimension_ == other.horizontalFieldDimension_);
-  }
-
-  bool K() const { return maskK_; }
-  const HorizontalFieldDimension& getHorizontalFieldDimension() const {
-    return horizontalFieldDimension_;
-  }
-  std::string toString() const;
-
-private:
-  HorizontalFieldDimension horizontalFieldDimension_;
-  bool maskK_;
 };
 
 template <typename T>
@@ -295,8 +278,51 @@ bool dimension_isa(HorizontalFieldDimension const& dimension) {
   using PlainT = std::remove_pointer_t<std::remove_reference_t<T>>;
   static_assert(std::is_base_of_v<FieldDimensionImpl, PlainT>,
                 "Can only be casted to a valid field dimension implementation");
-  return (bool)(dynamic_cast<PlainT*>(dimension.impl_.get()));
+  return static_cast<bool>(dynamic_cast<PlainT*>(dimension.impl_.get()));
 }
+
+class FieldDimensions {
+public:
+  FieldDimensions(HorizontalFieldDimension&& horizontalFieldDimension, bool maskK)
+      : horizontalFieldDimension_(horizontalFieldDimension), maskK_(maskK) {
+    if(!maskK && dimension_isa<CartesianFieldDimension>(*horizontalFieldDimension_)) {
+      auto cartDims = dimension_cast<const CartesianFieldDimension&>(*horizontalFieldDimension_);
+      DAWN_ASSERT_MSG(cartDims.I() || cartDims.J(),
+                      "a field cant' have all dimensions masked out!");
+    }
+  }
+  FieldDimensions(bool maskK) : maskK_(maskK) {
+    DAWN_ASSERT_MSG(
+        maskK_, "a field can't have null horizontal dimensions as well as masked out k dimension!");
+  }
+  FieldDimensions(const FieldDimensions&) = default;
+  FieldDimensions(FieldDimensions&&) = default;
+
+  FieldDimensions& operator=(const FieldDimensions&) = default;
+  FieldDimensions& operator=(FieldDimensions&&) = default;
+
+  bool operator==(const FieldDimensions& other) const {
+    return (maskK_ == other.maskK_ && horizontalFieldDimension_ == other.horizontalFieldDimension_);
+  }
+
+  bool K() const { return maskK_; }
+  const HorizontalFieldDimension& getHorizontalFieldDimension() const {
+    DAWN_ASSERT_MSG(!isVertical(), "attempted to get horizontal dimension of a vertical field!");
+    return horizontalFieldDimension_.value();
+  }
+  bool isVertical() const { return !horizontalFieldDimension_.has_value(); }
+  std::string toString() const;
+
+  // returns number of dimensions (1-3)
+  int numSpatialDimensions() const;
+
+  // returns the rank of the corresponding storage (multidimensional array)
+  int rank() const;
+
+private:
+  std::optional<HorizontalFieldDimension> horizontalFieldDimension_;
+  bool maskK_;
+};
 
 /// @brief Representation of a field
 /// @ingroup sir
@@ -449,36 +475,36 @@ public:
 
   template <class T>
   Value(T value)
-      : value_{std::move(value)}, is_constexpr_{false}, type_{TypeInfo<std::decay_t<T>>::Type} {}
+      : value_{std::move(value)}, isConstexpr_{false}, type_{TypeInfo<std::decay_t<T>>::Type} {}
 
   template <class T>
   Value(T value, bool is_constexpr)
       : value_{std::move(value)},
-        is_constexpr_{is_constexpr}, type_{TypeInfo<std::decay_t<T>>::Type} {}
+        isConstexpr_{is_constexpr}, type_{TypeInfo<std::decay_t<T>>::Type} {}
 
   Value(const Value& other)
-      : value_{other.value_}, is_constexpr_{other.isConstexpr()}, type_{other.getType()} {}
+      : value_{other.value_}, isConstexpr_{other.isConstexpr()}, type_{other.getType()} {}
 
   Value(Value& other)
-      : value_{other.value_}, is_constexpr_{other.isConstexpr()}, type_{other.getType()} {}
+      : value_{other.value_}, isConstexpr_{other.isConstexpr()}, type_{other.getType()} {}
 
   Value(Value&& other)
-      : value_{std::move(other.value_)}, is_constexpr_{other.isConstexpr()}, type_{
-                                                                                 other.getType()} {}
+      : value_{std::move(other.value_)}, isConstexpr_{other.isConstexpr()}, type_{other.getType()} {
+  }
 
-  Value(Kind type) : value_{}, is_constexpr_{false}, type_{type} {}
+  Value(Kind type) : value_{}, isConstexpr_{false}, type_{type} {}
 
   virtual ~Value() = default;
 
   Value& operator=(const Value& other) {
     value_ = other.value_;
-    is_constexpr_ = other.isConstexpr();
+    isConstexpr_ = other.isConstexpr();
     type_ = other.getType();
     return *this;
   }
 
   /// @brief Get/Set if the variable is `constexpr`
-  virtual bool isConstexpr() const { return is_constexpr_; }
+  virtual bool isConstexpr() const { return isConstexpr_; }
 
   /// @brief `Type` to string
   static const char* typeToString(Kind type);
@@ -517,7 +543,7 @@ public:
 
 protected:
   std::optional<std::variant<bool, int, float, double, std::string>> value_;
-  bool is_constexpr_;
+  bool isConstexpr_;
   Kind type_;
 };
 
@@ -557,7 +583,8 @@ public:
   Global(Kind type) : Value(type) {}
 };
 
-using GlobalVariableMap = std::unordered_map<std::string, Global>;
+// Using ordered map to guarantee the same backend code will be generated
+using GlobalVariableMap = std::map<std::string, Global>;
 
 } // namespace sir
 
@@ -573,7 +600,7 @@ struct SIR : public dawn::NonCopyable {
   SIR(const ast::GridType gridType);
 
   /// @brief Dump the SIR to stdout
-  void dump();
+  void dump(std::ostream& os);
 
   /// @brief Compares two SIRs for equality in contents
   ///
@@ -597,5 +624,3 @@ struct SIR : public dawn::NonCopyable {
 };
 
 } // namespace dawn
-
-#endif

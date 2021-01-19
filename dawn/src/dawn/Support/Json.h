@@ -17,13 +17,9 @@
 //
 //===------------------------------------------------------------------------------------------===//
 
-#ifndef DAWN_SUPPORT_JSON_H
-#define DAWN_SUPPORT_JSON_H
+#pragma once
 
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wignored-qualifiers"
-#include <nlohmann/json.hpp>
-#pragma GCC diagnostic pop
+#include <nlohmann_json.hpp>
 
 namespace dawn {
 
@@ -39,5 +35,3 @@ using nlohmann::json;
 } // namespace json
 
 } // namespace dawn
-
-#endif

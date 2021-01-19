@@ -15,11 +15,13 @@
 add_library(DawnOptimizer
   CreateVersionAndRename.cpp
   CreateVersionAndRename.h
-  OptimizerContext.cpp
-  OptimizerContext.h
+  Driver.cpp
+  Driver.h
+  Lowering.h
+  Lowering.cpp
+  Options.h
+  Options.inc
   Pass.h
-  PassComputeStageExtents.cpp
-  PassComputeStageExtents.h
   PassDataLocalityMetric.cpp
   PassDataLocalityMetric.h
   PassFieldVersioning.cpp
@@ -28,28 +30,41 @@ add_library(DawnOptimizer
   PassFixVersionedInputFields.h
   PassInlining.cpp
   PassInlining.h
-  PassIntervalPartitioner.cpp
-  PassIntervalPartitioner.h
+  PassIntervalPartitioning.cpp
+  PassIntervalPartitioning.h
+  PassLocalVarType.h
+  PassLocalVarType.cpp
   PassManager.cpp
   PassManager.h
-  PassMultiStageSplitter.cpp
-  PassMultiStageSplitter.h
+  PassMultiStageMerger.cpp
+  PassMultiStageMerger.h
+  PassOptions.inc
   PassPrintStencilGraph.cpp
   PassPrintStencilGraph.h
+  PassRemoveScalars.h
+  PassRemoveScalars.cpp
   PassSetBlockSize.cpp
   PassSetBlockSize.h
   PassSetBoundaryCondition.cpp
   PassSetBoundaryCondition.h
   PassSetCaches.cpp
   PassSetCaches.h
+  PassSetDependencyGraph.cpp
+  PassSetDependencyGraph.h
+  PassSetLoopOrder.cpp
+  PassSetLoopOrder.h
   PassSetNonTempCaches.cpp
   PassSetNonTempCaches.h
   PassSetStageGraph.cpp
   PassSetStageGraph.h
+  PassSetStageLocationType.cpp
+  PassSetStageLocationType.h
   PassSetStageName.cpp
   PassSetStageName.h
   PassSetSyncStage.cpp
   PassSetSyncStage.h
+  PassStageSplitAllStatements.cpp
+  PassStageSplitAllStatements.h
   PassSSA.cpp
   PassSSA.h
   PassStageMerger.cpp
@@ -88,4 +103,6 @@ add_library(DawnOptimizer
 )
 
 target_add_dawn_standard_props(DawnOptimizer)
-target_link_libraries(DawnOptimizer PUBLIC DawnSupport DawnIIR DawnValidator)
+target_link_libraries(DawnOptimizer
+  PUBLIC DawnSupport DawnIIR DawnValidator DawnSerialization
+)

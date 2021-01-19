@@ -43,7 +43,7 @@ private:
   };
 
 public:
-  bool checkGridTypeConsistency(const dawn::SIR&);
-  bool checkGridTypeConsistency(const dawn::iir::IIR&);
+  static bool checkGridTypeConsistency(const dawn::SIR&);
+  static bool checkGridTypeConsistency(const dawn::iir::IIR&);
 };
 } // namespace dawn

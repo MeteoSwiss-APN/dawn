@@ -19,8 +19,8 @@
 #include "dawn/SIR/SIR.h"
 #include "dawn/Support/StringUtil.h"
 #include "dawn/Support/Unreachable.h"
+
 #include <algorithm>
-#include <iostream>
 #include <numeric>
 
 namespace dawn {
@@ -321,11 +321,11 @@ bool Stencil::compareDerivedInfo() const {
   }
   return equal;
 }
-void Stencil::setStageDependencyGraph(const std::shared_ptr<DependencyGraphStage>& stageDAG) {
-  derivedInfo_.stageDependencyGraph_ = stageDAG;
+void Stencil::setStageDependencyGraph(DependencyGraphStage&& stageDAG) {
+  derivedInfo_.stageDependencyGraph_ = std::move(stageDAG);
 }
 
-const std::shared_ptr<DependencyGraphStage>& Stencil::getStageDependencyGraph() const {
+const std::optional<DependencyGraphStage>& Stencil::getStageDependencyGraph() const {
   return derivedInfo_.stageDependencyGraph_;
 }
 

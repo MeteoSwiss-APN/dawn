@@ -24,7 +24,8 @@ install(
 # GCC 8, still a common compiler, requires linking to a separate library for std::filesystem support.
 # Once that is no longer common we can remove this hack
 add_library(cpp_extra_libs INTERFACE)
-if (CMAKE_COMPILER_IS_GNUCC AND CMAKE_CXX_COMPILER_VERSION VERSION_LESS 9.0)
+if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU" AND CMAKE_CXX_COMPILER_VERSION VERSION_LESS 9.0)
+
     target_link_libraries(cpp_extra_libs INTERFACE stdc++fs)
 endif()
 
@@ -85,3 +86,23 @@ add_dawn_library(DawnCompiler)
 if(${PROJECT_NAME}_TESTING)
   add_subdirectory(Unittest)
 endif()
+
+include(FetchCxxopts)
+
+add_executable(dawn-opt dawn-opt.cpp)
+target_link_libraries(dawn-opt Dawn cxxopts)
+set_target_properties(dawn-opt PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/bin)
+install(
+  TARGETS dawn-opt
+  EXPORT ${PROJECT_NAME}Targets
+  RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
+)
+
+add_executable(dawn-codegen dawn-codegen.cpp)
+target_link_libraries(dawn-codegen Dawn cxxopts)
+set_target_properties(dawn-codegen PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/bin)
+install(
+  TARGETS dawn-codegen
+  EXPORT ${PROJECT_NAME}Targets
+  RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
+)

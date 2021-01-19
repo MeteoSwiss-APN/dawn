@@ -31,42 +31,28 @@ add_library(DawnSupport
   Compiler.h
   ComparisonHelpers.h
   ContainerUtils.h
-  DiagnosticsEngine.cpp
-  DiagnosticsEngine.h
-  DiagnosticsMessage.h
-  DiagnosticsQueue.cpp
-  DiagnosticsQueue.h
   DoubleSidedMap.h
   EditDistance.h
-  FileUtil.cpp
   Exception.h
-        Exception.cpp
-  FileUtil.h
+  Exception.cpp
   Format.h
   HashCombine.h
   IndexGenerator.cpp
   IndexGenerator.h
   IndexRange.h
+  Iterator.h
   Json.h
-  Logging.cpp
-  Logging.h
-  MathExtras.h
+  Logger.cpp
+  Logger.h
   NonCopyable.h
   Printing.h
   RemoveIf.hpp
-  SmallString.h
-  SmallVector.cpp
-  SmallVector.h
   SourceLocation.cpp
   SourceLocation.h
   STLExtras.h
-  StringRef.cpp
-  StringRef.h
   StringSwitch.h
   StringUtil.cpp
   StringUtil.h
-  Twine.cpp
-  Twine.h
   Type.cpp
   Type.h
   TypeTraits.h

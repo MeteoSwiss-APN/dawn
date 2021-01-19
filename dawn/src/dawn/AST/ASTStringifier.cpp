@@ -20,7 +20,6 @@
 #include "dawn/Support/StringUtil.h"
 #include "dawn/Support/Type.h"
 #include "dawn/Support/Unreachable.h"
-#include <iostream>
 #include <sstream>
 
 namespace dawn {
@@ -53,6 +52,13 @@ public:
     curIndent_ -= DAWN_PRINT_INDENT;
 
     ss_ << std::string(curIndent_, ' ') << "}\n";
+    scopeDepth_--;
+  }
+
+  void visit(const std::shared_ptr<LoopStmt>& stmt) override {
+    scopeDepth_++;
+    ss_ << "for (" << stmt->getIterationDescr().toString() << ")\n";
+    stmt->getBlockStmt()->accept(*this);
     scopeDepth_--;
   }
 
@@ -172,8 +178,16 @@ public:
 
     ss_ << "Reduce (" << expr->getOp() << ", init = ";
     expr->getInit()->accept(*this);
-    ss_ << ", location = ";
-    ss_ << getLocationTypeString(expr->getRhsLocation());
+    ss_ << ", location = {";
+    bool first = true;
+    for(const auto& loc : expr->getNbhChain()) {
+      if(!first) {
+        ss_ << ", ";
+      }
+      ss_ << getLocationTypeString(loc);
+      first = false;
+    }
+    ss_ << "}";
     ss_ << "): ";
     expr->getRhs()->accept(*this);
   }
@@ -265,7 +279,7 @@ public:
       auto hOffset = ast::offset_cast<CartesianOffset const&>(offset.horizontalOffset());
 
       std::array<int, 3> offsetArray = {hOffset.offsetI(), hOffset.offsetJ(),
-                                        offset.verticalOffset()};
+                                        offset.verticalShift()};
       ss_ << expr->getName() << "[";
 
       const auto& argMap = expr->getArgumentMap();

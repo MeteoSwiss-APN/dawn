@@ -22,12 +22,14 @@
 #include "dawn/IIR/IIRNodeIterator.h"
 #include "dawn/IIR/Stencil.h"
 #include "dawn/IIR/StencilInstantiation.h"
-#include "dawn/Optimizer/OptimizerContext.h"
-#include "dawn/SIR/SIR.h"
-#include <iostream>
-#include <set>
-
 #include "dawn/Optimizer/CreateVersionAndRename.h"
+#include "dawn/SIR/SIR.h"
+#include "dawn/Support/Exception.h"
+#include "dawn/Support/Logger.h"
+
+#include <set>
+#include <sstream>
+
 namespace dawn {
 
 namespace {
@@ -59,46 +61,41 @@ static void getAccessIDFromAssignment(const iir::StencilMetaInformation& metadat
 }
 
 /// @brief Check if the extent is a stencil-extent (i.e non-pointwise in the horizontal and a
-/// counter loop access in the vertical)
+/// counter loop access in the vertical, or vertically indirected)
 static bool isHorizontalStencilOrCounterLoopOrderExtent(const iir::Extents& extent,
                                                         iir::LoopOrderKind loopOrder) {
-  return !extent.isHorizontalPointwise() ||
+  return extent.verticalExtent().isUndefined() || !extent.isHorizontalPointwise() ||
          extent.getVerticalLoopOrderAccesses(loopOrder).CounterLoopOrder;
 }
 
 /// @brief Report a race condition in the given `statement`
 static void reportRaceCondition(const iir::Stmt& statement,
-                                iir::StencilInstantiation& instantiation,
-                                OptimizerContext& context) {
-  DiagnosticsBuilder diag(DiagnosticsKind::Error, statement.getSourceLocation());
-
+                                iir::StencilInstantiation& instantiation) {
+  std::stringstream ss;
   if(isa<iir::IfStmt>(&statement)) {
-    diag << "unresolvable race-condition in body of if-statement";
+    ss << "Unresolvable race-condition in body of if-statement\n";
   } else {
-    diag << "unresolvable race-condition in statement";
+    ss << "Unresolvable race-condition in statement\n";
   }
-
-  context.getDiagnostics().report(diag);
 
   // Print stack trace of stencil calls
+  dawn::DiagnosticStack stack;
   if(statement.getData<iir::IIRStmtData>().StackTrace) {
-    const std::vector<ast::StencilCall*>& stackTrace =
-        *statement.getData<iir::IIRStmtData>().StackTrace;
-    for(int i = stackTrace.size() - 1; i >= 0; --i) {
-      DiagnosticsBuilder note(DiagnosticsKind::Note, stackTrace[i]->Loc);
-      note << "detected during instantiation of stencil-call '" << stackTrace[i]->Callee << "'";
-      context.getDiagnostics().report(note);
-    }
+    const auto& stackTrace = *statement.getData<iir::IIRStmtData>().StackTrace;
+    for(const auto& frame : stackTrace)
+      stack.emplace(std::make_tuple(frame->Callee, frame->Loc));
   }
+
+  throw SemanticError(ss.str() + createDiagnosticStackTrace(
+                                     "detected during instantiation of stencil call: ", stack),
+                      instantiation.getMetaData().getFileName(), statement.getSourceLocation());
 }
 
-} // anonymous namespace
-
-PassFieldVersioning::PassFieldVersioning(OptimizerContext& context)
-    : Pass(context, "PassFieldVersioning", true), numRenames_(0) {}
+} // namespace
 
 bool PassFieldVersioning::run(
-    const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation) {
+    const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation,
+    const Options& options) {
   numRenames_ = 0;
 
   for(const auto& stencilPtr : stencilInstantiation->getStencils()) {
@@ -111,9 +108,8 @@ bool PassFieldVersioning::run(
       iir::MultiStage& multiStage = (**multiStageRit);
       iir::LoopOrderKind loopOrder = multiStage.getLoopOrder();
 
-      std::shared_ptr<iir::DependencyGraphAccesses> newGraph, oldGraph;
-      newGraph =
-          std::make_shared<iir::DependencyGraphAccesses>(stencilInstantiation->getMetaData());
+      iir::DependencyGraphAccesses newGraph(stencilInstantiation->getMetaData());
+      auto oldGraph = newGraph;
 
       // Iterate stages bottom -> top
       for(auto stageRit = multiStage.childrenRBegin(), stageRend = multiStage.childrenREnd();
@@ -124,14 +120,14 @@ bool PassFieldVersioning::run(
         // Iterate statements bottom -> top
         for(int stmtIndex = doMethod.getAST().getStatements().size() - 1; stmtIndex >= 0;
             --stmtIndex) {
-          oldGraph = newGraph->clone();
+          oldGraph = newGraph;
 
           const auto& stmt = doMethod.getAST().getStatements()[stmtIndex];
-          newGraph->insertStatement(stmt);
+          newGraph.insertStatement(stmt);
 
           // Try to resolve race-conditions by using double buffering if necessary
-          auto rc = fixRaceCondition(stencilInstantiation, newGraph.get(), stencil, doMethod,
-                                     loopOrder, stageIdx, stmtIndex);
+          auto rc = fixRaceCondition(stencilInstantiation, newGraph, stencil, doMethod, loopOrder,
+                                     stageIdx, stmtIndex, options.DumpRaceConditionGraph);
 
           if(rc == RCKind::Unresolvable) {
             // Nothing we can do ... bail out
@@ -140,7 +136,7 @@ bool PassFieldVersioning::run(
             // We fixed a race condition (this means some fields have changed and our current graph
             // is invalid)
             newGraph = oldGraph;
-            newGraph->insertStatement(stmt);
+            newGraph.insertStatement(stmt);
           }
           doMethod.update(iir::NodeUpdateType::level);
         }
@@ -154,16 +150,16 @@ bool PassFieldVersioning::run(
     }
   }
 
-  if(context_.getOptions().ReportPassFieldVersioning && numRenames_ == 0)
-    std::cout << "\nPASS: " << getName() << ": " << stencilInstantiation->getName()
-              << ": no rename\n";
+  if(numRenames_ == 0)
+    DAWN_LOG(INFO) << stencilInstantiation->getName() << ": no rename";
+
   return true;
 }
 
 PassFieldVersioning::RCKind PassFieldVersioning::fixRaceCondition(
     const std::shared_ptr<iir::StencilInstantiation> instantiation,
-    const iir::DependencyGraphAccesses* graph, iir::Stencil& stencil, iir::DoMethod& doMethod,
-    iir::LoopOrderKind loopOrder, int stageIdx, int index) {
+    iir::DependencyGraphAccesses const& graph, iir::Stencil& stencil, iir::DoMethod& doMethod,
+    iir::LoopOrderKind loopOrder, int stageIdx, int index, bool dump) {
   using Vertex = iir::DependencyGraphAccesses::Vertex;
   using Edge = iir::DependencyGraphAccesses::Edge;
 
@@ -176,17 +172,17 @@ PassFieldVersioning::RCKind PassFieldVersioning::fixRaceCondition(
 
   // Find all strongly connected components in the graph ...
   auto SCCs = std::make_unique<std::vector<std::set<int>>>();
-  graph->findStronglyConnectedComponents(*SCCs);
+  graph.findStronglyConnectedComponents(*SCCs);
 
   // ... and add those which have at least one stencil access
   for(std::set<int>& scc : *SCCs) {
     bool isStencilSCC = false;
 
     for(int fromAccessID : scc) {
-      std::size_t fromVertexID = graph->getVertexIDFromValue(fromAccessID);
+      std::size_t fromVertexID = graph.getVertexIDFromValue(fromAccessID);
 
-      for(const Edge& edge : *graph->getAdjacencyList()[fromVertexID]) {
-        if(scc.count(graph->getIDFromVertexID(edge.ToVertexID)) &&
+      for(const Edge& edge : graph.getAdjacencyList()[fromVertexID]) {
+        if(scc.count(graph.getIDFromVertexID(edge.ToVertexID)) &&
            isHorizontalStencilOrCounterLoopOrderExtent(edge.Data, loopOrder)) {
           isStencilSCC = true;
           stencilSCCs->emplace_back(std::move(scc));
@@ -202,13 +198,13 @@ PassFieldVersioning::RCKind PassFieldVersioning::fixRaceCondition(
   if(stencilSCCs->empty()) {
     // Check if we have self dependencies e.g `u = u(i+1)` (Our SCC algorithm does not capture SCCs
     // of size one i.e single nodes)
-    for(const auto& AccessIDVertexPair : graph->getVertices()) {
+    for(const auto& AccessIDVertexPair : graph.getVertices()) {
       const Vertex& vertex = AccessIDVertexPair.second;
 
-      for(const Edge& edge : *graph->getAdjacencyList()[vertex.VertexID]) {
+      for(const Edge& edge : graph.getAdjacencyList()[vertex.VertexID]) {
         if(edge.FromVertexID == edge.ToVertexID &&
            isHorizontalStencilOrCounterLoopOrderExtent(edge.Data, loopOrder)) {
-          stencilSCCs->emplace_back(std::set<int>{vertex.value});
+          stencilSCCs->emplace_back(std::set<int>{vertex.Value});
           break;
         }
       }
@@ -227,7 +223,7 @@ PassFieldVersioning::RCKind PassFieldVersioning::fixRaceCondition(
   //  field_b = field_a;
   //
   // ... and then field_b_0 must be initialized from field_b.
-  if(stencilSCCs->empty() && !SCCs->empty() && !graph->isDAG()) {
+  if(stencilSCCs->empty() && !SCCs->empty() && !graph.isDAG()) {
     stencilSCCs->emplace_back(std::move(SCCs->front()));
   }
 
@@ -242,10 +238,11 @@ PassFieldVersioning::RCKind PassFieldVersioning::fixRaceCondition(
     assignment = dyn_cast<iir::AssignmentExpr>(stmt->getExpr().get());
 
   if(!assignment) {
-    if(context_.getOptions().DumpRaceConditionGraph)
-      graph->toDot("rc_" + instantiation->getName() + ".dot");
-    reportRaceCondition(statement, *instantiation, context_);
-    return RCKind::Unresolvable;
+    if(dump)
+      graph.toDot("rc_" + instantiation->getName() + ".dot");
+    reportRaceCondition(statement, *instantiation);
+    // The function call above throws, so do not need a return here any longer. Will refactor
+    // further later. return RCKind::Unresolvable;
   }
 
   // Get AccessIDs of the LHS and RHS
@@ -258,10 +255,11 @@ PassFieldVersioning::RCKind PassFieldVersioning::fixRaceCondition(
   // If the LHSAccessID is not part of the SCC, we cannot resolve the race-condition
   for(std::set<int>& scc : *stencilSCCs) {
     if(!scc.count(LHSAccessID)) {
-      if(context_.getOptions().DumpRaceConditionGraph)
-        graph->toDot("rc_" + instantiation->getName() + ".dot");
-      reportRaceCondition(statement, *instantiation, context_);
-      return RCKind::Unresolvable;
+      if(dump)
+        graph.toDot("rc_" + instantiation->getName() + ".dot");
+      reportRaceCondition(statement, *instantiation);
+      // The function call above throws, so do not need a return here any longer. Will refactor
+      // further later. return RCKind::Unresolvable;
     }
   }
 
@@ -274,25 +272,26 @@ PassFieldVersioning::RCKind PassFieldVersioning::fixRaceCondition(
       renameCandiates.insert(AccessID);
   }
 
-  if(context_.getOptions().ReportPassFieldVersioning)
-    std::cout << "\nPASS: " << getName() << ": " << instantiation->getName()
-              << ": rename:" << statement.getSourceLocation().Line;
-
+  std::stringstream ss;
+  ss << instantiation->getName() << ": rename:";
   // Create a new multi-versioned field and rename all occurences
   for(int oldAccessID : renameCandiates) {
     int newAccessID = createVersionAndRename(instantiation.get(), oldAccessID, &stencil, stageIdx,
                                              index, assignment->getRight(), RenameDirection::Above);
 
-    if(context_.getOptions().ReportPassFieldVersioning)
-      std::cout << (numRenames != 0 ? ", " : " ")
-                << instantiation->getMetaData().getFieldNameFromAccessID(oldAccessID) << ":"
-                << instantiation->getMetaData().getFieldNameFromAccessID(newAccessID);
+    ss << (numRenames != 0 ? ", " : " ")
+       << instantiation->getMetaData().getFieldNameFromAccessID(oldAccessID) << ":"
+       << instantiation->getMetaData().getFieldNameFromAccessID(newAccessID);
 
     numRenames++;
   }
 
-  if(context_.getOptions().ReportPassFieldVersioning && numRenames > 0)
-    std::cout << "\n";
+  if(numRenames > 0)
+    DAWN_DIAG(INFO, instantiation->getMetaData().getFileName(), statement.getSourceLocation())
+        << ss.str();
+  else
+    DAWN_DIAG(INFO, instantiation->getMetaData().getFileName(), statement.getSourceLocation())
+        << instantiation->getName() << ": No renames performed";
 
   numRenames_ += numRenames;
   return RCKind::Fixed;

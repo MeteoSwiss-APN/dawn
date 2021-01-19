@@ -15,7 +15,6 @@
 #include "dawn/Optimizer/PassSetStageGraph.h"
 #include "dawn/IIR/DependencyGraphStage.h"
 #include "dawn/IIR/StencilInstantiation.h"
-#include "dawn/Optimizer/OptimizerContext.h"
 #include "dawn/Support/STLExtras.h"
 
 namespace dawn {
@@ -56,37 +55,32 @@ static bool depends(const iir::Stage& fromStage, const iir::Stage& toStage) {
   return false;
 }
 
-PassSetStageGraph::PassSetStageGraph(OptimizerContext& context)
-    : Pass(context, "PassSetStageGraph") {
-  dependencies_.push_back("PassSetStageName");
-}
-
-bool PassSetStageGraph::run(
-    const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation) {
+bool PassSetStageGraph::run(const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation,
+                            const Options& options) {
   int stencilIdx = 0;
 
   for(const auto& stencilPtr : stencilInstantiation->getStencils()) {
     iir::Stencil& stencil = *stencilPtr;
     int numStages = stencil.getNumStages();
 
-    auto stageDAG = std::make_shared<iir::DependencyGraphStage>(stencilInstantiation);
+    auto stageDAG = iir::DependencyGraphStage(stencilInstantiation);
 
     // Build DAG of stages (backward sweep)
     for(int i = numStages - 1; i >= 0; --i) {
       const auto& fromStagePtr = stencil.getStage(i);
-      stageDAG->insertNode(fromStagePtr->getStageID());
+      stageDAG.insertNode(fromStagePtr->getStageID());
       int curStageID = fromStagePtr->getStageID();
 
       for(int j = i - 1; j >= 0; --j) {
         const auto& toStagePtr = stencil.getStage(j);
         if(depends(*fromStagePtr, *toStagePtr))
-          stageDAG->insertEdge(curStageID, toStagePtr->getStageID());
+          stageDAG.insertEdge(curStageID, toStagePtr->getStageID());
       }
     }
 
-    if(context_.getOptions().DumpStageGraph)
-      stageDAG->toDot("stage_" + stencilInstantiation->getName() + "_s" +
-                      std::to_string(stencilIdx) + ".dot");
+    if(options.DumpStageGraph)
+      stageDAG.toDot("stage_" + stencilInstantiation->getName() + "_s" +
+                     std::to_string(stencilIdx) + ".dot");
 
     stencil.setStageDependencyGraph(std::move(stageDAG));
   }

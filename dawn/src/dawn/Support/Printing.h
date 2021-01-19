@@ -12,8 +12,7 @@
 //
 //===------------------------------------------------------------------------------------------===//
 
-#ifndef DAWN_SUPPORT_PRINTING_H
-#define DAWN_SUPPORT_PRINTING_H
+#pragma once
 
 namespace dawn {
 
@@ -58,5 +57,3 @@ struct MakeIndent<4> {
 };
 
 } // namespace dawn
-
-#endif

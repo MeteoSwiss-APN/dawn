@@ -1,0 +1,112 @@
+{
+ "metadata": {
+  "accessIDToName": {},
+  "accessIDToType": {},
+  "literalIDToName": {},
+  "fieldAccessIDs": [],
+  "APIFieldIDs": [],
+  "temporaryFieldIDs": [],
+  "globalVariableIDs": [],
+  "versionedFields": {
+   "variableVersionMap": {}
+  },
+  "fieldnameToBoundaryCondition": {},
+  "fieldIDtoDimensions": {},
+  "idToStencilCall": {
+   "6": {
+    "stencil_call_decl_stmt": {
+     "stencil_call": {
+      "loc": {
+       "Line": -1,
+       "Column": -1
+      },
+      "callee": "__code_gen_6",
+      "arguments": []
+     },
+     "loc": {
+      "Line": -1,
+      "Column": -1
+     },
+     "data": {},
+     "ID": 7
+    }
+   }
+  },
+  "boundaryCallToExtent": {},
+  "allocatedFieldIDs": [],
+  "stencilLocation": {
+   "Line": -1,
+   "Column": -1
+  },
+  "stencilName": "generated"
+ },
+ "internalIR": {
+  "gridType": "Unstructured",
+  "globalVariableToValue": {},
+  "stencils": [
+   {
+    "multiStages": [
+     {
+      "stages": [
+       {
+        "doMethods": [
+         {
+          "ast": {
+           "block_stmt": {
+            "statements": [
+            ],
+            "loc": {
+             "Line": -1,
+             "Column": -1
+            },
+            "data": {},
+            "ID": 16
+           }
+          },
+          "doMethodID": 261,
+          "interval": {
+           "lower_offset": 0,
+           "upper_offset": 0,
+           "special_lower_level": "Start",
+           "special_upper_level": "End"
+          }
+         }
+        ],
+        "stageID": 13
+       }
+      ],
+      "loopOrder": "Forward",
+      "multiStageID": 12,
+      "Caches": {}
+     }
+    ],
+    "stencilID": 6,
+    "attr": {
+     "attributes": []
+    }
+   }
+  ],
+  "controlFlowStatements": [
+   {
+    "stencil_call_decl_stmt": {
+     "stencil_call": {
+      "loc": {
+       "Line": -1,
+       "Column": -1
+      },
+      "callee": "__code_gen_6",
+      "arguments": []
+     },
+     "loc": {
+      "Line": -1,
+      "Column": -1
+     },
+     "data": {},
+     "ID": 7
+    }
+   }
+  ],
+  "boundaryConditions": []
+ },
+ "filename": "no-input-file"
+}

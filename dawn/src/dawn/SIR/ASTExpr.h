@@ -12,8 +12,7 @@
 //
 //===------------------------------------------------------------------------------------------===//
 
-#ifndef DAWN_SIR_ASTEXPR_H
-#define DAWN_SIR_ASTEXPR_H
+#pragma once
 
 #include "dawn/AST/ASTExpr.h"
 
@@ -37,5 +36,3 @@ using LiteralAccessExpr = ast::LiteralAccessExpr;
 using ReductionOverNeighborExpr = ast::ReductionOverNeighborExpr;
 } // namespace sir
 } // namespace dawn
-
-#endif

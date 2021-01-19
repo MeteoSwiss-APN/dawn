@@ -12,8 +12,7 @@
 //
 //===------------------------------------------------------------------------------------------===//
 
-#ifndef DAWN_OPTIMIZER_PASSSETSTAGENAME_H
-#define DAWN_OPTIMIZER_PASSSETSTAGENAME_H
+#pragma once
 
 #include "dawn/Optimizer/Pass.h"
 
@@ -25,12 +24,11 @@ namespace dawn {
 /// @ingroup optimizer
 class PassSetStageName : public Pass {
 public:
-  PassSetStageName(OptimizerContext& context);
+  PassSetStageName() : Pass("PassSetStageName") {}
 
   /// @brief Pass implementation
-  bool run(const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation) override;
+  bool run(const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation,
+           const Options& options = {}) override;
 };
 
 } // namespace dawn
-
-#endif

@@ -12,20 +12,20 @@
 //
 //===------------------------------------------------------------------------------------------===//
 
-#ifndef DAWN_IIR_METAINFORMATION_H
-#define DAWN_IIR_METAINFORMATION_H
+#pragma once
 
 #include "dawn/IIR/ASTFwd.h"
 #include "dawn/IIR/Extents.h"
 #include "dawn/IIR/Field.h"
 #include "dawn/IIR/FieldAccessMetadata.h"
+#include "dawn/IIR/LocalVariable.h"
 #include "dawn/SIR/SIR.h"
 #include "dawn/Support/DoubleSidedMap.h"
 #include "dawn/Support/NonCopyable.h"
 #include "dawn/Support/RemoveIf.hpp"
-#include "dawn/Support/StringRef.h"
 #include "dawn/Support/UIDGenerator.h"
 #include "dawn/Support/Unreachable.h"
+#include <algorithm>
 #include <memory>
 #include <set>
 #include <string>
@@ -43,21 +43,43 @@ namespace impl {
 template <FieldAccessType T>
 struct GetAccessesOfTypeHelper;
 
+template <FieldAccessType... Args>
+struct VariadicGetAccessesOfTypeHelper;
+
+template <FieldAccessType T, FieldAccessType... Args>
+struct VariadicGetAccessesOfTypeHelper<T, Args...> {
+  std::set<int> operator()(FieldAccessMetadata meta) {
+    std::set<int> ret;
+    auto lhs = GetAccessesOfTypeHelper<T>{}(meta);
+    auto rhs = VariadicGetAccessesOfTypeHelper<Args...>{}(meta);
+    std::set_union(lhs.begin(), lhs.end(), rhs.begin(), rhs.end(), std::inserter(ret, ret.begin()));
+    return ret;
+  }
+};
+template <>
+struct VariadicGetAccessesOfTypeHelper<> {
+  std::set<int> operator()(FieldAccessMetadata meta) { return std::set<int>(); }
+};
+
 template <>
 struct GetAccessesOfTypeHelper<FieldAccessType::Literal> {
-  auto const& operator()(FieldAccessMetadata const& fieldAccessMetadata) {
-    return fieldAccessMetadata.LiteralAccessIDToNameMap_;
+  auto operator()(FieldAccessMetadata const& fieldAccessMetadata) {
+    std::set<int> keys;
+    for(auto kv : fieldAccessMetadata.LiteralAccessIDToNameMap_) {
+      keys.insert(kv.first);
+    }
+    return keys;
   }
 };
 template <>
 struct GetAccessesOfTypeHelper<FieldAccessType::GlobalVariable> {
-  auto const& operator()(FieldAccessMetadata const& fieldAccessMetadata) {
+  std::set<int> operator()(FieldAccessMetadata const& fieldAccessMetadata) {
     return fieldAccessMetadata.GlobalVariableAccessIDSet_;
   }
 };
 template <>
 struct GetAccessesOfTypeHelper<FieldAccessType::Field> {
-  auto const& operator()(FieldAccessMetadata const& fieldAccessMetadata) {
+  std::set<int> operator()(FieldAccessMetadata const& fieldAccessMetadata) {
     return fieldAccessMetadata.FieldAccessIDSet_;
   }
 };
@@ -69,26 +91,30 @@ struct GetAccessesOfTypeHelper<FieldAccessType::LocalVariable> {
 };
 template <>
 struct GetAccessesOfTypeHelper<FieldAccessType::StencilTemporary> {
-  auto const& operator()(FieldAccessMetadata const& fieldAccessMetadata) {
+  std::set<int> operator()(FieldAccessMetadata const& fieldAccessMetadata) {
     return fieldAccessMetadata.TemporaryFieldAccessIDSet_;
   }
 };
 template <>
 struct GetAccessesOfTypeHelper<FieldAccessType::InterStencilTemporary> {
-  auto const& operator()(FieldAccessMetadata const& fieldAccessMetadata) {
+  std::set<int> operator()(FieldAccessMetadata const& fieldAccessMetadata) {
     return fieldAccessMetadata.AllocatedFieldAccessIDSet_;
   }
 };
 template <>
 struct GetAccessesOfTypeHelper<FieldAccessType::APIField> {
-  auto const& operator()(FieldAccessMetadata const& fieldAccessMetadata) {
-    return fieldAccessMetadata.apiFieldIDs_;
+  std::set<int> operator()(FieldAccessMetadata const& fieldAccessMetadata) {
+    std::set<int> keys;
+    for(auto apiFields : fieldAccessMetadata.apiFieldIDs_) {
+      keys.insert(apiFields);
+    }
+    return keys;
   }
 };
 
 } // namespace impl
 
-/// @brief Specific instantiation of a stencil
+/// @brief Metadata associated with a stencil instantiation (stored next to IIR)
 /// @ingroup optimizer
 class StencilMetaInformation : public NonCopyable {
   friend IIRSerializer;
@@ -134,14 +160,14 @@ public:
   sir::FieldDimensions getFieldDimensions(int fieldID) const;
   void setFieldDimensions(int fieldID, sir::FieldDimensions&& fieldDimensions);
 
-  template <FieldAccessType TFieldAccessType>
+  template <FieldAccessType... TFieldAccessType>
   bool hasAccessesOfType() const {
-    return !getAccessesOfType<TFieldAccessType>().empty();
+    return !getAccessesOfType<TFieldAccessType...>().empty();
   }
 
-  template <FieldAccessType TFieldAccessType>
-  auto const& getAccessesOfType() const {
-    return impl::GetAccessesOfTypeHelper<TFieldAccessType>{}(fieldAccessMetadata_);
+  template <FieldAccessType... TFieldAccessType>
+  std::set<int> getAccessesOfType() const {
+    return impl::VariadicGetAccessesOfTypeHelper<TFieldAccessType...>{}(fieldAccessMetadata_);
   }
 
   void moveRegisteredFieldTo(FieldAccessType type, int accessID);
@@ -157,7 +183,27 @@ public:
                   sir::FieldDimensions&& fieldDimensions,
                   std::optional<int> accessID = std::nullopt);
 
-  int addStmt(bool keepVarNames, const std::shared_ptr<VarDeclStmt>& stmt);
+  /// @brief Adds an existing variable declaration to the metadata: assigns an accessID to the
+  /// variable, fixes the ID to name map, the ID to LocalVariableData map and the AccessID in the
+  /// `VarDeclStmt`'s data.
+  /// @param keepVarName: whether to keep the current name or complete it with the accessID
+  /// @param stmt: the variable declaration statement
+  /// @returns the access id of the variable
+  int addStmt(bool keepVarName, const std::shared_ptr<VarDeclStmt>& stmt);
+
+  /// @brief Adds an new variable declaration to the metadata: constructs a `VarDeclStmt`, assigns
+  /// an accessID to the variable, fixes the ID to name map, the ID to LocalVariableData map and the
+  /// AccessID in the `VarDeclStmt`'s data.
+  /// @param keepVarName: whether to keep the provided name or complete it with the accessID
+  /// @param varName: the variable's name
+  /// @param type: the variable's type (double, const int, ...)
+  /// @param rhs: the expression to initialize the variable (optional)
+  /// @returns the variable declaration statement
+  std::shared_ptr<VarDeclStmt> declareVar(bool keepVarName, std::string varName, Type type,
+                                          int accessID = UIDGenerator::getInstance()->get());
+  std::shared_ptr<VarDeclStmt> declareVar(bool keepVarName, std::string varName, Type type,
+                                          std::shared_ptr<Expr> rhs,
+                                          int accessID = UIDGenerator::getInstance()->get());
 
   void eraseStencilFunctionInstantiation(
       const std::shared_ptr<StencilFunctionInstantiation>& stencilFun) {
@@ -350,7 +396,18 @@ public:
     return StencilIDToStencilCallMap_;
   }
 
+  void addAccessIDToLocalVariableDataPair(int accessID, LocalVariableData&& data);
+  iir::LocalVariableData& getLocalVariableDataFromAccessID(int accessID);
+  const iir::LocalVariableData& getLocalVariableDataFromAccessID(int accessID) const;
+  const std::unordered_map<int, iir::LocalVariableData>& getAccessIDToLocalVariableDataMap() const {
+    return accessIDToLocalVariableDataMap_;
+  }
+  /// @brief Resets types of all variables to "not computed" (type_ = std::nullopt)
+  void resetLocalVarTypes();
+
   dawn::ast::LocationType getDenseLocationTypeFromAccessID(int ID) const;
+
+  const std::vector<int> getAPIFields() const { return fieldAccessMetadata_.apiFieldIDs_; }
 
 private:
   //================================================================================================
@@ -390,11 +447,12 @@ private:
   std::unordered_map<std::shared_ptr<iir::BoundaryConditionDeclStmt>, Extents>
       boundaryConditionToExtentsMap_;
 
+  /// Map from AccessID (of a local variable) to the data of such variable.
+  std::unordered_map<int, iir::LocalVariableData> accessIDToLocalVariableDataMap_;
+
   SourceLocation stencilLocation_;
   std::string stencilName_;
   std::string fileName_;
 };
 } // namespace iir
 } // namespace dawn
-
-#endif

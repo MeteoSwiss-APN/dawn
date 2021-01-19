@@ -12,14 +12,10 @@
 //
 //===------------------------------------------------------------------------------------------===//
 
-#ifndef DAWN_OPTIMIZER_PASSINTEGRITYCHECK_H
-#define DAWN_OPTIMIZER_PASSINTEGRITYCHECK_H
+#pragma once
 
 #include "dawn/Optimizer/Pass.h"
-#include "dawn/Support/Logging.h"
-#include "dawn/Validator/GridTypeChecker.h"
-#include "dawn/Validator/IntegrityChecker.h"
-#include "dawn/Validator/UnstructuredDimensionChecker.h"
+#include "dawn/SIR/SIR.h"
 
 namespace dawn {
 
@@ -30,19 +26,19 @@ namespace dawn {
 /// This pass is read-only and is hence not in the debug-group
 class PassValidation : public Pass {
 public:
-  PassValidation(OptimizerContext& context);
+  PassValidation() : Pass("PassValidation") {}
 
   /// @brief Pass run implementation
-  bool run(const std::shared_ptr<iir::StencilInstantiation>& instantiation) override;
+  bool run(const std::shared_ptr<iir::StencilInstantiation>& instantiation,
+           const Options& options = {}) override;
 
   /// @brief IIR validation
   bool run(const std::shared_ptr<iir::StencilInstantiation>& instantiation,
-           const std::string& description);
+           const Options& options = {},
+           const std::string& description = "");
 
   /// @brief SIR validation
   bool run(const std::shared_ptr<dawn::SIR>& sir);
 };
 
 } // namespace dawn
-
-#endif // DAWN_OPTIMIZER_PASSINTEGRITYCHECK_H

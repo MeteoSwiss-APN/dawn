@@ -12,8 +12,7 @@
 //
 //===------------------------------------------------------------------------------------------===//
 
-#ifndef DAWN_SUPPORT_COMPARISONHELPERS_H
-#define DAWN_SUPPORT_COMPARISONHELPERS_H
+#pragma once
 
 #include <string>
 
@@ -30,5 +29,3 @@ struct CompareResult {
 };
 
 } // namespace dawn
-
-#endif

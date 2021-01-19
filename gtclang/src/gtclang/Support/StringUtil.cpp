@@ -15,9 +15,9 @@
 //===------------------------------------------------------------------------------------------===//
 
 #include "gtclang/Support/StringUtil.h"
-#include <cstring>
 
-#include <iostream>
+#include <cstring>
+#include <string>
 
 namespace gtclang {
 

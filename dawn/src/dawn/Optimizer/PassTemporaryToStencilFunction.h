@@ -12,8 +12,7 @@
 //
 //===------------------------------------------------------------------------------------------===//
 
-#ifndef DAWN_OPTIMIZER_PASSTEMPORARYTOSTENCILFUNCTION_H
-#define DAWN_OPTIMIZER_PASSTEMPORARYTOSTENCILFUNCTION_H
+#pragma once
 
 #include "dawn/Optimizer/Pass.h"
 #include "dawn/Support/Assert.h"
@@ -51,10 +50,11 @@ struct SkipIDs {
 /// This pass is not necessary to create legal code and is hence not in the debug-group
 class PassTemporaryToStencilFunction : public Pass {
 public:
-  PassTemporaryToStencilFunction(OptimizerContext& context);
+  PassTemporaryToStencilFunction() : Pass("PassTemporaryToStencilFunction") {}
 
   /// @brief Pass implementation
-  bool run(const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation) override;
+  bool run(const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation,
+           const Options& options = {}) override;
 
 private:
   SkipIDs computeSkipAccessIDs(
@@ -63,5 +63,3 @@ private:
 };
 
 } // namespace dawn
-
-#endif

@@ -12,8 +12,7 @@
 //
 //===------------------------------------------------------------------------------------------===//
 
-#ifndef DAWN_SUPPORT_COMPILER_H
-#define DAWN_SUPPORT_COMPILER_H
+#pragma once
 
 #include "dawn/Support/Config.h"
 
@@ -198,6 +197,4 @@
 #define DAWN_CURRENT_FUNCTION __func__
 #else
 #define DAWN_CURRENT_FUNCTION "(unknown)"
-#endif
-
 #endif

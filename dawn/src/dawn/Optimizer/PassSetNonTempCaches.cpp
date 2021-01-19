@@ -18,21 +18,21 @@
 #include "dawn/IIR/Cache.h"
 #include "dawn/IIR/IIRNodeIterator.h"
 #include "dawn/IIR/StencilInstantiation.h"
-#include "dawn/Optimizer/OptimizerContext.h"
 #include "dawn/Optimizer/PassDataLocalityMetric.h"
 #include "dawn/Optimizer/PassSetCaches.h"
 #include "dawn/Optimizer/Renaming.h"
+#include "dawn/Support/Logger.h"
 #include "dawn/Support/Unreachable.h"
-#include <iostream>
+
 #include <set>
 #include <vector>
 
 namespace dawn {
 
-struct AcessIDTolocalityMetric {
+struct AccessIDToLocalityMetric {
   int accessID;
   int dataLocalityGain;
-  bool operator<(const AcessIDTolocalityMetric& rhs) const {
+  bool operator<(const AccessIDToLocalityMetric& rhs) const {
     return dataLocalityGain < rhs.dataLocalityGain;
   }
 };
@@ -48,18 +48,18 @@ class GlobalFieldCacher {
   const std::unique_ptr<iir::MultiStage>& multiStagePrt_;
   const std::shared_ptr<iir::StencilInstantiation>& instantiation_;
   iir::StencilMetaInformation& metadata_;
-  OptimizerContext& context_;
+  const Options& options_;
   std::unordered_map<int, int> accessIDToDataLocality_;
   std::unordered_map<int, int> oldAccessIDtoNewAccessID_;
-  std::vector<AcessIDTolocalityMetric> sortedAccesses_;
+  std::vector<AccessIDToLocalityMetric> sortedAccesses_;
   std::vector<NameToImprovementMetric> originalNameToCache_;
 
 public:
   /// @param[in, out]  msprt   Pointer to the multistage to handle
-  /// @param[in, out]  si      Stencil Instanciation [ISIR] holding all the Stencils
+  /// @param[in, out]  si      Stencil Instantiation [ISIR] holding all the Stencils
   GlobalFieldCacher(const std::unique_ptr<iir::MultiStage>& msptr,
-                    const std::shared_ptr<iir::StencilInstantiation>& si, OptimizerContext& context)
-      : multiStagePrt_(msptr), instantiation_(si), metadata_(si->getMetaData()), context_(context) {
+                    const std::shared_ptr<iir::StencilInstantiation>& si, const Options& options)
+      : multiStagePrt_(msptr), instantiation_(si), metadata_(si->getMetaData()), options_(options) {
   }
 
   /// @brief Entry method for the pass: processes a given multistage and applies all changes
@@ -79,7 +79,7 @@ private:
   /// would benefit from caching
   void computeOptimalFields() {
     auto dataLocality =
-        computeReadWriteAccessesMetricPerAccessID(instantiation_, context_, *multiStagePrt_);
+        computeReadWriteAccessesMetricPerAccessID(instantiation_, options_, *multiStagePrt_);
 
     for(const auto& stagePtr : multiStagePrt_->getChildren()) {
       for(const auto& fieldPair : stagePtr->getFields()) {
@@ -114,20 +114,19 @@ private:
 
     for(auto& AcessIDMetricPair : accessIDToDataLocality_) {
       sortedAccesses_.emplace_back(
-          AcessIDTolocalityMetric{AcessIDMetricPair.first, AcessIDMetricPair.second});
+          AccessIDToLocalityMetric{AcessIDMetricPair.first, AcessIDMetricPair.second});
       std::sort(sortedAccesses_.begin(), sortedAccesses_.end());
     }
   }
 
-  /// @brief For each chached variable, check if we need a filler-stage (if we find a
-  /// read-before-write) and add it if necessary, renames all occurances and sets the cache for the
+  /// @brief For each cached variable, check if we need a filler-stage (if we find a
+  /// read-before-write) and add it if necessary, renames all occurrences and sets the cache for the
   /// temporary variable newly created
   ///
   /// We always fill to the extent of the given multistage and we only add one stage to fill all the
   /// variables to reduce synchronisation overhead
   void addFillerStages() {
-    int numVarsToBeCached =
-        std::min((int)sortedAccesses_.size(), context_.getHardwareConfiguration().SMemMaxFields);
+    int numVarsToBeCached = std::min((int)sortedAccesses_.size(), options_.SMemMaxFields);
     for(int i = 0; i < numVarsToBeCached; ++i) {
       int oldID = sortedAccesses_[i].accessID;
 
@@ -204,19 +203,19 @@ private:
     // Add the cache Flush stage
     std::unique_ptr<iir::Stage> assignmentStage = std::make_unique<iir::Stage>(
         instantiation_->getMetaData(), instantiation_->nextUID(), interval);
-    iir::Stage::DoMethodSmartPtr_t domethod =
+    iir::Stage::DoMethodSmartPtr_t doMethod =
         std::make_unique<iir::DoMethod>(interval, instantiation_->getMetaData());
-    domethod->getAST().clear();
+    doMethod->getAST().clear();
 
     for(int i = 0; i < assignmentIDs.size(); ++i) {
       int assignmentID = assignmentIDs[i];
       int assigneeID = assigneeIDs[i];
-      addAssignmentToDoMethod(domethod, assignmentID, assigneeID);
+      addAssignmentToDoMethod(doMethod, assignmentID, assigneeID);
     }
 
     // Add the single do method to the new Stage
     assignmentStage->clearChildren();
-    assignmentStage->addDoMethod(std::move(domethod));
+    assignmentStage->addDoMethod(std::move(doMethod));
     for(auto& doMethod : assignmentStage->getChildren()) {
       doMethod->update(iir::NodeUpdateType::level);
     }
@@ -225,8 +224,8 @@ private:
     return assignmentStage;
   }
 
-  ///@brief Add the assignment operator of two unique id's to a given domethod
-  void addAssignmentToDoMethod(const iir::Stage::DoMethodSmartPtr_t& domethod, int assignmentID,
+  ///@brief Add the assignment operator of two unique id's to a given doMethod
+  void addAssignmentToDoMethod(const iir::Stage::DoMethodSmartPtr_t& doMethod, int assignmentID,
                                int assigneeID) {
     // Create the statement of the assignment with the new and old variables
     auto fa_assignee =
@@ -241,7 +240,7 @@ private:
     newAccess.addReadExtent(assigneeID, iir::Extents{});
     expAssignment->getData<iir::IIRStmtData>().CallerAccesses =
         std::make_optional(std::move(newAccess));
-    domethod->getAST().push_back(std::move(expAssignment));
+    doMethod->getAST().push_back(std::move(expAssignment));
 
     // Add access ids to the expressions
     fa_assignment->getData<iir::IIRAccessExprData>().AccessID = std::make_optional(assignmentID);
@@ -280,8 +279,8 @@ private:
       const auto& callerAccesses = stmt->getData<iir::IIRStmtData>().CallerAccesses;
 
       // If we find a write-statement we exit
-      auto wirteAccessIterator = callerAccesses->getWriteAccesses().find(AccessID);
-      if(wirteAccessIterator != callerAccesses->getWriteAccesses().end()) {
+      auto writeAccessIterator = callerAccesses->getWriteAccesses().find(AccessID);
+      if(writeAccessIterator != callerAccesses->getWriteAccesses().end()) {
         return false;
       }
     }
@@ -289,47 +288,44 @@ private:
   }
 };
 
-PassSetNonTempCaches::PassSetNonTempCaches(OptimizerContext& context)
-    : Pass(context, "PassSetNonTempCaches") {}
-
 // TODO delete this pass
 bool dawn::PassSetNonTempCaches::run(
-    const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation) {
+    const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation,
+    const Options& options) {
 
   for(const auto& stencilPtr : stencilInstantiation->getStencils()) {
     const iir::Stencil& stencil = *stencilPtr;
 
     std::vector<NameToImprovementMetric> allCachedFields;
-    if(context_.getOptions().UseNonTempCaches) {
-      for(const auto& multiStagePtr : stencil.getChildren()) {
-        GlobalFieldCacher organizer(multiStagePtr, stencilInstantiation, context_);
-        organizer.process();
-        if(context_.getOptions().ReportPassSetNonTempCaches) {
-          for(const auto& nametoCache : organizer.getOriginalNameToCache())
-            allCachedFields.push_back(nametoCache);
-        }
+    for(const auto& multiStagePtr : stencil.getChildren()) {
+      GlobalFieldCacher organizer(multiStagePtr, stencilInstantiation, options);
+      organizer.process();
+      for(const auto& nametoCache : organizer.getOriginalNameToCache()) {
+        cachedFieldNames_.push_back(nametoCache.name);
+      }
+
+      for(const auto& nametoCache : organizer.getOriginalNameToCache()) {
+        allCachedFields.push_back(nametoCache);
       }
     }
     // Output
-    if(context_.getOptions().ReportPassSetNonTempCaches) {
-      std::sort(allCachedFields.begin(), allCachedFields.end(),
-                [](const NameToImprovementMetric& lhs, const NameToImprovementMetric& rhs) {
-                  return lhs.name < rhs.name;
-                });
-      std::cout << "\nPASS: " << getName() << ": " << stencilInstantiation->getName() << " :";
-      for(const auto& nametoCache : allCachedFields) {
-        std::cout << " Cached: " << nametoCache.name
-                  << " : Type: " << nametoCache.cache.getTypeAsString() << ":"
-                  << nametoCache.cache.getIOPolicyAsString();
-      }
-      if(allCachedFields.size() == 0) {
-        std::cout << " no fields cached";
-      }
-      std::cout << std::endl;
+    std::sort(allCachedFields.begin(), allCachedFields.end(),
+              [](const NameToImprovementMetric& lhs, const NameToImprovementMetric& rhs) {
+                return lhs.name < rhs.name;
+              });
+    for(const auto& nametoCache : allCachedFields) {
+      DAWN_LOG(INFO) << stencilInstantiation->getName() << ": Cached: " << nametoCache.name
+                     << " : Type: " << nametoCache.cache.getTypeAsString() << ":"
+                     << nametoCache.cache.getIOPolicyAsString();
+    }
+    if(allCachedFields.size() == 0) {
+      DAWN_LOG(INFO) << stencilInstantiation->getName() << ": No fields cached";
     }
   }
 
   return true;
 }
+
+std::vector<std::string>& PassSetNonTempCaches::getCachedFieldNames() { return cachedFieldNames_; }
 
 } // namespace dawn

@@ -12,8 +12,7 @@
 //
 //===------------------------------------------------------------------------------------------===//
 
-#ifndef DAWN_CODEGEN_TRANSLATIONUNIT_H
-#define DAWN_CODEGEN_TRANSLATIONUNIT_H
+#pragma once
 
 #include <map>
 #include <string>
@@ -55,5 +54,3 @@ public:
 
 } // namespace codegen
 } // namespace dawn
-
-#endif

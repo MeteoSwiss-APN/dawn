@@ -27,7 +27,7 @@ unset(__VERSION_LIST)
 project(GTClang
   VERSION ${__GTCLANG_VERSION}
   HOMEPAGE_URL https://meteoswiss-apn.github.io/dawn/
-  LANGUAGES CXX C
+  LANGUAGES CXX
 )
 unset(__GTCLANG_VERSION)
 
@@ -41,9 +41,6 @@ include(CMakeDependentOption)
 option(BUILD_EXAMPLES "Build examples" ON)
 option(ENABLE_CUDA_IF_FOUND "Enable CUDA if it is detected" ON)
 option(GTCLANG_BUILD_TESTING "Override BUILD_TESTING if part of a multi-project build." OFF)
-# By default unstructured integration tests are not built if atlas or eckit is not found.
-# GTCLANG_REQUIRE_UNSTRUCTURED_TESTING=ON will force an error if atlas or eckit are not found.
-option(GTCLANG_REQUIRE_UNSTRUCTURED_TESTING "Require building tests for unstructured grids." OFF)
 
 ### Require out-of-source builds
 file(TO_CMAKE_PATH "${PROJECT_BINARY_DIR}/CMakeLists.txt" LOC_PATH)
@@ -153,11 +150,11 @@ if(${PROJECT_NAME}_TESTING)
   )
   cmake_dependent_option(GTCLANG_BUILD_TESTING_GT_CUDA
     "Build integration tests with the GridTools CUDA backend"
-    ON "BUILD_TESTING;CMAKE_CUDA_COMPILER;NOT ENABLE_CUDA_IF_FOUND" OFF
+    ON "BUILD_TESTING;CMAKE_CUDA_COMPILER;ENABLE_CUDA_IF_FOUND" OFF
   )
   cmake_dependent_option(GTCLANG_BUILD_TESTING_PLAIN_CUDA
     "Build integration tests with the plain CUDA backend"
-    ON "BUILD_TESTING;CMAKE_CUDA_COMPILER;NOT ENABLE_CUDA_IF_FOUND" OFF
+    ON "BUILD_TESTING;CMAKE_CUDA_COMPILER;ENABLE_CUDA_IF_FOUND" OFF
   )
 
   add_subdirectory(test)
@@ -183,19 +180,19 @@ install(
   EXPORT ${PROJECT_NAME}Targets
   FILE ${PROJECT_NAME}Targets.cmake
   NAMESPACE ${PROJECT_NAME}::
-  DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/${PROJECT_NAME}
+  DESTINATION ${CMAKE_INSTALL_PREFIX}/lib/cmake/${PROJECT_NAME}
 )
 
 install(
   FILES cmake/FindLLVM.cmake cmake/FindClang.cmake
-  DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/${PROJECT_NAME}
+  DESTINATION ${CMAKE_INSTALL_PREFIX}/lib/cmake/${PROJECT_NAME}
 )
 
 install(
   FILES
   "${PROJECT_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/${PROJECT_NAME}Config.cmake"
   "${PROJECT_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/${PROJECT_NAME}ConfigVersion.cmake"
-  DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/${PROJECT_NAME}
+  DESTINATION ${CMAKE_INSTALL_PREFIX}/lib/cmake/${PROJECT_NAME}
 )
 
 install(

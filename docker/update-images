@@ -1,0 +1,41 @@
+#!/bin/sh
+
+set -e
+
+usage() {
+    echo "USAGE: docker/update-images [-s] [cpu] [gpu]"
+    exit 1
+}
+
+if [ $# -eq 0 ]; then
+    usage
+fi
+
+while [ "$1" != "" ]; do
+    case $1 in
+    c | cpu)
+        image_name=gtclang/dawn-env-ubuntu20.04
+        docker build --rm \
+            --tag $image_name-base \
+            --file docker/ubuntu20.04.dockerfile .
+        docker build --rm \
+            --tag $image_name --build-arg IMAGE=$image_name-base \
+            --file docker/dawn-env.dockerfile .
+        echo "Now run:\n\tdocker push $image_name"
+        ;;
+    g | gpu)
+        image_name=gtclang/dawn-env-cuda10.1-ubuntu18.04
+        docker build --rm \
+            --tag $image_name-base \
+            --file docker/cuda10.1-ubuntu18.04.dockerfile .
+        docker build --rm \
+            --tag $image_name --build-arg IMAGE=$image_name-base \
+            --file docker/dawn-env.dockerfile .
+        echo "Now run:\n\tdocker push $image_name"
+        ;;
+    *)
+        usage
+        ;;
+    esac
+    shift
+done

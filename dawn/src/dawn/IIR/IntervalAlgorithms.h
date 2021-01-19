@@ -13,8 +13,7 @@
 //
 //===------------------------------------------------------------------------------------------===//
 
-#ifndef DAWN_IIR_INTERVALALGORITHMS_H
-#define DAWN_IIR_INTERVALALGORITHMS_H
+#pragma once
 
 #include "dawn/IIR/Cache.h"
 #include "dawn/IIR/Interval.h"
@@ -43,5 +42,3 @@ Cache::window computeWindowOffset(LoopOrderKind loopOrder, iir::Interval const& 
 
 } // namespace iir
 } // namespace dawn
-
-#endif

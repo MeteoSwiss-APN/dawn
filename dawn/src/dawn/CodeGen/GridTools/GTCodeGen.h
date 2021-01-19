@@ -12,11 +12,11 @@
 //
 //===------------------------------------------------------------------------------------------===//
 
-#ifndef DAWN_CODEGEN_GRIDTOOLS_GTCODEGEN_H
-#define DAWN_CODEGEN_GRIDTOOLS_GTCODEGEN_H
+#pragma once
 
 #include "dawn/CodeGen/CodeGen.h"
 #include "dawn/CodeGen/CodeGenProperties.h"
+#include "dawn/CodeGen/Options.h"
 #include "dawn/IIR/Interval.h"
 #include <set>
 #include <unordered_map>
@@ -33,12 +33,18 @@ class Stencil;
 namespace codegen {
 namespace gt {
 
+/// @brief Run the GridTools code generation
+std::unique_ptr<TranslationUnit>
+run(const std::map<std::string, std::shared_ptr<iir::StencilInstantiation>>&
+        stencilInstantiationMap,
+    const Options& options = {});
+
 /// @brief GridTools C++ code generation for the gtclang DSL
 /// @ingroup gt
 class GTCodeGen : public CodeGen {
 public:
-  GTCodeGen(const stencilInstantiationContext& ctx, DiagnosticsEngine& engine, bool useParallelEP,
-            int maxHaloPoints);
+  GTCodeGen(const StencilInstantiationContext& ctx, bool useParallelEP, int maxHaloPoints,
+            bool runWithSync = true);
   virtual ~GTCodeGen();
 
   virtual std::unique_ptr<TranslationUnit> generateCode() override;
@@ -60,7 +66,11 @@ public:
     std::unordered_map<int, std::vector<iir::Interval>> StageIntervals;
 
     // TODO we should compute the OffsetLimit, not use a hard-coded value!
-    static constexpr int OffsetLimit = 3;
+    // TODO when resolving the above TODO, take into account the result of
+    // https://github.com/GridTools/gridtools/issues/1483
+    // Roughly: if k-caches are involved the extent of this field must not
+    // be > (OffsetLimit - |lower and upper offset in the current interval|).
+    static constexpr int OffsetLimit = 4;
 
     // TODO we should avoid the ExtraOffsets, not use a hard-coded value!
     static constexpr int ExtraOffsets = 1;
@@ -83,8 +93,7 @@ private:
 
   bool isTemporary(iir::Stencil::FieldInfo const& f) const { return f.IsTemporary; }
 
-  void generateGlobalsAPI(const iir::StencilInstantiation& stencilInstantiation,
-                          Class& stencilWrapperClass, const sir::GlobalVariableMap& globalsMap,
+  void generateGlobalsAPI(Structure& stencilWrapperClass, const sir::GlobalVariableMap& globalsMap,
                           const CodeGenProperties& codeGenProperties) const override;
 
   void generateStencilWrapperMembers(
@@ -127,11 +136,10 @@ private:
   /// Use the parallel keyword for mulistages
   struct GTCodeGenOptions {
     bool useParallelEP_;
+    bool runWithSync_;
   } codeGenOptions_;
 };
 
 } // namespace gt
 } // namespace codegen
 } // namespace dawn
-
-#endif

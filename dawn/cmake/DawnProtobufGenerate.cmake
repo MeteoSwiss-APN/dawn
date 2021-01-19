@@ -29,18 +29,19 @@ include(CMakeParseArguments)
 # ``OUT_FILES``
 #   On output this variable contains a List of output files which contain the location of the header and
 #   source files.
-# ``OUT_DIRS``
-#   On output this variable contains a List of paths
-# ``OUT_INCLUDE_DIRS``
-#   On output this variable contains a list of include directories which need to be added to compile
-#   the generated sources (C++ only).
+# ``OUTDIR``
+#   Output directory. By default is set to CMAKE_CURRENT_BINARY_DIR.
+# ``WDIR``
+#   Working directory.
+# ``PACKG``
+#   Package directory (subdirectory of OUTDIR).
 # ``PROTOS``
 #   List of proto files to compile.
 # ``LANGUAGE``
 #   Language to compile to [default: cpp].
 #
 function(dawn_protobuf_generate)
-  set(one_value_args OUT_FILES OUT_DIRS OUT_INCLUDE_DIRS WDIR PACKG INC_DIR LANGUAGE)
+  set(one_value_args OUT_FILES OUTDIR WDIR PACKG INC_DIR LANGUAGE)
   set(multi_value_args PROTOS)
   cmake_parse_arguments(ARG "${options}" "${one_value_args}" "${multi_value_args}" ${ARGN})
 
@@ -88,6 +89,7 @@ function(dawn_protobuf_generate)
     set(include_path ${include_path} -I${ARG_INC_DIR})
   endif()
 
+  # Set include directories based on protobuf target property
   get_property(Protobuf_INCLUDE_DIRS
     TARGET protobuf::libprotobuf
     PROPERTY INCLUDE_DIRECTORIES
@@ -102,7 +104,12 @@ function(dawn_protobuf_generate)
   endif()
 
   set(output_files)
-  set(output_include_dirs)
+
+  if(ARG_OUTDIR)
+    set(output_directory ${ARG_OUTDIR})
+  else()
+    set(output_directory ${CMAKE_CURRENT_BINARY_DIR})
+  endif()
 
   foreach(proto ${ARG_PROTOS})
     set(abs_file ${ARG_WDIR}/${proto})
@@ -110,17 +117,17 @@ function(dawn_protobuf_generate)
 
     unset(generated_srcs)
     foreach(ext ${extensions})
-      if(${ARG_LANGUAGE} STREQUAL "java" )
-        list(APPEND generated_srcs "${CMAKE_CURRENT_BINARY_DIR}/dawn/sir/${basename}${ext}")
+      if(${ARG_LANGUAGE} STREQUAL "java")
+        list(APPEND generated_srcs "${output_directory}/dawn/sir/${basename}${ext}")
       else()
-        list(APPEND generated_srcs "${CMAKE_CURRENT_BINARY_DIR}/${ARG_PACKG}/${basename}${ext}")
+        list(APPEND generated_srcs "${output_directory}/${ARG_PACKG}/${basename}${ext}")
       endif()
     endforeach()
 
     add_custom_command(
       OUTPUT ${generated_srcs}
       COMMAND protobuf::protoc
-      ARGS ${protobuf_script} --${ARG_LANGUAGE}_out "${CMAKE_CURRENT_BINARY_DIR}"
+      ARGS ${protobuf_script} --${ARG_LANGUAGE}_out ${output_directory}
            ${include_path} "${proto}"
       COMMENT "Running ${ARG_LANGUAGE} protocol buffer compiler on ${proto}"
       DEPENDS ${abs_file} protobuf::protoc ${depends}
@@ -129,27 +136,7 @@ function(dawn_protobuf_generate)
     )
 
     list(APPEND output_files ${generated_srcs})
-
-    foreach(src ${generated_srcs})
-      get_filename_component(abs_file ${src} ABSOLUTE)
-      get_filename_component(abs_path ${src} PATH)
-      list(FIND output_include_dirs ${abs_path} existing)
-      if(${existing} EQUAL -1)
-        list(APPEND output_include_dirs ${abs_path})
-      endif()
-    endforeach()
   endforeach()
 
-  if(ARG_OUT_DIRS)
-    if(${ARG_LANGUAGE} STREQUAL "java" )
-      set("${ARG_OUT_DIRS}" "${CMAKE_CURRENT_BINARY_DIR}/dawn/" PARENT_SCOPE)
-    else()
-      set("${ARG_OUT_DIRS}" "${CMAKE_CURRENT_BINARY_DIR}" PARENT_SCOPE)
-    endif()
-  endif()
-
-  set("${ARG_OUT_FILES}" ${output_files} PARENT_SCOPE)
-  if(ARG_OUT_INCLUDE_DIRS)
-    set("${ARG_OUT_INCLUDE_DIRS}" ${output_include_dirs} PARENT_SCOPE)
-  endif()
+  set("${ARG_OUT_FILES}" "${output_files}" PARENT_SCOPE)
 endfunction()

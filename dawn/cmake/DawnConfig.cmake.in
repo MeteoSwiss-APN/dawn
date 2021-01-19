@@ -8,7 +8,7 @@ include(CMakeFindDependencyMacro)
 find_dependency(Protobuf 3.4.0
   CONFIG
   REQUIRED
-  HINTS @CMAKE_INSTALL_FULL_LIBDIR@/cmake/protobuf # in case protobuf was build with dawn
+  PATHS @CMAKE_INSTALL_FULL_LIBDIR@/cmake/protobuf # in case protobuf was build with dawn
 )
 
 if(NOT TARGET Dawn::Dawn)

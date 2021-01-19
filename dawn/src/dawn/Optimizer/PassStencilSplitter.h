@@ -12,8 +12,7 @@
 //
 //===------------------------------------------------------------------------------------------===//
 
-#ifndef DAWN_OPTIMIZER_PASSSTENCILSPLITTER_H
-#define DAWN_OPTIMIZER_PASSSTENCILSPLITTER_H
+#pragma once
 
 #include "dawn/Optimizer/Pass.h"
 
@@ -28,7 +27,10 @@ namespace dawn {
 /// This pass is not necessary to create legal code and is hence not in the debug-group
 class PassStencilSplitter : public Pass {
 public:
-  PassStencilSplitter(OptimizerContext& context, int maxNumberOfFilelds);
+  PassStencilSplitter(int maxNumberOfFields)
+      : Pass("PassStencilSplitter"), MaxFieldPerStencil(maxNumberOfFields) {
+    dependencies_.push_back("PassSetStageGraph");
+  }
 
   /// @brief Maximum number of allowed fields per stencil
   ///
@@ -36,9 +38,8 @@ public:
   int MaxFieldPerStencil;
 
   /// @brief Pass implementation
-  bool run(const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation) override;
+  bool run(const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation,
+           const Options& options = {}) override;
 };
 
 } // namespace dawn
-
-#endif

@@ -6,6 +6,8 @@
 **/.vscode
 **/bin
 **/obj
+**/*.so
+**/*.dylib
 **/README.md
 **/LICENSE.txt
 Dockerfile

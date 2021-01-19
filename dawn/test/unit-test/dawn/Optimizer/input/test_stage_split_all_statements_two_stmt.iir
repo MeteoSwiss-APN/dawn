@@ -1,0 +1,189 @@
+{
+ "metadata": {
+  "accessIDToName": {
+   "17": "__local_a_17",
+   "18": "__local_b_18"
+  },
+  "accessIDToType": {},
+  "literalIDToName": {},
+  "fieldAccessIDs": [],
+  "APIFieldIDs": [],
+  "temporaryFieldIDs": [],
+  "globalVariableIDs": [],
+  "versionedFields": {
+   "variableVersionMap": {}
+  },
+  "fieldnameToBoundaryCondition": {},
+  "fieldIDtoDimensions": {},
+  "idToStencilCall": {
+   "7": {
+    "stencil_call_decl_stmt": {
+     "stencil_call": {
+      "loc": {
+       "Line": -1,
+       "Column": -1
+      },
+      "callee": "__code_gen_7",
+      "arguments": []
+     },
+     "loc": {
+      "Line": -1,
+      "Column": -1
+     },
+     "data": {},
+     "ID": 8
+    }
+   }
+  },
+  "boundaryCallToExtent": {},
+  "allocatedFieldIDs": [],
+  "stencilLocation": {
+   "Line": -1,
+   "Column": -1
+  },
+  "stencilName": "generated"
+ },
+ "internalIR": {
+  "gridType": "Unstructured",
+  "globalVariableToValue": {},
+  "stencils": [
+   {
+    "multiStages": [
+     {
+      "stages": [
+       {
+        "doMethods": [
+         {
+          "ast": {
+           "block_stmt": {
+            "statements": [
+             {
+              "var_decl_stmt": {
+               "type": {
+                "builtin_type": {
+                 "type_id": "Integer"
+                },
+                "is_const": false,
+                "is_volatile": false
+               },
+               "name": "a",
+               "dimension": 0,
+               "op": "=",
+               "init_list": [],
+               "loc": {
+                "Line": -1,
+                "Column": -1
+               },
+               "data": {
+                "accesses": {
+                 "writeAccess": {
+                  "17": {
+                   "zero_extent": {},
+                   "vertical_extent": {
+                    "minus": 0,
+                    "plus": 0
+                   }
+                  }
+                 },
+                 "readAccess": {}
+                }
+               },
+               "var_decl_stmt_data": {
+                "accessID": 17
+               },
+               "ID": 20
+              }
+             },
+             {
+              "var_decl_stmt": {
+               "type": {
+                "builtin_type": {
+                 "type_id": "Integer"
+                },
+                "is_const": false,
+                "is_volatile": false
+               },
+               "name": "b",
+               "dimension": 0,
+               "op": "=",
+               "init_list": [],
+               "loc": {
+                "Line": -1,
+                "Column": -1
+               },
+               "data": {
+                "accesses": {
+                 "writeAccess": {
+                  "18": {
+                   "zero_extent": {},
+                   "vertical_extent": {
+                    "minus": 0,
+                    "plus": 0
+                   }
+                  }
+                 },
+                 "readAccess": {}
+                }
+               },
+               "var_decl_stmt_data": {
+                "accessID": 18
+               },
+               "ID": 21
+              }
+             }
+            ],
+            "loc": {
+             "Line": -1,
+             "Column": -1
+            },
+            "data": {},
+            "ID": 19
+           }
+          },
+          "doMethodID": 262,
+          "interval": {
+           "lower_offset": 0,
+           "upper_offset": 0,
+           "special_lower_level": "Start",
+           "special_upper_level": "End"
+          }
+         }
+        ],
+        "stageID": 15
+       }
+      ],
+      "loopOrder": "Forward",
+      "multiStageID": 14,
+      "Caches": {}
+     }
+    ],
+    "stencilID": 7,
+    "attr": {
+     "attributes": []
+    }
+   }
+  ],
+  "controlFlowStatements": [
+   {
+    "stencil_call_decl_stmt": {
+     "stencil_call": {
+      "loc": {
+       "Line": -1,
+       "Column": -1
+      },
+      "callee": "__code_gen_7",
+      "arguments": []
+     },
+     "loc": {
+      "Line": -1,
+      "Column": -1
+     },
+     "data": {},
+     "ID": 8
+    }
+   }
+  ],
+  "boundaryConditions": []
+ },
+ "filename": "../input/test_stage_split_all_statements_two_stmt.sir"
+}

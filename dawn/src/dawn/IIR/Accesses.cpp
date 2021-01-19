@@ -17,7 +17,7 @@
 #include "dawn/IIR/StencilMetaInformation.h"
 #include "dawn/Support/Format.h"
 #include "dawn/Support/StringUtil.h"
-#include <iostream>
+#include <sstream>
 #include <utility>
 
 namespace dawn {

@@ -13,33 +13,29 @@
 //===------------------------------------------------------------------------------------------===//
 
 #include "dawn/Support/Exception.h"
-#include <cstring>
 
 namespace dawn {
 
-CompileError::CompileError(const std::string& message, const std::string& file, unsigned line)
-    : message_(message), file_(file), line_(line) {}
-
-std::string CompileError::getMessage() const {
-  std::string message = message_;
+CompileError::CompileError(const std::string& message, const std::string& file, int line,
+                           int column)
+    : file_(file), line_(line), column_(column) {
+  message_ = message;
   if(!file_.empty()) {
-    message += " in file '" + file_ + "'";
+    message_ += " in file '" + file_ + "'";
   }
-  if(line_ > 0) {
-    message += " at line " + std::to_string(line_);
+  if(line_ >= 0) {
+    message_ += " at line " + std::to_string(line_);
   }
-  return message;
+  if(column_ >= 0) {
+    message_ += " at column " + std::to_string(column_);
+  }
 }
 
+std::string CompileError::getMessage() const { return message_; }
 std::string CompileError::getFile() const { return file_; }
 
-unsigned CompileError::getLine() const { return line_; }
+int CompileError::getLine() const { return line_; }
 
-const char* CompileError::what() const throw() {
-  return getMessage().c_str();
-}
-
-SemanticError::SemanticError(const std::string& message, const std::string& file, unsigned line)
-    : CompileError(message, file, line) {}
+const char* CompileError::what() const throw() { return message_.c_str(); }
 
 } // namespace dawn

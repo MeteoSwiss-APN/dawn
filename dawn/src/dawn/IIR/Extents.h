@@ -12,13 +12,23 @@
 //
 //===------------------------------------------------------------------------------------------===//
 
-#ifndef DAWN_IIR_EXTENTS_H
-#define DAWN_IIR_EXTENTS_H
+#pragma once
 
 #include "LoopOrder.h"
 
 #include "dawn/AST/GridType.h"
 #include "dawn/AST/Offsets.h"
+
+// TODO there are death tests which rely on the following code to die, needs refactoring
+#ifdef NDEBUG
+#undef NDEBUG
+#define HAD_NDEBUG
+#endif
+#include "dawn/Support/Assert.h"
+#ifdef HAD_NDEBUG
+#define NDEBUG
+#undef HAD_NDEBUG
+#endif
 
 #include <array>
 #include <iosfwd>
@@ -28,10 +38,13 @@ namespace dawn {
 namespace iir {
 
 class Extents;
+struct UndefinedExtent {};
 
 /// @brief Access extent of a single dimension
 /// @ingroup optimizer
 class Extent {
+private:
+  bool undefinedExtent_ = false;
 
 public:
   /// @name Constructors and Assignment
@@ -39,15 +52,23 @@ public:
   Extent(int minus, int plus);
   explicit Extent(int offset);
   Extent();
+  Extent(UndefinedExtent) : undefinedExtent_(true) {}
   /// @}
 
-  int minus() const { return minus_; }
-  int plus() const { return plus_; }
+  int minus() const {
+    DAWN_ASSERT_MSG(!undefinedExtent_, "undefined extent!");
+    return minus_;
+  }
+  int plus() const {
+    DAWN_ASSERT_MSG(!undefinedExtent_, "undefined extent!");
+    return plus_;
+  }
 
   /// @name Operators
   /// @{
-  void merge(const Extent& other);
+  void merge(const Extent& other); // propagate undefined'ness
   void merge(int other);
+  bool isUndefined() const { return undefinedExtent_; }
 
   void limit(Extent const& other);
 
@@ -136,7 +157,7 @@ protected:
   void limitImpl(HorizontalExtentImpl const& other) override;
 
 private:
-  bool hasExtent_;
+  bool hasExtent_ = false;
 };
 
 class HorizontalExtent {
@@ -189,8 +210,8 @@ template <typename T>
 T extent_cast(HorizontalExtent const& extent) {
   using PlainT = std::remove_reference_t<T>;
   static_assert(std::is_base_of_v<HorizontalExtentImpl, PlainT>,
-                "Can only be casted to a valid horizontal extent implementation");
-  static_assert(std::is_const_v<PlainT>, "Can only be casted to const");
+                "Can only be cast to a valid horizontal extent implementation");
+  static_assert(std::is_const_v<PlainT>, "Can only be cast to const");
   static PlainT nullExtent{};
   return extent.impl_ ? dynamic_cast<T>(*extent.impl_) : nullExtent;
 }
@@ -343,5 +364,3 @@ struct hash<dawn::iir::Extents> {
 };
 
 } // namespace std
-
-#endif

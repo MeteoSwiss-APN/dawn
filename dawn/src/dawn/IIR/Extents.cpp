@@ -14,13 +14,11 @@
 
 #include "dawn/IIR/Extents.h"
 #include "dawn/AST/GridType.h"
-#include "dawn/Support/Assert.h"
 #include "dawn/Support/HashCombine.h"
 #include "dawn/Support/StringUtil.h"
 #include "dawn/Support/Unreachable.h"
 
 #include <algorithm>
-#include <iostream>
 
 namespace dawn::iir {
 
@@ -29,24 +27,55 @@ Extent::Extent(int minus, int plus) : minus_(minus), plus_(plus) { DAWN_ASSERT(m
 Extent::Extent(int offset) : Extent(offset, offset) {}
 Extent::Extent() : Extent(0, 0) {}
 void Extent::merge(const Extent& other) {
+  if(isUndefined()) {
+    return;
+  }
+  if(other.isUndefined()) {
+    undefinedExtent_ = true;
+    return;
+  }
+
   minus_ = std::min(minus_, other.minus_);
   plus_ = std::max(plus_, other.plus_);
 }
 void Extent::merge(int other) { merge(Extent{other, other}); }
 void Extent::limit(Extent const& other) {
+  DAWN_ASSERT_MSG(!isUndefined() && !other.isUndefined(), "limit called on undefined Extent");
   minus_ = std::max(minus_, other.minus_);
   plus_ = std::min(plus_, other.plus_);
 }
 Extent& Extent::operator+=(const Extent& other) {
+  if(isUndefined()) {
+    return *this;
+  }
+  if(other.isUndefined()) {
+    undefinedExtent_ = true;
+    return *this;
+  }
+
   minus_ += other.minus_;
   plus_ += other.plus_;
   return *this;
 }
 bool Extent::operator==(const Extent& other) const {
-  return minus_ == other.minus_ && plus_ == other.plus_;
+  // minus / plus may be uninitialized in the undefined case
+  if(undefinedExtent_ && other.undefinedExtent_) {
+    return true;
+  }
+  // look at boundaries if both extents are defined
+  if(!undefinedExtent_ && !other.undefinedExtent_) {
+    return minus_ == other.minus_ && plus_ == other.plus_;
+  }
+  // not equal otherwise
+  return false;
 }
 bool Extent::operator!=(const Extent& other) const { return !(*this == other); }
-bool Extent::isPointwise() const { return plus_ == 0 && minus_ == 0; }
+bool Extent::isPointwise() const {
+  if(isUndefined()) {
+    return false;
+  }
+  return plus_ == 0 && minus_ == 0;
+}
 
 Extent operator+(Extent lhs, Extent const& rhs) { return lhs += rhs; }
 Extent merge(Extent lhs, Extent const& rhs) {
@@ -150,16 +179,16 @@ void UnstructuredExtent::limitImpl(HorizontalExtentImpl const& other) {
 
 // HorizontalExtent
 HorizontalExtent::HorizontalExtent(ast::HorizontalOffset const& hOffset) {
-  *this = offset_dispatch(hOffset,
-                          [](ast::CartesianOffset const& cOffset) {
-                            return HorizontalExtent(ast::cartesian, cOffset.offsetI(),
-                                                    cOffset.offsetI(), cOffset.offsetJ(),
-                                                    cOffset.offsetJ());
-                          },
-                          [](ast::UnstructuredOffset const& uOffset) {
-                            return HorizontalExtent(ast::unstructured, uOffset.hasOffset());
-                          },
-                          []() { return HorizontalExtent(); });
+  *this = offset_dispatch(
+      hOffset,
+      [](ast::CartesianOffset const& cOffset) {
+        return HorizontalExtent(ast::cartesian, cOffset.offsetI(), cOffset.offsetI(),
+                                cOffset.offsetJ(), cOffset.offsetJ());
+      },
+      [](ast::UnstructuredOffset const& uOffset) {
+        return HorizontalExtent(ast::unstructured, uOffset.hasOffset());
+      },
+      []() { return HorizontalExtent(); });
 }
 HorizontalExtent::HorizontalExtent(ast::cartesian_) : impl_(std::make_unique<CartesianExtent>()) {}
 HorizontalExtent::HorizontalExtent(ast::cartesian_, int iMinus, int iPlus, int jMinus, int jPlus)
@@ -235,8 +264,13 @@ Extents::Extents() : Extents(HorizontalExtent{}, Extent{}) {}
 Extents::Extents(HorizontalExtent const& hExtent, Extent const& vExtent)
     : verticalExtent_(vExtent), horizontalExtent_(hExtent) {}
 
-Extents::Extents(ast::Offsets const& offset)
-    : verticalExtent_(offset.verticalOffset()), horizontalExtent_(offset.horizontalOffset()) {}
+Extents::Extents(ast::Offsets const& offset) : horizontalExtent_(offset.horizontalOffset()) {
+  if(offset.hasVerticalIndirection()) {
+    verticalExtent_ = Extent(UndefinedExtent{});
+  } else {
+    verticalExtent_ = Extent(offset.verticalShift());
+  }
+}
 
 Extents::Extents(ast::cartesian_, int extent1minus, int extent1plus, int extent2minus,
                  int extent2plus, int extent3minus, int extent3plus)
@@ -258,7 +292,7 @@ void Extents::resetVerticalExtent() { verticalExtent_ = Extent(0, 0); }
 
 void Extents::merge(const ast::Offsets& offset) {
   horizontalExtent_.merge(offset.horizontalOffset());
-  verticalExtent_.merge(offset.verticalOffset());
+  verticalExtent_.merge(offset.verticalShift());
 }
 
 Extents& Extents::operator+=(const Extents& other) {
@@ -283,6 +317,8 @@ bool Extents::isHorizontalPointwise() const { return horizontalExtent_.isPointwi
 bool Extents::isVerticalPointwise() const { return verticalExtent_.isPointwise(); }
 
 bool Extents::hasVerticalCenter() const {
+  DAWN_ASSERT_MSG(!verticalExtent_.isUndefined(),
+                  "has vertical center called on undefined interval");
   return verticalExtent_.minus() <= 0 && verticalExtent_.plus() >= 0;
 }
 void Extents::limit(Extents const& other) {
@@ -291,12 +327,20 @@ void Extents::limit(Extents const& other) {
 }
 
 bool Extents::isPointwise() const {
+  // if the vertical extent is indirected than its at least not _guaranteed_ to
+  // be pointwise
+  if(verticalExtent_.isUndefined()) {
+    return false;
+  }
   return horizontalExtent_.isPointwise() && verticalExtent_.isPointwise();
 }
 
 Extents::VerticalLoopOrderAccess
 Extents::getVerticalLoopOrderAccesses(LoopOrderKind loopOrder) const {
   VerticalLoopOrderAccess access{false, false};
+
+  if(verticalExtent().isUndefined())
+    return VerticalLoopOrderAccess{true, true};
 
   if(isVerticalPointwise())
     return access;
@@ -373,19 +417,22 @@ std::string to_string(const Extents& extent) {
 
   using namespace std::string_literals;
   return "["s +
-         extent_dispatch(extent.horizontalExtent(),
-                         [&](CartesianExtent const& hExtents) {
-                           return "("s + std::to_string(hExtents.iMinus()) + "," +
-                                  std::to_string(hExtents.iPlus()) + "),(" +
-                                  std::to_string(hExtents.jMinus()) + "," +
-                                  std::to_string(hExtents.jPlus()) + ")";
-                         },
-                         [&](UnstructuredExtent const& hExtents) {
-                           return hExtents.hasExtent() ? "<has_horizontal_extent>"s
-                                                       : "<no_horizontal_extent>"s;
-                         },
-                         [&]() { return "<no_horizontal_extent>"s; }) +
-         ",(" + std::to_string(vExtents.minus()) + "," + std::to_string(vExtents.plus()) + ")]";
+         extent_dispatch(
+             extent.horizontalExtent(),
+             [&](CartesianExtent const& hExtents) {
+               return "("s + std::to_string(hExtents.iMinus()) + "," +
+                      std::to_string(hExtents.iPlus()) + "),(" + std::to_string(hExtents.jMinus()) +
+                      "," + std::to_string(hExtents.jPlus()) + ")";
+             },
+             [&](UnstructuredExtent const& hExtents) {
+               return hExtents.hasExtent() ? "<has_horizontal_extent>"s : "<no_horizontal_extent>"s;
+             },
+             [&]() { return "<no_horizontal_extent>"s; }) +
+         ",(" +
+         (vExtents.isUndefined()
+              ? "UNDEFINED,UNDEFINED"
+              : std::to_string(vExtents.minus()) + "," + std::to_string(vExtents.plus())) +
+         ")]";
 }
 
 std::ostream& operator<<(std::ostream& os, const Extents& extents) {

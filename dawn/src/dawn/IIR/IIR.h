@@ -12,8 +12,7 @@
 //
 //===------------------------------------------------------------------------------------------===//
 
-#ifndef DAWN_IIR_IIR_H
-#define DAWN_IIR_IIR_H
+#pragma once
 
 #include "dawn/AST/GridType.h"
 #include "dawn/IIR/ControlFlowDescriptor.h"
@@ -105,13 +104,11 @@ public:
   }
   const sir::GlobalVariableMap& getGlobalVariableMap() const { return *globalVariableMap_; }
 
-  void insertGlobalVariable(std::string&& varName, sir::Global&& value) {
-    globalVariableMap_->insert(std::pair(std::move(varName), std::move(value)));
+  void insertGlobalVariable(const std::string& varName, sir::Global&& value) {
+    globalVariableMap_->insert(std::pair(varName, std::move(value)));
   }
 
   const Stencil& getStencil(const int stencilID) const;
 };
 } // namespace iir
 } // namespace dawn
-
-#endif

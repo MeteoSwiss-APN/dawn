@@ -30,7 +30,7 @@ function(generate_target)
   if(EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/${test}.json)
     set(config_str --config=${CMAKE_CURRENT_SOURCE_DIR}/${test}.json)
   endif()
-  
+
   # TODO this probably didn't work before CMAKE refactoring because of wrong matching
   # string(TOLOWER "${CMAKE_BUILD_TYPE}" LOWERCASE_CMAKE_BUILD_TYPE)
   # if(LOWERCASE_CMAKE_BUILD_TYPE MATCHES debug)
@@ -77,7 +77,7 @@ function(compile_target)
   endif()
 
   target_compile_definitions(${executable} PRIVATE -DOPTBACKEND=${backend})
-  target_compile_features(${executable} PRIVATE cxx_std_11)
+  target_compile_features(${executable} PRIVATE cxx_std_14)
   target_link_libraries(${executable} GridTools::gridtools)
   target_link_libraries(${executable} gtest)
   # TODO The following line must not be there!
@@ -86,7 +86,7 @@ function(compile_target)
   target_include_directories(${executable} PRIVATE ${PROJECT_SOURCE_DIR}/src)
 
   add_test(NAME GTClang::Integration::CodeGen::${executable}
-    COMMAND ${executable} 12 12 10 --gtest_output=xml:${executable}_unittest.xml
+    COMMAND ${executable} 12 12 10
   )
 endfunction()
 
@@ -123,7 +123,6 @@ function(compile_target_cuda)
   )
 
   target_compile_definitions(${executable} PRIVATE -DOPTBACKEND=${backend})
-  target_compile_features(${executable} PRIVATE cxx_std_14)
   target_link_libraries(${executable} GridTools::gridtools)
   target_link_libraries(${executable} gtest)
   # TODO The following line must not be there!
@@ -133,7 +132,7 @@ function(compile_target_cuda)
 
 
   add_test(NAME GTClang-${executable}
-    COMMAND ${executable} 12 12 10 --gtest_output=xml:${executable}_unittest.xml
+    COMMAND ${executable} 12 12 10
   )
 endfunction()
 
@@ -168,7 +167,7 @@ function(add_codegen_test)
 endfunction()
 
 add_codegen_test(TEST copy_stencil)
-add_codegen_test(TEST lap FLAGS -fpass-tmp-to-function)
+add_codegen_test(TEST lap FLAGS -ftmp-to-stencil-function)
 add_codegen_test(TEST conditional_stencil)
 add_codegen_test(TEST coriolis_stencil)
 add_codegen_test(TEST hori_diff_stencil_01)
@@ -179,10 +178,10 @@ add_codegen_test(TEST intervals_stencil)
 add_codegen_test(TEST globals_stencil)
 add_codegen_test(TEST stencil_functions)
 add_codegen_test(TEST nested_stencil_functions)
-add_codegen_test(TEST tridiagonal_solve)
+add_codegen_test(TEST tridiagonal_solve FLAGS -merge-stages)
 add_codegen_test(TEST stencil_desc_ast)
 add_codegen_test(TEST kparallel_solver)
-add_codegen_test(TEST asymmetric)
+add_codegen_test(TEST asymmetric FLAGS -merge-stages)
 add_codegen_test(TEST p_grad_c)
 # add_codegen_test(TEST boundary_condition FLAGS -max-fields=2 -fsplit-stencils)
 # add_codegen_test(TEST boundary_condition_2 FLAGS -max-fields=2 -fsplit-stencils)
@@ -191,9 +190,9 @@ add_codegen_test(TEST p_grad_c)
 add_codegen_test(TEST intervals01 PLAIN_CUDA_ONLY)
 add_codegen_test(TEST intervals02 FLAGS -disable-kcaches PLAIN_CUDA_ONLY)
 add_codegen_test(TEST intervals03 FLAGS -disable-kcaches PLAIN_CUDA_ONLY)
-add_codegen_test(TEST local_kcache PLAIN_CUDA_ONLY)
-add_codegen_test(TEST kcache_fill PLAIN_CUDA_ONLY)
+add_codegen_test(TEST local_kcache FLAGS -fmultistage-merger PLAIN_CUDA_ONLY)
+add_codegen_test(TEST kcache_fill FLAGS -fmultistage-merger PLAIN_CUDA_ONLY)
 add_codegen_test(TEST kcache_fill_kparallel PLAIN_CUDA_ONLY)
 add_codegen_test(TEST kcache_fill_backward PLAIN_CUDA_ONLY)
-add_codegen_test(TEST kcache_flush PLAIN_CUDA_ONLY)
-add_codegen_test(TEST kcache_epflush PLAIN_CUDA_ONLY)
+add_codegen_test(TEST kcache_flush FLAGS -fmultistage-merger PLAIN_CUDA_ONLY)
+add_codegen_test(TEST kcache_epflush FLAGS -fmultistage-merger PLAIN_CUDA_ONLY)

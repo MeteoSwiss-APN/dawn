@@ -26,7 +26,7 @@ unset(__VERSION_LIST)
 project(Dawn
   VERSION ${__DAWN_VERSION}
   HOMEPAGE_URL https://meteoswiss-apn.github.io/dawn/
-  LANGUAGES CXX C
+  LANGUAGES CXX
 )
 unset(__DAWN_VERSION)
 
@@ -43,9 +43,13 @@ unset(__DAWN_VERSION)
 option(BUILD_EXAMPLES "Build examples" ON)
 option(DAWN_BUILD_TESTING "Override BUILD_TESTING if part of a multi-project build." OFF)
 option(DAWN_BUILD_EXAMPLES "Override BUILD_EXAMPLES if part of a multi-project build." OFF)
-option(DAWN_REQUIRE_PYTHON_TESTING "Require enabling python." OFF)
-set(PROTOBUF_PYTHON_MODULE_DIR "" CACHE PATH "Path to protobuf python module, if not at $Protobuf_INCLUDE_DIR/..")
-mark_as_advanced(PROTOBUF_PYTHON_MODULE_DIR)
+option(DAWN_REQUIRE_PYTHON "Require enabling python." OFF)
+set(PROTOBUF_PYTHON_MODULE_DIR "" CACHE PATH "Path to protobuf python module. Use this if CMake is not finding the module.")
+set(DAWN4PY_MODULE_DIR "${PROJECT_SOURCE_DIR}/src" CACHE PATH "Path to dawn4py python module being built. Change this to self.build_lib for pip out-of-source builds.")
+mark_as_advanced(PROTOBUF_PYTHON_MODULE_DIR DAWN4PY_MODULE_DIR)
+# By default unstructured integration tests are not built if atlas or eckit is not found.
+# DAWN_REQUIRE_UNSTRUCTURED_TESTING=ON will force an error if atlas or eckit are not found.
+option(DAWN_REQUIRE_UNSTRUCTURED_TESTING "Require building tests for unstructured grids." OFF)
 
 ### Require out-of-source builds
 file(TO_CMAKE_PATH "${PROJECT_BINARY_DIR}/CMakeLists.txt" LOC_PATH)
@@ -53,9 +57,10 @@ if(EXISTS "${LOC_PATH}")
     message(FATAL_ERROR "You cannot build in a source directory (or any directory with a CMakeLists.txt file). Please make a build subdirectory. Feel free to remove CMakeCache.txt and CMakeFiles.")
 endif()
 
-# Path for Find*.cmake files
-list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake ${CMAKE_CURRENT_SOURCE_DIR}/../cmake)
+# Path for external CMake files
+list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
 
+include(HasUnstructuredDeps)
 include(CTest)
 include(GNUInstallDirs)
 include(EnableCCache)
@@ -96,6 +101,8 @@ add_cxx_compiler_flag_if_supported("-Wextra" DAWN_CXX_FLAGS)
 add_cxx_compiler_flag_if_supported("-pedantic" DAWN_CXX_FLAGS)
 add_cxx_compiler_flag_if_supported("-Wno-unused-parameter" DAWN_CXX_FLAGS)
 add_cxx_compiler_flag_if_supported("-Wno-sign-compare" DAWN_CXX_FLAGS) # Would like to remove
+add_cxx_compiler_flag_if_supported("-Wno-comment" DAWN_CXX_FLAGS)
+add_cxx_compiler_flag_if_supported("-Werror=return-type" DAWN_CXX_FLAGS)
 add_cxx_compiler_flag_if_supported("-Wl,--unresolved-symbols=report-all" DAWN_LINKER_FLAGS)
 
 # Target properties
@@ -108,6 +115,12 @@ set(DAWN_TARGET_PROPERTIES CXX_EXTENSIONS OFF)
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 
 find_package(Python3 COMPONENTS Interpreter)
+
+# Set PYTHON_EXECUTABLE to the Python3_EXECUTABLE if not manually specified,
+# otherwise pybind11 may find the wrong python library.
+if (Python3_EXECUTABLE AND NOT PYBIND11_PYTHON_VERSION)
+  set(PYBIND11_PYTHON_VERSION ${Python3_VERSION})
+endif()
 
 # Add cxx standard, include directories, and properties
 function(target_add_dawn_standard_props target)
@@ -150,6 +163,7 @@ if(Python3_FOUND)
     # we try to find it -- CMake has poor path detection
     find_path(PROTOBUF_PYTHON_DIR google/protobuf/__init__.py
       HINTS ${Protobuf_DIR}/../../.. ${PROTOBUF_PYTHON_MODULE_DIR}
+      PATHS /usr/lib/python3/dist-packages
       PATH_SUFFIXES python python3 lib lib/python lib/python3 include/python include/python3
       DOC "Path to protobuf python module"
     )
@@ -164,23 +178,11 @@ if(Python3_FOUND)
 else()
   message(STATUS "Python3 not found, not installing python bindings")
 endif()
-if(NOT ENABLE_PYTHON AND DAWN_REQUIRE_PYTHON_TESTING)
-  message(FATAL_ERROR "Python testing was requested, but required dependencies are not found")
+if(NOT ENABLE_PYTHON AND DAWN_REQUIRE_PYTHON)
+  message(FATAL_ERROR "Python was requested, but required dependencies are not found")
 endif()
 
 add_subdirectory(src)
-
-# Only build examples if BUILD_EXAMPLES and main project, or DAWN_BUILD_EXAMPLES is on
-if((CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME OR DAWN_BUILD_EXAMPLES) AND BUILD_EXAMPLES)
-  set(${PROJECT_NAME}_EXAMPLES ON)
-else()
-  set(${PROJECT_NAME}_EXAMPLES OFF)
-endif()
-mark_as_advanced(${PROJECT_NAME}_EXAMPLES)
-
-if(${PROJECT_NAME}_EXAMPLES)
-  add_subdirectory(examples)
-endif()
 
 if(${PROJECT_NAME}_TESTING)
   add_subdirectory(test)
@@ -195,7 +197,7 @@ include(CMakePackageConfigHelpers)
 configure_package_config_file(
   cmake/${PROJECT_NAME}Config.cmake.in
   "${PROJECT_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/${PROJECT_NAME}Config.cmake"
-  INSTALL_DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/${PROJECT_NAME}
+  INSTALL_DESTINATION ${CMAKE_INSTALL_PREFIX}/lib/cmake/${PROJECT_NAME}
   PATH_VARS DAWN_INSTALL_DRIVER_INCLUDEDIR
 )
 
@@ -208,12 +210,12 @@ install(
   EXPORT ${PROJECT_NAME}Targets
   FILE ${PROJECT_NAME}Targets.cmake
   NAMESPACE ${PROJECT_NAME}::
-  DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/${PROJECT_NAME}
+  DESTINATION ${CMAKE_INSTALL_PREFIX}/lib/cmake/${PROJECT_NAME}
 )
 
 install(
   FILES
   "${PROJECT_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/${PROJECT_NAME}Config.cmake"
   "${PROJECT_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/${PROJECT_NAME}ConfigVersion.cmake"
-  DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/${PROJECT_NAME}
+  DESTINATION ${CMAKE_INSTALL_PREFIX}/lib/cmake/${PROJECT_NAME}
 )
