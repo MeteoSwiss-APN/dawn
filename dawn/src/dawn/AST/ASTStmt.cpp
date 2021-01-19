@@ -16,7 +16,6 @@
 #include "dawn/AST/ASTExpr.h"
 #include "dawn/AST/ASTUtil.h"
 #include "dawn/AST/ASTVisitor.h"
-#include "dawn/SIR/SIR.h"
 #include "dawn/Support/Assert.h"
 #include "dawn/Support/Casting.h"
 
@@ -197,39 +196,6 @@ void VarDeclStmt::replaceChildren(std::shared_ptr<Expr> const& oldExpr,
                                   std::shared_ptr<Expr> const& newExpr) {
   [[maybe_unused]] bool success = ASTHelper::replaceOperands(oldExpr, newExpr, initList_);
   DAWN_ASSERT_MSG(success, ("Expression not found"));
-}
-
-//===------------------------------------------------------------------------------------------===//
-//     VerticalRegionDeclStmt
-//===------------------------------------------------------------------------------------------===//
-
-VerticalRegionDeclStmt::VerticalRegionDeclStmt(
-    std::unique_ptr<StmtData> data, const std::shared_ptr<sir::VerticalRegion>& verticalRegion,
-    SourceLocation loc)
-    : Stmt(std::move(data), Kind::VerticalRegionDeclStmt, loc), verticalRegion_(verticalRegion) {
-  DAWN_ASSERT_MSG((checkSameDataType(*verticalRegion_->Ast->getRoot())),
-                  "Trying to insert vertical region with different data type");
-}
-
-VerticalRegionDeclStmt::VerticalRegionDeclStmt(const VerticalRegionDeclStmt& stmt)
-    : Stmt(stmt), verticalRegion_(stmt.getVerticalRegion()->clone()) {}
-
-VerticalRegionDeclStmt& VerticalRegionDeclStmt::operator=(VerticalRegionDeclStmt stmt) {
-  assign(stmt);
-  verticalRegion_ = std::move(stmt.getVerticalRegion());
-  return *this;
-}
-
-VerticalRegionDeclStmt::~VerticalRegionDeclStmt() {}
-
-std::shared_ptr<Stmt> VerticalRegionDeclStmt::clone() const {
-  return std::make_shared<VerticalRegionDeclStmt>(*this);
-}
-
-bool VerticalRegionDeclStmt::equals(const Stmt* other, bool compareData) const {
-  const VerticalRegionDeclStmt* otherPtr = dyn_cast<VerticalRegionDeclStmt>(other);
-  return otherPtr && Stmt::equals(other, compareData) &&
-         *(verticalRegion_.get()) == *(otherPtr->verticalRegion_.get());
 }
 
 std::shared_ptr<StencilCall> StencilCall::clone() const {

@@ -60,43 +60,43 @@ void IntegrityChecker::iterate(const std::unique_ptr<iir::DoMethod>& doMethod) {
   }
 }
 
-void IntegrityChecker::visit(const std::shared_ptr<iir::BlockStmt>& statement) {
+void IntegrityChecker::visit(const std::shared_ptr<ast::BlockStmt>& statement) {
   for(const auto& stmt : statement->getStatements()) {
     stmt->accept(*this);
   }
 }
 
-void IntegrityChecker::visit(const std::shared_ptr<iir::ExprStmt>& statement) {
+void IntegrityChecker::visit(const std::shared_ptr<ast::ExprStmt>& statement) {
   statement->getExpr()->accept(*this);
 }
 
-void IntegrityChecker::visit(const std::shared_ptr<iir::ReturnStmt>& stmt) {
+void IntegrityChecker::visit(const std::shared_ptr<ast::ReturnStmt>& stmt) {
   stmt->getExpr()->accept(*this);
 }
 
-void IntegrityChecker::visit(const std::shared_ptr<iir::IfStmt>& stmt) {
+void IntegrityChecker::visit(const std::shared_ptr<ast::IfStmt>& stmt) {
   stmt->getCondExpr()->accept(*this);
   stmt->getThenStmt()->accept(*this);
   if(stmt->hasElse())
     stmt->getElseStmt()->accept(*this);
 }
 
-void IntegrityChecker::visit(const std::shared_ptr<iir::VarDeclStmt>& stmt) {
+void IntegrityChecker::visit(const std::shared_ptr<ast::VarDeclStmt>& stmt) {
   for(const auto& expr : stmt->getInitList())
     expr->accept(*this);
 }
 
-void IntegrityChecker::visit(const std::shared_ptr<iir::AssignmentExpr>& expr) {
-  std::shared_ptr<iir::Expr>& left = expr->getLeft();
+void IntegrityChecker::visit(const std::shared_ptr<ast::AssignmentExpr>& expr) {
+  std::shared_ptr<ast::Expr>& left = expr->getLeft();
   // Check whether literal expressions are being assigned
-  if(iir::LiteralAccessExpr::classof(left.get())) {
-    std::string value = dyn_cast<iir::LiteralAccessExpr>(left.get())->getValue();
+  if(ast::LiteralAccessExpr::classof(left.get())) {
+    std::string value = dyn_cast<ast::LiteralAccessExpr>(left.get())->getValue();
     throw SemanticError("Attempt to assign constant expression " + value, metadata_.getFileName(),
                         expr->getSourceLocation().Line);
   }
 
-  if(iir::FieldAccessExpr::classof(left.get())) {
-    if(dyn_cast<iir::FieldAccessExpr>(left.get())->getOffset().verticalShift() != 0) {
+  if(ast::FieldAccessExpr::classof(left.get())) {
+    if(dyn_cast<ast::FieldAccessExpr>(left.get())->getOffset().verticalShift() != 0) {
       throw SemanticError("Attempt to write vertically offset ", metadata_.getFileName(),
                           expr->getSourceLocation().Line);
     }
@@ -132,7 +132,7 @@ void IntegrityChecker::visit(const std::shared_ptr<iir::AssignmentExpr>& expr) {
   curDimensions_ = oldDim;
 } // namespace dawn
 
-void IntegrityChecker::visit(const std::shared_ptr<iir::FieldAccessExpr>& expr) {
+void IntegrityChecker::visit(const std::shared_ptr<ast::FieldAccessExpr>& expr) {
 
   int accessID = iir::getAccessID(expr);
   DAWN_ASSERT_MSG(metadata_.getFieldNameFromAccessID(accessID) == expr->getName(),
@@ -162,12 +162,12 @@ void IntegrityChecker::visit(const std::shared_ptr<iir::FieldAccessExpr>& expr) 
   curDimensions_ = metadata_.getFieldDimensions(accessID).numSpatialDimensions();
 }
 
-void IntegrityChecker::visit(const std::shared_ptr<iir::UnaryOperator>& expr) {
+void IntegrityChecker::visit(const std::shared_ptr<ast::UnaryOperator>& expr) {
   for(auto& stmt : expr->getChildren())
     stmt->accept(*this);
 }
 
-void IntegrityChecker::visit(const std::shared_ptr<iir::ReductionOverNeighborExpr>& expr) {
+void IntegrityChecker::visit(const std::shared_ptr<ast::ReductionOverNeighborExpr>& expr) {
   bool parentHadIterationContext = parentHasIterationContext_;
   parentHasIterationContext_ = true;
   for(auto& stmt : expr->getChildren())
@@ -175,24 +175,24 @@ void IntegrityChecker::visit(const std::shared_ptr<iir::ReductionOverNeighborExp
   parentHasIterationContext_ = parentHadIterationContext;
 }
 
-void IntegrityChecker::visit(const std::shared_ptr<iir::LoopStmt>& expr) {
+void IntegrityChecker::visit(const std::shared_ptr<ast::LoopStmt>& expr) {
   parentHasIterationContext_ = true;
   for(auto& stmt : expr->getChildren())
     stmt->accept(*this);
   parentHasIterationContext_ = false;
 }
 
-void IntegrityChecker::visit(const std::shared_ptr<iir::BinaryOperator>& expr) {
+void IntegrityChecker::visit(const std::shared_ptr<ast::BinaryOperator>& expr) {
   for(auto& stmt : expr->getChildren())
     stmt->accept(*this);
 }
 
-void IntegrityChecker::visit(const std::shared_ptr<iir::TernaryOperator>& expr) {
+void IntegrityChecker::visit(const std::shared_ptr<ast::TernaryOperator>& expr) {
   for(auto& stmt : expr->getChildren())
     stmt->accept(*this);
 }
 
-void IntegrityChecker::visit(const std::shared_ptr<iir::FunCallExpr>& expr) {
+void IntegrityChecker::visit(const std::shared_ptr<ast::FunCallExpr>& expr) {
   for(auto& stmt : expr->getChildren())
     stmt->accept(*this);
 }

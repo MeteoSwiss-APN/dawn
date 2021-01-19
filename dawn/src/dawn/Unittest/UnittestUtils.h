@@ -19,6 +19,6 @@ namespace dawn {
 
 iir::DoMethod& getFirstDoMethod(std::shared_ptr<iir::StencilInstantiation>& si);
 
-std::shared_ptr<iir::Stmt> getNthStmt(iir::DoMethod& doMethod, int n);
+std::shared_ptr<ast::Stmt> getNthStmt(iir::DoMethod& doMethod, int n);
 
 } // namespace dawn

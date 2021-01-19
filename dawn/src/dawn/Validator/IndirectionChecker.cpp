@@ -2,7 +2,7 @@
 
 namespace dawn {
 void IndirectionChecker::IndirectionCheckerImpl::visit(
-    const std::shared_ptr<iir::AssignmentExpr>& expr) {
+    const std::shared_ptr<ast::AssignmentExpr>& expr) {
   lhs_ = true;
   expr->getLeft()->accept(*this);
   lhs_ = false;
@@ -10,7 +10,7 @@ void IndirectionChecker::IndirectionCheckerImpl::visit(
 }
 
 void IndirectionChecker::IndirectionCheckerImpl::visit(
-    const std::shared_ptr<iir::FieldAccessExpr>& expr) {
+    const std::shared_ptr<ast::FieldAccessExpr>& expr) {
   if(!indirectionsValid_) {
     return;
   }

@@ -61,7 +61,7 @@ class GTClangLexer {
   bool hasGlobals_;
 
   /// Map of stencil and stencil functions to their parsed attributes from pragmas
-  std::unordered_map<std::string, dawn::sir::Attr> attributeMap_;
+  std::unordered_map<std::string, dawn::ast::Attr> attributeMap_;
 
   /// The current token
   clang::Token token_;
@@ -772,7 +772,7 @@ private:
     };
 
     LexStateKind state = Unknown;
-    dawn::sir::Attr curAttribute;
+    dawn::ast::Attr curAttribute;
     SourceLocation curStartLoc;
     SourceLocation curEndLoc;
     std::string curClause;
@@ -812,15 +812,15 @@ private:
           curClause = token_.getRawIdentifier().str();
 
           if(curClause == "no_codegen")
-            curAttribute.set(dawn::sir::Attr::Kind::NoCodeGen);
+            curAttribute.set(dawn::ast::Attr::Kind::NoCodeGen);
           else if(curClause == "merge_stages")
-            curAttribute.set(dawn::sir::Attr::Kind::MergeStages);
+            curAttribute.set(dawn::ast::Attr::Kind::MergeStages);
           else if(curClause == "merge_do_methods")
-            curAttribute.set(dawn::sir::Attr::Kind::MergeDoMethods);
+            curAttribute.set(dawn::ast::Attr::Kind::MergeDoMethods);
           else if(curClause == "merge_temporaries")
-            curAttribute.set(dawn::sir::Attr::Kind::MergeTemporaries);
+            curAttribute.set(dawn::ast::Attr::Kind::MergeTemporaries);
           else if(curClause == "use_kcaches")
-            curAttribute.set(dawn::sir::Attr::Kind::UseKCaches);
+            curAttribute.set(dawn::ast::Attr::Kind::UseKCaches);
           else {
             // We don't know this pragma, issue a warning about unknown gtclang pragma
             Diagnostics::reportRaw(
@@ -896,7 +896,7 @@ public:
   }
 
   /// @brief Get the attribute map for the stencil and stencil functions
-  const std::unordered_map<std::string, dawn::sir::Attr>& getAttributeMap() const {
+  const std::unordered_map<std::string, dawn::ast::Attr>& getAttributeMap() const {
     return attributeMap_;
   }
 

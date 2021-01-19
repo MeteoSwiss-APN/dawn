@@ -43,7 +43,7 @@ public:
     int levelMark_;
     int offset_;
     int bound() const { return (levelMark_ + offset_); }
-    bool isEnd() const { return (levelMark_ == sir::Interval::End); }
+    bool isEnd() const { return (levelMark_ == ast::Interval::End); }
   };
 
 private:
@@ -58,7 +58,7 @@ public:
   Interval(int lowerLevel, int upperLevel, int lowerOffset = 0, int upperOffset = 0)
       : lower_{lowerLevel, lowerOffset}, upper_{upperLevel, upperOffset} {}
 
-  Interval(const sir::Interval& interval)
+  Interval(const ast::Interval& interval)
       : lower_{interval.LowerLevel, interval.LowerOffset}, upper_{interval.UpperLevel,
                                                                   interval.UpperOffset} {}
 
@@ -204,10 +204,10 @@ public:
     return extendInterval(extents.verticalExtent());
   }
 
-  /// @brief Convert to SIR Interval
-  inline sir::Interval asSIRInterval() const {
-    DAWN_ASSERT_MSG(!undefined_, "undefined interval not representable in SIR");
-    return sir::Interval(lowerLevel(), upperLevel(), lowerOffset(), upperOffset());
+  /// @brief Convert to AST Interval
+  inline ast::Interval asASTInterval() const {
+    DAWN_ASSERT_MSG(!undefined_, "undefined interval not representable in AST");
+    return ast::Interval(lowerLevel(), upperLevel(), lowerOffset(), upperOffset());
   }
 
   /// @brief returns true if the level bound of the interval is the end of the axis

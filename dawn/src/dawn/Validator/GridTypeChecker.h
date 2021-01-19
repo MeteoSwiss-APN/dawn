@@ -16,7 +16,6 @@
 
 #include "dawn/AST/GridType.h"
 #include "dawn/IIR/ASTExpr.h"
-#include "dawn/IIR/ASTFwd.h"
 #include "dawn/IIR/DoMethod.h"
 #include "dawn/IIR/IIR.h"
 #include "dawn/IIR/IIRNodeIterator.h"
@@ -36,7 +35,7 @@ private:
     //   This is still checked, but not using this visitor)
     // - The is currently no unstructured FieldDimensions, hence this is not checked. This will need
     //   to be added as soon as the unstructured version is introduced
-    void visit(const std::shared_ptr<iir::FieldAccessExpr>& stmt) override;
+    void visit(const std::shared_ptr<ast::FieldAccessExpr>& stmt) override;
     bool isConsistent() const { return typesConsistent_; }
 
     TypeCheckerImpl(ast::GridType prescribedType) : prescribedType_(prescribedType){};

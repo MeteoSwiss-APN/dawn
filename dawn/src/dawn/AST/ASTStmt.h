@@ -24,15 +24,12 @@
 #include "dawn/Support/SourceLocation.h"
 #include "dawn/Support/Type.h"
 #include "dawn/Support/UIDGenerator.h"
+#include "dawn/Support/Format.h"
 #include <memory>
 #include <sstream>
 #include <vector>
 
 namespace dawn {
-
-namespace sir {
-struct VerticalRegion;
-} // namespace sir
 
 namespace ast {
 class ASTVisitor;
@@ -364,35 +361,6 @@ private:
 
   // List of expression used for initializaion or just 1 element for variables
   InitList initList_;
-};
-
-//===------------------------------------------------------------------------------------------===//
-//     VerticalRegionDeclStmt
-//===------------------------------------------------------------------------------------------===//
-
-/// @brief This represents a declaration of a sir::VerticalRegion
-/// @ingroup ast
-class VerticalRegionDeclStmt : public Stmt {
-  std::shared_ptr<sir::VerticalRegion> verticalRegion_;
-
-public:
-  /// @name Constructor & Destructor
-  /// @{
-  VerticalRegionDeclStmt(std::unique_ptr<StmtData> data,
-                         const std::shared_ptr<sir::VerticalRegion>& verticalRegion,
-                         SourceLocation loc = SourceLocation());
-  VerticalRegionDeclStmt(const VerticalRegionDeclStmt& stmt);
-  VerticalRegionDeclStmt& operator=(VerticalRegionDeclStmt stmt);
-  virtual ~VerticalRegionDeclStmt();
-  /// @}
-
-  const std::shared_ptr<sir::VerticalRegion>& getVerticalRegion() const { return verticalRegion_; }
-
-  virtual bool isStencilDesc() const override { return true; }
-  virtual std::shared_ptr<Stmt> clone() const override;
-  virtual bool equals(const Stmt* other, bool compareData = true) const override;
-  static bool classof(const Stmt* stmt) { return stmt->getKind() == Kind::VerticalRegionDeclStmt; }
-  ACCEPTVISITOR(Stmt, VerticalRegionDeclStmt)
 };
 
 /// @brief Call to another stencil

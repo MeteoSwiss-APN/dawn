@@ -37,7 +37,7 @@ class GTClangContext : dawn::NonCopyable {
   std::unique_ptr<Diagnostics> diagnostics_;
 
   // Map of attributes for stencil and stencil-functions
-  std::unordered_map<std::string, dawn::sir::Attr> stencilNameToAttributeMap_;
+  std::unordered_map<std::string, dawn::ast::Attr> stencilNameToAttributeMap_;
 
   // Raw points are always non-owning
   clang::ASTContext* astContext_;
@@ -91,10 +91,10 @@ public:
   /// If attribute was not set for the given stencil or stencil function, the default constructed
   /// attribute is returned.
   ///
-  /// @see dawn::sir::Attr
+  /// @see dawn::ast::Attr
   /// @{
-  dawn::sir::Attr getStencilAttribute(const std::string& name) const;
-  void setStencilAttribute(const std::string& name, dawn::sir::Attr attr);
+  dawn::ast::Attr getStencilAttribute(const std::string& name) const;
+  void setStencilAttribute(const std::string& name, dawn::ast::Attr attr);
   /// @}
 };
 

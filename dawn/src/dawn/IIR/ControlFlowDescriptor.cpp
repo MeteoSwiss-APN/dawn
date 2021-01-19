@@ -28,9 +28,9 @@ void ControlFlowDescriptor::removeStencilCalls(const std::set<int>& stencilIDs,
                                                iir::StencilMetaInformation& metadata) {
   std::vector<StmtConstIterator> stmtsToRemove;
   for(StmtConstIterator it = getStatements().begin(); it != getStatements().end(); ++it) {
-    const std::shared_ptr<iir::Stmt>& stmt = *it;
-    if(isa<iir::StencilCallDeclStmt>(stmt.get())) {
-      auto callDecl = std::static_pointer_cast<iir::StencilCallDeclStmt>(stmt);
+    const std::shared_ptr<ast::Stmt>& stmt = *it;
+    if(isa<ast::StencilCallDeclStmt>(stmt.get())) {
+      auto callDecl = std::static_pointer_cast<ast::StencilCallDeclStmt>(stmt);
       bool remove = false;
       for(int id : stencilIDs) {
         if(metadata.getStencilIDFromStencilCallStmt(callDecl) == id) {

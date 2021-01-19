@@ -11,10 +11,8 @@
 //  See LICENSE.txt for details.
 //
 //===------------------------------------------------------------------------------------------===//
-#include "dawn/IIR/ASTFwd.h"
 #include "dawn/IIR/ASTStmt.h"
 #include "dawn/IIR/IIR.h"
-#include "dawn/IIR/IIRNodeIterator.h"
 #include "dawn/IIR/StencilInstantiation.h"
 #include "dawn/Optimizer/PassFieldVersioning.h"
 #include "dawn/Optimizer/PassFixVersionedInputFields.h"
@@ -224,7 +222,7 @@ TEST_F(TestPassFieldVersioning, VersionSparseField) {
       b.stencil(b.multistage(
           LoopOrderKind::Parallel,
           b.stage(b.doMethod(
-              dawn::sir::Interval::Start, dawn::sir::Interval::End,
+              dawn::ast::Interval::Start, dawn::ast::Interval::End,
               b.stmt(b.assignExpr(b.at(dense),
                                   b.reduceOverNeighborExpr(Op::plus, b.at(sparse), b.lit(0.),
                                                            {LocType::Edges, LocType::Cells,
@@ -251,16 +249,16 @@ TEST_F(TestPassFieldVersioning, VersionSparseField) {
   EXPECT_EQ(firstStatement->getKind(), ast::Stmt::Kind::LoopStmt);
 
   // lets look at the assign expression therein...
-  auto assignExpr = std::dynamic_pointer_cast<iir::AssignmentExpr>(
-      std::dynamic_pointer_cast<iir::ExprStmt>(
-          std::dynamic_pointer_cast<iir::LoopStmt>(firstStatement)
+  auto assignExpr = std::dynamic_pointer_cast<ast::AssignmentExpr>(
+      std::dynamic_pointer_cast<ast::ExprStmt>(
+          std::dynamic_pointer_cast<ast::LoopStmt>(firstStatement)
               ->getBlockStmt()
               ->getStatements()
               .front())
           ->getExpr());
 
-  auto fieldAccessLeft = std::dynamic_pointer_cast<iir::FieldAccessExpr>(assignExpr->getLeft());
-  auto fieldAccessRight = std::dynamic_pointer_cast<iir::FieldAccessExpr>(assignExpr->getRight());
+  auto fieldAccessLeft = std::dynamic_pointer_cast<ast::FieldAccessExpr>(assignExpr->getLeft());
+  auto fieldAccessRight = std::dynamic_pointer_cast<ast::FieldAccessExpr>(assignExpr->getRight());
 
   // ... and ensure that we indeed fill the versioned sparse field here
   EXPECT_EQ(fieldAccessRight->getName(), "sparse");

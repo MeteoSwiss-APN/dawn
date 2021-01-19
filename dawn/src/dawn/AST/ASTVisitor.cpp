@@ -15,7 +15,7 @@
 
 #include "dawn/AST/ASTVisitor.h"
 #include "dawn/AST/AST.h"
-#include "dawn/SIR/SIR.h"
+#include "dawn/SIR/VerticalRegion.h"
 
 namespace dawn {
 namespace ast {

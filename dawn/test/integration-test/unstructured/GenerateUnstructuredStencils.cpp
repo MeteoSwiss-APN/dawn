@@ -15,13 +15,9 @@
 //===------------------------------------------------------------------------------------------===//
 
 #include "dawn/AST/LocationType.h"
-#include "dawn/CodeGen/CXXNaive-ico/CXXNaiveCodeGen.h"
-#include "dawn/CodeGen/CXXNaive/CXXNaiveCodeGen.h"
 #include "dawn/CodeGen/Driver.h"
 #include "dawn/CodeGen/Options.h"
-#include "dawn/IIR/ASTFwd.h"
 #include "dawn/IIR/LocalVariable.h"
-#include "dawn/Optimizer/Driver.h"
 #include "dawn/Optimizer/Lowering.h"
 #include "dawn/Optimizer/PassFieldVersioning.h"
 #include "dawn/Optimizer/PassFixVersionedInputFields.h"
@@ -31,15 +27,7 @@
 
 #include "testMutator.h"
 
-#include <cstring>
-#include <execinfo.h>
 #include <fstream>
-#include <map>
-#include <optional>
-#include <signal.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <unistd.h>
 
 // not in use, but can be employed to rapidly inject indirected reads into existing IIR
 // for debugging / get coverage quickly. example usage see below
@@ -60,7 +48,7 @@ int main() {
         stencilName,
         b.stencil(b.multistage(
             LoopOrderKind::Parallel,
-            b.stage(LocType::Cells, b.doMethod(dawn::sir::Interval::Start, dawn::sir::Interval::End,
+            b.stage(LocType::Cells, b.doMethod(dawn::ast::Interval::Start, dawn::ast::Interval::End,
                                                b.stmt(b.assignExpr(b.at(out_f), b.at(in_f))))))));
 
     std::ofstream of("generated/generated_copyCell.hpp");
@@ -84,7 +72,7 @@ int main() {
         stencilName,
         b.stencil(b.multistage(
             LoopOrderKind::Parallel,
-            b.stage(LocType::Edges, b.doMethod(dawn::sir::Interval::Start, dawn::sir::Interval::End,
+            b.stage(LocType::Edges, b.doMethod(dawn::ast::Interval::Start, dawn::ast::Interval::End,
                                                b.stmt(b.assignExpr(b.at(out_f), b.at(in_f))))))));
 
     std::ofstream of("generated/generated_" + stencilName + ".hpp");
@@ -109,7 +97,7 @@ int main() {
             LoopOrderKind::Parallel,
             b.stage(
                 LocType::Cells,
-                b.doMethod(dawn::sir::Interval::Start, dawn::sir::Interval::End,
+                b.doMethod(dawn::ast::Interval::Start, dawn::ast::Interval::End,
                            b.stmt(b.assignExpr(
                                b.at(out_f), b.reduceOverNeighborExpr(
                                                 Op::plus, b.at(in_f, HOffsetType::withOffset, 0),
@@ -136,7 +124,7 @@ int main() {
         b.stencil(b.multistage(
             LoopOrderKind::Parallel,
             b.stage(LocType::Cells,
-                    b.doMethod(dawn::sir::Interval::Start, dawn::sir::Interval::End, 1, -1,
+                    b.doMethod(dawn::ast::Interval::Start, dawn::ast::Interval::End, 1, -1,
                                b.stmt(b.assignExpr(
                                    b.at(out_f), b.binaryExpr(b.at(in_f, HOffsetType::noOffset, +1),
                                                              b.at(in_f, HOffsetType::noOffset, -1),
@@ -167,14 +155,14 @@ int main() {
             b.multistage(
                 LoopOrderKind::Forward,
                 b.stage(LocType::Cells,
-                        b.doMethod(dawn::sir::Interval::Start, dawn::sir::Interval::Start, 0, 0,
+                        b.doMethod(dawn::ast::Interval::Start, dawn::ast::Interval::Start, 0, 0,
                                    b.stmt(b.assignExpr(
                                        b.at(c_f), b.binaryExpr(b.at(c_f), b.at(b_f), Op::divide))),
                                    b.stmt(b.assignExpr(b.at(d_f), b.binaryExpr(b.at(d_f), b.at(b_f),
                                                                                Op::divide))))),
                 b.stage(LocType::Cells,
                         b.doMethod(
-                            dawn::sir::Interval::Start, dawn::sir::Interval::End, 1, 0,
+                            dawn::ast::Interval::Start, dawn::ast::Interval::End, 1, 0,
                             b.declareVar(m_var),
                             b.stmt(b.assignExpr(
                                 b.at(m_var),
@@ -201,7 +189,7 @@ int main() {
                 LoopOrderKind::Backward,
                 b.stage(
                     LocType::Cells,
-                    b.doMethod(dawn::sir::Interval::Start, dawn::sir::Interval::End, 0, -1,
+                    b.doMethod(dawn::ast::Interval::Start, dawn::ast::Interval::End, 0, -1,
                                b.stmt(b.assignExpr(
                                    b.at(d_f),
                                    b.binaryExpr(b.at(d_f),
@@ -233,7 +221,7 @@ int main() {
             dawn::iir::LoopOrderKind::Parallel,
             b.stage(
                 LocType::Cells,
-                b.doMethod(dawn::sir::Interval::Start, dawn::sir::Interval::End, b.declareVar(cnt),
+                b.doMethod(dawn::ast::Interval::Start, dawn::ast::Interval::End, b.declareVar(cnt),
                            b.stmt(b.assignExpr(
                                b.at(cnt), b.reduceOverNeighborExpr(Op::plus, b.lit(1), b.lit(0),
                                                                    {LocType::Cells, LocType::Edges,
@@ -273,7 +261,7 @@ int main() {
             dawn::iir::LoopOrderKind::Parallel,
             b.stage(
                 LocType::Edges,
-                b.doMethod(dawn::sir::Interval::Start, dawn::sir::Interval::End,
+                b.doMethod(dawn::ast::Interval::Start, dawn::ast::Interval::End,
                            b.stmt(b.assignExpr(
                                b.at(edge_f), b.reduceOverNeighborExpr<float>(
                                                  Op::plus, b.at(cell_f, HOffsetType::withOffset, 0),
@@ -281,7 +269,7 @@ int main() {
                                                  std::vector<float>({1., -1.})))))),
             b.stage(
                 LocType::Cells,
-                b.doMethod(dawn::sir::Interval::Start, dawn::sir::Interval::End,
+                b.doMethod(dawn::ast::Interval::Start, dawn::ast::Interval::End,
                            b.stmt(b.assignExpr(
                                b.at(cell_f), b.reduceOverNeighborExpr<float>(
                                                  Op::plus, b.at(edge_f, HOffsetType::withOffset, 0),
@@ -310,7 +298,7 @@ int main() {
             dawn::iir::LoopOrderKind::Parallel,
             b.stage(
                 LocType::Edges,
-                b.doMethod(dawn::sir::Interval::Start, dawn::sir::Interval::End,
+                b.doMethod(dawn::ast::Interval::Start, dawn::ast::Interval::End,
                            b.stmt(b.assignExpr(
                                b.at(edge_f),
                                b.reduceOverNeighborExpr(
@@ -341,7 +329,7 @@ int main() {
             dawn::iir::LoopOrderKind::Parallel,
             b.stage(
                 LocType::Edges,
-                b.doMethod(dawn::sir::Interval::Start, dawn::sir::Interval::End,
+                b.doMethod(dawn::ast::Interval::Start, dawn::ast::Interval::End,
                            b.stmt(b.assignExpr(
                                b.at(out_f),
                                b.reduceOverNeighborExpr(
@@ -377,7 +365,7 @@ int main() {
         b.stencil(b.multistage(
             dawn::iir::LoopOrderKind::Parallel,
             b.stage(LocType::Cells,
-                    b.doMethod(dawn::sir::Interval::Start, dawn::sir::Interval::End,
+                    b.doMethod(dawn::ast::Interval::Start, dawn::ast::Interval::End,
                                b.stmt(b.assignExpr(
                                    b.at(out_f),
                                    b.reduceOverNeighborExpr(
@@ -408,7 +396,7 @@ int main() {
         b.stencil(b.multistage(
             dawn::iir::LoopOrderKind::Parallel,
             b.stage(LocType::Cells,
-                    b.doMethod(dawn::sir::Interval::Start, dawn::sir::Interval::End,
+                    b.doMethod(dawn::ast::Interval::Start, dawn::ast::Interval::End,
                                b.stmt(b.assignExpr(
                                    b.at(cell_f),
                                    b.reduceOverNeighborExpr<float>(
@@ -444,7 +432,7 @@ int main() {
             b.stage(
                 LocType::Cells,
                 b.doMethod(
-                    dawn::sir::Interval::Start, dawn::sir::Interval::End,
+                    dawn::ast::Interval::Start, dawn::ast::Interval::End,
                     b.stmt(b.assignExpr(
                         b.at(cell_f),
                         b.reduceOverNeighborExpr<float>(
@@ -486,7 +474,7 @@ int main() {
             dawn::iir::LoopOrderKind::Parallel,
             b.stage(
                 LocType::Cells,
-                b.doMethod(dawn::sir::Interval::Start, dawn::sir::Interval::End,
+                b.doMethod(dawn::ast::Interval::Start, dawn::ast::Interval::End,
                            b.stmt(b.assignExpr(
                                b.at(cell_f),
                                b.reduceOverNeighborExpr(
@@ -519,7 +507,7 @@ int main() {
             dawn::iir::LoopOrderKind::Parallel,
             b.stage(LocType::Cells,
                     b.doMethod(
-                        dawn::sir::Interval::Start, dawn::sir::Interval::End,
+                        dawn::ast::Interval::Start, dawn::ast::Interval::End,
                         b.stmt(b.assignExpr(
                             b.at(cell_f), b.reduceOverNeighborExpr(
                                               Op::plus,
@@ -560,7 +548,7 @@ int main() {
             b.stage(
                 LocType::Cells,
                 b.doMethod(
-                    dawn::sir::Interval::Start, dawn::sir::Interval::End,
+                    dawn::ast::Interval::Start, dawn::ast::Interval::End,
                     b.stmt(b.assignExpr(
                         b.at(cell_f),
                         b.reduceOverNeighborExpr(
@@ -601,7 +589,7 @@ int main() {
             b.stage(
                 LocType::Edges,
                 b.doMethod(
-                    dawn::sir::Interval::Start, dawn::sir::Interval::End,
+                    dawn::ast::Interval::Start, dawn::ast::Interval::End,
                     b.loopStmtChain(
                         b.stmt(b.assignExpr(
                             b.at(vn_f),
@@ -640,7 +628,7 @@ int main() {
             b.stage(
                 LocType::Edges,
                 b.doMethod(
-                    dawn::sir::Interval::Start, dawn::sir::Interval::End,
+                    dawn::ast::Interval::Start, dawn::ast::Interval::End,
                     b.loopStmtChain(
                         b.stmt(b.assignExpr(
                             b.at(vn_f),
@@ -676,7 +664,7 @@ int main() {
             dawn::iir::LoopOrderKind::Parallel,
             b.stage(
                 LocType::Edges,
-                b.doMethod(dawn::sir::Interval::Start, dawn::sir::Interval::End,
+                b.doMethod(dawn::ast::Interval::Start, dawn::ast::Interval::End,
                            b.loopStmtChain(
                                b.stmt(b.assignExpr(
                                    b.at(sparse_f),
@@ -709,7 +697,7 @@ int main() {
             dawn::iir::LoopOrderKind::Parallel,
             b.stage(LocType::Cells,
                     b.doMethod(
-                        dawn::sir::Interval::Start, dawn::sir::Interval::End,
+                        dawn::ast::Interval::Start, dawn::ast::Interval::End,
                         b.loopStmtChain(
                             b.stmt(b.assignExpr(b.at(sparse_f),
                                                 b.binaryExpr(b.at(A_f, HOffsetType::withOffset, 0),
@@ -741,7 +729,7 @@ int main() {
             b.stage(
                 LocType::Cells,
                 b.doMethod(
-                    dawn::sir::Interval::Start, dawn::sir::Interval::End,
+                    dawn::ast::Interval::Start, dawn::ast::Interval::End,
                     b.loopStmtChain(b.stmt(b.assignExpr(b.at(sparse_f),
                                                         b.reduceOverNeighborExpr(
                                                             Op::plus, b.at(v_f), b.lit(0.),
@@ -771,7 +759,7 @@ int main() {
         b.stencil(b.multistage(
             dawn::iir::LoopOrderKind::Parallel,
             b.stage(LocType::Cells,
-                    b.doMethod(dawn::sir::Interval::Start, dawn::sir::Interval::End,
+                    b.doMethod(dawn::ast::Interval::Start, dawn::ast::Interval::End,
                                b.loopStmtChain(
                                    b.stmt(b.assignExpr(
                                        b.at(sparse_f),
@@ -812,7 +800,7 @@ int main() {
             dawn::iir::LoopOrderKind::Parallel,
             b.stage(LocType::Edges,
                     b.doMethod(
-                        dawn::sir::Interval::Start, dawn::sir::Interval::End,
+                        dawn::ast::Interval::Start, dawn::ast::Interval::End,
                         b.stmt(b.assignExpr(
                             b.at(out1_f),
                             b.binaryExpr(b.binaryExpr(b.at(full_f), b.at(horizontal_f), Op::plus),
@@ -844,7 +832,7 @@ int main() {
         b.stencil(b.multistage(
             LoopOrderKind::Parallel,
             b.stage(LocType::Cells,
-                    b.doMethod(dawn::sir::Interval::Start, dawn::sir::Interval::End, 0, -1,
+                    b.doMethod(dawn::ast::Interval::Start, dawn::ast::Interval::End, 0, -1,
                                b.stmt(b.assignExpr(
                                    b.at(out), b.at(in, AccessType::r,
                                                    dawn::ast::Offsets{dawn::ast::unstructured,
@@ -871,10 +859,10 @@ int main() {
         stencilName, b.stencil(b.multistage(
                          LoopOrderKind::Parallel,
                          b.stage(LocType::Cells, Interval(3, 4, 0, 0),
-                                 b.doMethod(dawn::sir::Interval::Start, dawn::sir::Interval::End, 0,
+                                 b.doMethod(dawn::ast::Interval::Start, dawn::ast::Interval::End, 0,
                                             0, b.stmt(b.assignExpr(b.at(out), b.at(in_1))))),
                          b.stage(LocType::Cells, Interval(2, 3, 0, 0),
-                                 b.doMethod(dawn::sir::Interval::Start, dawn::sir::Interval::End, 0,
+                                 b.doMethod(dawn::ast::Interval::Start, dawn::ast::Interval::End, 0,
                                             0, b.stmt(b.assignExpr(b.at(out), b.at(in_2))))))));
 
     std::ofstream of("generated/generated_" + stencilName + ".hpp");
@@ -899,7 +887,7 @@ int main() {
             LoopOrderKind::Parallel,
             b.stage(
                 LocType::Cells,
-                b.doMethod(dawn::sir::Interval::Start, dawn::sir::Interval::End,
+                b.doMethod(dawn::ast::Interval::Start, dawn::ast::Interval::End,
                            b.stmt(b.assignExpr(b.at(out_f), b.binaryExpr(b.at(global), b.at(in_f),
                                                                          Op::multiply))))))));
 
@@ -925,7 +913,7 @@ int main() {
             LoopOrderKind::Parallel,
             b.stage(LocType::Edges,
                     b.doMethod(
-                        dawn::sir::Interval::Start, dawn::sir::Interval::End,
+                        dawn::ast::Interval::Start, dawn::ast::Interval::End,
                         b.stmt(b.assignExpr(b.at(dense), b.reduceOverNeighborExpr(
                                                              Op::plus, b.at(sparse), b.lit(0.),
                                                              {LocType::Edges, LocType::Cells,
@@ -965,7 +953,7 @@ int main() {
             LoopOrderKind::Parallel,
             b.stage(
                 LocType::Cells,
-                b.doMethod(dawn::sir::Interval::Start, dawn::sir::Interval::End,
+                b.doMethod(dawn::ast::Interval::Start, dawn::ast::Interval::End,
                            b.stmt(b.assignExpr(b.at(tmp_f), b.lit(1.))),
                            b.stmt(b.assignExpr(
                                b.at(out_f), b.binaryExpr(b.at(tmp_f), b.at(in_f), Op::plus))))))));
@@ -992,7 +980,7 @@ int main() {
             LoopOrderKind::Parallel,
             b.stage(
                 LocType::Cells,
-                b.doMethod(dawn::sir::Interval::Start, dawn::sir::Interval::End,
+                b.doMethod(dawn::ast::Interval::Start, dawn::ast::Interval::End,
                            b.loopStmtChain(b.stmt(b.assignExpr(b.at(tmp_f), b.lit(1.))),
                                            {LocType::Cells, LocType::Edges}),
                            b.stmt(b.assignExpr(
@@ -1024,7 +1012,7 @@ int main() {
             LoopOrderKind::Parallel,
             b.stage(LocType::Cells,
                     b.doMethod(
-                        dawn::sir::Interval::Start, dawn::sir::Interval::End,
+                        dawn::ast::Interval::Start, dawn::ast::Interval::End,
                         b.ifStmt(
                             b.binaryExpr(b.reduceOverNeighborExpr(
                                              Op::plus, b.at(e_f),
@@ -1062,7 +1050,7 @@ int main() {
             LoopOrderKind::Parallel,
             b.stage(
                 LocType::Cells,
-                b.doMethod(dawn::sir::Interval::Start, dawn::sir::Interval::End,
+                b.doMethod(dawn::ast::Interval::Start, dawn::ast::Interval::End,
                            b.stmt(b.assignExpr(
                                b.at(cout_f),
                                b.reduceOverNeighborExpr(
@@ -1091,7 +1079,7 @@ int main() {
         b.stencil(b.multistage(
             LoopOrderKind::Parallel,
             b.stage(LocType::Cells,
-                    b.doMethod(dawn::sir::Interval::Start, dawn::sir::Interval::End,
+                    b.doMethod(dawn::ast::Interval::Start, dawn::ast::Interval::End,
                                b.stmt(b.assignExpr(
                                    b.at(cout_f),
                                    b.reduceOverNeighborExpr(
@@ -1123,7 +1111,7 @@ int main() {
         b.stencil(b.multistage(
             LoopOrderKind::Parallel,
             b.stage(LocType::Cells,
-                    b.doMethod(dawn::sir::Interval::Start, dawn::sir::Interval::End,
+                    b.doMethod(dawn::ast::Interval::Start, dawn::ast::Interval::End,
                                b.loopStmtChain(b.stmt(b.assignExpr(b.at(sparse_f), b.lit(2.))),
                                                {LocType::Cells, LocType::Edges, LocType::Cells},
                                                /*include center*/ true),
@@ -1157,12 +1145,12 @@ int main() {
         stencilName,
         b.stencil(b.multistage(
             LoopOrderKind::Parallel,
-            b.stage(LocType::Cells, b.doMethod(dawn::sir::Interval::Start, dawn::sir::Interval::End,
+            b.stage(LocType::Cells, b.doMethod(dawn::ast::Interval::Start, dawn::ast::Interval::End,
                                                b.stmt(b.assignExpr(b.at(c_f), b.lit(1.))))),
-            b.stage(LocType::Edges, b.doMethod(dawn::sir::Interval::Start, dawn::sir::Interval::End,
+            b.stage(LocType::Edges, b.doMethod(dawn::ast::Interval::Start, dawn::ast::Interval::End,
                                                b.stmt(b.assignExpr(b.at(e_f), b.lit(1.))))),
             b.stage(LocType::Vertices,
-                    b.doMethod(dawn::sir::Interval::Start, dawn::sir::Interval::End,
+                    b.doMethod(dawn::ast::Interval::Start, dawn::ast::Interval::End,
                                b.stmt(b.assignExpr(b.at(v_f), b.lit(1.))))))));
 
     std::ofstream of("generated/generated_" + stencilName + ".hpp");

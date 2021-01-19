@@ -52,8 +52,8 @@ TEST_F(TestComputeEnclosingAccessInterval, test_field_access_interval_01) {
   ASSERT_TRUE(!intervalOut1.has_value());
   ASSERT_TRUE(intervalLap1.has_value());
 
-  ASSERT_TRUE((*intervalU1 == iir::Interval{0, sir::Interval::End, 11, 0}));
-  ASSERT_TRUE((*intervalLap1 == iir::Interval{0, sir::Interval::End, 11, 0}));
+  ASSERT_TRUE((*intervalU1 == iir::Interval{0, ast::Interval::End, 11, 0}));
+  ASSERT_TRUE((*intervalLap1 == iir::Interval{0, ast::Interval::End, 11, 0}));
 
   std::optional<iir::Interval> intervalU2 =
       stage2->computeEnclosingAccessInterval(metadata.getAccessIDFromName("u"), false);
@@ -67,8 +67,8 @@ TEST_F(TestComputeEnclosingAccessInterval, test_field_access_interval_01) {
   ASSERT_TRUE(intervalLap2.has_value());
 
   EXPECT_EQ(*intervalU2, (iir::Interval{0, 0, 0, 10}));
-  EXPECT_EQ(*intervalOut2, (iir::Interval{0, sir::Interval::End, 0, 0}));
-  EXPECT_EQ(*intervalLap2, (iir::Interval{0, sir::Interval::End, 11, 0}));
+  EXPECT_EQ(*intervalOut2, (iir::Interval{0, ast::Interval::End, 0, 0}));
+  EXPECT_EQ(*intervalLap2, (iir::Interval{0, ast::Interval::End, 11, 0}));
 }
 
 TEST_F(TestComputeEnclosingAccessInterval, test_field_access_interval_02) {
@@ -92,7 +92,7 @@ TEST_F(TestComputeEnclosingAccessInterval, test_field_access_interval_02) {
 
     ASSERT_TRUE(intervalcoeff1.has_value());
 
-    EXPECT_EQ(*intervalcoeff1, (iir::Interval{12, sir::Interval::End + 1}));
+    EXPECT_EQ(*intervalcoeff1, (iir::Interval{12, ast::Interval::End + 1}));
   }
   {
     std::optional<iir::Interval> intervalcoeff1 =
@@ -100,7 +100,7 @@ TEST_F(TestComputeEnclosingAccessInterval, test_field_access_interval_02) {
 
     ASSERT_TRUE(intervalcoeff1.has_value());
 
-    EXPECT_EQ(*intervalcoeff1, (iir::Interval{11, sir::Interval::End + 1}));
+    EXPECT_EQ(*intervalcoeff1, (iir::Interval{11, ast::Interval::End + 1}));
   }
 }
 

@@ -22,8 +22,6 @@
 #include "dawn/Support/Logger.h"
 
 #include <deque>
-#include <iterator>
-#include <unordered_set>
 
 namespace dawn {
 
@@ -62,7 +60,7 @@ bool PassStageSplitter::run(const std::shared_ptr<iir::StencilInstantiation>& st
           if(hasHorizontalReadBeforeWriteConflict(newGraph)) {
 
             // Check if the conflict is related to a conditional block
-            if(isa<iir::IfStmt>(stmt.get())) {
+            if(isa<ast::IfStmt>(stmt.get())) {
               // Check if the conflict is inside the conditional block
               iir::DependencyGraphAccesses conditionalBlockGraph =
                   iir::DependencyGraphAccesses(stencilInstantiation->getMetaData());

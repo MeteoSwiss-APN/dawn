@@ -16,7 +16,6 @@
 #include "dawn/AST/LocationType.h"
 #include "dawn/IIR/AST.h"
 #include "dawn/IIR/ASTExpr.h"
-#include "dawn/IIR/ASTFwd.h"
 #include <memory>
 #include <sstream>
 #include <string>
@@ -25,7 +24,7 @@ namespace dawn {
 namespace codegen {
 namespace cudaico {
 
-void ASTStencilBody::visit(const std::shared_ptr<iir::BlockStmt>& stmt) {
+void ASTStencilBody::visit(const std::shared_ptr<ast::BlockStmt>& stmt) {
   indent_ += DAWN_PRINT_INDENT;
   auto indent = std::string(indent_, ' ');
   for(const auto& s : stmt->getStatements()) {
@@ -35,7 +34,7 @@ void ASTStencilBody::visit(const std::shared_ptr<iir::BlockStmt>& stmt) {
   indent_ -= DAWN_PRINT_INDENT;
 }
 
-void ASTStencilBody::visit(const std::shared_ptr<iir::LoopStmt>& stmt) {
+void ASTStencilBody::visit(const std::shared_ptr<ast::LoopStmt>& stmt) {
   const auto maybeChainPtr =
       dynamic_cast<const ast::ChainIterationDescr*>(stmt->getIterationDescrPtr());
   DAWN_ASSERT_MSG(maybeChainPtr, "general loop concept not implemented yet!\n");
@@ -55,28 +54,28 @@ void ASTStencilBody::visit(const std::shared_ptr<iir::LoopStmt>& stmt) {
   ss_ << "}\n";
   parentIsForLoop_ = false;
 }
-void ASTStencilBody::visit(const std::shared_ptr<iir::VerticalRegionDeclStmt>& stmt) {
+void ASTStencilBody::visit(const std::shared_ptr<ast::VerticalRegionDeclStmt>& stmt) {
   DAWN_ASSERT_MSG(0, "VerticalRegionDeclStmt not allowed in this context");
 }
-void ASTStencilBody::visit(const std::shared_ptr<iir::StencilCallDeclStmt>& stmt) {
+void ASTStencilBody::visit(const std::shared_ptr<ast::StencilCallDeclStmt>& stmt) {
   DAWN_ASSERT_MSG(0, "StencilCallDeclStmt not allowed in this context");
 }
-void ASTStencilBody::visit(const std::shared_ptr<iir::BoundaryConditionDeclStmt>& stmt) {
+void ASTStencilBody::visit(const std::shared_ptr<ast::BoundaryConditionDeclStmt>& stmt) {
   DAWN_ASSERT_MSG(0, "BoundaryConditionDeclStmt not allowed in this context");
 }
 
-void ASTStencilBody::visit(const std::shared_ptr<iir::StencilFunCallExpr>& expr) {
+void ASTStencilBody::visit(const std::shared_ptr<ast::StencilFunCallExpr>& expr) {
   DAWN_ASSERT_MSG(0, "StencilFunCallExpr not allowed in this context");
 }
-void ASTStencilBody::visit(const std::shared_ptr<iir::StencilFunArgExpr>& expr) {
+void ASTStencilBody::visit(const std::shared_ptr<ast::StencilFunArgExpr>& expr) {
   DAWN_ASSERT_MSG(0, "StencilFunArgExpr not allowed in this context");
 }
 
-void ASTStencilBody::visit(const std::shared_ptr<iir::ReturnStmt>& stmt) {
+void ASTStencilBody::visit(const std::shared_ptr<ast::ReturnStmt>& stmt) {
   DAWN_ASSERT_MSG(0, "Return not allowed in this context");
 }
 
-void ASTStencilBody::visit(const std::shared_ptr<iir::VarAccessExpr>& expr) {
+void ASTStencilBody::visit(const std::shared_ptr<ast::VarAccessExpr>& expr) {
   std::string name = getName(expr);
   int AccessID = iir::getAccessID(expr);
 
@@ -93,13 +92,13 @@ void ASTStencilBody::visit(const std::shared_ptr<iir::VarAccessExpr>& expr) {
   }
 }
 
-void ASTStencilBody::visit(const std::shared_ptr<iir::AssignmentExpr>& expr) {
+void ASTStencilBody::visit(const std::shared_ptr<ast::AssignmentExpr>& expr) {
   expr->getLeft()->accept(*this);
   ss_ << " " << expr->getOp() << " ";
   expr->getRight()->accept(*this);
 }
 
-std::string ASTStencilBody::makeIndexString(const std::shared_ptr<iir::FieldAccessExpr>& expr,
+std::string ASTStencilBody::makeIndexString(const std::shared_ptr<ast::FieldAccessExpr>& expr,
                                             std::string kiterStr) {
   bool isVertical = metadata_.getFieldDimensions(iir::getAccessID(expr)).isVertical();
   if(isVertical) {
@@ -155,14 +154,14 @@ std::string ASTStencilBody::makeIndexString(const std::shared_ptr<iir::FieldAcce
   return "BAD_FIELD_CONFIG";
 }
 
-void ASTStencilBody::visit(const std::shared_ptr<iir::FieldAccessExpr>& expr) {
+void ASTStencilBody::visit(const std::shared_ptr<ast::FieldAccessExpr>& expr) {
   if(!expr->getOffset().hasVerticalIndirection()) {
     ss_ << expr->getName() + "[" +
                makeIndexString(expr, "(kIter + " +
                                          std::to_string(expr->getOffset().verticalShift()) + ")") +
                "]";
   } else {
-    auto vertOffset = makeIndexString(std::static_pointer_cast<iir::FieldAccessExpr>(
+    auto vertOffset = makeIndexString(std::static_pointer_cast<ast::FieldAccessExpr>(
                                           expr->getOffset().getVerticalIndirectionFieldAsExpr()),
                                       "kIter");
     ss_ << expr->getName() + "[" +
@@ -174,7 +173,7 @@ void ASTStencilBody::visit(const std::shared_ptr<iir::FieldAccessExpr>& expr) {
   }
 }
 
-void ASTStencilBody::visit(const std::shared_ptr<iir::FunCallExpr>& expr) {
+void ASTStencilBody::visit(const std::shared_ptr<ast::FunCallExpr>& expr) {
   std::string callee = expr->getCallee();
   // TODO: temporary hack to remove namespace prefixes
   std::size_t lastcolon = callee.find_last_of(":");
@@ -188,7 +187,7 @@ void ASTStencilBody::visit(const std::shared_ptr<iir::FunCallExpr>& expr) {
   ss_ << ")";
 }
 
-void ASTStencilBody::visit(const std::shared_ptr<iir::IfStmt>& stmt) {
+void ASTStencilBody::visit(const std::shared_ptr<ast::IfStmt>& stmt) {
   ss_ << "if(";
   stmt->getCondExpr()->accept(*this);
   ss_ << ")\n";
@@ -203,7 +202,7 @@ void ASTStencilBody::visit(const std::shared_ptr<iir::IfStmt>& stmt) {
   }
 }
 
-void ASTStencilBody::visit(const std::shared_ptr<iir::ReductionOverNeighborExpr>& expr) {
+void ASTStencilBody::visit(const std::shared_ptr<ast::ReductionOverNeighborExpr>& expr) {
   DAWN_ASSERT_MSG(!parentIsReduction_,
                   "Nested Reductions not yet supported for CUDA code generation");
 
@@ -250,10 +249,10 @@ void ASTStencilBody::visit(const std::shared_ptr<iir::ReductionOverNeighborExpr>
   parentIsReduction_ = false;
 }
 
-std::string ASTStencilBody::getName(const std::shared_ptr<iir::VarDeclStmt>& stmt) const {
+std::string ASTStencilBody::getName(const std::shared_ptr<ast::VarDeclStmt>& stmt) const {
   return metadata_.getFieldNameFromAccessID(iir::getAccessID(stmt));
 }
-std::string ASTStencilBody::getName(const std::shared_ptr<iir::Expr>& expr) const {
+std::string ASTStencilBody::getName(const std::shared_ptr<ast::Expr>& expr) const {
   return metadata_.getFieldNameFromAccessID(iir::getAccessID(expr));
 }
 

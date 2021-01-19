@@ -13,7 +13,6 @@
 //===------------------------------------------------------------------------------------------===//
 
 #include "dawn/AST/AST.h"
-#include "dawn/AST/ASTStmt.h"
 #include "dawn/Support/Assert.h"
 #include "dawn/Support/Casting.h"
 

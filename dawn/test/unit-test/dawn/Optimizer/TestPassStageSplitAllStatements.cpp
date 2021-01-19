@@ -12,8 +12,6 @@
 //
 //===------------------------------------------------------------------------------------------===//
 
-#include "dawn/IIR/ASTFwd.h"
-#include "dawn/IIR/IIR.h"
 #include "dawn/IIR/StencilInstantiation.h"
 #include "dawn/Optimizer/PassStageSplitAllStatements.h"
 #include "dawn/Serialization/IIRSerializer.h"
@@ -21,7 +19,6 @@
 #include "dawn/Support/Type.h"
 #include "dawn/Unittest/ASTConstructionAliases.h"
 
-#include <fstream>
 #include <gtest/gtest.h>
 #include <memory>
 

@@ -15,13 +15,10 @@
 #include "dawn/Optimizer/PassSetSyncStage.h"
 #include "dawn/IIR/Cache.h"
 #include "dawn/IIR/IIRNodeIterator.h"
-#include "dawn/IIR/IntervalAlgorithms.h"
 #include "dawn/IIR/StencilInstantiation.h"
 #include "dawn/Support/Unreachable.h"
 
 #include <optional>
-#include <set>
-#include <vector>
 
 namespace dawn {
 

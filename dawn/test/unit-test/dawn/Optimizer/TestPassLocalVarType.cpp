@@ -35,7 +35,7 @@ TEST(TestLocalVarType, test_cartesian_01) {
       "generated",
       b.stencil(b.multistage(
           dawn::iir::LoopOrderKind::Forward,
-          b.stage(b.doMethod(dawn::sir::Interval::Start, dawn::sir::Interval::End,
+          b.stage(b.doMethod(dawn::ast::Interval::Start, dawn::ast::Interval::End,
                              b.declareVar(varA), b.stmt(b.assignExpr(b.at(fIJ), b.at(varA))))))));
 
   // run single pass (PassLocalVarType)
@@ -63,7 +63,7 @@ TEST(TestLocalVarType, test_cartesian_02) {
       "generated",
       b.stencil(b.multistage(
           dawn::iir::LoopOrderKind::Forward,
-          b.stage(b.doMethod(dawn::sir::Interval::Start, dawn::sir::Interval::End,
+          b.stage(b.doMethod(dawn::ast::Interval::Start, dawn::ast::Interval::End,
                              b.declareVar(varA), b.stmt(b.assignExpr(b.at(varA), b.at(fIJ))),
                              b.stmt(b.assignExpr(b.at(fIJ), b.at(varA))))))));
 
@@ -93,7 +93,7 @@ TEST(TestLocalVarType, test_cartesian_propagation_01) {
   auto stencil = b.build(
       "generated", b.stencil(b.multistage(
                        dawn::iir::LoopOrderKind::Forward,
-                       b.stage(b.doMethod(dawn::sir::Interval::Start, dawn::sir::Interval::End,
+                       b.stage(b.doMethod(dawn::ast::Interval::Start, dawn::ast::Interval::End,
                                           b.declareVar(varA), b.declareVar(varB),
                                           b.stmt(b.assignExpr(b.at(fIJ), b.at(varB))))))));
 
@@ -126,7 +126,7 @@ TEST(TestLocalVarType, test_cartesian_propagation_02) {
   auto stencil = b.build(
       "generated", b.stencil(b.multistage(
                        dawn::iir::LoopOrderKind::Forward,
-                       b.stage(b.doMethod(dawn::sir::Interval::Start, dawn::sir::Interval::End,
+                       b.stage(b.doMethod(dawn::ast::Interval::Start, dawn::ast::Interval::End,
                                           b.declareVar(varA), b.declareVar(varB),
                                           b.stmt(b.assignExpr(b.at(varA), b.at(fIJ))),
                                           b.stmt(b.assignExpr(b.at(fIJ), b.at(varB))))))));
@@ -168,7 +168,7 @@ TEST(TestLocalVarType, test_cartesian_propagation_03) {
       "generated",
       b.stencil(b.multistage(
           dawn::iir::LoopOrderKind::Forward,
-          b.stage(b.doMethod(dawn::sir::Interval::Start, dawn::sir::Interval::End,
+          b.stage(b.doMethod(dawn::ast::Interval::Start, dawn::ast::Interval::End,
                              b.declareVar(varA), b.declareVar(varB), b.declareVar(varC),
                              b.declareVar(varD), b.stmt(b.assignExpr(b.at(varB), b.at(varA))),
                              b.stmt(b.assignExpr(b.at(varD), b.at(varB))),
@@ -216,7 +216,7 @@ TEST(TestLocalVarType, test_cartesian_propagation_04) {
       "generated",
       b.stencil(b.multistage(
           dawn::iir::LoopOrderKind::Forward,
-          b.stage(b.doMethod(dawn::sir::Interval::Start, dawn::sir::Interval::End,
+          b.stage(b.doMethod(dawn::ast::Interval::Start, dawn::ast::Interval::End,
                              b.declareVar(varA), b.declareVar(varB), b.declareVar(varC),
                              b.declareVar(varD), b.stmt(b.assignExpr(b.at(varB), b.at(varA))),
                              b.stmt(b.assignExpr(b.at(varD), b.at(varB))),
@@ -268,7 +268,7 @@ TEST(TestLocalVarType, test_unstructured_propagation_01) {
       "generated",
       b.stencil(b.multistage(
           dawn::iir::LoopOrderKind::Forward,
-          b.stage(b.doMethod(dawn::sir::Interval::Start, dawn::sir::Interval::End,
+          b.stage(b.doMethod(dawn::ast::Interval::Start, dawn::ast::Interval::End,
                              b.declareVar(varA), b.declareVar(varB), b.declareVar(varC),
                              b.declareVar(varD), b.stmt(b.assignExpr(b.at(varA), b.at(varB))),
                              b.stmt(b.assignExpr(b.at(varB), b.at(varD))),
@@ -316,7 +316,7 @@ TEST(TestLocalVarType, test_unstructured_propagation_02) {
       b.build("generated",
               b.stencil(b.multistage(
                   dawn::iir::LoopOrderKind::Forward,
-                  b.stage(b.doMethod(dawn::sir::Interval::Start, dawn::sir::Interval::End,
+                  b.stage(b.doMethod(dawn::ast::Interval::Start, dawn::ast::Interval::End,
                                      b.declareVar(varA), b.declareVar(varB), b.declareVar(varC),
                                      b.stmt(b.assignExpr(b.at(varA), b.at(varB))),
                                      b.stmt(b.assignExpr(b.at(varB), b.at(varC))))))));
@@ -360,7 +360,7 @@ TEST(TestLocalVarType, test_unstructured_if_condition_01) {
       b.build("generated",
               b.stencil(b.multistage(
                   dawn::iir::LoopOrderKind::Forward,
-                  b.stage(b.doMethod(dawn::sir::Interval::Start, dawn::sir::Interval::End,
+                  b.stage(b.doMethod(dawn::ast::Interval::Start, dawn::ast::Interval::End,
                                      b.declareVar(varA), b.declareVar(varB),
                                      b.ifStmt(b.binaryExpr(b.at(f_e), b.lit(0.0), Op::greater),
                                               b.block(b.stmt(b.assignExpr(b.at(varA), b.lit(3.0)))),
@@ -408,7 +408,7 @@ TEST(TestLocalVarType, test_unstructured_if_condition_02) {
       b.build("generated",
               b.stencil(b.multistage(
                   dawn::iir::LoopOrderKind::Forward,
-                  b.stage(b.doMethod(dawn::sir::Interval::Start, dawn::sir::Interval::End,
+                  b.stage(b.doMethod(dawn::ast::Interval::Start, dawn::ast::Interval::End,
                                      b.declareVar(varA), b.declareVar(varB),
                                      b.ifStmt(b.binaryExpr(b.at(f_e), b.lit(0.0), Op::greater),
                                               b.block(b.stmt(b.assignExpr(b.at(varA), b.lit(3.0)))),
@@ -453,7 +453,7 @@ TEST(TestLocalVarType, test_unstructured_if_condition_03) {
       "generated",
       b.stencil(b.multistage(
           dawn::iir::LoopOrderKind::Forward,
-          b.stage(b.doMethod(dawn::sir::Interval::Start, dawn::sir::Interval::End,
+          b.stage(b.doMethod(dawn::ast::Interval::Start, dawn::ast::Interval::End,
                              b.declareVar(varA), b.declareVar(varB),
                              b.ifStmt(b.binaryExpr(b.at(varA), b.lit(0.0), Op::greater),
                                       b.block(b.stmt(b.assignExpr(b.at(varB), b.lit(3.0))))),
@@ -496,7 +496,7 @@ TEST(TestLocalVarType, test_unstructured_nested_if_01) {
       b.stencil(b.multistage(
           dawn::iir::LoopOrderKind::Forward,
           b.stage(b.doMethod(
-              dawn::sir::Interval::Start, dawn::sir::Interval::End, b.declareVar(varA),
+              dawn::ast::Interval::Start, dawn::ast::Interval::End, b.declareVar(varA),
               b.declareVar(varB),
               b.ifStmt(b.binaryExpr(b.at(f_e), b.lit(0.0), Op::greater),
                        b.block(b.ifStmt(b.binaryExpr(b.at(varB), b.lit(0.0), Op::greater),
@@ -541,7 +541,7 @@ TEST(TestLocalVarType, test_unstructured_nested_if_02) {
       b.stencil(b.multistage(
           dawn::iir::LoopOrderKind::Forward,
           b.stage(b.doMethod(
-              dawn::sir::Interval::Start, dawn::sir::Interval::End, b.declareVar(varA),
+              dawn::ast::Interval::Start, dawn::ast::Interval::End, b.declareVar(varA),
               b.declareVar(varB),
               b.ifStmt(b.binaryExpr(b.at(g), b.lit(0.0), Op::greater),
                        b.block(b.ifStmt(b.binaryExpr(b.at(varB), b.lit(0.0), Op::greater),
@@ -578,7 +578,7 @@ TEST(TestLocalVarType, test_unstructured_reduction_01) {
               b.stencil(b.multistage(
                   dawn::iir::LoopOrderKind::Forward,
                   b.stage(b.doMethod(
-                      dawn::sir::Interval::Start, dawn::sir::Interval::End, b.declareVar(varA),
+                      dawn::ast::Interval::Start, dawn::ast::Interval::End, b.declareVar(varA),
                       b.stmt(b.assignExpr(
                           b.at(varA), b.reduceOverNeighborExpr(Op::plus, b.at(f_e), b.lit(0.0),
                                                                {ast::LocationType::Cells,
@@ -611,7 +611,7 @@ TEST(TestLocalVarType, test_throw_unstructured_01) {
       "generated",
       b.stencil(b.multistage(
           dawn::iir::LoopOrderKind::Forward,
-          b.stage(b.doMethod(dawn::sir::Interval::Start, dawn::sir::Interval::End,
+          b.stage(b.doMethod(dawn::ast::Interval::Start, dawn::ast::Interval::End,
                              b.declareVar(varA), b.stmt(b.assignExpr(b.at(varA), b.at(f_e))))))));
 
   // run single pass (PassLocalVarType) and expect exception to be thrown
@@ -639,7 +639,7 @@ TEST(TestLocalVarType, test_throw_unstructured_02) {
       "generated",
       b.stencil(b.multistage(
           dawn::iir::LoopOrderKind::Forward,
-          b.stage(b.doMethod(dawn::sir::Interval::Start, dawn::sir::Interval::End,
+          b.stage(b.doMethod(dawn::ast::Interval::Start, dawn::ast::Interval::End,
                              b.declareVar(varA), b.declareVar(varB),
                              b.stmt(b.assignExpr(b.at(varB), b.binaryExpr(b.at(f_e), b.at(varA)))),
                              b.stmt(b.assignExpr(b.at(varA), b.at(f_c))))))));
@@ -673,7 +673,7 @@ TEST(TestLocalVarType, test_throw_unstructured_03) {
       b.build("generated",
               b.stencil(b.multistage(
                   dawn::iir::LoopOrderKind::Forward,
-                  b.stage(b.doMethod(dawn::sir::Interval::Start, dawn::sir::Interval::End,
+                  b.stage(b.doMethod(dawn::ast::Interval::Start, dawn::ast::Interval::End,
                                      b.declareVar(varA), b.declareVar(varB), b.declareVar(varC),
                                      b.stmt(b.assignExpr(b.at(varB), b.at(varA))),
                                      b.stmt(b.assignExpr(b.at(varC), b.at(varB))),
@@ -704,7 +704,7 @@ TEST(TestLocalVarType, test_throw_unstructured_04) {
       "generated", b.stencil(b.multistage(
                        dawn::iir::LoopOrderKind::Forward,
                        b.stage(b.doMethod(
-                           dawn::sir::Interval::Start, dawn::sir::Interval::End, b.declareVar(varA),
+                           dawn::ast::Interval::Start, dawn::ast::Interval::End, b.declareVar(varA),
                            b.ifStmt(b.binaryExpr(b.at(f_c), b.lit(0.0), Op::greater),
                                     b.block(b.stmt(b.assignExpr(b.at(varA), b.lit(1.0))))))))));
 
@@ -735,7 +735,7 @@ TEST(TestLocalVarType, test_throw_unstructured_05) {
       b.build("generated",
               b.stencil(b.multistage(
                   dawn::iir::LoopOrderKind::Forward,
-                  b.stage(b.doMethod(dawn::sir::Interval::Start, dawn::sir::Interval::End,
+                  b.stage(b.doMethod(dawn::ast::Interval::Start, dawn::ast::Interval::End,
                                      b.declareVar(varA), b.declareVar(varB),
                                      b.ifStmt(b.binaryExpr(b.at(varA), b.lit(0.0), Op::greater),
                                               b.block(b.stmt(b.assignExpr(b.at(varB), b.at(f_c))))),
@@ -762,7 +762,7 @@ TEST(TestLocalVarType, test_throw_unstructured_06) {
       "generated", b.stencil(b.multistage(
                        dawn::iir::LoopOrderKind::Forward,
                        b.stage(b.doMethod(
-                           dawn::sir::Interval::Start, dawn::sir::Interval::End, b.declareVar(varA),
+                           dawn::ast::Interval::Start, dawn::ast::Interval::End, b.declareVar(varA),
                            b.stmt(b.assignExpr(
                                b.at(varA), b.reduceOverNeighborExpr(Op::plus, b.at(f_e), b.lit(0.0),
                                                                     {ast::LocationType::Cells,
@@ -801,7 +801,7 @@ TEST(TestLocalVarType, test_throw_nested_if_02) {
       b.stencil(b.multistage(
           dawn::iir::LoopOrderKind::Forward,
           b.stage(b.doMethod(
-              dawn::sir::Interval::Start, dawn::sir::Interval::End, b.declareVar(varA),
+              dawn::ast::Interval::Start, dawn::ast::Interval::End, b.declareVar(varA),
               b.declareVar(varB), b.declareVar(varC),
               b.ifStmt(b.binaryExpr(b.at(varA), b.lit(0.0), Op::greater),
                        b.block(b.ifStmt(b.binaryExpr(b.at(varB), b.lit(0.0), Op::greater),

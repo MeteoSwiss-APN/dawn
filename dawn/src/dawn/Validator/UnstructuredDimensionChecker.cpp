@@ -3,7 +3,6 @@
 #include "dawn/AST/IterationSpace.h"
 #include "dawn/AST/LocationType.h"
 #include "dawn/AST/Offsets.h"
-#include "dawn/IIR/ASTFwd.h"
 #include "dawn/IIR/IIRNodeIterator.h"
 #include "dawn/IIR/Stage.h"
 #include "dawn/SIR/SIR.h"
@@ -127,7 +126,7 @@ UnstructuredDimensionChecker::UnstructuredDimensionCheckerImpl::getDimensions() 
 }
 
 void UnstructuredDimensionChecker::UnstructuredDimensionCheckerImpl::visit(
-    const std::shared_ptr<iir::VarDeclStmt>& stmt) {
+    const std::shared_ptr<ast::VarDeclStmt>& stmt) {
   if(!dimensionsConsistent_) {
     return;
   }
@@ -144,7 +143,7 @@ void UnstructuredDimensionChecker::UnstructuredDimensionCheckerImpl::visit(
 }
 
 void UnstructuredDimensionChecker::UnstructuredDimensionCheckerImpl::visit(
-    const std::shared_ptr<iir::FieldAccessExpr>& fieldAccessExpr) {
+    const std::shared_ptr<ast::FieldAccessExpr>& fieldAccessExpr) {
   if(!dimensionsConsistent_) {
     return;
   }
@@ -201,7 +200,7 @@ void UnstructuredDimensionChecker::UnstructuredDimensionCheckerImpl::setCurDimen
 }
 
 void UnstructuredDimensionChecker::UnstructuredDimensionCheckerImpl::visit(
-    const std::shared_ptr<iir::VarAccessExpr>& varAccessExpr) {
+    const std::shared_ptr<ast::VarAccessExpr>& varAccessExpr) {
   if(!dimensionsConsistent_) {
     return;
   }
@@ -224,17 +223,17 @@ void UnstructuredDimensionChecker::UnstructuredDimensionCheckerImpl::visit(
 }
 
 void UnstructuredDimensionChecker::UnstructuredDimensionCheckerImpl::visit(
-    const std::shared_ptr<iir::IfStmt>& ifStmt) {
-  visit(std::static_pointer_cast<iir::Stmt>(ifStmt));
+    const std::shared_ptr<ast::IfStmt>& ifStmt) {
+  visit(std::static_pointer_cast<ast::Stmt>(ifStmt));
 }
 
 void UnstructuredDimensionChecker::UnstructuredDimensionCheckerImpl::visit(
-    const std::shared_ptr<iir::BlockStmt>& blockStmt) {
-  visit(std::static_pointer_cast<iir::Stmt>(blockStmt));
+    const std::shared_ptr<ast::BlockStmt>& blockStmt) {
+  visit(std::static_pointer_cast<ast::Stmt>(blockStmt));
 }
 
 void UnstructuredDimensionChecker::UnstructuredDimensionCheckerImpl::visit(
-    const std::shared_ptr<iir::Stmt>& stmt) {
+    const std::shared_ptr<ast::Stmt>& stmt) {
   std::optional<sir::FieldDimensions> prevDims = curDimensions_;
   for(auto& s : stmt->getChildren()) {
     s->accept(*this);
@@ -276,7 +275,7 @@ void UnstructuredDimensionChecker::UnstructuredDimensionCheckerImpl::checkBinary
 }
 
 void UnstructuredDimensionChecker::UnstructuredDimensionCheckerImpl::visit(
-    const std::shared_ptr<iir::BinaryOperator>& binOp) {
+    const std::shared_ptr<ast::BinaryOperator>& binOp) {
   if(!dimensionsConsistent_) {
     return;
   }
@@ -309,7 +308,7 @@ void UnstructuredDimensionChecker::UnstructuredDimensionCheckerImpl::visit(
 }
 
 void UnstructuredDimensionChecker::UnstructuredDimensionCheckerImpl::visit(
-    const std::shared_ptr<iir::AssignmentExpr>& assignmentExpr) {
+    const std::shared_ptr<ast::AssignmentExpr>& assignmentExpr) {
   if(!dimensionsConsistent_) {
     return;
   }
@@ -438,7 +437,7 @@ void UnstructuredDimensionChecker::UnstructuredDimensionCheckerImpl::visit(
 }
 
 void UnstructuredDimensionChecker::UnstructuredDimensionCheckerImpl::visit(
-    const std::shared_ptr<iir::LoopStmt>& loopStmt) {
+    const std::shared_ptr<ast::LoopStmt>& loopStmt) {
   config_.parentIsChainForLoop_ = true;
   const auto maybeChainPtr =
       dynamic_cast<const ast::ChainIterationDescr*>(loopStmt->getIterationDescrPtr());
@@ -453,7 +452,7 @@ void UnstructuredDimensionChecker::UnstructuredDimensionCheckerImpl::visit(
 }
 
 void UnstructuredDimensionChecker::UnstructuredDimensionCheckerImpl::visit(
-    const std::shared_ptr<iir::ReductionOverNeighborExpr>& reductionExpr) {
+    const std::shared_ptr<ast::ReductionOverNeighborExpr>& reductionExpr) {
   if(!dimensionsConsistent_) {
     return;
   }

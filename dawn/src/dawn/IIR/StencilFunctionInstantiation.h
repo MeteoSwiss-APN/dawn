@@ -99,9 +99,9 @@ private:
   const StencilMetaInformation& metadata_;
   // TODO put all members in a struct to avoid having to implement a clone for all of them
   // except the vector<unique_ptr>
-  std::shared_ptr<iir::StencilFunCallExpr> expr_;
+  std::shared_ptr<ast::StencilFunCallExpr> expr_;
   std::shared_ptr<sir::StencilFunction> function_;
-  std::shared_ptr<iir::AST> ast_;
+  std::shared_ptr<ast::AST> ast_;
 
   Interval interval_;
   bool hasReturn_;
@@ -134,7 +134,7 @@ private:
   std::unordered_map<int, std::string> LiteralAccessIDToNameMap_;
 
   /// Referenced stencil functions within this stencil function
-  std::unordered_map<std::shared_ptr<iir::StencilFunCallExpr>,
+  std::unordered_map<std::shared_ptr<ast::StencilFunCallExpr>,
                      std::shared_ptr<StencilFunctionInstantiation>>
       ExprToStencilFunctionInstantiationMap_;
 
@@ -157,9 +157,9 @@ private:
 
 public:
   StencilFunctionInstantiation(StencilInstantiation* context,
-                               const std::shared_ptr<iir::StencilFunCallExpr>& expr,
+                               const std::shared_ptr<ast::StencilFunCallExpr>& expr,
                                const std::shared_ptr<sir::StencilFunction>& function,
-                               const std::shared_ptr<iir::AST>& ast, const Interval& interval,
+                               const std::shared_ptr<ast::AST>& ast, const Interval& interval,
                                bool isNested);
 
   StencilFunctionInstantiation(StencilFunctionInstantiation&&) = default;
@@ -193,7 +193,7 @@ public:
   bool hasGlobalVariables() const { return !GlobalVariableAccessIDSet_.empty(); }
 
   /// @brief remove a stencil function instantiation tagged by a StencilFunCallExpr
-  void removeStencilFunctionInstantiation(const std::shared_ptr<iir::StencilFunCallExpr>& expr);
+  void removeStencilFunctionInstantiation(const std::shared_ptr<ast::StencilFunCallExpr>& expr);
 
   /// @brief get the name of the arg parameter of the stencil function which is called passing
   /// another function
@@ -219,12 +219,12 @@ public:
   const std::string& getName() const { return function_->Name; }
 
   /// @brief Get the AST of the stencil function
-  std::shared_ptr<iir::AST>& getAST() { return ast_; }
-  const std::shared_ptr<iir::AST>& getAST() const { return ast_; }
+  std::shared_ptr<ast::AST>& getAST() { return ast_; }
+  const std::shared_ptr<ast::AST>& getAST() const { return ast_; }
 
   /// @brief Evaluate the offset of the field access expression (this performs the lazy evaluation
   /// of the offsets)
-  ast::Offsets evalOffsetOfFieldAccessExpr(const std::shared_ptr<iir::FieldAccessExpr>& expr,
+  ast::Offsets evalOffsetOfFieldAccessExpr(const std::shared_ptr<ast::FieldAccessExpr>& expr,
                                            bool applyInitialOffset = true) const;
 
   /// @brief returns true if the argument in the argumentIndex position is bound to an offset
@@ -338,15 +338,15 @@ public:
   const std::unordered_map<int, ast::Offsets>& getCallerAccessIDToInitialOffsetMap() const;
 
   /// @brief Get StencilFunctionInstantiation of the `StencilFunCallExpr`
-  const std::unordered_map<std::shared_ptr<iir::StencilFunCallExpr>,
+  const std::unordered_map<std::shared_ptr<ast::StencilFunCallExpr>,
                            std::shared_ptr<StencilFunctionInstantiation>>&
   getExprToStencilFunctionInstantiationMap() const;
 
   /// @brief Get StencilFunctionInstantiation of the `StencilFunCallExpr`
   std::shared_ptr<StencilFunctionInstantiation>
-  getStencilFunctionInstantiation(const std::shared_ptr<iir::StencilFunCallExpr>& expr) const;
+  getStencilFunctionInstantiation(const std::shared_ptr<ast::StencilFunCallExpr>& expr) const;
 
-  bool hasStencilFunctionInstantiation(const std::shared_ptr<iir::StencilFunCallExpr>& expr) const;
+  bool hasStencilFunctionInstantiation(const std::shared_ptr<ast::StencilFunCallExpr>& expr) const;
 
   void insertExprToStencilFunction(const std::shared_ptr<StencilFunctionInstantiation>& stencilFun);
 
@@ -364,7 +364,7 @@ public:
   //===----------------------------------------------------------------------------------------===//
 
   /// @brief Get the statements of the stencil function
-  const std::vector<std::shared_ptr<iir::Stmt>>& getStatements() const;
+  const std::vector<std::shared_ptr<ast::Stmt>>& getStatements() const;
 
   /// @brief Update the fields and global variables
   ///
@@ -407,10 +407,10 @@ public:
   bool isNested() const;
 
   /// @brief Get the underlying AST stencil function call expression
-  const std::shared_ptr<iir::StencilFunCallExpr>& getExpression() const { return expr_; }
+  const std::shared_ptr<ast::StencilFunCallExpr>& getExpression() const { return expr_; }
 
   /// @brief Set the underlying AST stencil function call expression
-  void setExpression(const std::shared_ptr<iir::StencilFunCallExpr>& expr) { expr_ = expr; }
+  void setExpression(const std::shared_ptr<ast::StencilFunCallExpr>& expr) { expr_ = expr; }
 
   /// @brief finalizes the binding of the arguments of a stencil function.
   /// In particular it associates new accessIDs of arguments that are nested stencil function calls
