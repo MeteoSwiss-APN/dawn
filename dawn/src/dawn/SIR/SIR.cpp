@@ -12,115 +12,13 @@
 //
 //===------------------------------------------------------------------------------------------===//
 
+#include "dawn/AST/ASTStringifier.h"
 #include "dawn/SIR/SIR.h"
-#include "dawn/SIR/AST.h"
-#include "dawn/SIR/ASTStringifier.h"
-#include "dawn/SIR/ASTVisitor.h"
-#include "dawn/Support/Casting.h"
-#include "dawn/Support/Format.h"
 #include "dawn/Support/Printing.h"
-#include "dawn/Support/StringUtil.h"
-#include "dawn/Support/Unreachable.h"
-#include <iomanip>
-#include <sstream>
 
 namespace dawn {
 
 namespace {
-
-/// @brief Allow direct comparison of the Stmts of an AST
-class DiffWriter final : public sir::ASTVisitorForwarding {
-public:
-  virtual void visit(const std::shared_ptr<sir::VerticalRegionDeclStmt>& stmt) override {
-    statements_.push_back(stmt);
-    stmt->getVerticalRegion()->Ast->getRoot()->accept(*this);
-  }
-
-  virtual void visit(const std::shared_ptr<sir::ReturnStmt>& stmt) override {
-    statements_.push_back(stmt);
-    sir::ASTVisitorForwarding::visit(stmt);
-  }
-
-  virtual void visit(const std::shared_ptr<sir::ExprStmt>& stmt) override {
-    statements_.push_back(stmt);
-    sir::ASTVisitorForwarding::visit(stmt);
-  }
-
-  virtual void visit(const std::shared_ptr<sir::BlockStmt>& stmt) override {
-    statements_.push_back(stmt);
-    sir::ASTVisitorForwarding::visit(stmt);
-  }
-
-  virtual void visit(const std::shared_ptr<sir::VarDeclStmt>& stmt) override {
-    statements_.push_back(stmt);
-    sir::ASTVisitorForwarding::visit(stmt);
-  }
-
-  virtual void visit(const std::shared_ptr<sir::IfStmt>& stmt) override {
-    statements_.push_back(stmt);
-    sir::ASTVisitorForwarding::visit(stmt);
-  }
-
-  std::vector<std::shared_ptr<sir::Stmt>> getStatements() const { return statements_; }
-
-  std::pair<std::string, bool> compare(const DiffWriter& other) {
-
-    std::size_t minSize = std::min(statements_.size(), other.getStatements().size());
-    if(minSize == 0 && (statements_.size() != other.getStatements().size()))
-      return std::make_pair("[AST mismatch] AST is empty", false);
-
-    for(std::size_t idx = 0; idx < minSize; ++idx) {
-      if(!statements_[idx]->equals(other.getStatements()[idx].get())) {
-        return std::make_pair(
-            dawn::format("[AST mismatch] Statement mismatch\n"
-                         "  Actual:\n"
-                         "    %s\n"
-                         "  Expected:\n"
-                         "    %s",
-                         indent(sir::ASTStringifier::toString(statements_[idx]), 4),
-                         indent(sir::ASTStringifier::toString(other.getStatements()[idx]), 4)),
-            false);
-      }
-    }
-
-    return std::make_pair("", true);
-  }
-
-private:
-  std::vector<std::shared_ptr<sir::Stmt>> statements_;
-};
-
-///@brief Stringification of a Value mismatch
-template <class T>
-CompareResult isEqualImpl(const sir::Value& a, const sir::Value& b, const std::string& name) {
-  if(a.getValue<T>() != b.getValue<T>())
-    return CompareResult{dawn::format("[Value mismatch] %s values are not equal\n"
-                                      "  Actual:\n"
-                                      "    %s\n"
-                                      "  Expected:\n"
-                                      "    %s",
-                                      name, a.toString(), b.toString()),
-                         false};
-
-  return CompareResult{"", true};
-}
-
-/// @brief Compares two ASTs
-std::pair<std::string, bool> compareAst(const std::shared_ptr<sir::AST>& lhs,
-                                        const std::shared_ptr<sir::AST>& rhs) {
-  if(lhs->getRoot()->equals(rhs->getRoot().get()))
-    return std::make_pair("", true);
-
-  DiffWriter lhsDW, rhsDW;
-  lhs->accept(lhsDW);
-  rhs->accept(rhsDW);
-
-  auto comp = lhsDW.compare(rhsDW);
-  if(!comp.second)
-    return comp;
-
-  return std::make_pair("", true);
-}
 
 /// @brief Compares the content of two shared pointers
 ///
@@ -153,8 +51,8 @@ CompareResult pointeeComparisonWithOutput(const std::shared_ptr<T>& comparate1,
 /// the string returns a potential mismatch notification
 ///
 /// @return pair of boolean and string
-static std::pair<std::string, bool> globalMapComparison(const sir::GlobalVariableMap& map1,
-                                                        const sir::GlobalVariableMap& map2) {
+static std::pair<std::string, bool> globalMapComparison(const ast::GlobalVariableMap& map1,
+                                                        const ast::GlobalVariableMap& map2) {
   std::string output;
   if(map1.size() != map2.size()) {
     output += dawn::format("[GlobalVariableMap mismatch] Number of Global Variables do not match\n"
@@ -340,7 +238,7 @@ CompareResult sir::StencilFunction::comparison(const sir::StencilFunction& rhs) 
 
   // Intervals
   if(!Intervals.empty() && !std::equal(Intervals.begin(), Intervals.end(), rhs.Intervals.begin(),
-                                       pointeeComparison<sir::Interval>)) {
+                                       pointeeComparison<ast::Interval>)) {
     std::string output = "[StencilFunction mismatch] Intervals do not match\n";
     for(int i = 0; i < Intervals.size(); ++i) {
       auto comp = pointeeComparisonWithOutput(Intervals[i], rhs.Intervals[i]);
@@ -363,7 +261,7 @@ CompareResult sir::StencilFunction::comparison(const sir::StencilFunction& rhs) 
                          false};
   }
 
-  auto intervalToString = [](const sir::Interval& interval) {
+  auto intervalToString = [](const ast::Interval& interval) {
     std::stringstream ss;
     ss << interval;
     return ss.str();
@@ -418,136 +316,16 @@ CompareResult sir::StencilFunctionArg::comparison(const sir::StencilFunctionArg&
   return CompareResult{"", true};
 }
 
-CompareResult sir::Value::comparison(const sir::Value& rhs) const {
-  auto type = getType();
-  if(type != rhs.getType())
-    return CompareResult{dawn::format("[Value mismatch] Values are not of the same type\n"
-                                      "  Actual:\n"
-                                      "    %s\n"
-                                      "  Expected:\n"
-                                      "    %s",
-                                      sir::Value::typeToString(type),
-                                      sir::Value::typeToString(rhs.getType())),
-                         false};
-
-  switch(type) {
-  case sir::Value::Kind::Boolean:
-    return isEqualImpl<bool>(*this, rhs, rhs.toString());
-  case sir::Value::Kind::Integer:
-    return isEqualImpl<int>(*this, rhs, rhs.toString());
-  case sir::Value::Kind::Double:
-    return isEqualImpl<double>(*this, rhs, rhs.toString());
-  case sir::Value::Kind::Float:
-    return isEqualImpl<float>(*this, rhs, rhs.toString());
-  case sir::Value::Kind::String:
-    return isEqualImpl<std::string>(*this, rhs, rhs.toString());
-  default:
-    dawn_unreachable("invalid type");
-  }
-}
-
-CompareResult sir::VerticalRegion::comparison(const sir::VerticalRegion& rhs) const {
-  std::string output;
-  if(LoopOrder != rhs.LoopOrder) {
-    output += dawn::format("[VerticalRegion mismatch] Loop order does not match\n"
-                           "  Actual:\n"
-                           "    %s\n"
-                           "  Expected:\n"
-                           "    %s",
-                           static_cast<int>(LoopOrder), static_cast<int>(rhs.LoopOrder));
-    return CompareResult{output, false};
-  }
-
-  auto intervalComp = VerticalInterval->comparison(*(rhs.VerticalInterval));
-  if(!static_cast<bool>(intervalComp)) {
-    output += "[VerticalRegion mismatch] Intervals do not match\n";
-    output += intervalComp.why();
-    return CompareResult{output, false};
-  } else if(IterationSpace[0] != rhs.IterationSpace[0]) {
-    output += "[VerticalRegion mismatch] iteration space in i do not match\n";
-    return CompareResult{output, false};
-  } else if(IterationSpace[1] != rhs.IterationSpace[1]) {
-    output += "[VerticalRegion mismatch] iteration space in j do not match\n";
-    return CompareResult{output, false};
-  }
-
-  auto astComp = compareAst(Ast, rhs.Ast);
-  if(!astComp.second) {
-    output += "[VerticalRegion mismatch] ASTs do not match\n";
-    output += astComp.first;
-    return CompareResult{output, false};
-  } else {
-    return CompareResult{output, true};
-  }
-}
-
-bool sir::VerticalRegion::operator==(const sir::VerticalRegion& rhs) const {
-  // casted to bool by return statement
-  return this->comparison(rhs);
-}
-
 namespace sir {
 
-bool StencilFunction::isSpecialized() const { return !Intervals.empty(); }
-
-std::shared_ptr<sir::AST> StencilFunction::getASTOfInterval(const Interval& interval) const {
+std::shared_ptr<ast::AST> StencilFunction::getASTOfInterval(const ast::Interval& interval) const {
   for(int i = 0; i < Intervals.size(); ++i)
     if(*Intervals[i] == interval)
       return Asts[i];
   return nullptr;
 }
 
-CompareResult Interval::comparison(const Interval& rhs) const {
-  auto formatErrorMsg = [](const char* name, int l, int r) -> std::string {
-    return dawn::format("[Inverval mismatch] %s do not match\n"
-                        "  Actual:\n"
-                        "    %i\n"
-                        "  Expected:\n"
-                        "    %i",
-                        name, l, r);
-  };
-
-  if(LowerLevel != rhs.LowerLevel)
-    return CompareResult{formatErrorMsg("LowerLevels", LowerLevel, rhs.LowerLevel), false};
-
-  if(UpperLevel != rhs.UpperLevel)
-    return CompareResult{formatErrorMsg("UpperLevels", UpperLevel, rhs.UpperLevel), false};
-
-  if(LowerOffset != rhs.LowerOffset)
-    return CompareResult{formatErrorMsg("LowerOffsets", LowerOffset, rhs.LowerOffset), false};
-
-  if(UpperOffset != rhs.UpperOffset)
-    return CompareResult{formatErrorMsg("UpperOffsets", UpperOffset, rhs.UpperOffset), false};
-
-  return CompareResult{"", true};
-}
-
-std::string Interval::toString() const {
-  std::stringstream ss;
-  ss << *this;
-  return ss.str();
-}
-
-std::ostream& operator<<(std::ostream& os, const Interval& interval) {
-  auto printLevel = [&os](int level, int offset) -> void {
-    if(level == sir::Interval::Start)
-      os << "Start";
-    else if(level == sir::Interval::End)
-      os << "End";
-    else
-      os << level;
-
-    if(offset != 0)
-      os << (offset > 0 ? "+" : "") << offset;
-  };
-
-  os << "{ ";
-  printLevel(interval.LowerLevel, interval.LowerOffset);
-  os << " : ";
-  printLevel(interval.UpperLevel, interval.UpperOffset);
-  os << " }";
-  return os;
-}
+bool StencilFunction::isSpecialized() const { return !Intervals.empty(); }
 
 Stencil::Stencil() : StencilDescAst(sir::makeAST()) {}
 
@@ -609,7 +387,7 @@ ast::GridType HorizontalFieldDimension::getType() const {
   } else {
     return ast::GridType::Unstructured;
   }
-} // namespace sir
+}
 
 std::string FieldDimensions::toString() const {
   if(sir::dimension_isa<sir::CartesianFieldDimension>(getHorizontalFieldDimension())) {
@@ -661,6 +439,17 @@ int FieldDimensions::rank() const {
   }
   return rank;
 }
+
+bool Stencil::operator==(const sir::Stencil& rhs) const { return bool(comparison(rhs)); }
+
+bool StencilFunction::operator==(const sir::StencilFunction& rhs) const {
+  return bool(comparison(rhs));
+}
+
+bool StencilFunctionArg::operator==(const sir::StencilFunctionArg& rhs) const {
+  return bool(comparison(rhs));
+}
+
 } // namespace sir
 
 std::ostream& operator<<(std::ostream& os, const SIR& Sir) {
@@ -686,11 +475,11 @@ std::ostream& operator<<(std::ostream& os, const SIR& Sir) {
 
     if(!stencilFunction->isSpecialized()) {
       os << "\n" << indent2 << "Do\n";
-      os << sir::ASTStringifier::toString(*stencilFunction->Asts[0], 2 * DAWN_PRINT_INDENT);
+      os << ast::ASTStringifier::toString(*stencilFunction->Asts[0], 2 * DAWN_PRINT_INDENT);
     } else {
       for(int i = 0; i < stencilFunction->Intervals.size(); ++i) {
         os << "\n" << indent2 << "Do " << *stencilFunction->Intervals[i].get() << "\n";
-        os << sir::ASTStringifier::toString(*stencilFunction->Asts[i], 2 * DAWN_PRINT_INDENT);
+        os << ast::ASTStringifier::toString(*stencilFunction->Asts[i], 2 * DAWN_PRINT_INDENT);
       }
     }
     os << indent1 << "}\n";
@@ -703,7 +492,7 @@ std::ostream& operator<<(std::ostream& os, const SIR& Sir) {
     os << "\n";
 
     os << indent2 << "Do\n"
-       << sir::ASTStringifier::toString(*stencil->StencilDescAst, 2 * DAWN_PRINT_INDENT);
+       << ast::ASTStringifier::toString(*stencil->StencilDescAst, 2 * DAWN_PRINT_INDENT);
     os << indent1 << "}\n";
   }
 
@@ -712,84 +501,12 @@ std::ostream& operator<<(std::ostream& os, const SIR& Sir) {
 }
 
 SIR::SIR(const ast::GridType gridType)
-    : GlobalVariableMap(std::make_shared<sir::GlobalVariableMap>()), GridType(gridType) {}
+    : GlobalVariableMap(std::make_shared<ast::GlobalVariableMap>()), GridType(gridType) {}
 
 void SIR::dump(std::ostream& os) { os << *this << std::endl; }
-
-const char* sir::Value::typeToString(sir::Value::Kind type) {
-  switch(type) {
-  case Kind::Boolean:
-    return "bool";
-  case Kind::Integer:
-    return "int";
-  case Kind::Double:
-    return "double";
-  case Kind::Float:
-    return "float";
-  case Kind::String:
-    return "std::string";
-  }
-  dawn_unreachable("invalid type");
-}
-
-BuiltinTypeID sir::Value::typeToBuiltinTypeID(sir::Value::Kind type) {
-  switch(type) {
-  case Kind::Boolean:
-    return BuiltinTypeID::Boolean;
-  case Kind::Integer:
-    return BuiltinTypeID::Integer;
-  case Kind::Double:
-    return BuiltinTypeID::Double;
-  case Kind::Float:
-    return BuiltinTypeID::Float;
-  default:
-    dawn_unreachable("invalid type");
-  }
-}
-
-std::string sir::Value::toString() const {
-  std::ostringstream out;
-  DAWN_ASSERT(has_value());
-  switch(type_) {
-  case Kind::Boolean:
-    return std::get<bool>(*value_) ? "true" : "false";
-  case Kind::Integer:
-    return std::to_string(std::get<int>(*value_));
-  case Kind::Double:
-    out << std::setprecision(std::numeric_limits<double>::max_digits10)
-        << std::get<double>(*value_);
-    return out.str();
-  case Kind::Float:
-    out << std::setprecision(std::numeric_limits<float>::max_digits10) << std::get<float>(*value_);
-    return out.str();
-  case Kind::String:
-    return std::get<std::string>(*value_);
-  default:
-    dawn_unreachable("invalid type");
-  }
-}
-
-std::shared_ptr<sir::VerticalRegion> sir::VerticalRegion::clone() const {
-  auto retval =
-      std::make_shared<sir::VerticalRegion>(Ast->clone(), VerticalInterval, LoopOrder, Loc);
-  retval->IterationSpace = IterationSpace;
-  return retval;
-}
 
 bool SIR::operator==(const SIR& rhs) const { return comparison(rhs); }
 
 bool SIR::operator!=(const SIR& rhs) const { return !(*this == rhs); }
-
-bool sir::Stencil::operator==(const sir::Stencil& rhs) const { return bool(comparison(rhs)); }
-
-bool sir::StencilFunction::operator==(const sir::StencilFunction& rhs) const {
-  return bool(comparison(rhs));
-}
-
-bool sir::StencilFunctionArg::operator==(const sir::StencilFunctionArg& rhs) const {
-  return bool(comparison(rhs));
-}
-
-bool sir::Value::operator==(const sir::Value& rhs) const { return bool(comparison(rhs)); }
 
 } // namespace dawn

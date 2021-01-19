@@ -83,7 +83,7 @@ private:
 
   void generatePlaceholderDefinitions(
       Structure& function, const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation,
-      const sir::GlobalVariableMap& globalsMap, const CodeGenProperties& codeGenProperties) const;
+      const ast::GlobalVariableMap& globalsMap, const CodeGenProperties& codeGenProperties) const;
 
   std::string getFieldName(std::shared_ptr<sir::Field> const& f) const { return f->Name; }
 
@@ -93,7 +93,7 @@ private:
 
   bool isTemporary(iir::Stencil::FieldInfo const& f) const { return f.IsTemporary; }
 
-  void generateGlobalsAPI(Structure& stencilWrapperClass, const sir::GlobalVariableMap& globalsMap,
+  void generateGlobalsAPI(Structure& stencilWrapperClass, const ast::GlobalVariableMap& globalsMap,
                           const CodeGenProperties& codeGenProperties) const override;
 
   void generateStencilWrapperMembers(

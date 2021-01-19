@@ -23,7 +23,7 @@ namespace gt {
 std::vector<std::string>
 CodeGenUtils::buildPlaceholderList(const iir::StencilMetaInformation& metadata,
                                    const std::map<int, iir::Stencil::FieldInfo>& stencilFields,
-                                   const sir::GlobalVariableMap& globalsMap, bool buildPair) {
+                                   const ast::GlobalVariableMap& globalsMap, bool buildPair) {
   auto nonTempFields =
       makeRange(stencilFields, [](std::pair<int, iir::Stencil::FieldInfo> const& p) {
         return !p.second.IsTemporary;

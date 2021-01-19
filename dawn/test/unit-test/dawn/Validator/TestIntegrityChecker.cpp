@@ -52,7 +52,7 @@ TEST(TestIntegrityChecker, OffsetReadsInCorrectContext) {
         "OffsetReadsInCorrectContext",
         b.stencil(b.multistage(
             LoopOrderKind::Parallel,
-            b.stage(b.doMethod(dawn::sir::Interval::Start, dawn::sir::Interval::End,
+            b.stage(b.doMethod(dawn::ast::Interval::Start, dawn::ast::Interval::End,
                                b.stmt(b.assignExpr(
                                    b.at(out), b.at(in, AccessType::r,
                                                    ast::Offsets{ast::unstructured, true, 0}))))))));
@@ -74,7 +74,7 @@ TEST(TestIntegrityChecker, Assignment2d3d) {
         "Assignment2d3d",
         b.stencil(b.multistage(
             LoopOrderKind::Parallel,
-            b.stage(LocType::Edges, b.doMethod(dawn::sir::Interval::Start, dawn::sir::Interval::End,
+            b.stage(LocType::Edges, b.doMethod(dawn::ast::Interval::Start, dawn::ast::Interval::End,
                                                b.stmt(b.assignExpr(b.at(out), b.at(in))))))));
     FAIL() << "Semantic error not thrown";
   } catch(SemanticError& error) {
@@ -95,7 +95,7 @@ TEST(TestIntegrityChecker, Assignment1d3d) {
         "Assignment1d3d",
         b.stencil(b.multistage(
             LoopOrderKind::Parallel,
-            b.stage(LocType::Edges, b.doMethod(dawn::sir::Interval::Start, dawn::sir::Interval::End,
+            b.stage(LocType::Edges, b.doMethod(dawn::ast::Interval::Start, dawn::ast::Interval::End,
                                                b.stmt(b.assignExpr(b.at(f_vert), b.at(f_e))))))));
     FAIL() << "Semantic error not thrown";
   } catch(SemanticError& error) {
@@ -116,7 +116,7 @@ TEST(TestIntegrityChecker, OffsetReadsIn2DField) {
         "OffsetReadsIn2DField",
         b.stencil(b.multistage(
             LoopOrderKind::Parallel,
-            b.stage(b.doMethod(dawn::sir::Interval::Start, dawn::sir::Interval::End,
+            b.stage(b.doMethod(dawn::ast::Interval::Start, dawn::ast::Interval::End,
                                b.stmt(b.assignExpr(b.at(out), b.at(in, AccessType::r,
                                                                    ast::Offsets{ast::unstructured,
                                                                                 false, 1}))))))));
@@ -140,7 +140,7 @@ TEST(TestIntegrityChecker, WriteVerticallyOffset) {
         "fail",
         b.stencil(b.multistage(
             LoopOrderKind::Parallel,
-            b.stage(b.doMethod(dawn::sir::Interval::Start, dawn::sir::Interval::End,
+            b.stage(b.doMethod(dawn::ast::Interval::Start, dawn::ast::Interval::End,
                                b.stmt(b.assignExpr(b.at(out, AccessType::rw,
                                                         ast::Offsets{ast::unstructured, false, 1}),
                                                    b.at(in))))))));

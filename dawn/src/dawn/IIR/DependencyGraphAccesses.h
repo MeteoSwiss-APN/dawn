@@ -14,7 +14,7 @@
 
 #pragma once
 
-#include "dawn/IIR/ASTFwd.h"
+#include "dawn/IIR/ASTStmt.h"
 #include "dawn/IIR/DependencyGraph.h"
 #include "dawn/IIR/Extents.h"
 #include "dawn/Support/TypeTraits.h"
@@ -92,7 +92,7 @@ public:
   /// +-------+           +--------+
   ///
   /// Note that only child-less nodes are processed.
-  void insertStatement(const std::shared_ptr<iir::Stmt>& stmt);
+  void insertStatement(const std::shared_ptr<ast::Stmt>& stmt);
 
   /// @brief Insert a new node
   Vertex& insertNode(int ID);

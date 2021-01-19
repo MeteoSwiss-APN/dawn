@@ -31,26 +31,26 @@ ClangASTStmtResolver::ClangASTStmtResolver(GTClangContext* context, StencilParse
 ClangASTStmtResolver::ClangASTStmtResolver(const std::shared_ptr<ClangASTExprResolver>& resolver)
     : clangASTExprResolver_(resolver), AstKind_(AK_Unknown) {}
 
-llvm::ArrayRef<std::shared_ptr<dawn::sir::Stmt>>
+llvm::ArrayRef<std::shared_ptr<dawn::ast::Stmt>>
 ClangASTStmtResolver::resolveStmt(clang::Stmt* stmt, ASTKind kind) {
   resetInternals();
   AstKind_ = kind;
   resolve(stmt);
-  return llvm::ArrayRef<std::shared_ptr<dawn::sir::Stmt>>(statements_);
+  return llvm::ArrayRef<std::shared_ptr<dawn::ast::Stmt>>(statements_);
 }
 
-std::vector<std::shared_ptr<dawn::sir::Stmt>>& ClangASTStmtResolver::getStatements() {
+std::vector<std::shared_ptr<dawn::ast::Stmt>>& ClangASTStmtResolver::getStatements() {
   return statements_;
 }
 
-const std::vector<std::shared_ptr<dawn::sir::Stmt>>& ClangASTStmtResolver::getStatements() const {
+const std::vector<std::shared_ptr<dawn::ast::Stmt>>& ClangASTStmtResolver::getStatements() const {
   return statements_;
 }
 
 //===------------------------------------------------------------------------------------------===//
 //     Internal statment resolver
 
-inline void ClangASTStmtResolver::emplaceStmt(std::shared_ptr<dawn::sir::Stmt>&& stmt) {
+inline void ClangASTStmtResolver::emplaceStmt(std::shared_ptr<dawn::ast::Stmt>&& stmt) {
   if(stmt)
     statements_.emplace_back(stmt);
 }
@@ -148,7 +148,7 @@ void ClangASTStmtResolver::resolve(clang::ReturnStmt* stmt) {
 
 void ClangASTStmtResolver::resolve(clang::IfStmt* stmt) {
   using namespace clang;
-  std::shared_ptr<dawn::sir::Stmt> condStmt = nullptr;
+  std::shared_ptr<dawn::ast::Stmt> condStmt = nullptr;
 
   // We currently don't support expression with variable decls in the condition
   if(stmt->getConditionVariable())
@@ -186,7 +186,7 @@ void ClangASTStmtResolver::resolve(clang::IfStmt* stmt) {
         << clangCond->getSourceRange();
   }
 
-  auto parseBody = [&](clang::Stmt* clangStmt) -> std::shared_ptr<dawn::sir::BlockStmt> {
+  auto parseBody = [&](clang::Stmt* clangStmt) -> std::shared_ptr<dawn::ast::BlockStmt> {
     if(!clangStmt)
       return nullptr;
 

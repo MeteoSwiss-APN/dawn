@@ -17,7 +17,6 @@
 #include "dawn/IIR/IIR.h"
 #include "dawn/IIR/IIRNodeIterator.h"
 #include "dawn/SIR/SIR.h"
-#include "dawn/Support/StringUtil.h"
 #include "dawn/Support/Unreachable.h"
 
 #include <algorithm>
@@ -153,9 +152,9 @@ bool Stencil::Lifetime::overlaps(const Stencil::Lifetime& other) const {
   return lowerBoundOverlap && upperBoundOverlap;
 }
 
-sir::Attr& Stencil::getStencilAttributes() { return stencilAttributes_; }
+ast::Attr& Stencil::getStencilAttributes() { return stencilAttributes_; }
 
-Stencil::Stencil(const StencilMetaInformation& metadata, sir::Attr attributes, int StencilID)
+Stencil::Stencil(const StencilMetaInformation& metadata, ast::Attr attributes, int StencilID)
     : metadata_(metadata), stencilAttributes_(attributes), StencilID_(StencilID) {}
 
 void Stencil::DerivedInfo::clear() { fields_.clear(); }
@@ -200,19 +199,19 @@ int Stencil::getNumStages() const {
                          });
 }
 
-void Stencil::forEachStatement(std::function<void(ArrayRef<std::shared_ptr<iir::Stmt>>)> func,
+void Stencil::forEachStatement(std::function<void(ArrayRef<std::shared_ptr<ast::Stmt>>)> func,
                                bool updateFields) {
   forEachStatementImpl(func, 0, getNumStages(), updateFields);
 }
 
-void Stencil::forEachStatement(std::function<void(ArrayRef<std::shared_ptr<iir::Stmt>>)> func,
+void Stencil::forEachStatement(std::function<void(ArrayRef<std::shared_ptr<ast::Stmt>>)> func,
                                const Stencil::Lifetime& lifetime, bool updateFields) {
   int startStageIdx = getStageIndexFromPosition(lifetime.Begin.StagePos);
   int endStageIdx = getStageIndexFromPosition(lifetime.End.StagePos);
   forEachStatementImpl(func, startStageIdx, endStageIdx + 1, updateFields);
 }
 
-void Stencil::forEachStatementImpl(std::function<void(ArrayRef<std::shared_ptr<iir::Stmt>>)> func,
+void Stencil::forEachStatementImpl(std::function<void(ArrayRef<std::shared_ptr<ast::Stmt>>)> func,
                                    int startStageIdx, int endStageIdx, bool updateFields) {
   for(int stageIdx = startStageIdx; stageIdx < endStageIdx; ++stageIdx) {
     const auto& stage = getStage(stageIdx);
@@ -538,7 +537,7 @@ std::optional<Interval> Stencil::getEnclosingIntervalTemporaries() const {
   return tmpInterval;
 }
 
-void Stencil::accept(iir::ASTVisitor& visitor) {
+void Stencil::accept(ast::ASTVisitor& visitor) {
   for(const auto& stmt : iterateIIROverStmt(*this)) {
     stmt->accept(visitor);
   }

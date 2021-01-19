@@ -76,10 +76,10 @@ public:
 //===------------------------------------------------------------------------------------------===//
 
 GlobalVariableParser::GlobalVariableParser(gtclang::GTClangContext* context)
-    : context_(context), variableMap_(std::make_shared<dawn::sir::GlobalVariableMap>()),
+    : context_(context), variableMap_(std::make_shared<dawn::ast::GlobalVariableMap>()),
       configFile_(std::make_shared<dawn::json::json>()), recordDecl_(nullptr) {}
 
-const std::shared_ptr<dawn::sir::GlobalVariableMap>&
+const std::shared_ptr<dawn::ast::GlobalVariableMap>&
 GlobalVariableParser::getGlobalVariableMap() const {
   return variableMap_;
 }
@@ -108,15 +108,15 @@ void GlobalVariableParser::parseGlobals(clang::CXXRecordDecl* recordDecl) {
     auto type = arg->getType();
     DAWN_ASSERT(!type.isNull());
 
-    dawn::sir::Value::Kind typeKind;
+    dawn::ast::Value::Kind typeKind;
     if(type->isBooleanType()) // bool
-      typeKind = dawn::sir::Value::Kind::Boolean;
+      typeKind = dawn::ast::Value::Kind::Boolean;
     else if(type->isIntegerType()) // int
-      typeKind = dawn::sir::Value::Kind::Integer;
+      typeKind = dawn::ast::Value::Kind::Integer;
     else if(type->isArithmeticType()) // int, float, double... we treat this as 'double'
-      typeKind = dawn::sir::Value::Kind::Double;
+      typeKind = dawn::ast::Value::Kind::Double;
     else if(type.getAsString() == "std::string") {
-      typeKind = dawn::sir::Value::Kind::String;
+      typeKind = dawn::ast::Value::Kind::String;
     } else {
       context_->getDiagnostics().report(arg->getLocation(), Diagnostics::err_globals_invalid_type)
           << type.getAsString() << name;
@@ -125,7 +125,7 @@ void GlobalVariableParser::parseGlobals(clang::CXXRecordDecl* recordDecl) {
       return;
     }
 
-    std::shared_ptr<dawn::sir::Global> value = 0;
+    std::shared_ptr<dawn::ast::Global> value = 0;
 
     // Check if we have a default value `value` i.e `T var = value`
     if(arg->hasInClassInitializer()) {
@@ -138,17 +138,17 @@ void GlobalVariableParser::parseGlobals(clang::CXXRecordDecl* recordDecl) {
       };
 
       // demotion to integer (`double ->12<-' would dyncast to int)
-      if(dyn_cast<IntegerLiteral>(init) != nullptr && typeKind == dawn::sir::Value::Kind::Integer) {
+      if(dyn_cast<IntegerLiteral>(init) != nullptr && typeKind == dawn::ast::Value::Kind::Integer) {
         IntegerLiteral* il = dyn_cast<IntegerLiteral>(init);
         std::string valueStr = il->getValue().toString(10, true);
-        value = std::make_shared<dawn::sir::Global>((int)std::atoi(valueStr.c_str()));
+        value = std::make_shared<dawn::ast::Global>((int)std::atoi(valueStr.c_str()));
         DAWN_LOG(INFO) << "Setting default value of '" << name << "' to '" << valueStr << "'";
 
         // this slightly unelegant procedure is needed since FloatingLiteral does not cast from
         // expressions without trailing do (e.g. `12.' would cast, `12' wouldn't.)
       } else if((dyn_cast<FloatingLiteral>(init) != nullptr ||
                  dyn_cast<IntegerLiteral>(init) != nullptr) &&
-                typeKind == dawn::sir::Value::Kind::Double) {
+                typeKind == dawn::ast::Value::Kind::Double) {
         IntegerLiteral* il = dyn_cast<IntegerLiteral>(init);
         FloatingLiteral* fl = dyn_cast<FloatingLiteral>(init);
         std::string valueStr;
@@ -156,24 +156,24 @@ void GlobalVariableParser::parseGlobals(clang::CXXRecordDecl* recordDecl) {
           llvm::SmallVector<char, 10> valueVec;
           fl->getValue().toString(valueVec);
           valueStr = std::string(valueVec.data(), valueVec.size());
-          value = std::make_shared<dawn::sir::Global>((double)std::atof(valueStr.c_str()));
+          value = std::make_shared<dawn::ast::Global>((double)std::atof(valueStr.c_str()));
         } else {
           valueStr = il->getValue().toString(10, true);
-          value = std::make_shared<dawn::sir::Global>((double)std::atof(valueStr.c_str()));
+          value = std::make_shared<dawn::ast::Global>((double)std::atof(valueStr.c_str()));
         }
         DAWN_LOG(INFO) << "Setting default value of '" << name << "' to '" << valueStr << "'";
 
       } else if(CXXBoolLiteralExpr* bl = dyn_cast<CXXBoolLiteralExpr>(init)) {
-        value = std::make_shared<dawn::sir::Global>((bool)bl->getValue());
+        value = std::make_shared<dawn::ast::Global>((bool)bl->getValue());
         DAWN_LOG(INFO) << "Setting default value of '" << name << "' to '" << bl->getValue() << "'";
 
-      } else if(typeKind == dawn::sir::Value::Kind::String) {
+      } else if(typeKind == dawn::ast::Value::Kind::String) {
         StringInitArgResolver resolver;
         resolver.resolve(init);
         std::string valueStr = resolver.getStr();
 
         if(!valueStr.empty()) {
-          value = std::make_shared<dawn::sir::Global>(valueStr);
+          value = std::make_shared<dawn::ast::Global>(valueStr);
           DAWN_LOG(INFO) << "Setting default value of '" << name << "' to '" << valueStr << "'";
         } else
           reportError();
@@ -182,7 +182,7 @@ void GlobalVariableParser::parseGlobals(clang::CXXRecordDecl* recordDecl) {
         reportError();
       }
     } else {
-      value = std::make_shared<dawn::sir::Global>(typeKind);
+      value = std::make_shared<dawn::ast::Global>(typeKind);
     }
 
     if(value) {
@@ -232,8 +232,8 @@ void GlobalVariableParser::parseGlobals(clang::CXXRecordDecl* recordDecl) {
         continue;
       }
 
-      dawn::sir::Global& global = varIt->second;
-      std::shared_ptr<dawn::sir::Global> parsed_global;
+      dawn::ast::Global& global = varIt->second;
+      std::shared_ptr<dawn::ast::Global> parsed_global;
 
       // Treat the value as a compile time constant
       //  i.e., at this point in time we are sure that this is a compile time constant
@@ -241,18 +241,18 @@ void GlobalVariableParser::parseGlobals(clang::CXXRecordDecl* recordDecl) {
 
       try {
         switch(global.getType()) {
-        case dawn::sir::Value::Kind::Boolean:
-          parsed_global = std::make_shared<dawn::sir::Global>(bool(*it), isConstExpr);
+        case dawn::ast::Value::Kind::Boolean:
+          parsed_global = std::make_shared<dawn::ast::Global>(bool(*it), isConstExpr);
           break;
-        case dawn::sir::Value::Kind::Integer:
-          parsed_global = std::make_shared<dawn::sir::Global>(int(*it), isConstExpr);
+        case dawn::ast::Value::Kind::Integer:
+          parsed_global = std::make_shared<dawn::ast::Global>(int(*it), isConstExpr);
           break;
-        case dawn::sir::Value::Kind::Double:
-          parsed_global = std::make_shared<dawn::sir::Global>(double(*it), isConstExpr);
+        case dawn::ast::Value::Kind::Double:
+          parsed_global = std::make_shared<dawn::ast::Global>(double(*it), isConstExpr);
           break;
-        case dawn::sir::Value::Kind::String: {
+        case dawn::ast::Value::Kind::String: {
           std::string v = *it;
-          parsed_global = std::make_shared<dawn::sir::Global>(v, isConstExpr);
+          parsed_global = std::make_shared<dawn::ast::Global>(v, isConstExpr);
         } break;
         default:
           dawn_unreachable("invalid type");

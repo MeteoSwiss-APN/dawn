@@ -16,8 +16,7 @@
 #include "dawn/AST/ASTStmt.h"
 #include "dawn/AST/LocationType.h"
 #include "dawn/IIR/ASTStmt.h"
-#include "dawn/IIR/ASTVisitor.h"
-#include "dawn/IIR/IIRNodeIterator.h"
+#include "dawn/AST/ASTVisitor.h"
 #include "dawn/IIR/MultiStage.h"
 #include "dawn/IIR/StencilInstantiation.h"
 #include "dawn/SIR/SIR.h"
@@ -100,12 +99,12 @@ static void setCache(proto::iir::Cache* protoCache, const iir::Cache& cache) {
     break;
   }
   if(cache.getInterval()) {
-    auto sirInterval = cache.getInterval()->asSIRInterval();
-    setInterval(protoCache->mutable_interval(), &sirInterval);
+    auto astInterval = cache.getInterval()->asASTInterval();
+    setInterval(protoCache->mutable_interval(), &astInterval);
   }
   if(cache.getEnclosingAccessedInterval()) {
-    auto sirInterval = cache.getEnclosingAccessedInterval()->asSIRInterval();
-    setInterval(protoCache->mutable_enclosingaccessinterval(), &sirInterval);
+    auto astInterval = cache.getEnclosingAccessedInterval()->asASTInterval();
+    setInterval(protoCache->mutable_enclosingaccessinterval(), &astInterval);
   }
   if(cache.getWindow()) {
     protoCache->mutable_cachewindow()->set_minus(cache.getWindow()->m_m);
@@ -290,21 +289,21 @@ void IIRSerializer::serializeIIR(proto::iir::StencilInstantiation& target,
     bool valueIsSet = false;
 
     switch(globalToValue.second.getType()) {
-    case sir::Value::Kind::Boolean:
+    case ast::Value::Kind::Boolean:
       if(globalToValue.second.has_value()) {
         protoGlobalToStore.set_value(globalToValue.second.getValue<bool>());
         valueIsSet = true;
       }
       protoGlobalToStore.set_type(proto::iir::GlobalValueAndType_TypeKind_Boolean);
       break;
-    case sir::Value::Kind::Integer:
+    case ast::Value::Kind::Integer:
       if(globalToValue.second.has_value()) {
         protoGlobalToStore.set_value(globalToValue.second.getValue<int>());
         valueIsSet = true;
       }
       protoGlobalToStore.set_type(proto::iir::GlobalValueAndType_TypeKind_Integer);
       break;
-    case sir::Value::Kind::Double:
+    case ast::Value::Kind::Double:
       if(globalToValue.second.has_value()) {
         protoGlobalToStore.set_value(globalToValue.second.getValue<double>());
         valueIsSet = true;
@@ -326,23 +325,23 @@ void IIRSerializer::serializeIIR(proto::iir::StencilInstantiation& target,
     // Information other than the children
     protoStencil->set_stencilid(stencils->getStencilID());
     auto protoAttribute = protoStencil->mutable_attr();
-    if(stencils->getStencilAttributes().has(sir::Attr::Kind::MergeDoMethods)) {
+    if(stencils->getStencilAttributes().has(ast::Attr::Kind::MergeDoMethods)) {
       protoAttribute->add_attributes(
           proto::iir::Attributes::StencilAttributes::Attributes_StencilAttributes_MergeDoMethods);
     }
-    if(stencils->getStencilAttributes().has(sir::Attr::Kind::MergeStages)) {
+    if(stencils->getStencilAttributes().has(ast::Attr::Kind::MergeStages)) {
       protoAttribute->add_attributes(
           proto::iir::Attributes::StencilAttributes::Attributes_StencilAttributes_MergeStages);
     }
-    if(stencils->getStencilAttributes().has(sir::Attr::Kind::MergeTemporaries)) {
+    if(stencils->getStencilAttributes().has(ast::Attr::Kind::MergeTemporaries)) {
       protoAttribute->add_attributes(
           proto::iir::Attributes::StencilAttributes::Attributes_StencilAttributes_MergeTemporaries);
     }
-    if(stencils->getStencilAttributes().has(sir::Attr::Kind::NoCodeGen)) {
+    if(stencils->getStencilAttributes().has(ast::Attr::Kind::NoCodeGen)) {
       protoAttribute->add_attributes(
           proto::iir::Attributes::StencilAttributes::Attributes_StencilAttributes_NoCodeGen);
     }
-    if(stencils->getStencilAttributes().has(sir::Attr::Kind::UseKCaches)) {
+    if(stencils->getStencilAttributes().has(ast::Attr::Kind::UseKCaches)) {
       protoAttribute->add_attributes(
           proto::iir::Attributes::StencilAttributes::Attributes_StencilAttributes_UseKCaches);
     }
@@ -376,11 +375,11 @@ void IIRSerializer::serializeIIR(proto::iir::StencilInstantiation& target,
         if(stage->hasIterationSpace()) {
           auto iterationSpace = stage->getIterationSpace();
           if(iterationSpace[0].has_value()) {
-            dawn::sir::Interval interval = iterationSpace[0].value().asSIRInterval();
+            dawn::ast::Interval interval = iterationSpace[0].value().asASTInterval();
             setInterval(protoStage->mutable_i_range(), &interval);
           }
           if(iterationSpace[1].has_value()) {
-            dawn::sir::Interval interval = iterationSpace[1].value().asSIRInterval();
+            dawn::ast::Interval interval = iterationSpace[1].value().asASTInterval();
             setInterval(protoStage->mutable_j_range(), &interval);
           }
         }
@@ -389,7 +388,7 @@ void IIRSerializer::serializeIIR(proto::iir::StencilInstantiation& target,
         for(const auto& domethod : stage->getChildren()) {
           auto protoDoMethod = protoStage->add_domethods();
           // Information other than the children
-          dawn::sir::Interval interval = domethod->getInterval().asSIRInterval();
+          dawn::ast::Interval interval = domethod->getInterval().asASTInterval();
           setInterval(protoDoMethod->mutable_interval(), &interval);
           protoDoMethod->set_domethodid(domethod->getID());
 
@@ -466,7 +465,7 @@ IIRSerializer::serializeImpl(const std::shared_ptr<iir::StencilInstantiation>& i
   std::set<std::string> usedBC;
   std::transform(
       fieldNameToBCMap.begin(), fieldNameToBCMap.end(), std::inserter(usedBC, usedBC.end()),
-      [](std::pair<std::string, std::shared_ptr<iir::BoundaryConditionDeclStmt>> const& bc) {
+      [](std::pair<std::string, std::shared_ptr<ast::BoundaryConditionDeclStmt>> const& bc) {
         return bc.second->getFunctor();
       });
   serializeIIR(protoStencilInstantiation, instantiation->getIIR(), usedBC);
@@ -544,20 +543,20 @@ void IIRSerializer::deserializeMetaData(std::shared_ptr<iir::StencilInstantiatio
     }
   }
 
-  struct DeclStmtFinder : public iir::ASTVisitorForwarding {
+  struct DeclStmtFinder : public ast::ASTVisitorForwarding {
     DeclStmtFinder(int& maxid) : maxID(maxid) {}
-    void visit(const std::shared_ptr<iir::StencilCallDeclStmt>& stmt) override {
+    void visit(const std::shared_ptr<ast::StencilCallDeclStmt>& stmt) override {
       stencilCallDecl.insert(std::make_pair(stmt->getID(), stmt));
       maxID = std::max(std::abs(stmt->getID()), maxID);
       ASTVisitorForwarding::visit(stmt);
     }
-    void visit(const std::shared_ptr<iir::BoundaryConditionDeclStmt>& stmt) override {
+    void visit(const std::shared_ptr<ast::BoundaryConditionDeclStmt>& stmt) override {
       boundaryConditionDecl.insert(std::make_pair(stmt->getID(), stmt));
       maxID = std::max(std::abs(stmt->getID()), maxID);
       ASTVisitorForwarding::visit(stmt);
     }
-    std::map<int, std::shared_ptr<iir::StencilCallDeclStmt>> stencilCallDecl;
-    std::map<int, std::shared_ptr<iir::BoundaryConditionDeclStmt>> boundaryConditionDecl;
+    std::map<int, std::shared_ptr<ast::StencilCallDeclStmt>> stencilCallDecl;
+    std::map<int, std::shared_ptr<ast::BoundaryConditionDeclStmt>> boundaryConditionDecl;
     int& maxID;
   };
   DeclStmtFinder declStmtFinder(maxID);
@@ -588,7 +587,7 @@ void IIRSerializer::deserializeMetaData(std::shared_ptr<iir::StencilInstantiatio
     metadata.fieldnameToBoundaryConditionMap_[FieldnameToBC.first] =
         foundDecl != declStmtFinder.boundaryConditionDecl.end()
             ? foundDecl->second
-            : dyn_pointer_cast<iir::BoundaryConditionDeclStmt>(
+            : dyn_pointer_cast<ast::BoundaryConditionDeclStmt>(
                   makeStmt(FieldnameToBC.second, ast::StmtData::IIR_DATA_TYPE, maxID));
   }
 
@@ -612,29 +611,29 @@ void IIRSerializer::deserializeMetaData(std::shared_ptr<iir::StencilInstantiatio
 void IIRSerializer::deserializeIIR(std::shared_ptr<iir::StencilInstantiation>& target,
                                    const proto::iir::IIR& protoIIR, int& maxID) {
   for(auto GlobalToValue : protoIIR.globalvariabletovalue()) {
-    std::shared_ptr<sir::Global> value;
+    std::shared_ptr<ast::Global> value;
     switch(GlobalToValue.second.type()) {
     case proto::iir::GlobalValueAndType_TypeKind_Boolean:
       if(GlobalToValue.second.valueisset()) {
-        value = std::make_shared<sir::Global>((bool)GlobalToValue.second.value());
+        value = std::make_shared<ast::Global>((bool)GlobalToValue.second.value());
       } else {
-        value = std::make_shared<sir::Global>(sir::Value::Kind::Boolean);
+        value = std::make_shared<ast::Global>(ast::Value::Kind::Boolean);
       }
       break;
     case proto::iir::GlobalValueAndType_TypeKind_Integer:
       if(GlobalToValue.second.valueisset()) {
         // the explicit cast is needed since in this case GlobalToValue.second.value()
         // may hold a double constant because of trailing dot in the IIR (e.g. 12.)
-        value = std::make_shared<sir::Global>((int)GlobalToValue.second.value());
+        value = std::make_shared<ast::Global>((int)GlobalToValue.second.value());
       } else {
-        value = std::make_shared<sir::Global>(sir::Value::Kind::Integer);
+        value = std::make_shared<ast::Global>(ast::Value::Kind::Integer);
       }
       break;
     case proto::iir::GlobalValueAndType_TypeKind_Double:
       if(GlobalToValue.second.valueisset()) {
-        value = std::make_shared<sir::Global>((double)GlobalToValue.second.value());
+        value = std::make_shared<ast::Global>((double)GlobalToValue.second.value());
       } else {
-        value = std::make_shared<sir::Global>(sir::Value::Kind::Double);
+        value = std::make_shared<ast::Global>(ast::Value::Kind::Double);
       }
       break;
     default:
@@ -648,7 +647,7 @@ void IIRSerializer::deserializeIIR(std::shared_ptr<iir::StencilInstantiation>& t
   int stencilPos = 0;
   for(const auto& protoStencils : protoIIR.stencils()) {
     int mssPos = 0;
-    sir::Attr attributes;
+    ast::Attr attributes;
 
     target->getIIR()->insertChild(std::make_unique<iir::Stencil>(target->getMetaData(), attributes,
                                                                  protoStencils.stencilid()),
@@ -659,23 +658,23 @@ void IIRSerializer::deserializeIIR(std::shared_ptr<iir::StencilInstantiation>& t
     for(auto attribute : protoStencils.attr().attributes()) {
       if(attribute ==
          proto::iir::Attributes::StencilAttributes::Attributes_StencilAttributes_MergeDoMethods) {
-        IIRStencil->getStencilAttributes().set(sir::Attr::Kind::MergeDoMethods);
+        IIRStencil->getStencilAttributes().set(ast::Attr::Kind::MergeDoMethods);
       }
       if(attribute ==
          proto::iir::Attributes::StencilAttributes::Attributes_StencilAttributes_MergeStages) {
-        IIRStencil->getStencilAttributes().set(sir::Attr::Kind::MergeStages);
+        IIRStencil->getStencilAttributes().set(ast::Attr::Kind::MergeStages);
       }
       if(attribute ==
          proto::iir::Attributes::StencilAttributes::Attributes_StencilAttributes_MergeTemporaries) {
-        IIRStencil->getStencilAttributes().set(sir::Attr::Kind::MergeTemporaries);
+        IIRStencil->getStencilAttributes().set(ast::Attr::Kind::MergeTemporaries);
       }
       if(attribute ==
          proto::iir::Attributes::StencilAttributes::Attributes_StencilAttributes_NoCodeGen) {
-        IIRStencil->getStencilAttributes().set(sir::Attr::Kind::NoCodeGen);
+        IIRStencil->getStencilAttributes().set(ast::Attr::Kind::NoCodeGen);
       }
       if(attribute ==
          proto::iir::Attributes::StencilAttributes::Attributes_StencilAttributes_UseKCaches) {
-        IIRStencil->getStencilAttributes().set(sir::Attr::Kind::UseKCaches);
+        IIRStencil->getStencilAttributes().set(ast::Attr::Kind::UseKCaches);
       }
     }
 
@@ -725,7 +724,7 @@ void IIRSerializer::deserializeIIR(std::shared_ptr<iir::StencilInstantiation>& t
           IIRDoMethod->setID(protoDoMethod.domethodid());
           maxID = std::max(std::abs(protoDoMethod.domethodid()), maxID);
 
-          auto ast = std::dynamic_pointer_cast<iir::BlockStmt>(
+          auto ast = std::dynamic_pointer_cast<ast::BlockStmt>(
               makeStmt(protoDoMethod.ast(), ast::StmtData::IIR_DATA_TYPE, maxID));
           DAWN_ASSERT(ast);
           IIRDoMethod->setAST(ast);
@@ -752,10 +751,10 @@ void IIRSerializer::deserializeIIR(std::shared_ptr<iir::StencilInstantiation>& t
       new_arg->Kind = sir::StencilFunctionArg::ArgumentKind::Field;
       stencilFunction->Args.push_back(std::move(new_arg));
     }
-    auto stmt = std::dynamic_pointer_cast<iir::BlockStmt>(
+    auto stmt = std::dynamic_pointer_cast<ast::BlockStmt>(
         makeStmt(boundaryCondition.aststmt(), ast::StmtData::IIR_DATA_TYPE, maxID));
     DAWN_ASSERT(stmt);
-    stencilFunction->Asts.push_back(std::make_shared<iir::AST>(stmt));
+    stencilFunction->Asts.push_back(std::make_shared<ast::AST>(stmt));
 
     target->getIIR()->insertStencilFunction(stencilFunction);
   }

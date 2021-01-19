@@ -19,12 +19,10 @@
 
 namespace dawn {
 namespace sir {
+
 inline std::shared_ptr<ast::AST> makeAST() {
   return std::make_shared<ast::AST>(std::make_unique<SIRStmtData>());
 }
-//
-// TODO refactor_AST: this is TEMPORARY, will be removed in the future
-//
-using AST = ast::AST;
+
 } // namespace sir
 } // namespace dawn

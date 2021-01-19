@@ -17,7 +17,7 @@
 #include "dawn/AST/ASTStmt.h"
 #include "dawn/AST/GridType.h"
 #include "dawn/IIR/ASTExpr.h"
-#include "dawn/IIR/ASTVisitor.h"
+#include "dawn/AST/ASTVisitor.h"
 #include "dawn/IIR/DoMethod.h"
 #include "dawn/IIR/IIRNodeIterator.h"
 #include "dawn/IIR/Interval.h"
@@ -50,7 +50,7 @@ createAssignmentStatement(int assignmentID, int assigneeID,
   if(hDimensions.getType() == ast::GridType::Unstructured &&
      sir::dimension_cast<const sir::UnstructuredFieldDimension&>(hDimensions).isSparse()) {
     auto blockAssignmentStatement =
-        iir::makeBlockStmt(std::vector<std::shared_ptr<sir::Stmt>>{assignmentStmt});
+        iir::makeBlockStmt(std::vector<std::shared_ptr<ast::Stmt>>{assignmentStmt});
     auto chain =
         sir::dimension_cast<const sir::UnstructuredFieldDimension&>(hDimensions).getNeighborChain();
     auto wrappedAssignmentStatement =
@@ -122,13 +122,13 @@ createAssignmentMultiStage(int assignmentID, std::shared_ptr<iir::StencilInstant
 }
 
 /// @brief Collects AccessIDs from versioned fields in the IIR.
-struct CollectVersionedIDs : public iir::ASTVisitorForwarding {
+struct CollectVersionedIDs : public ast::ASTVisitorForwarding {
   const iir::StencilMetaInformation& metadata_;
   std::set<int> versionedAccessIDs;
 
   CollectVersionedIDs(const iir::StencilMetaInformation& metadata) : metadata_(metadata) {}
 
-  virtual void visit(const std::shared_ptr<iir::FieldAccessExpr>& expr) override {
+  virtual void visit(const std::shared_ptr<ast::FieldAccessExpr>& expr) override {
     const int id = iir::getAccessID(expr);
     if(metadata_.isAccessIDAVersion(id)) {
       versionedAccessIDs.insert(id);
@@ -165,7 +165,7 @@ bool PassFixVersionedInputFields::run(
 
         iir::MultiInterval multiInterval;
         if(extents.verticalExtent().isUndefined()) {
-          multiInterval.insert(iir::Interval(sir::Interval::Start, sir::Interval::End, 0, 0));
+          multiInterval.insert(iir::Interval(ast::Interval::Start, ast::Interval::End, 0, 0));
         } else {
           multiInterval = ms->computeReadAccessInterval(id);
         }

@@ -16,11 +16,10 @@
 
 #include "gtclang/Unittest/ParsingComparison.h"
 #include "dawn/CodeGen/CXXUtil.h"
-#include "dawn/SIR/ASTUtil.h"
+#include "dawn/AST/ASTUtil.h"
 #include "dawn/SIR/SIR.h"
 #include "dawn/Support/Array.h"
 #include "dawn/Support/Casting.h"
-#include "dawn/Support/Unreachable.h"
 #include "gtclang/Unittest/GTClang.h"
 #include "gtclang/Unittest/UnittestEnvironment.h"
 #include "llvm/ProfileData/InstrProf.h"
@@ -198,7 +197,7 @@ public:
     dawn::ast::ASTVisitorForwarding::visit(expr);
   }
 
-  virtual void visit(const std::shared_ptr<dawn::sir::VerticalRegionDeclStmt>& stmt) {
+  virtual void visit(const std::shared_ptr<dawn::ast::VerticalRegionDeclStmt>& stmt) {
     stmt->getVerticalRegion()->Ast->accept(*this);
   }
 
@@ -216,7 +215,7 @@ getFieldFromStencilAST(const std::shared_ptr<dawn::ast::AST>& ast) {
 }
 
 CompareResult ParsingComparison::compare(const ParsedString& ps,
-                                         const std::shared_ptr<dawn::sir::Stmt>& stmt) {
+                                         const std::shared_ptr<dawn::ast::Stmt>& stmt) {
   std::unique_ptr<dawn::SIR> test01SIR =
       std::make_unique<dawn::SIR>(dawn::ast::GridType::Cartesian);
   wrapStatementInStencil(test01SIR, stmt);
@@ -241,7 +240,7 @@ CompareResult ParsingComparison::compare(const ParsedString& ps,
 }
 
 CompareResult ParsingComparison::compare(const ParsedString& ps,
-                                         const std::shared_ptr<dawn::sir::Expr>& expr) {
+                                         const std::shared_ptr<dawn::ast::Expr>& expr) {
   return compare(ps, dawn::sir::makeExprStmt(expr));
 }
 
@@ -254,23 +253,23 @@ ParsingComparison& ParsingComparison::getSingleton() {
 }
 
 void ParsingComparison::wrapStatementInStencil(std::unique_ptr<dawn::SIR>& sir,
-                                               const std::shared_ptr<dawn::sir::Stmt>& stmt) {
+                                               const std::shared_ptr<dawn::ast::Stmt>& stmt) {
   using namespace dawn;
-  if(sir::BlockStmt* blockstmt = dawn::dyn_cast<sir::BlockStmt>(stmt.get())) {
+  if(ast::BlockStmt* blockstmt = dawn::dyn_cast<ast::BlockStmt>(stmt.get())) {
     sir->Stencils.push_back(std::make_shared<sir::Stencil>());
     sir->Stencils[0]->Name = "test01";
     sir->Stencils[0]->StencilDescAst =
-        std::make_shared<sir::AST>(sir::makeBlockStmt(std::vector<std::shared_ptr<sir::Stmt>>{
+        std::make_shared<ast::AST>(sir::makeBlockStmt(std::vector<std::shared_ptr<ast::Stmt>>{
             sir::makeVerticalRegionDeclStmt(std::make_shared<sir::VerticalRegion>(
-                std::make_shared<sir::AST>(std::make_shared<sir::BlockStmt>(*blockstmt)),
-                std::make_shared<sir::Interval>(sir::Interval::Start, sir::Interval::End),
+                std::make_shared<ast::AST>(std::make_shared<ast::BlockStmt>(*blockstmt)),
+                std::make_shared<ast::Interval>(ast::Interval::Start, ast::Interval::End),
                 sir::VerticalRegion::LoopOrderKind::Forward))}));
     auto allFields = getFieldFromStencilAST(sir->Stencils[0]->StencilDescAst);
     for(const auto& a : allFields) {
       sir->Stencils[0]->Fields.push_back(std::make_shared<dawn::sir::Field>(a));
     }
   } else {
-    wrapStatementInStencil(sir, sir::makeBlockStmt(std::vector<std::shared_ptr<sir::Stmt>>{stmt}));
+    wrapStatementInStencil(sir, sir::makeBlockStmt(std::vector<std::shared_ptr<ast::Stmt>>{stmt}));
   }
 }
 

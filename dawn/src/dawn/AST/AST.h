@@ -16,7 +16,6 @@
 
 #include "dawn/AST/ASTExpr.h"
 #include "dawn/AST/ASTStmt.h"
-#include "dawn/AST/ASTStringifier.h"
 #include <memory>
 
 namespace dawn {

@@ -254,10 +254,10 @@ TEST_F(IIRSerializerTest, IIRTestsStageLocationType) {
       stencilName.c_str(),
       b.stencil(b.multistage(
           LoopOrderKind::Parallel,
-          b.stage(LocType::Cells, b.doMethod(dawn::sir::Interval::Start, dawn::sir::Interval::End,
+          b.stage(LocType::Cells, b.doMethod(dawn::ast::Interval::Start, dawn::ast::Interval::End,
                                              b.stmt(b.assignExpr(b.at(out_c), b.at(in_c))))),
           b.stage(LocType::Vertices,
-                  b.doMethod(dawn::sir::Interval::Start, dawn::sir::Interval::End,
+                  b.doMethod(dawn::ast::Interval::Start, dawn::ast::Interval::End,
                              b.stmt(b.assignExpr(b.at(out_v), b.at(in_v))))))));
 
   auto deserializedAndSerialized =
@@ -281,7 +281,7 @@ TEST_F(IIRSerializerTest, IIRTestsReduce) {
               b.stencil(b.multistage(
                   LoopOrderKind::Parallel,
                   b.stage(b.doMethod(
-                      dawn::sir::Interval::Start, dawn::sir::Interval::End,
+                      dawn::ast::Interval::Start, dawn::ast::Interval::End,
                       b.stmt(b.assignExpr(b.at(out_f),
                                           b.reduceOverNeighborExpr(
                                               Op::plus, b.at(in_f, HOffsetType::withOffset, 0),
@@ -308,7 +308,7 @@ TEST_F(IIRSerializerTest, IIRTestsReductionWithCenterSparse) {
       b.stencil(b.multistage(
           LoopOrderKind::Parallel,
           b.stage(LocType::Cells,
-                  b.doMethod(dawn::sir::Interval::Start, dawn::sir::Interval::End,
+                  b.doMethod(dawn::ast::Interval::Start, dawn::ast::Interval::End,
                              b.stmt(b.assignExpr(
                                  b.at(cout_f),
                                  b.reduceOverNeighborExpr(
@@ -339,7 +339,7 @@ TEST_F(IIRSerializerTest, IIRTestsFillAndReductionWithCenterSparse) {
       b.stencil(b.multistage(
           LoopOrderKind::Parallel,
           b.stage(LocType::Cells,
-                  b.doMethod(dawn::sir::Interval::Start, dawn::sir::Interval::End,
+                  b.doMethod(dawn::ast::Interval::Start, dawn::ast::Interval::End,
                              b.loopStmtChain(b.stmt(b.assignExpr(b.at(sparse_f), b.lit(2.))),
                                              {LocType::Cells, LocType::Edges, LocType::Cells},
                                              /*include center*/ true),
@@ -373,7 +373,7 @@ TEST_F(IIRSerializerTest, IIRTestsWeightedReduce) {
       b.stencil(b.multistage(
           LoopOrderKind::Parallel,
           b.stage(b.doMethod(
-              dawn::sir::Interval::Start, dawn::sir::Interval::End,
+              dawn::ast::Interval::Start, dawn::ast::Interval::End,
               b.stmt(b.assignExpr(b.at(out_f), b.reduceOverNeighborExpr(
                                                    Op::plus, b.at(in_f, HOffsetType::withOffset, 0),
                                                    b.lit(0.), {LocType::Cells, LocType::Edges},
@@ -410,7 +410,7 @@ TEST_F(IIRSerializerTest, IIRTestsGeneralWeightedReduce) {
       b.stencil(b.multistage(
           LoopOrderKind::Parallel,
           b.stage(b.doMethod(
-              dawn::sir::Interval::Start, dawn::sir::Interval::End,
+              dawn::ast::Interval::Start, dawn::ast::Interval::End,
               b.stmt(b.assignExpr(b.at(out_f),
                                   b.reduceOverNeighborExpr(
                                       Op::plus, b.at(in_f, HOffsetType::withOffset, 0), b.lit(0.),
@@ -432,15 +432,15 @@ TEST_F(IIRSerializerTest, IIRTestsGeneralWeightedReduce) {
 }
 
 TEST_F(IIRSerializerTest, IIRTests) {
-  sir::Attr attributes;
-  attributes.set(sir::Attr::Kind::MergeStages);
+  ast::Attr attributes;
+  attributes.set(ast::Attr::Kind::MergeStages);
   referenceInstantiation->getIIR()->insertChild(
       std::make_unique<iir::Stencil>(referenceInstantiation->getMetaData(), attributes, 10),
       referenceInstantiation->getIIR());
   const auto& IIRStencil = referenceInstantiation->getIIR()->getChild(0);
   auto deserialized = serializeAndDeserializeRef();
   IIR_EXPECT_EQ(deserialized, referenceInstantiation);
-  IIRStencil->getStencilAttributes().set(sir::Attr::Kind::NoCodeGen);
+  IIRStencil->getStencilAttributes().set(ast::Attr::Kind::NoCodeGen);
   IIR_EXPECT_NE(deserialized, referenceInstantiation);
 
   (IIRStencil)
@@ -463,7 +463,7 @@ TEST_F(IIRSerializerTest, IIRTests) {
   IIR_EXPECT_EQ(serializeAndDeserializeRef(), referenceInstantiation);
 
   auto& IIRDoMethod = (IIRStage)->getChild(0);
-  auto expr = std::make_shared<iir::VarAccessExpr>("name");
+  auto expr = std::make_shared<ast::VarAccessExpr>("name");
   expr->getData<iir::IIRAccessExprData>().AccessID = std::make_optional<int>(42);
   auto stmt = iir::makeExprStmt(expr);
   stmt->setID(22);
@@ -475,7 +475,7 @@ TEST_F(IIRSerializerTest, IIRTests) {
   IIRDoMethod->getAST().push_back(std::move(stmt));
   std::string varName = "foo";
   auto varDeclStmt = iir::makeVarDeclStmt(dawn::Type(BuiltinTypeID::Float), varName, 0, "=",
-                                          std::vector<std::shared_ptr<iir::Expr>>{expr->clone()});
+                                          std::vector<std::shared_ptr<ast::Expr>>{expr->clone()});
   iir::Accesses varDeclStmtAccesses;
   varDeclStmtAccesses.addWriteExtent(33, extents);
   varDeclStmt->getData<iir::IIRStmtData>().CallerAccesses =
@@ -487,19 +487,19 @@ TEST_F(IIRSerializerTest, IIRTests) {
   deserialized = serializeAndDeserializeRef();
   IIR_EXPECT_EQ(deserialized, referenceInstantiation);
   auto deserializedExprStmt =
-      std::dynamic_pointer_cast<iir::ExprStmt>(getNthStmt(getFirstDoMethod(deserialized), 0));
+      std::dynamic_pointer_cast<ast::ExprStmt>(getNthStmt(getFirstDoMethod(deserialized), 0));
   deserializedExprStmt->getData<iir::IIRStmtData>().CallerAccesses->addReadExtent(50, extents);
   IIR_EXPECT_NE(deserialized, referenceInstantiation);
   deserialized = serializeAndDeserializeRef();
-  auto deserializedVarAccessExpr = std::dynamic_pointer_cast<iir::VarAccessExpr>(
-      std::dynamic_pointer_cast<iir::ExprStmt>(getNthStmt(getFirstDoMethod(deserialized), 0))
+  auto deserializedVarAccessExpr = std::dynamic_pointer_cast<ast::VarAccessExpr>(
+      std::dynamic_pointer_cast<ast::ExprStmt>(getNthStmt(getFirstDoMethod(deserialized), 0))
           ->getExpr());
   deserializedVarAccessExpr->getData<iir::IIRAccessExprData>().AccessID =
       std::make_optional<int>(50);
   IIR_EXPECT_NE(deserialized, referenceInstantiation);
   deserialized = serializeAndDeserializeRef();
   auto deserializedVarDeclStmt =
-      std::dynamic_pointer_cast<iir::VarDeclStmt>(getNthStmt(getFirstDoMethod(deserialized), 1));
+      std::dynamic_pointer_cast<ast::VarDeclStmt>(getNthStmt(getFirstDoMethod(deserialized), 1));
   deserializedVarDeclStmt->getData<iir::VarDeclStmtData>().AccessID = std::make_optional<int>(34);
   IIR_EXPECT_NE(deserialized, referenceInstantiation);
 }
@@ -515,10 +515,10 @@ TEST_F(IIRSerializerTest, IterationSpace) {
       b.build("iteration_space",
               b.stencil(b.multistage(
                   LoopOrderKind::Parallel,
-                  b.stage(b.doMethod(dawn::sir::Interval::Start, dawn::sir::Interval::End,
+                  b.stage(b.doMethod(dawn::ast::Interval::Start, dawn::ast::Interval::End,
                                      b.block(b.stmt(b.assignExpr(b.at(out_f), b.at(in_f)))))),
                   b.stage(1, {0, 2},
-                          b.doMethod(dawn::sir::Interval::Start, dawn::sir::Interval::End,
+                          b.doMethod(dawn::ast::Interval::Start, dawn::ast::Interval::End,
                                      b.block(b.stmt(b.assignExpr(b.at(out_f), b.lit(10)))))))));
 
   std::string serializedIIR = IIRSerializer::serializeToString(instantiation);
@@ -542,7 +542,7 @@ TEST_F(IIRSerializerTest, VerticalIndirection) {
               b.stencil(b.multistage(
                   LoopOrderKind::Parallel,
                   b.stage(b.doMethod(
-                      dawn::sir::Interval::Start, dawn::sir::Interval::End,
+                      dawn::ast::Interval::Start, dawn::ast::Interval::End,
                       b.stmt(b.assignExpr(
                           b.at(out), b.at(in, AccessType::r,
                                           ast::Offsets{ast::unstructured, false, 1, "kidx"}))))))));

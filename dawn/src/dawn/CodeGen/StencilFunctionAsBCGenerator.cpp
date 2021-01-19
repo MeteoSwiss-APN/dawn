@@ -6,15 +6,15 @@ namespace dawn {
 namespace codegen {
 
 std::string
-StencilFunctionAsBCGenerator::getName(const std::shared_ptr<iir::VarDeclStmt>& stmt) const {
+StencilFunctionAsBCGenerator::getName(const std::shared_ptr<ast::VarDeclStmt>& stmt) const {
   return metadata_.getFieldNameFromAccessID(iir::getAccessID(stmt));
 }
 
-std::string StencilFunctionAsBCGenerator::getName(const std::shared_ptr<iir::Expr>& expr) const {
+std::string StencilFunctionAsBCGenerator::getName(const std::shared_ptr<ast::Expr>& expr) const {
   return metadata_.getFieldNameFromAccessID(iir::getAccessID(expr));
 }
 
-void StencilFunctionAsBCGenerator::visit(const std::shared_ptr<iir::FieldAccessExpr>& expr) {
+void StencilFunctionAsBCGenerator::visit(const std::shared_ptr<ast::FieldAccessExpr>& expr) {
   expr->getName();
   auto getArgumentIndex = [&](const std::string& name) {
     size_t pos =
@@ -34,7 +34,7 @@ void StencilFunctionAsBCGenerator::visit(const std::shared_ptr<iir::FieldAccessE
       }));
 }
 
-void StencilFunctionAsBCGenerator::visit(const std::shared_ptr<iir::VarAccessExpr>& expr) {
+void StencilFunctionAsBCGenerator::visit(const std::shared_ptr<ast::VarAccessExpr>& expr) {
   if(metadata_.isAccessType(iir::FieldAccessType::GlobalVariable, iir::getAccessID(expr)))
     ss_ << "m_globals.";
 
@@ -47,7 +47,7 @@ void StencilFunctionAsBCGenerator::visit(const std::shared_ptr<iir::VarAccessExp
   }
 }
 
-void BCGenerator::generate(const std::shared_ptr<iir::BoundaryConditionDeclStmt>& stmt) {
+void BCGenerator::generate(const std::shared_ptr<ast::BoundaryConditionDeclStmt>& stmt) {
   const auto& hExtents = iir::extent_cast<iir::CartesianExtent const&>(
       metadata_.getBoundaryConditionExtentsFromBCStmt(stmt).horizontalExtent());
   const auto& vExtents = metadata_.getBoundaryConditionExtentsFromBCStmt(stmt).verticalExtent();

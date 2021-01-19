@@ -31,14 +31,14 @@ ASTStencilBody::ASTStencilBody(const iir::StencilMetaInformation& metadata,
 
 ASTStencilBody::~ASTStencilBody() {}
 
-std::string ASTStencilBody::getName(const std::shared_ptr<iir::VarDeclStmt>& stmt) const {
+std::string ASTStencilBody::getName(const std::shared_ptr<ast::VarDeclStmt>& stmt) const {
   if(currentFunction_)
     return currentFunction_->getFieldNameFromAccessID(iir::getAccessID(stmt));
   else
     return metadata_.getFieldNameFromAccessID(iir::getAccessID(stmt));
 }
 
-std::string ASTStencilBody::getName(const std::shared_ptr<iir::Expr>& expr) const {
+std::string ASTStencilBody::getName(const std::shared_ptr<ast::Expr>& expr) const {
   if(currentFunction_)
     return currentFunction_->getFieldNameFromAccessID(iir::getAccessID(expr));
   else
@@ -49,7 +49,7 @@ std::string ASTStencilBody::getName(const std::shared_ptr<iir::Expr>& expr) cons
 //     Stmt
 //===------------------------------------------------------------------------------------------===//
 
-void ASTStencilBody::visit(const std::shared_ptr<iir::ReturnStmt>& stmt) {
+void ASTStencilBody::visit(const std::shared_ptr<ast::ReturnStmt>& stmt) {
   if(scopeDepth_ == 0)
     ss_ << std::string(indent_, ' ');
 
@@ -59,15 +59,15 @@ void ASTStencilBody::visit(const std::shared_ptr<iir::ReturnStmt>& stmt) {
   ss_ << ";\n";
 }
 
-void ASTStencilBody::visit(const std::shared_ptr<iir::VerticalRegionDeclStmt>& stmt) {
+void ASTStencilBody::visit(const std::shared_ptr<ast::VerticalRegionDeclStmt>& stmt) {
   DAWN_ASSERT_MSG(0, "VerticalRegionDeclStmt not allowed in this context");
 }
 
-void ASTStencilBody::visit(const std::shared_ptr<iir::StencilCallDeclStmt>& stmt) {
+void ASTStencilBody::visit(const std::shared_ptr<ast::StencilCallDeclStmt>& stmt) {
   DAWN_ASSERT_MSG(0, "StencilCallDeclStmt not allowed in this context");
 }
 
-void ASTStencilBody::visit(const std::shared_ptr<iir::BoundaryConditionDeclStmt>& stmt) {
+void ASTStencilBody::visit(const std::shared_ptr<ast::BoundaryConditionDeclStmt>& stmt) {
   DAWN_ASSERT_MSG(0, "BoundaryConditionDeclStmt not allowed in this context");
 }
 
@@ -75,7 +75,7 @@ void ASTStencilBody::visit(const std::shared_ptr<iir::BoundaryConditionDeclStmt>
 //     Expr
 //===------------------------------------------------------------------------------------------===//
 
-void ASTStencilBody::visit(const std::shared_ptr<iir::StencilFunCallExpr>& expr) {
+void ASTStencilBody::visit(const std::shared_ptr<ast::StencilFunCallExpr>& expr) {
   if(nestingOfStencilFunArgLists_++)
     ss_ << ", ";
 
@@ -99,9 +99,9 @@ void ASTStencilBody::visit(const std::shared_ptr<iir::StencilFunCallExpr>& expr)
   ss_ << ")";
 }
 
-void ASTStencilBody::visit(const std::shared_ptr<iir::StencilFunArgExpr>& expr) {}
+void ASTStencilBody::visit(const std::shared_ptr<ast::StencilFunArgExpr>& expr) {}
 
-void ASTStencilBody::visit(const std::shared_ptr<iir::VarAccessExpr>& expr) {
+void ASTStencilBody::visit(const std::shared_ptr<ast::VarAccessExpr>& expr) {
   std::string name = getName(expr);
   int AccessID = iir::getAccessID(expr);
 
@@ -118,7 +118,7 @@ void ASTStencilBody::visit(const std::shared_ptr<iir::VarAccessExpr>& expr) {
   }
 }
 
-void ASTStencilBody::visit(const std::shared_ptr<iir::FieldAccessExpr>& expr) {
+void ASTStencilBody::visit(const std::shared_ptr<ast::FieldAccessExpr>& expr) {
 
   if(currentFunction_) {
     // extract the arg index, from the AccessID

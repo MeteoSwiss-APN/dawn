@@ -22,9 +22,9 @@ class StencilMetaInformation;
 
 class ControlFlowDescriptor {
 public:
-  using StmtContainer = std::vector<std::shared_ptr<iir::Stmt>>;
-  using StmtIterator = std::vector<std::shared_ptr<iir::Stmt>>::iterator;
-  using StmtConstIterator = std::vector<std::shared_ptr<iir::Stmt>>::const_iterator;
+  using StmtContainer = std::vector<std::shared_ptr<ast::Stmt>>;
+  using StmtIterator = std::vector<std::shared_ptr<ast::Stmt>>::iterator;
+  using StmtConstIterator = std::vector<std::shared_ptr<ast::Stmt>>::const_iterator;
 
 private:
   /// The control flow statements. These are built from the StencilDescAst of the sir::Stencil

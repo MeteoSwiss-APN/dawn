@@ -83,7 +83,7 @@ private:
                            const std::shared_ptr<StencilProperties>& stencilProperties,
                            const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation,
                            const std::unordered_map<std::string, std::string>& paramNameToType,
-                           const sir::GlobalVariableMap& globalsMap) const;
+                           const ast::GlobalVariableMap& globalsMap) const;
 
   void
   generateStencilClasses(const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation,
@@ -108,14 +108,14 @@ private:
 
   void
   generateStencilClassCtr(Structure& stencilClass, const iir::Stencil& stencil,
-                          const sir::GlobalVariableMap& globalsMap,
+                          const ast::GlobalVariableMap& globalsMap,
                           IndexRange<const std::map<int, iir::Stencil::FieldInfo>>& nonTempFields,
                           IndexRange<const std::map<int, iir::Stencil::FieldInfo>>& tempFields,
                           std::shared_ptr<StencilProperties> stencilProperties) const;
 
   void generateStencilClassMembers(
       Structure& stencilClass, const iir::Stencil& stencil,
-      const sir::GlobalVariableMap& globalsMap,
+      const ast::GlobalVariableMap& globalsMap,
       IndexRange<const std::map<int, iir::Stencil::FieldInfo>>& nonTempFields,
       IndexRange<const std::map<int, iir::Stencil::FieldInfo>>& tempFields,
       std::shared_ptr<StencilProperties> stencilProperties) const;

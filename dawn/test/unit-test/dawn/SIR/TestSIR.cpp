@@ -12,7 +12,7 @@
 //
 //===------------------------------------------------------------------------------------------===//
 
-#include "dawn/SIR/ASTExpr.h"
+#include "dawn/AST/ASTExpr.h"
 #include "dawn/SIR/ASTStmt.h"
 #include "dawn/SIR/SIR.h"
 #include <gtest/gtest.h>
@@ -97,19 +97,19 @@ TEST_F(SIRStencilTest, Fields) {
 
 TEST_F(SIRStencilTest, AST) {
   sir1->Stencils[0]->StencilDescAst =
-      std::make_shared<sir::AST>(sir::makeBlockStmt(std::vector<std::shared_ptr<sir::Stmt>>{
-          sir::makeExprStmt(std::make_shared<sir::FieldAccessExpr>("bar"))}));
+      std::make_shared<ast::AST>(sir::makeBlockStmt(std::vector<std::shared_ptr<ast::Stmt>>{
+          sir::makeExprStmt(std::make_shared<ast::FieldAccessExpr>("bar"))}));
   sir2->Stencils[0]->StencilDescAst =
-      std::make_shared<sir::AST>(sir::makeBlockStmt(std::vector<std::shared_ptr<sir::Stmt>>{
-          sir::makeExprStmt(std::make_shared<sir::FieldAccessExpr>("bar"))}));
+      std::make_shared<ast::AST>(sir::makeBlockStmt(std::vector<std::shared_ptr<ast::Stmt>>{
+          sir::makeExprStmt(std::make_shared<ast::FieldAccessExpr>("bar"))}));
   SIR_EXCPECT_EQ(sir1, sir2);
 
   sir1->Stencils[0]->StencilDescAst =
-      std::make_shared<sir::AST>(sir::makeBlockStmt(std::vector<std::shared_ptr<sir::Stmt>>{
-          sir::makeExprStmt(std::make_shared<sir::FieldAccessExpr>("bar"))}));
+      std::make_shared<ast::AST>(sir::makeBlockStmt(std::vector<std::shared_ptr<ast::Stmt>>{
+          sir::makeExprStmt(std::make_shared<ast::FieldAccessExpr>("bar"))}));
   sir2->Stencils[0]->StencilDescAst =
-      std::make_shared<sir::AST>(sir::makeBlockStmt(std::vector<std::shared_ptr<sir::Stmt>>{
-          sir::makeExprStmt(std::make_shared<sir::FieldAccessExpr>("foo"))}));
+      std::make_shared<ast::AST>(sir::makeBlockStmt(std::vector<std::shared_ptr<ast::Stmt>>{
+          sir::makeExprStmt(std::make_shared<ast::FieldAccessExpr>("foo"))}));
   SIR_EXCPECT_NE(sir1, sir2);
 }
 
@@ -158,80 +158,80 @@ TEST_F(SIRStencilFunctionTest, Arguments) {
 
 TEST_F(SIRStencilFunctionTest, Interval) {
   sir1->StencilFunctions[0]->Intervals.emplace_back(
-      std::make_shared<sir::Interval>(0, sir::Interval::End, 0, 0));
+      std::make_shared<ast::Interval>(0, ast::Interval::End, 0, 0));
   sir2->StencilFunctions[0]->Intervals.emplace_back(
-      std::make_shared<sir::Interval>(0, sir::Interval::End, 0, 0));
+      std::make_shared<ast::Interval>(0, ast::Interval::End, 0, 0));
   SIR_EXCPECT_EQ(sir1, sir2);
 
   sir1->StencilFunctions[0]->Intervals.emplace_back(
-      std::make_shared<sir::Interval>(0, sir::Interval::End, 0, 0));
+      std::make_shared<ast::Interval>(0, ast::Interval::End, 0, 0));
   SIR_EXCPECT_NE(sir1, sir2);
 
   sir2->StencilFunctions[0]->Intervals.emplace_back(
-      std::make_shared<sir::Interval>(0, sir::Interval::End, 1, 1));
+      std::make_shared<ast::Interval>(0, ast::Interval::End, 1, 1));
   SIR_EXCPECT_NE(sir1, sir2);
 }
 
 TEST_F(SIRStencilFunctionTest, AST) {
   sir1->StencilFunctions[0]->Asts.emplace_back(
-      std::make_shared<sir::AST>(sir::makeBlockStmt(std::vector<std::shared_ptr<sir::Stmt>>{
-          sir::makeExprStmt(std::make_shared<sir::FieldAccessExpr>("bar"))})));
+      std::make_shared<ast::AST>(sir::makeBlockStmt(std::vector<std::shared_ptr<ast::Stmt>>{
+          sir::makeExprStmt(std::make_shared<ast::FieldAccessExpr>("bar"))})));
   sir2->StencilFunctions[0]->Asts.emplace_back(
-      std::make_shared<sir::AST>(sir::makeBlockStmt(std::vector<std::shared_ptr<sir::Stmt>>{
-          sir::makeExprStmt(std::make_shared<sir::FieldAccessExpr>("bar"))})));
+      std::make_shared<ast::AST>(sir::makeBlockStmt(std::vector<std::shared_ptr<ast::Stmt>>{
+          sir::makeExprStmt(std::make_shared<ast::FieldAccessExpr>("bar"))})));
   SIR_EXCPECT_EQ(sir1, sir2);
 
   sir1->StencilFunctions[0]->Asts.emplace_back(
-      std::make_shared<sir::AST>(sir::makeBlockStmt(std::vector<std::shared_ptr<sir::Stmt>>{
-          sir::makeExprStmt(std::make_shared<sir::FieldAccessExpr>("bar"))})));
+      std::make_shared<ast::AST>(sir::makeBlockStmt(std::vector<std::shared_ptr<ast::Stmt>>{
+          sir::makeExprStmt(std::make_shared<ast::FieldAccessExpr>("bar"))})));
   sir2->StencilFunctions[0]->Asts.emplace_back(
-      std::make_shared<sir::AST>(sir::makeBlockStmt(std::vector<std::shared_ptr<sir::Stmt>>{
-          sir::makeExprStmt(std::make_shared<sir::FieldAccessExpr>("foo"))})));
+      std::make_shared<ast::AST>(sir::makeBlockStmt(std::vector<std::shared_ptr<ast::Stmt>>{
+          sir::makeExprStmt(std::make_shared<ast::FieldAccessExpr>("foo"))})));
   SIR_EXCPECT_NE(sir1, sir2);
 }
 
 class SIRGlobalVariableTest : public SIRTest {
   virtual void SetUp() override {
     SIRTest::SetUp();
-    sir1->GlobalVariableMap = std::make_shared<sir::GlobalVariableMap>();
-    sir2->GlobalVariableMap = std::make_shared<sir::GlobalVariableMap>();
+    sir1->GlobalVariableMap = std::make_shared<ast::GlobalVariableMap>();
+    sir2->GlobalVariableMap = std::make_shared<ast::GlobalVariableMap>();
   }
 };
 
 TEST_F(SIRGlobalVariableTest, Comparison) {
-  sir1->GlobalVariableMap->insert(std::pair("foo", sir::Global(5)));
-  sir2->GlobalVariableMap->insert(std::pair("foo", sir::Global(5)));
+  sir1->GlobalVariableMap->insert(std::pair("foo", ast::Global(5)));
+  sir2->GlobalVariableMap->insert(std::pair("foo", ast::Global(5)));
   SIR_EXCPECT_EQ(sir1, sir2);
 
   // key is identical (not inserted)
-  sir1->GlobalVariableMap->insert(std::pair("foo", sir::Global(5)));
+  sir1->GlobalVariableMap->insert(std::pair("foo", ast::Global(5)));
   SIR_EXCPECT_EQ(sir1, sir2);
 
   // Different number of members
-  sir1->GlobalVariableMap->insert(std::pair("bar", sir::Global(5.0)));
+  sir1->GlobalVariableMap->insert(std::pair("bar", ast::Global(5.0)));
   SIR_EXCPECT_NE(sir1, sir2);
 
   // Different values
-  sir2->GlobalVariableMap->insert(std::pair("bar", sir::Global(4.0)));
+  sir2->GlobalVariableMap->insert(std::pair("bar", ast::Global(4.0)));
   SIR_EXCPECT_NE(sir1, sir2);
 
   // Different types
   sir2->GlobalVariableMap->erase("bar");
-  sir2->GlobalVariableMap->insert(std::pair("bar", sir::Global(bool(true))));
+  sir2->GlobalVariableMap->insert(std::pair("bar", ast::Global(bool(true))));
   SIR_EXCPECT_NE(sir1, sir2);
 
   // // Same type/value
   sir2->GlobalVariableMap->erase("bar");
-  sir2->GlobalVariableMap->insert(std::pair("bar", sir::Global(double(5.0))));
+  sir2->GlobalVariableMap->insert(std::pair("bar", ast::Global(double(5.0))));
   SIR_EXCPECT_EQ(sir1, sir2);
 }
 
 TEST(SIRIntervalTest, Comparison) {
-  sir::Interval i1(0, sir::Interval::End, 0, 0);
-  sir::Interval i2(0, sir::Interval::End, 1, 0);
-  sir::Interval i3(0, sir::Interval::End, 1, 1);
-  sir::Interval i4(0, sir::Interval::End - 1, 1, 1);
-  sir::Interval i5(1, sir::Interval::End - 1, 1, 1);
+  ast::Interval i1(0, ast::Interval::End, 0, 0);
+  ast::Interval i2(0, ast::Interval::End, 1, 0);
+  ast::Interval i3(0, ast::Interval::End, 1, 1);
+  ast::Interval i4(0, ast::Interval::End - 1, 1, 1);
+  ast::Interval i5(1, ast::Interval::End - 1, 1, 1);
 
   EXPECT_EQ(i1, i1);
 
@@ -254,27 +254,27 @@ TEST(SIRValueTest, Construction) {
   // EXPECT_EQ(empty.getType(), sir::Value::Kind::None);
 
   // Test Boolean
-  sir::Value valueBoolean(bool(true));
+  ast::Value valueBoolean(bool(true));
   // valueBoolean.setValue(bool(true));
-  EXPECT_EQ(valueBoolean.getType(), sir::Value::Kind::Boolean);
+  EXPECT_EQ(valueBoolean.getType(), ast::Value::Kind::Boolean);
   EXPECT_EQ(valueBoolean.getValue<bool>(), true);
 
   // Test Integer
-  sir::Value valueInteger(int(5));
+  ast::Value valueInteger(int(5));
   // valueInteger.setValue();
-  EXPECT_EQ(valueInteger.getType(), sir::Value::Kind::Integer);
+  EXPECT_EQ(valueInteger.getType(), ast::Value::Kind::Integer);
   EXPECT_EQ(valueInteger.getValue<int>(), 5);
 
   // Test Double
-  sir::Value valueDouble(double(5.0));
+  ast::Value valueDouble(double(5.0));
   // valueDouble.setValue();
-  EXPECT_EQ(valueDouble.getType(), sir::Value::Kind::Double);
+  EXPECT_EQ(valueDouble.getType(), ast::Value::Kind::Double);
   EXPECT_EQ(valueDouble.getValue<double>(), 5.0);
 
   // Test String
-  sir::Value valueString(std::string("string"));
+  ast::Value valueString(std::string("string"));
   // valueString.setValue(std::string("string"));
-  EXPECT_EQ(valueString.getType(), sir::Value::Kind::String);
+  EXPECT_EQ(valueString.getType(), ast::Value::Kind::String);
   EXPECT_EQ(valueString.getValue<std::string>(), "string");
 }
 

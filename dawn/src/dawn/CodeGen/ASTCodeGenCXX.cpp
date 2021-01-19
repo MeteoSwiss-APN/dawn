@@ -14,7 +14,6 @@
 
 #include "dawn/CodeGen/ASTCodeGenCXX.h"
 #include "dawn/CodeGen/CXXUtil.h"
-#include "dawn/IIR/AST.h"
 #include "dawn/IIR/ASTExpr.h"
 #include "dawn/IIR/ASTStmt.h"
 #include "dawn/Support/Unreachable.h"
@@ -28,7 +27,7 @@ ASTCodeGenCXX::ASTCodeGenCXX() : indent_(0), scopeDepth_(0) {}
 //     Stmt
 //===------------------------------------------------------------------------------------------===//
 
-void ASTCodeGenCXX::visit(const std::shared_ptr<iir::BlockStmt>& stmt) {
+void ASTCodeGenCXX::visit(const std::shared_ptr<ast::BlockStmt>& stmt) {
   scopeDepth_++;
   ss_ << std::string(indent_, ' ') << "{\n";
 
@@ -44,7 +43,7 @@ void ASTCodeGenCXX::visit(const std::shared_ptr<iir::BlockStmt>& stmt) {
   scopeDepth_--;
 }
 
-void ASTCodeGenCXX::visit(const std::shared_ptr<iir::ExprStmt>& stmt) {
+void ASTCodeGenCXX::visit(const std::shared_ptr<ast::ExprStmt>& stmt) {
   if(scopeDepth_ == 0)
     ss_ << std::string(indent_, ' ');
 
@@ -52,7 +51,7 @@ void ASTCodeGenCXX::visit(const std::shared_ptr<iir::ExprStmt>& stmt) {
   ss_ << ";\n";
 }
 
-void ASTCodeGenCXX::visit(const std::shared_ptr<iir::VarDeclStmt>& stmt) {
+void ASTCodeGenCXX::visit(const std::shared_ptr<ast::VarDeclStmt>& stmt) {
   if(scopeDepth_ == 0)
     ss_ << std::string(indent_, ' ');
 
@@ -88,7 +87,7 @@ void ASTCodeGenCXX::visit(const std::shared_ptr<iir::VarDeclStmt>& stmt) {
   ss_ << ";\n";
 }
 
-void ASTCodeGenCXX::visit(const std::shared_ptr<iir::IfStmt>& stmt) {
+void ASTCodeGenCXX::visit(const std::shared_ptr<ast::IfStmt>& stmt) {
   if(scopeDepth_ == 0)
     ss_ << std::string(indent_, ' ');
 
@@ -107,13 +106,13 @@ void ASTCodeGenCXX::visit(const std::shared_ptr<iir::IfStmt>& stmt) {
 //     Expr
 //===------------------------------------------------------------------------------------------===//
 
-void ASTCodeGenCXX::visit(const std::shared_ptr<iir::UnaryOperator>& expr) {
+void ASTCodeGenCXX::visit(const std::shared_ptr<ast::UnaryOperator>& expr) {
   ss_ << "(" << expr->getOp();
   expr->getOperand()->accept(*this);
   ss_ << ")";
 }
 
-void ASTCodeGenCXX::visit(const std::shared_ptr<iir::BinaryOperator>& expr) {
+void ASTCodeGenCXX::visit(const std::shared_ptr<ast::BinaryOperator>& expr) {
   ss_ << "(";
   expr->getLeft()->accept(*this);
   ss_ << " " << expr->getOp() << " ";
@@ -121,13 +120,13 @@ void ASTCodeGenCXX::visit(const std::shared_ptr<iir::BinaryOperator>& expr) {
   ss_ << ")";
 }
 
-void ASTCodeGenCXX::visit(const std::shared_ptr<iir::AssignmentExpr>& expr) {
+void ASTCodeGenCXX::visit(const std::shared_ptr<ast::AssignmentExpr>& expr) {
   expr->getLeft()->accept(*this);
   ss_ << " " << expr->getOp() << " ";
   expr->getRight()->accept(*this);
 }
 
-void ASTCodeGenCXX::visit(const std::shared_ptr<iir::TernaryOperator>& expr) {
+void ASTCodeGenCXX::visit(const std::shared_ptr<ast::TernaryOperator>& expr) {
   ss_ << "(";
   expr->getCondition()->accept(*this);
   ss_ << " " << expr->getOp() << " ";
@@ -137,7 +136,7 @@ void ASTCodeGenCXX::visit(const std::shared_ptr<iir::TernaryOperator>& expr) {
   ss_ << ")";
 }
 
-void ASTCodeGenCXX::visit(const std::shared_ptr<iir::FunCallExpr>& expr) {
+void ASTCodeGenCXX::visit(const std::shared_ptr<ast::FunCallExpr>& expr) {
   ss_ << expr->getCallee() << "(";
 
   std::size_t numArgs = expr->getArguments().size();
@@ -148,7 +147,7 @@ void ASTCodeGenCXX::visit(const std::shared_ptr<iir::FunCallExpr>& expr) {
   ss_ << ")";
 }
 
-void ASTCodeGenCXX::visit(const std::shared_ptr<iir::LiteralAccessExpr>& expr) {
+void ASTCodeGenCXX::visit(const std::shared_ptr<ast::LiteralAccessExpr>& expr) {
   std::string type(ASTCodeGenCXX::builtinTypeIDToCXXType(expr->getBuiltinType(), false));
   ss_ << (type.empty() ? "" : "(" + type + ") ") << expr->getValue();
 }

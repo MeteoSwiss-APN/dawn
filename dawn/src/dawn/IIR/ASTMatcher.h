@@ -38,22 +38,22 @@ public:
   std::vector<std::shared_ptr<ast::Stmt>>& match(ast::Stmt::Kind kind);
   std::vector<std::shared_ptr<ast::Expr>>& match(ast::Expr::Kind kind);
 
-  void visit(const std::shared_ptr<iir::BlockStmt>& stmt) override;
-  void visit(const std::shared_ptr<iir::ExprStmt>& stmt) override;
-  void visit(const std::shared_ptr<iir::ReturnStmt>& stmt) override;
-  void visit(const std::shared_ptr<iir::IfStmt>& stmt) override;
-  void visit(const std::shared_ptr<iir::VarDeclStmt>& stmt) override;
-  void visit(const std::shared_ptr<iir::ReductionOverNeighborExpr>& expr) override;
-  void visit(const std::shared_ptr<iir::UnaryOperator>& expr) override;
-  void visit(const std::shared_ptr<iir::BinaryOperator>& expr) override;
-  void visit(const std::shared_ptr<iir::AssignmentExpr>& expr) override;
-  void visit(const std::shared_ptr<iir::TernaryOperator>& expr) override;
-  void visit(const std::shared_ptr<iir::FunCallExpr>& expr) override;
-  void visit(const std::shared_ptr<iir::StencilFunCallExpr>& expr) override;
-  void visit(const std::shared_ptr<iir::StencilFunArgExpr>& expr) override;
-  void visit(const std::shared_ptr<iir::VarAccessExpr>& expr) override;
-  void visit(const std::shared_ptr<iir::FieldAccessExpr>& expr) override;
-  void visit(const std::shared_ptr<iir::LiteralAccessExpr>& expr) override;
+  void visit(const std::shared_ptr<ast::BlockStmt>& stmt) override;
+  void visit(const std::shared_ptr<ast::ExprStmt>& stmt) override;
+  void visit(const std::shared_ptr<ast::ReturnStmt>& stmt) override;
+  void visit(const std::shared_ptr<ast::IfStmt>& stmt) override;
+  void visit(const std::shared_ptr<ast::VarDeclStmt>& stmt) override;
+  void visit(const std::shared_ptr<ast::ReductionOverNeighborExpr>& expr) override;
+  void visit(const std::shared_ptr<ast::UnaryOperator>& expr) override;
+  void visit(const std::shared_ptr<ast::BinaryOperator>& expr) override;
+  void visit(const std::shared_ptr<ast::AssignmentExpr>& expr) override;
+  void visit(const std::shared_ptr<ast::TernaryOperator>& expr) override;
+  void visit(const std::shared_ptr<ast::FunCallExpr>& expr) override;
+  void visit(const std::shared_ptr<ast::StencilFunCallExpr>& expr) override;
+  void visit(const std::shared_ptr<ast::StencilFunArgExpr>& expr) override;
+  void visit(const std::shared_ptr<ast::VarAccessExpr>& expr) override;
+  void visit(const std::shared_ptr<ast::FieldAccessExpr>& expr) override;
+  void visit(const std::shared_ptr<ast::LiteralAccessExpr>& expr) override;
 
 private:
   void iterate(iir::StencilInstantiation* instantiation);

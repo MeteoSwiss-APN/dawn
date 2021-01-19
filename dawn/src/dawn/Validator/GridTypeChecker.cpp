@@ -111,7 +111,7 @@ bool GridTypeChecker::checkGridTypeConsistency(const dawn::SIR& sir) {
   return true;
 }
 
-void GridTypeChecker::TypeCheckerImpl::visit(const std::shared_ptr<iir::FieldAccessExpr>& expr) {
+void GridTypeChecker::TypeCheckerImpl::visit(const std::shared_ptr<ast::FieldAccessExpr>& expr) {
   if(!typesConsistent_) {
     return;
   }

@@ -60,7 +60,7 @@ TEST(TestRemoveScalars, test_unstructured_scalar_01) {
       "generated",
       b.stencil(b.multistage(
           dawn::iir::LoopOrderKind::Forward,
-          b.stage(b.doMethod(dawn::sir::Interval::Start, dawn::sir::Interval::End,
+          b.stage(b.doMethod(dawn::ast::Interval::Start, dawn::ast::Interval::End,
                              b.declareVar(varA), b.stmt(b.assignExpr(b.at(f_c), b.at(varA))))))));
 
   auto& metadata = stencil->getMetaData();
@@ -106,7 +106,7 @@ TEST(TestRemoveScalars, test_unstructured_scalar_02) {
       b.stencil(b.multistage(
           dawn::iir::LoopOrderKind::Forward,
           b.stage(b.doMethod(
-              dawn::sir::Interval::Start, dawn::sir::Interval::End, b.declareVar(varA),
+              dawn::ast::Interval::Start, dawn::ast::Interval::End, b.declareVar(varA),
               b.declareVar(varB),
               b.stmt(b.assignExpr(b.at(varA), b.binaryExpr(b.at(varA), b.lit(1.0), Op::plus))),
               b.stmt(b.assignExpr(b.at(varB), b.binaryExpr(b.at(varB), b.at(varA), Op::plus))),
@@ -154,7 +154,7 @@ TEST(TestRemoveScalars, test_cartesian_scalar_01) {
   auto stencil = b.build(
       "generated", b.stencil(b.multistage(
                        dawn::iir::LoopOrderKind::Forward,
-                       b.stage(b.doMethod(dawn::sir::Interval::Start, dawn::sir::Interval::End,
+                       b.stage(b.doMethod(dawn::ast::Interval::Start, dawn::ast::Interval::End,
                                           b.declareVar(varA), b.declareVar(varB),
                                           b.stmt(b.assignExpr(b.at(f), b.at(varB))))))));
 
@@ -199,7 +199,7 @@ TEST(TestRemoveScalars, test_cartesian_scalar_02) {
       "generated",
       b.stencil(b.multistage(
           dawn::iir::LoopOrderKind::Forward,
-          b.stage(b.doMethod(dawn::sir::Interval::Start, dawn::sir::Interval::End,
+          b.stage(b.doMethod(dawn::ast::Interval::Start, dawn::ast::Interval::End,
                              b.declareVar(varA), b.stmt(b.assignExpr(b.at(varA), b.lit(3.0))),
                              b.declareVar(varB), b.stmt(b.assignExpr(b.at(f), b.at(varB))))))));
 
@@ -245,7 +245,7 @@ TEST(TestRemoveScalars, test_global_01) {
       b.stencil(b.multistage(
           dawn::iir::LoopOrderKind::Forward,
           b.stage(b.doMethod(
-              dawn::sir::Interval::Start, dawn::sir::Interval::End, b.declareVar(varA),
+              dawn::ast::Interval::Start, dawn::ast::Interval::End, b.declareVar(varA),
               b.stmt(b.assignExpr(b.at(varA), b.binaryExpr(b.at(pi), b.lit(2.0), Op::multiply))),
               b.stmt(b.assignExpr(b.at(f_c), b.at(varA))))))));
 
@@ -289,7 +289,7 @@ TEST(TestRemoveScalars, test_if_01) {
       "generated", b.stencil(b.multistage(
                        dawn::iir::LoopOrderKind::Forward,
                        b.stage(b.doMethod(
-                           dawn::sir::Interval::Start, dawn::sir::Interval::End, b.declareVar(varA),
+                           dawn::ast::Interval::Start, dawn::ast::Interval::End, b.declareVar(varA),
                            b.ifStmt(b.binaryExpr(b.at(f_c), b.lit(0.0), Op::greater),
                                     b.block(b.stmt(b.assignExpr(b.at(f_c_out), b.at(varA))))))))));
 
@@ -337,7 +337,7 @@ TEST(TestRemoveScalars, test_if_02) {
       "generated", b.stencil(b.multistage(
                        dawn::iir::LoopOrderKind::Forward,
                        b.stage(b.doMethod(
-                           dawn::sir::Interval::Start, dawn::sir::Interval::End, b.declareVar(varA),
+                           dawn::ast::Interval::Start, dawn::ast::Interval::End, b.declareVar(varA),
                            b.ifStmt(b.binaryExpr(b.at(f_c), b.at(varA), Op::greater),
                                     b.block(b.stmt(b.assignExpr(b.at(f_c_out), b.at(varA))))))))));
 
@@ -388,7 +388,7 @@ TEST(TestRemoveScalars, test_else_01) {
       b.stencil(b.multistage(
           dawn::iir::LoopOrderKind::Forward,
           b.stage(b.doMethod(
-              dawn::sir::Interval::Start, dawn::sir::Interval::End, b.declareVar(varA),
+              dawn::ast::Interval::Start, dawn::ast::Interval::End, b.declareVar(varA),
               b.ifStmt(b.binaryExpr(b.at(f_c), b.lit(0.0), Op::greater), b.block(),
                        b.block(b.stmt(b.assignExpr(
                            b.at(f_c_out), b.binaryExpr(b.at(varA), b.lit(1.0), Op::plus))))))))));
@@ -438,7 +438,7 @@ TEST(TestRemoveScalars, warn_compound_assignments) {
       b.build("generated",
               b.stencil(b.multistage(
                   dawn::iir::LoopOrderKind::Forward,
-                  b.stage(b.doMethod(dawn::sir::Interval::Start, dawn::sir::Interval::End,
+                  b.stage(b.doMethod(dawn::ast::Interval::Start, dawn::ast::Interval::End,
                                      b.declareVar(varA),
                                      b.stmt(b.assignExpr(b.at(varA), b.lit(3.0), Op::multiply)),
                                      b.stmt(b.assignExpr(b.at(f_e), b.at(varA))))))));
@@ -470,7 +470,7 @@ TEST(TestRemoveScalars, warn_increment) {
       "generated",
       b.stencil(b.multistage(
           dawn::iir::LoopOrderKind::Forward,
-          b.stage(b.doMethod(dawn::sir::Interval::Start, dawn::sir::Interval::End,
+          b.stage(b.doMethod(dawn::ast::Interval::Start, dawn::ast::Interval::End,
                              b.declareVar(varA), b.stmt(b.unaryExpr(b.at(varA), Op::increment)),
                              b.stmt(b.assignExpr(b.at(f_e), b.at(varA))))))));
 
@@ -503,7 +503,7 @@ TEST(TestRemoveScalars, warn_condition_adimensional_01) {
       "generated", b.stencil(b.multistage(
                        dawn::iir::LoopOrderKind::Forward,
                        b.stage(b.doMethod(
-                           dawn::sir::Interval::Start, dawn::sir::Interval::End, b.declareVar(varA),
+                           dawn::ast::Interval::Start, dawn::ast::Interval::End, b.declareVar(varA),
                            b.ifStmt(b.binaryExpr(b.at(varA), b.lit(0.0), Op::equal),
                                     b.block(b.stmt(b.assignExpr(b.at(varA), b.lit(4.0))))),
                            b.stmt(b.assignExpr(b.at(f_e), b.at(varA))))))));
@@ -537,7 +537,7 @@ TEST(TestRemoveScalars, warn_condition_adimensional_02) {
       "generated", b.stencil(b.multistage(
                        dawn::iir::LoopOrderKind::Forward,
                        b.stage(b.doMethod(
-                           dawn::sir::Interval::Start, dawn::sir::Interval::End, b.declareVar(varA),
+                           dawn::ast::Interval::Start, dawn::ast::Interval::End, b.declareVar(varA),
                            b.ifStmt(b.binaryExpr(b.lit(1.0), b.lit(1.0), Op::minus),
                                     b.block(b.stmt(b.assignExpr(b.at(varA), b.lit(4.0))))),
                            b.stmt(b.assignExpr(b.at(f_e), b.at(varA))))))));
@@ -574,7 +574,7 @@ TEST(TestRemoveScalars, warn_condition_adimensional_03) {
               b.stencil(b.multistage(
                   dawn::iir::LoopOrderKind::Forward,
                   b.stage(b.doMethod(
-                      dawn::sir::Interval::Start, dawn::sir::Interval::End, b.declareVar(varA),
+                      dawn::ast::Interval::Start, dawn::ast::Interval::End, b.declareVar(varA),
                       b.ifStmt(b.at(myBool), b.block(b.stmt(b.assignExpr(b.at(varA), b.lit(4.0))))),
                       b.stmt(b.assignExpr(b.at(f_e), b.at(varA))))))));
 

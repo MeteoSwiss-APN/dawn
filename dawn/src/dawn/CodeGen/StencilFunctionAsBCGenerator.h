@@ -46,35 +46,35 @@ public:
                                const std::shared_ptr<sir::StencilFunction>& functionToAnalyze)
       : function_(functionToAnalyze), metadata_(metadata) {}
 
-  void visit(const std::shared_ptr<iir::FieldAccessExpr>& expr);
+  void visit(const std::shared_ptr<ast::FieldAccessExpr>& expr);
 
-  inline void visit(const std::shared_ptr<iir::VerticalRegionDeclStmt>& stmt) {
+  inline void visit(const std::shared_ptr<ast::VerticalRegionDeclStmt>& stmt) {
     DAWN_ASSERT_MSG(0, "VerticalRegionDeclStmt not allowed in this context");
   }
-  inline void visit(const std::shared_ptr<iir::StencilCallDeclStmt>& stmt) {
+  inline void visit(const std::shared_ptr<ast::StencilCallDeclStmt>& stmt) {
     DAWN_ASSERT_MSG(0, "StencilCallDeclStmt not allowed in this context");
   }
-  inline void visit(const std::shared_ptr<iir::BoundaryConditionDeclStmt>& stmt) {
+  inline void visit(const std::shared_ptr<ast::BoundaryConditionDeclStmt>& stmt) {
     DAWN_ASSERT_MSG(0, "BoundaryConditionDeclStmt not allowed in this context");
   }
-  inline void visit(const std::shared_ptr<iir::StencilFunCallExpr>& expr) {
+  inline void visit(const std::shared_ptr<ast::StencilFunCallExpr>& expr) {
     DAWN_ASSERT_MSG(0, "StencilFunCallExpr not allowed in this context");
   }
-  inline void visit(const std::shared_ptr<iir::StencilFunArgExpr>& expr) {
+  inline void visit(const std::shared_ptr<ast::StencilFunArgExpr>& expr) {
     DAWN_ASSERT_MSG(0, "StencilFunArgExpr not allowed in this context");
   }
 
-  inline void visit(const std::shared_ptr<iir::ReturnStmt>& stmt) {
+  inline void visit(const std::shared_ptr<ast::ReturnStmt>& stmt) {
     DAWN_ASSERT_MSG(0, "ReturnStmt not allowed in this context");
   }
-  inline void visit(const std::shared_ptr<iir::ReductionOverNeighborExpr>& expr) {
+  inline void visit(const std::shared_ptr<ast::ReductionOverNeighborExpr>& expr) {
     DAWN_ASSERT_MSG(0, "ReductionOverNeighborExpr not allowed in this context");
   }
 
-  void visit(const std::shared_ptr<iir::VarAccessExpr>& expr);
+  void visit(const std::shared_ptr<ast::VarAccessExpr>& expr);
 
-  std::string getName(const std::shared_ptr<iir::VarDeclStmt>& stmt) const;
-  std::string getName(const std::shared_ptr<iir::Expr>& expr) const;
+  std::string getName(const std::shared_ptr<ast::VarDeclStmt>& stmt) const;
+  std::string getName(const std::shared_ptr<ast::Expr>& expr) const;
 };
 
 class BCGenerator {
@@ -85,7 +85,7 @@ public:
   BCGenerator(const iir::StencilMetaInformation& metadata, std::stringstream& ss)
       : metadata_(metadata), ss_(ss) {}
 
-  void generate(const std::shared_ptr<iir::BoundaryConditionDeclStmt>& stmt);
+  void generate(const std::shared_ptr<ast::BoundaryConditionDeclStmt>& stmt);
 };
 } // namespace codegen
 } // namespace dawn

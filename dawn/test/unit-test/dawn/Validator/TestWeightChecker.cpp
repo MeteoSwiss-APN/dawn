@@ -34,7 +34,7 @@ TEST(WeightCheckerTest, Reduce_0) {
       b.stencil(b.multistage(
           LoopOrderKind::Parallel,
           b.stage(b.doMethod(
-              dawn::sir::Interval::Start, dawn::sir::Interval::End,
+              dawn::ast::Interval::Start, dawn::ast::Interval::End,
               b.stmt(b.assignExpr(
                   b.at(cell_field),
                   b.reduceOverNeighborExpr(Op::plus, b.at(edge_field, HOffsetType::withOffset, 0),
@@ -60,12 +60,12 @@ TEST(WeightCheckerTest, Reduce_1) {
       b.stencil(b.multistage(
           LoopOrderKind::Parallel,
           b.stage(b.doMethod(
-              dawn::sir::Interval::Start, dawn::sir::Interval::End,
+              dawn::ast::Interval::Start, dawn::ast::Interval::End,
               b.stmt(b.assignExpr(b.at(cell_field),
                                   b.reduceOverNeighborExpr(
                                       Op::plus, b.at(edge_field, HOffsetType::withOffset, 0),
                                       b.lit(0.), {LocType::Cells, LocType::Edges},
-                                      std::vector<std::shared_ptr<Expr>>{
+                                      std::vector<std::shared_ptr<ast::Expr>>{
                                           b.at(distToE1), b.at(distToE2), b.at(distToE3)}))))))));
 
   auto result = WeightChecker::CheckWeights(*stencil->getIIR(), stencil->getMetaData());
@@ -87,12 +87,12 @@ TEST(WeightCheckerTest, Reduce_2) {
           b.stencil(b.multistage(
               LoopOrderKind::Parallel,
               b.stage(b.doMethod(
-                  dawn::sir::Interval::Start, dawn::sir::Interval::End,
+                  dawn::ast::Interval::Start, dawn::ast::Interval::End,
                   b.stmt(b.assignExpr(b.at(cell_field),
                                       b.reduceOverNeighborExpr(
                                           Op::plus, b.at(edge_field, HOffsetType::withOffset, 0),
                                           b.lit(0.), {LocType::Cells, LocType::Edges},
-                                          std::vector<std::shared_ptr<Expr>>{
+                                          std::vector<std::shared_ptr<ast::Expr>>{
                                               b.at(distToE), b.at(distToE), b.at(distToE)})))))))),
       ".*Found invalid weights.*");
 }
@@ -112,17 +112,17 @@ TEST(WeightCheckerTest, NestedReduce_0) {
       b.stencil(b.multistage(
           dawn::iir::LoopOrderKind::Parallel,
           b.stage(LocType::Cells,
-                  b.doMethod(dawn::sir::Interval::Start, dawn::sir::Interval::End,
+                  b.doMethod(dawn::ast::Interval::Start, dawn::ast::Interval::End,
                              b.stmt(b.assignExpr(
                                  b.at(cell_f),
                                  b.reduceOverNeighborExpr(
                                      Op::plus,
                                      b.reduceOverNeighborExpr(Op::plus, b.at(vertex_f), b.lit(0.),
                                                               {LocType::Edges, LocType::Vertices},
-                                                              std::vector<std::shared_ptr<Expr>>{
+                                                              std::vector<std::shared_ptr<ast::Expr>>{
                                                                   b.at(edge_f), b.at(edge_f)}),
                                      b.lit(0.), {LocType::Cells, LocType::Edges},
-                                     std::vector<std::shared_ptr<Expr>>{b.at(cell_f),
+                                     std::vector<std::shared_ptr<ast::Expr>>{b.at(cell_f),
                                                                         b.at(cell_f)}))))))));
 
   auto result = WeightChecker::CheckWeights(*stencil->getIIR(), stencil->getMetaData());
@@ -146,17 +146,17 @@ TEST(WeightCheckerTest, NestedReduce_1) {
                   dawn::iir::LoopOrderKind::Parallel,
                   b.stage(LocType::Cells,
                           b.doMethod(
-                              dawn::sir::Interval::Start, dawn::sir::Interval::End,
+                              dawn::ast::Interval::Start, dawn::ast::Interval::End,
                               b.stmt(b.assignExpr(
                                   b.at(cell_f),
                                   b.reduceOverNeighborExpr(
                                       Op::plus,
                                       b.reduceOverNeighborExpr(Op::plus, b.at(vertex_f), b.lit(0.),
                                                                {LocType::Edges, LocType::Vertices},
-                                                               std::vector<std::shared_ptr<Expr>>{
+                                                               std::vector<std::shared_ptr<ast::Expr>>{
                                                                    b.at(edge_f), b.at(edge_f)}),
                                       b.lit(0.), {LocType::Cells, LocType::Edges},
-                                      std::vector<std::shared_ptr<Expr>>{b.at(distToE),
+                                      std::vector<std::shared_ptr<ast::Expr>>{b.at(distToE),
                                                                          b.at(distToE)})))))))),
       ".*Found invalid weights.*");
 }

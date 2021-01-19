@@ -13,11 +13,8 @@
 //===------------------------------------------------------------------------------------------===//
 
 #include "dawn/Support/Logger.h"
-#include "dawn/Support/Assert.h"
-#include "dawn/Support/FileSystem.h"
 #include "dawn/Support/Format.h"
 
-#include <chrono>
 #include <sstream>
 
 namespace dawn {

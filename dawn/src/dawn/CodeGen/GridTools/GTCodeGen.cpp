@@ -175,9 +175,9 @@ void GTCodeGen::generateGridConstruction(MemberFunction& stencilConstructor,
 
   auto getLevel = [](int level) -> std::string {
     switch(level) {
-    case sir::Interval::Start:
+    case ast::Interval::Start:
       return "dom.kminus()";
-    case sir::Interval::End:
+    case ast::Interval::End:
       return "dom.ksize() - dom.kplus()";
     default:
       return std::to_string(level);
@@ -202,7 +202,7 @@ void GTCodeGen::generateGridConstruction(MemberFunction& stencilConstructor,
 
 void GTCodeGen::generatePlaceholderDefinitions(
     Structure& stencilClass, const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation,
-    const sir::GlobalVariableMap& globalsMap, const CodeGenProperties& codeGenProperties) const {
+    const ast::GlobalVariableMap& globalsMap, const CodeGenProperties& codeGenProperties) const {
 
   const auto& stencilFields = stencilInstantiation->getIIR()->getFields();
 
@@ -227,7 +227,7 @@ void GTCodeGen::generatePlaceholderDefinitions(
 }
 
 void GTCodeGen::generateGlobalsAPI(Structure& stencilWrapperClass,
-                                   const sir::GlobalVariableMap& globalsMap,
+                                   const ast::GlobalVariableMap& globalsMap,
                                    const CodeGenProperties& codeGenProperties) const {
 
   stencilWrapperClass.addComment("Globals API");
@@ -238,13 +238,13 @@ void GTCodeGen::generateGlobalsAPI(Structure& stencilWrapperClass,
       continue;
     }
     auto getter = stencilWrapperClass.addMemberFunction(
-        sir::Value::typeToString(globalValue.getType()), "get_" + globalProp.first);
+        ast::Value::typeToString(globalValue.getType()), "get_" + globalProp.first);
     getter.finishArgs();
     getter.addStatement("return m_globals." + globalProp.first);
     getter.commit();
 
     auto setter = stencilWrapperClass.addMemberFunction("void", "set_" + globalProp.first);
-    setter.addArg(std::string(sir::Value::typeToString(globalValue.getType())) + " " +
+    setter.addArg(std::string(ast::Value::typeToString(globalValue.getType())) + " " +
                   globalProp.first);
     setter.finishArgs();
     setter.addStatement("m_globals." + globalProp.first + "=" + globalProp.first);
@@ -561,11 +561,11 @@ void GTCodeGen::generateStencilClasses(
     auto makeLevelName = [&](int level, int offset) {
       std::stringstream tss;
       int gt_level =
-          (level == sir::Interval::End ? maxLevel
+          (level == ast::Interval::End ? maxLevel
                                        : std::distance(intervalDefinitions.Levels.begin(),
                                                        intervalDefinitions.Levels.find(level)));
       int gt_offset =
-          (level != sir::Interval::End) ? offset + 1 : (offset <= 0) ? offset - 1 : offset;
+          (level != ast::Interval::End) ? offset + 1 : (offset <= 0) ? offset - 1 : offset;
       tss << "gridtools::level<" << gt_level << ", " << gt_offset << ", "
           << intervalDefinitions.OffsetLimit << ">";
 

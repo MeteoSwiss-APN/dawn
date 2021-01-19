@@ -71,19 +71,6 @@ std::shared_ptr<ast::LoopStmt> makeLoopStmt(Args&&... args) {
   return std::make_shared<ast::LoopStmt>(std::make_unique<SIRStmtData>(),
                                          std::forward<Args>(args)...);
 }
-//
-// TODO refactor_AST: this is TEMPORARY, will be removed in the future
-//
-using Stmt = ast::Stmt;
-using BlockStmt = ast::BlockStmt;
-using ExprStmt = ast::ExprStmt;
-using ReturnStmt = ast::ReturnStmt;
-using VarDeclStmt = ast::VarDeclStmt;
-using VerticalRegionDeclStmt = ast::VerticalRegionDeclStmt;
-using StencilCallDeclStmt = ast::StencilCallDeclStmt;
-using BoundaryConditionDeclStmt = ast::BoundaryConditionDeclStmt;
-using IfStmt = ast::IfStmt;
-using LoopStmt = ast::LoopStmt;
 
 } // namespace sir
 } // namespace dawn

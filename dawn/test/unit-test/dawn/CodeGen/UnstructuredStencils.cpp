@@ -25,7 +25,7 @@ std::shared_ptr<iir::StencilInstantiation> getReductionsStencil() {
           LoopOrderKind::Parallel,
           b.stage(LocType::Cells,
                   b.doMethod(
-                      dawn::sir::Interval::Start, dawn::sir::Interval::End,
+                      dawn::ast::Interval::Start, dawn::ast::Interval::End,
                       b.stmt(b.assignExpr(
                           b.at(lhs_f),
                           b.binaryExpr(b.binaryExpr(b.at(rhs_f),

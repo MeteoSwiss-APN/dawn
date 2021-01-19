@@ -18,7 +18,6 @@
 #include "dawn/CodeGen/CXXUtil.h"
 #include "dawn/IIR/AST.h"
 #include "dawn/IIR/ASTExpr.h"
-#include "dawn/IIR/ASTFwd.h"
 #include "dawn/IIR/StencilFunctionInstantiation.h"
 #include "dawn/SIR/SIR.h"
 #include "dawn/Support/Unreachable.h"
@@ -64,14 +63,14 @@ ASTStencilBody::ASTStencilBody(const iir::StencilMetaInformation& metadata,
 
 ASTStencilBody::~ASTStencilBody() {}
 
-std::string ASTStencilBody::getName(const std::shared_ptr<iir::VarDeclStmt>& stmt) const {
+std::string ASTStencilBody::getName(const std::shared_ptr<ast::VarDeclStmt>& stmt) const {
   if(currentFunction_)
     return currentFunction_->getFieldNameFromAccessID(iir::getAccessID(stmt));
   else
     return metadata_.getFieldNameFromAccessID(iir::getAccessID(stmt));
 }
 
-std::string ASTStencilBody::getName(const std::shared_ptr<iir::Expr>& expr) const {
+std::string ASTStencilBody::getName(const std::shared_ptr<ast::Expr>& expr) const {
   if(currentFunction_)
     return currentFunction_->getFieldNameFromAccessID(iir::getAccessID(expr));
   else
@@ -82,7 +81,7 @@ std::string ASTStencilBody::getName(const std::shared_ptr<iir::Expr>& expr) cons
 //     Stmt
 //===------------------------------------------------------------------------------------------===//
 
-void ASTStencilBody::visit(const std::shared_ptr<iir::ReturnStmt>& stmt) {
+void ASTStencilBody::visit(const std::shared_ptr<ast::ReturnStmt>& stmt) {
   if(scopeDepth_ == 0)
     ss_ << std::string(indent_, ' ');
 
@@ -92,7 +91,7 @@ void ASTStencilBody::visit(const std::shared_ptr<iir::ReturnStmt>& stmt) {
   ss_ << ";\n";
 }
 
-void ASTStencilBody::visit(const std::shared_ptr<iir::BlockStmt>& stmt) {
+void ASTStencilBody::visit(const std::shared_ptr<ast::BlockStmt>& stmt) {
   scopeDepth_++;
   ss_ << std::string(indent_, ' ') << "{\n";
 
@@ -112,7 +111,7 @@ void ASTStencilBody::visit(const std::shared_ptr<iir::BlockStmt>& stmt) {
   scopeDepth_--;
 }
 
-void ASTStencilBody::visit(const std::shared_ptr<iir::LoopStmt>& stmt) {
+void ASTStencilBody::visit(const std::shared_ptr<ast::LoopStmt>& stmt) {
   const auto maybeChainPtr =
       dynamic_cast<const ast::ChainIterationDescr*>(stmt->getIterationDescrPtr());
   DAWN_ASSERT_MSG(maybeChainPtr, "general loop concept not implemented yet!\n");
@@ -131,15 +130,15 @@ void ASTStencilBody::visit(const std::shared_ptr<iir::LoopStmt>& stmt) {
   ss_ << "}";
 }
 
-void ASTStencilBody::visit(const std::shared_ptr<iir::VerticalRegionDeclStmt>& stmt) {
+void ASTStencilBody::visit(const std::shared_ptr<ast::VerticalRegionDeclStmt>& stmt) {
   DAWN_ASSERT_MSG(0, "VerticalRegionDeclStmt not allowed in this context");
 }
 
-void ASTStencilBody::visit(const std::shared_ptr<iir::StencilCallDeclStmt>& stmt) {
+void ASTStencilBody::visit(const std::shared_ptr<ast::StencilCallDeclStmt>& stmt) {
   DAWN_ASSERT_MSG(0, "StencilCallDeclStmt not allowed in this context");
 }
 
-void ASTStencilBody::visit(const std::shared_ptr<iir::BoundaryConditionDeclStmt>& stmt) {
+void ASTStencilBody::visit(const std::shared_ptr<ast::BoundaryConditionDeclStmt>& stmt) {
   DAWN_ASSERT_MSG(0, "BoundaryConditionDeclStmt not allowed in this context");
 }
 
@@ -147,7 +146,7 @@ void ASTStencilBody::visit(const std::shared_ptr<iir::BoundaryConditionDeclStmt>
 //     Expr
 //===------------------------------------------------------------------------------------------===//
 
-void ASTStencilBody::visit(const std::shared_ptr<iir::StencilFunCallExpr>& expr) {
+void ASTStencilBody::visit(const std::shared_ptr<ast::StencilFunCallExpr>& expr) {
   if(nestingOfStencilFunArgLists_++)
     ss_ << ", ";
 
@@ -171,9 +170,9 @@ void ASTStencilBody::visit(const std::shared_ptr<iir::StencilFunCallExpr>& expr)
   ss_ << ")";
 }
 
-void ASTStencilBody::visit(const std::shared_ptr<iir::StencilFunArgExpr>& expr) {}
+void ASTStencilBody::visit(const std::shared_ptr<ast::StencilFunArgExpr>& expr) {}
 
-void ASTStencilBody::visit(const std::shared_ptr<iir::VarAccessExpr>& expr) {
+void ASTStencilBody::visit(const std::shared_ptr<ast::VarAccessExpr>& expr) {
   std::string name = getName(expr);
   int AccessID = iir::getAccessID(expr);
 
@@ -190,7 +189,7 @@ void ASTStencilBody::visit(const std::shared_ptr<iir::VarAccessExpr>& expr) {
   }
 }
 
-std::string ASTStencilBody::makeIndexString(const std::shared_ptr<iir::FieldAccessExpr>& expr,
+std::string ASTStencilBody::makeIndexString(const std::shared_ptr<ast::FieldAccessExpr>& expr,
                                             std::string kiterStr) {
   bool isVertical = metadata_.getFieldDimensions(iir::getAccessID(expr)).isVertical();
   if(isVertical) {
@@ -264,7 +263,7 @@ std::string ASTStencilBody::makeIndexString(const std::shared_ptr<iir::FieldAcce
   return "BAD_FIELD_CONFIG";
 }
 
-void ASTStencilBody::visit(const std::shared_ptr<iir::FieldAccessExpr>& expr) {
+void ASTStencilBody::visit(const std::shared_ptr<ast::FieldAccessExpr>& expr) {
 
   if(currentFunction_) {
     // extract the arg index, from the AccessID
@@ -339,7 +338,7 @@ void ASTStencilBody::visit(const std::shared_ptr<iir::FieldAccessExpr>& expr) {
                                            ")") +
                  ")";
     } else {
-      auto vertOffset = makeIndexString(std::static_pointer_cast<iir::FieldAccessExpr>(
+      auto vertOffset = makeIndexString(std::static_pointer_cast<ast::FieldAccessExpr>(
                                             expr->getOffset().getVerticalIndirectionFieldAsExpr()),
                                         "k");
       ss_ << "m_"
@@ -353,7 +352,7 @@ void ASTStencilBody::visit(const std::shared_ptr<iir::FieldAccessExpr>& expr) {
   }
 }
 
-void ASTStencilBody::visit(const std::shared_ptr<iir::ReductionOverNeighborExpr>& expr) {
+void ASTStencilBody::visit(const std::shared_ptr<ast::ReductionOverNeighborExpr>& expr) {
   bool hasWeights = expr->getWeights().has_value();
 
   std::string sigArg;

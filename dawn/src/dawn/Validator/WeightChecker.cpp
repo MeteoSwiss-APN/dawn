@@ -13,14 +13,13 @@
 //===------------------------------------------------------------------------------------------===//
 
 #include "WeightChecker.h"
-#include "dawn/AST/ASTFwd.h"
 #include "dawn/Support/SourceLocation.h"
 
 namespace dawn {
 
 std::shared_ptr<const iir::StencilFunctionInstantiation>
 WeightChecker::WeightCheckerImpl::getStencilFunctionInstantiation(
-    const std::shared_ptr<iir::StencilFunCallExpr>& expr) {
+    const std::shared_ptr<ast::StencilFunCallExpr>& expr) {
   if(!functionInstantiationStack_.empty())
     return functionInstantiationStack_.top()->getStencilFunctionInstantiation(expr);
   return (*ExprToStencilFunctionInstantiationMap_).get().at(expr);
@@ -98,7 +97,7 @@ WeightChecker::WeightCheckerImpl::WeightCheckerImpl(
 WeightChecker::WeightCheckerImpl::WeightCheckerImpl(
     const std::unordered_map<std::string, sir::FieldDimensions> nameToDimensionsMap,
     const std::unordered_map<int, std::string> idToNameMap,
-    const std::unordered_map<std::shared_ptr<iir::StencilFunCallExpr>,
+    const std::unordered_map<std::shared_ptr<ast::StencilFunCallExpr>,
                              std::shared_ptr<iir::StencilFunctionInstantiation>>& exprToFunMap)
     : nameToDimensions_(nameToDimensionsMap), idToNameMap_(idToNameMap),
       ExprToStencilFunctionInstantiationMap_(exprToFunMap) {}

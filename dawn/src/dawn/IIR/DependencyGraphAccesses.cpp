@@ -25,7 +25,7 @@
 namespace dawn {
 namespace iir {
 
-void DependencyGraphAccesses::insertStatement(const std::shared_ptr<iir::Stmt>& stmt) {
+void DependencyGraphAccesses::insertStatement(const std::shared_ptr<ast::Stmt>& stmt) {
 
   if(!stmt->getChildren().empty()) {
     for(const auto& s : stmt->getChildren())

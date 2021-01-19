@@ -32,7 +32,7 @@ class IIR : public IIRNode<void, IIR, Stencil> {
   std::array<unsigned int, 3> blockSize_ = {{32, 4, 4}};
   ControlFlowDescriptor controlFlowDesc_;
 
-  std::shared_ptr<sir::GlobalVariableMap> globalVariableMap_;
+  std::shared_ptr<ast::GlobalVariableMap> globalVariableMap_;
   std::vector<std::shared_ptr<sir::StencilFunction>> stencilFunctions_;
 
   struct DerivedInfo {
@@ -55,7 +55,7 @@ public:
   inline std::array<unsigned int, 3> getBlockSize() const { return blockSize_; }
 
   /// @brief constructors and assignment
-  IIR(const ast::GridType gridType, std::shared_ptr<sir::GlobalVariableMap> sirGlobals,
+  IIR(const ast::GridType gridType, std::shared_ptr<ast::GlobalVariableMap> sirGlobals,
       const std::vector<std::shared_ptr<sir::StencilFunction>>& stencilFunction);
   IIR(const IIR&) = default;
   IIR(IIR&&) = default;
@@ -99,12 +99,12 @@ public:
     return it->second;
   }
 
-  std::shared_ptr<sir::GlobalVariableMap> getGlobalVariableMapPtr() const {
+  std::shared_ptr<ast::GlobalVariableMap> getGlobalVariableMapPtr() const {
     return globalVariableMap_;
   }
-  const sir::GlobalVariableMap& getGlobalVariableMap() const { return *globalVariableMap_; }
+  const ast::GlobalVariableMap& getGlobalVariableMap() const { return *globalVariableMap_; }
 
-  void insertGlobalVariable(const std::string& varName, sir::Global&& value) {
+  void insertGlobalVariable(const std::string& varName, ast::Global&& value) {
     globalVariableMap_->insert(std::pair(varName, std::move(value)));
   }
 

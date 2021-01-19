@@ -33,8 +33,8 @@ class ExprScalarChecker : public ast::ASTVisitorForwarding {
   bool isScalar_ = true;
 
 public:
-  void visit(const std::shared_ptr<iir::FieldAccessExpr>& expr) override { isScalar_ = false; }
-  void visit(const std::shared_ptr<iir::VarAccessExpr>& expr) override {
+  void visit(const std::shared_ptr<ast::FieldAccessExpr>& expr) override { isScalar_ = false; }
+  void visit(const std::shared_ptr<ast::VarAccessExpr>& expr) override {
     if(expr->isLocal()) {
       isScalar_ &= metadata_.getLocalVariableDataFromAccessID(iir::getAccessID(expr)).isScalar();
     }
@@ -45,7 +45,7 @@ public:
   ExprScalarChecker(const iir::StencilMetaInformation& metadata) : metadata_(metadata) {}
 };
 
-bool isExprScalar(const std::shared_ptr<iir::Expr>& expr,
+bool isExprScalar(const std::shared_ptr<ast::Expr>& expr,
                   const iir::StencilMetaInformation& metadata) {
   ExprScalarChecker checker(metadata);
   expr->accept(checker);
@@ -54,11 +54,11 @@ bool isExprScalar(const std::shared_ptr<iir::Expr>& expr,
 
 class VarAccessesReplacer : public ast::ASTVisitorPostOrder {
   const int variableToSubstitute_;
-  const std::shared_ptr<const iir::Expr> substituteExpr_;
+  const std::shared_ptr<const ast::Expr> substituteExpr_;
 
 public:
-  std::shared_ptr<iir::Expr>
-  postVisitNode(std::shared_ptr<iir::VarAccessExpr> const& expr) override {
+  std::shared_ptr<ast::Expr>
+  postVisitNode(std::shared_ptr<ast::VarAccessExpr> const& expr) override {
     if(iir::getAccessID(expr) == variableToSubstitute_) {
       return substituteExpr_->clone();
     }
@@ -66,22 +66,22 @@ public:
   }
 
   VarAccessesReplacer(int variableToSubstitute,
-                      const std::shared_ptr<const iir::Expr> substituteExpr)
+                      const std::shared_ptr<const ast::Expr> substituteExpr)
       : variableToSubstitute_(variableToSubstitute), substituteExpr_(substituteExpr) {}
 };
 
 // If `stmt` is a variable declaration of / an assignment to a scalar local variable,
 // returns the access ID of the scalar. Otherwise returns std::nullopt.
-std::optional<int> getScalarLhsOfStatement(const std::shared_ptr<iir::Stmt> stmt,
+std::optional<int> getScalarLhsOfStatement(const std::shared_ptr<ast::Stmt> stmt,
                                            const iir::StencilMetaInformation& metadata) {
   const auto& idToLocalVariableData = metadata.getAccessIDToLocalVariableDataMap();
   std::optional<int> scalarAccessID;
 
-  if(const auto& varDeclStmt = std::dynamic_pointer_cast<iir::VarDeclStmt>(stmt)) {
+  if(const auto& varDeclStmt = std::dynamic_pointer_cast<ast::VarDeclStmt>(stmt)) {
     scalarAccessID = iir::getAccessID(varDeclStmt);
-  } else if(const auto& exprStmt = std::dynamic_pointer_cast<iir::ExprStmt>(stmt)) {
+  } else if(const auto& exprStmt = std::dynamic_pointer_cast<ast::ExprStmt>(stmt)) {
     if(const auto& assignmentExpr =
-           std::dynamic_pointer_cast<iir::AssignmentExpr>(exprStmt->getExpr())) {
+           std::dynamic_pointer_cast<ast::AssignmentExpr>(exprStmt->getExpr())) {
       int accessID = iir::getAccessID(assignmentExpr->getLeft());
       if(metadata.isAccessType(iir::FieldAccessType::LocalVariable, accessID)) {
         scalarAccessID = accessID;
@@ -99,11 +99,11 @@ std::optional<int> getScalarLhsOfStatement(const std::shared_ptr<iir::Stmt> stmt
 }
 
 // Whether a `stmt` is an assignment or a variable declaration with non-empty init list.
-bool hasRhs(const std::shared_ptr<const iir::Stmt> stmt) {
-  if(const auto& varDeclStmt = std::dynamic_pointer_cast<const iir::VarDeclStmt>(stmt)) {
+bool hasRhs(const std::shared_ptr<const ast::Stmt> stmt) {
+  if(const auto& varDeclStmt = std::dynamic_pointer_cast<const ast::VarDeclStmt>(stmt)) {
     return varDeclStmt->getInitList().size() == 1 && varDeclStmt->getInitList()[0] != nullptr;
-  } else if(const auto& exprStmt = std::dynamic_pointer_cast<const iir::ExprStmt>(stmt)) {
-    if(exprStmt->getExpr()->getKind() == iir::Expr::Kind::AssignmentExpr) {
+  } else if(const auto& exprStmt = std::dynamic_pointer_cast<const ast::ExprStmt>(stmt)) {
+    if(exprStmt->getExpr()->getKind() == ast::Expr::Kind::AssignmentExpr) {
       return true;
     }
   }
@@ -111,13 +111,13 @@ bool hasRhs(const std::shared_ptr<const iir::Stmt> stmt) {
 }
 
 // Returns the rhs `Expr` of a variable declaration / assignment.
-std::shared_ptr<iir::Expr>& getRhs(const std::shared_ptr<iir::Stmt> stmt) {
-  if(const auto& varDeclStmt = std::dynamic_pointer_cast<iir::VarDeclStmt>(stmt)) {
+std::shared_ptr<ast::Expr>& getRhs(const std::shared_ptr<ast::Stmt> stmt) {
+  if(const auto& varDeclStmt = std::dynamic_pointer_cast<ast::VarDeclStmt>(stmt)) {
     DAWN_ASSERT(varDeclStmt->getInitList().size() == 1);
     return varDeclStmt->getInitList()[0];
-  } else if(const auto& exprStmt = std::dynamic_pointer_cast<iir::ExprStmt>(stmt)) {
+  } else if(const auto& exprStmt = std::dynamic_pointer_cast<ast::ExprStmt>(stmt)) {
     if(const auto& assignmentExpr =
-           std::dynamic_pointer_cast<iir::AssignmentExpr>(exprStmt->getExpr())) {
+           std::dynamic_pointer_cast<ast::AssignmentExpr>(exprStmt->getExpr())) {
       return assignmentExpr->getRight();
     }
   }
@@ -127,8 +127,8 @@ std::shared_ptr<iir::Expr>& getRhs(const std::shared_ptr<iir::Stmt> stmt) {
 
 // Removes scalar local variables from a BlockStmt and returns their access ids.
 std::set<int> removeScalarsFromBlockStmt(
-    iir::BlockStmt& blockStmt,
-    std::unordered_map<int, std::shared_ptr<const iir::Expr>>& scalarToLastRhsMap,
+    ast::BlockStmt& blockStmt,
+    std::unordered_map<int, std::shared_ptr<const ast::Expr>>& scalarToLastRhsMap,
     const iir::StencilMetaInformation& metadata) {
 
   std::set<int> removedScalarsIDs;
@@ -142,25 +142,25 @@ std::set<int> removeScalarsFromBlockStmt(
       if(hasRhs(*stmtIt)) {
         auto& rhs = getRhs(*stmtIt);
         rhs = rhs->acceptAndReplace(replacer);
-      } else if(const std::shared_ptr<iir::IfStmt> ifStmt = std::dynamic_pointer_cast<iir::IfStmt>(
+      } else if(const std::shared_ptr<ast::IfStmt> ifStmt = std::dynamic_pointer_cast<ast::IfStmt>(
                     *stmtIt)) { // or on the condition expression if current statement is an if.
         ifStmt->getCondExpr() = ifStmt->getCondExpr()->acceptAndReplace(replacer);
       }
     }
     // Now process then and else block statements of an if
-    if(const std::shared_ptr<iir::IfStmt> ifStmt =
-           std::dynamic_pointer_cast<iir::IfStmt>(*stmtIt)) {
+    if(const std::shared_ptr<ast::IfStmt> ifStmt =
+           std::dynamic_pointer_cast<ast::IfStmt>(*stmtIt)) {
 
-      DAWN_ASSERT_MSG(ifStmt->getThenStmt()->getKind() == iir::Stmt::Kind::BlockStmt,
+      DAWN_ASSERT_MSG(ifStmt->getThenStmt()->getKind() == ast::Stmt::Kind::BlockStmt,
                       "Then statement must be a block statement.");
-      removeScalarsFromBlockStmt(*std::dynamic_pointer_cast<iir::BlockStmt>(ifStmt->getThenStmt()),
+      removeScalarsFromBlockStmt(*std::dynamic_pointer_cast<ast::BlockStmt>(ifStmt->getThenStmt()),
                                  scalarToLastRhsMap, metadata);
 
       if(ifStmt->hasElse()) {
-        DAWN_ASSERT_MSG(ifStmt->getElseStmt()->getKind() == iir::Stmt::Kind::BlockStmt,
+        DAWN_ASSERT_MSG(ifStmt->getElseStmt()->getKind() == ast::Stmt::Kind::BlockStmt,
                         "Else statement must be a block statement.");
         removeScalarsFromBlockStmt(
-            *std::dynamic_pointer_cast<iir::BlockStmt>(ifStmt->getElseStmt()), scalarToLastRhsMap,
+            *std::dynamic_pointer_cast<ast::BlockStmt>(ifStmt->getElseStmt()), scalarToLastRhsMap,
             metadata);
       }
 
@@ -186,7 +186,7 @@ std::vector<std::string> removeScalarsFromDoMethod(iir::DoMethod& doMethod,
 
   std::vector<std::string> removedScalars;
   // Map from scalar variable's access id to last rhs assigned to the variable.
-  std::unordered_map<int, std::shared_ptr<const iir::Expr>> scalarToLastRhsMap;
+  std::unordered_map<int, std::shared_ptr<const ast::Expr>> scalarToLastRhsMap;
 
   auto removedIDs = removeScalarsFromBlockStmt(doMethod.getAST(), scalarToLastRhsMap, metadata);
 
@@ -201,20 +201,20 @@ std::vector<std::string> removeScalarsFromDoMethod(iir::DoMethod& doMethod,
   return removedScalars;
 }
 
-bool isStatementUnsupported(const std::shared_ptr<iir::Stmt>& stmt,
+bool isStatementUnsupported(const std::shared_ptr<ast::Stmt>& stmt,
                             const iir::StencilMetaInformation& metadata) {
-  if(const auto& exprStmt = std::dynamic_pointer_cast<iir::ExprStmt>(stmt)) {
+  if(const auto& exprStmt = std::dynamic_pointer_cast<ast::ExprStmt>(stmt)) {
     if(const auto& assignmentExpr =
-           std::dynamic_pointer_cast<iir::AssignmentExpr>(exprStmt->getExpr())) {
+           std::dynamic_pointer_cast<ast::AssignmentExpr>(exprStmt->getExpr())) {
       if(assignmentExpr->getOp() != "=") { // Compound assignment
         return true;
       }
     } else if(exprStmt->getExpr()->getKind() ==
-              iir::Expr::Kind::UnaryOperator) { // Increment / decrement ops
+              ast::Expr::Kind::UnaryOperator) { // Increment / decrement ops
       return true;
     }
-  } else if(const std::shared_ptr<iir::IfStmt> ifStmt =
-                std::dynamic_pointer_cast<iir::IfStmt>(stmt)) {
+  } else if(const std::shared_ptr<ast::IfStmt> ifStmt =
+                std::dynamic_pointer_cast<ast::IfStmt>(stmt)) {
     if(isExprScalar(ifStmt->getCondExpr(), metadata)) {
       return true;
     }

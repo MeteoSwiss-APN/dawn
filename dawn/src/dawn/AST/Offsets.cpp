@@ -16,7 +16,6 @@
 #include "dawn/AST/ASTExpr.h"
 #include "dawn/IIR/ASTExpr.h"
 #include "dawn/Support/Assert.h"
-#include "dawn/Support/Logger.h"
 #include <memory>
 #include <optional>
 

@@ -14,7 +14,6 @@
 
 #pragma once
 
-#include "dawn/IIR/ASTFwd.h"
 #include "dawn/IIR/Extents.h"
 #include "dawn/IIR/Field.h"
 #include "dawn/IIR/FieldAccessMetadata.h"
@@ -120,7 +119,7 @@ class StencilMetaInformation : public NonCopyable {
   friend IIRSerializer;
 
 public:
-  StencilMetaInformation(std::shared_ptr<sir::GlobalVariableMap> globalVariables);
+  StencilMetaInformation(std::shared_ptr<ast::GlobalVariableMap> globalVariables);
 
   void clone(const StencilMetaInformation& origin);
 
@@ -189,7 +188,7 @@ public:
   /// @param keepVarName: whether to keep the current name or complete it with the accessID
   /// @param stmt: the variable declaration statement
   /// @returns the access id of the variable
-  int addStmt(bool keepVarName, const std::shared_ptr<VarDeclStmt>& stmt);
+  int addStmt(bool keepVarName, const std::shared_ptr<ast::VarDeclStmt>& stmt);
 
   /// @brief Adds an new variable declaration to the metadata: constructs a `VarDeclStmt`, assigns
   /// an accessID to the variable, fixes the ID to name map, the ID to LocalVariableData map and the
@@ -199,10 +198,10 @@ public:
   /// @param type: the variable's type (double, const int, ...)
   /// @param rhs: the expression to initialize the variable (optional)
   /// @returns the variable declaration statement
-  std::shared_ptr<VarDeclStmt> declareVar(bool keepVarName, std::string varName, Type type,
+  std::shared_ptr<ast::VarDeclStmt> declareVar(bool keepVarName, std::string varName, Type type,
                                           int accessID = UIDGenerator::getInstance()->get());
-  std::shared_ptr<VarDeclStmt> declareVar(bool keepVarName, std::string varName, Type type,
-                                          std::shared_ptr<Expr> rhs,
+  std::shared_ptr<ast::VarDeclStmt> declareVar(bool keepVarName, std::string varName, Type type,
+                                          std::shared_ptr<ast::Expr> rhs,
                                           int accessID = UIDGenerator::getInstance()->get());
 
   void eraseStencilFunctionInstantiation(
@@ -211,7 +210,7 @@ public:
         stencilFunctionInstantiations_,
         [&](const std::shared_ptr<StencilFunctionInstantiation>& v) { return (v == stencilFun); });
   }
-  void eraseExprToStencilFunction(const std::shared_ptr<iir::StencilFunCallExpr>& expr) {
+  void eraseExprToStencilFunction(const std::shared_ptr<ast::StencilFunCallExpr>& expr) {
     ExprToStencilFunctionInstantiationMap_.erase(expr);
   }
 
@@ -236,26 +235,26 @@ public:
   const std::set<int>& getGlobalVariableAccessIDSet() const;
 
   /// @brief Get StencilID of the StencilCallDeclStmt
-  const std::unordered_map<std::shared_ptr<iir::StencilCallDeclStmt>, int>&
+  const std::unordered_map<std::shared_ptr<ast::StencilCallDeclStmt>, int>&
   getStencilCallToStencilIDMap() const;
-  const std::unordered_map<int, std::shared_ptr<iir::StencilCallDeclStmt>>&
+  const std::unordered_map<int, std::shared_ptr<ast::StencilCallDeclStmt>>&
   getStencilIDToStencilCallMap() const;
 
-  int getStencilIDFromStencilCallStmt(const std::shared_ptr<iir::StencilCallDeclStmt>& stmt) const;
+  int getStencilIDFromStencilCallStmt(const std::shared_ptr<ast::StencilCallDeclStmt>& stmt) const;
 
   Extents const& getBoundaryConditionExtentsFromBCStmt(
-      const std::shared_ptr<iir::BoundaryConditionDeclStmt>& stmt) const {
+      const std::shared_ptr<ast::BoundaryConditionDeclStmt>& stmt) const {
     DAWN_ASSERT_MSG(boundaryConditionToExtentsMap_.count(stmt),
                     "Boundary Condition does not have a matching Extent");
     return boundaryConditionToExtentsMap_.at(stmt);
   }
 
   bool hasBoundaryConditionStmtToExtent(
-      const std::shared_ptr<iir::BoundaryConditionDeclStmt>& stmt) const {
+      const std::shared_ptr<ast::BoundaryConditionDeclStmt>& stmt) const {
     return boundaryConditionToExtentsMap_.count(stmt);
   }
 
-  void addBoundaryConditiontoExtentPair(std::shared_ptr<BoundaryConditionDeclStmt>& bc,
+  void addBoundaryConditiontoExtentPair(std::shared_ptr<ast::BoundaryConditionDeclStmt>& bc,
                                         Extents& extents) {
     DAWN_ASSERT(!boundaryConditionToExtentsMap_.count(bc));
     boundaryConditionToExtentsMap_.emplace(bc, extents);
@@ -263,7 +262,7 @@ public:
 
   /// @brief get a stencil function instantiation by StencilFunCallExpr
   const std::shared_ptr<StencilFunctionInstantiation>
-  getStencilFunctionInstantiation(const std::shared_ptr<iir::StencilFunCallExpr>& expr) const;
+  getStencilFunctionInstantiation(const std::shared_ptr<ast::StencilFunCallExpr>& expr) const;
 
   const std::vector<std::shared_ptr<StencilFunctionInstantiation>>&
   getStencilFunctionInstantiations() const {
@@ -273,12 +272,12 @@ public:
   /// @brief Insert a new AccessID - Name pair
   void addAccessIDNamePair(int accessID, const std::string& name);
 
-  void addStencilCallStmt(std::shared_ptr<StencilCallDeclStmt> stmt, int stencilID);
+  void addStencilCallStmt(std::shared_ptr<ast::StencilCallDeclStmt> stmt, int stencilID);
 
   /// @brief Remove the field, variable or literal given by `AccessID`
   void removeAccessID(int AccessID);
 
-  void eraseStencilCallStmt(std::shared_ptr<iir::StencilCallDeclStmt> stmt);
+  void eraseStencilCallStmt(std::shared_ptr<ast::StencilCallDeclStmt> stmt);
   void eraseStencilID(const int stencilID);
 
   json::json jsonDump() const;
@@ -294,7 +293,7 @@ public:
   std::string getStencilName() const { return stencilName_; }
   SourceLocation getStencilLocation() const { return stencilLocation_; }
 
-  const std::unordered_map<std::string, std::shared_ptr<iir::BoundaryConditionDeclStmt>>&
+  const std::unordered_map<std::string, std::shared_ptr<ast::BoundaryConditionDeclStmt>>&
   getFieldNameToBCMap() const {
     return fieldnameToBoundaryConditionMap_;
   }
@@ -302,7 +301,7 @@ public:
   bool hasBC() const { return !fieldnameToBoundaryConditionMap_.empty(); }
   bool hasFieldBC(std::string name) const { return fieldnameToBoundaryConditionMap_.count(name); }
 
-  void addFieldBC(std::string name, const std::shared_ptr<BoundaryConditionDeclStmt>& bc) {
+  void addFieldBC(std::string name, const std::shared_ptr<ast::BoundaryConditionDeclStmt>& bc) {
     DAWN_ASSERT(!fieldnameToBoundaryConditionMap_.count(name));
     fieldnameToBoundaryConditionMap_.emplace(name, bc);
   }
@@ -324,14 +323,14 @@ public:
 
   std::shared_ptr<std::vector<int>> getVersionsOf(const int accessID) const;
 
-  const std::unordered_map<std::shared_ptr<iir::StencilFunCallExpr>,
+  const std::unordered_map<std::shared_ptr<ast::StencilFunCallExpr>,
                            std::shared_ptr<StencilFunctionInstantiation>>&
   getExprToStencilFunctionInstantiation() const {
     return ExprToStencilFunctionInstantiationMap_;
   }
 
   void insertExprToStencilFunctionInstantiation(
-      const std::shared_ptr<iir::StencilFunCallExpr>& expr,
+      const std::shared_ptr<ast::StencilFunCallExpr>& expr,
       const std::shared_ptr<StencilFunctionInstantiation>& stencilFun) {
     ExprToStencilFunctionInstantiationMap_.emplace(expr, stencilFun);
   }
@@ -358,12 +357,12 @@ public:
   /// the scope of another stencil function), the stencil function will be removed
   /// from the `callerStencilFunctionInstantiation` instead of this `StencilInstantiation`.
   void removeStencilFunctionInstantiation(
-      const std::shared_ptr<iir::StencilFunCallExpr>& expr,
+      const std::shared_ptr<ast::StencilFunCallExpr>& expr,
       std::shared_ptr<StencilFunctionInstantiation> callerStencilFunctionInstantiation = nullptr);
 
   /// @brief get a stencil function candidate by StencilFunCallExpr
   std::shared_ptr<StencilFunctionInstantiation>
-  getStencilFunctionInstantiationCandidate(const std::shared_ptr<iir::StencilFunCallExpr>& expr);
+  getStencilFunctionInstantiationCandidate(const std::shared_ptr<ast::StencilFunCallExpr>& expr);
 
   /// @brief get a stencil function candidate by name
   std::shared_ptr<StencilFunctionInstantiation>
@@ -391,7 +390,7 @@ public:
     return fieldIDToInitializedDimensionsMap_;
   }
 
-  const DoubleSidedMap<int, std::shared_ptr<iir::StencilCallDeclStmt>>&
+  const DoubleSidedMap<int, std::shared_ptr<ast::StencilCallDeclStmt>>&
   getStencilIDToStencilCallMap() {
     return StencilIDToStencilCallMap_;
   }
@@ -424,7 +423,7 @@ private:
   /// Referenced stencil functions in this stencil (note that nested stencil functions are not
   /// stored here but rather in the respecticve `StencilFunctionInstantiation`)
   std::vector<std::shared_ptr<StencilFunctionInstantiation>> stencilFunctionInstantiations_;
-  std::unordered_map<std::shared_ptr<iir::StencilFunCallExpr>,
+  std::unordered_map<std::shared_ptr<ast::StencilFunCallExpr>,
                      std::shared_ptr<StencilFunctionInstantiation>>
       ExprToStencilFunctionInstantiationMap_;
 
@@ -434,17 +433,17 @@ private:
       stencilFunInstantiationCandidate_;
 
   /// Field Name to BoundaryConditionDeclStmt
-  std::unordered_map<std::string, std::shared_ptr<iir::BoundaryConditionDeclStmt>>
+  std::unordered_map<std::string, std::shared_ptr<ast::BoundaryConditionDeclStmt>>
       fieldnameToBoundaryConditionMap_;
 
   /// Map of Field ID's to their respecive legal dimensions for offsets if specified in the code
   std::unordered_map<int, dawn::sir::FieldDimensions> fieldIDToInitializedDimensionsMap_;
 
   /// Can be filled from the StencilIDToStencilCallMap that is in Metainformation
-  DoubleSidedMap<int, std::shared_ptr<iir::StencilCallDeclStmt>> StencilIDToStencilCallMap_;
+  DoubleSidedMap<int, std::shared_ptr<ast::StencilCallDeclStmt>> StencilIDToStencilCallMap_;
 
   /// BoundaryConditionCall to Extent Map. Filled my `PassSetBoundaryCondition`
-  std::unordered_map<std::shared_ptr<iir::BoundaryConditionDeclStmt>, Extents>
+  std::unordered_map<std::shared_ptr<ast::BoundaryConditionDeclStmt>, Extents>
       boundaryConditionToExtentsMap_;
 
   /// Map from AccessID (of a local variable) to the data of such variable.

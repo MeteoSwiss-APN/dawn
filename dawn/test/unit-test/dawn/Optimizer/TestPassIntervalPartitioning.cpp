@@ -28,11 +28,11 @@ TEST(TestPassIntervalPartitioning, test_interval_partition) {
   std::unordered_set<iir::Interval> expected;
 
   dawn::UIDGenerator::getInstance()->reset();
-  expected.insert(iir::Interval{sir::Interval::Start, sir::Interval::Start});
-  expected.insert(iir::Interval{sir::Interval::Start + 1, sir::Interval::Start + 2});
-  expected.insert(iir::Interval{sir::Interval::Start + 3, sir::Interval::End - 4});
-  expected.insert(iir::Interval{sir::Interval::End - 3, sir::Interval::End - 2});
-  expected.insert(iir::Interval{sir::Interval::End - 1, sir::Interval::End});
+  expected.insert(iir::Interval{ast::Interval::Start, ast::Interval::Start});
+  expected.insert(iir::Interval{ast::Interval::Start + 1, ast::Interval::Start + 2});
+  expected.insert(iir::Interval{ast::Interval::Start + 3, ast::Interval::End - 4});
+  expected.insert(iir::Interval{ast::Interval::End - 3, ast::Interval::End - 2});
+  expected.insert(iir::Interval{ast::Interval::End - 1, ast::Interval::End});
 
   auto instantiation = IIRSerializer::deserialize("input/test_interval_partition.iir");
 
