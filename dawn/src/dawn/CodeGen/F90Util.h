@@ -72,10 +72,10 @@ public:
   std::string str() { return ss().str(); }
 };
 
-class FortranInterfaceAPI {
+class FortranAPI {
 public:
   enum class InterfaceType { INTEGER, FLOAT, DOUBLE, CHAR, BOOLEAN, OBJ };
-  FortranInterfaceAPI(std::string name, std::optional<InterfaceType> returnType = std::nullopt)
+  FortranAPI(std::string name, std::optional<InterfaceType> returnType = std::nullopt)
       : name_(name) {
     if(returnType) {
       returnType_ = TypeToString(*returnType);
@@ -104,7 +104,7 @@ protected:
     return "";
   }
 
-  void streamInterface(IndentedStringStream& ss) const {
+  void streamAPISignature(IndentedStringStream& ss, bool isCBinding) const {
     bool isFunction = returnType_ != "";
     ss << (isFunction ? returnType_ + " function" : std::string("subroutine")) << " &" << endline;
     ss << name_ << "( ";
@@ -121,34 +121,24 @@ protected:
     if(args_.size() > 0) {
       ss << " &" << endline;
     }
-    ss << ") bind(c)" << endline;
+    ss << std::string(")") << (isCBinding ? " bind(c)" : "") << endline;
+  }
+
+  virtual void streamAPISignature(IndentedStringStream& ss) const = 0;
+
+  virtual void streamArgsDecls(IndentedStringStream& ss) const = 0;
+
+  void streamAPI(IndentedStringStream& ss) const {
+    streamAPISignature(ss);
 
     ss.increaseIndent();
     ss << "use, intrinsic :: iso_c_binding" << endline;
-    std::for_each(args_.begin(), args_.end(), [&ss](auto& arg) {
-      ss << std::get<1>(arg) << ", ";
-      if(std::get<2>(arg) == 0) {
-        ss << "value";
-      } else {
-        ss << "dimension(*)";
-        // NOTE: this is what we would want. However, this leads to seg faults when being called
-        //       from  a FORTRAN host (but not with OpenACC ptrs for reasons currentyl not well
-        //       understood). We can re-introduce rank safety on the wrap() / verify() level
-        //
-        // ss << "dimension(";
-        // {
-        //   std::string sep;
-        //   for(int c = 0; c < std::get<2>(arg); ++c) {
-        //     ss << sep << ":";
-        //     sep = ",";
-        //   }
-        // }
-        // ss << ")";
-      }
-      ss << ", target :: " << std::get<0>(arg) << endline;
-    });
-    ss.decreaseIndent();
+    streamArgsDecls(ss);
+  }
 
+  void streamFooter(IndentedStringStream& ss) const {
+    ss.decreaseIndent();
+    bool isFunction = returnType_ != "";
     ss << "end " << (isFunction ? "function" : "subroutine") << endline;
   }
 
@@ -158,13 +148,87 @@ protected:
   friend class FortranInterfaceModuleGen;
 };
 
+class FortranWrapperAPI : public FortranAPI {
+public:
+  FortranWrapperAPI(std::string name, std::optional<InterfaceType> returnType = std::nullopt)
+      : FortranAPI(name, returnType) {}
+
+  void addBodyLine(std::string line, bool withIndentation = true) {
+    lines_.push_back(std::pair(line, withIndentation));
+  }
+  void addACCLine(std::string line) { lines_.push_back(std::pair("!$ACC " + line, false)); }
+
+protected:
+  void streamAPISignature(IndentedStringStream& ss) const override {
+    FortranAPI::streamAPISignature(ss, /*isCBinding*/ false);
+  }
+  void streamArgsDecls(IndentedStringStream& ss) const override {
+    std::for_each(args_.begin(), args_.end(), [&ss](auto& arg) {
+      ss << std::get<1>(arg) << ", ";
+      if(std::get<2>(arg) == 0) {
+        ss << "value";
+      } else {
+        ss << "dimension(";
+        {
+          std::string sep;
+          for(int c = 0; c < std::get<2>(arg); ++c) {
+            ss << sep << ":";
+            sep = ",";
+          }
+        }
+        ss << ")";
+      }
+      ss << ", target :: " << std::get<0>(arg) << endline;
+    });
+  }
+
+  void streamStatements(IndentedStringStream& ss) const {
+    for(const auto& line : lines_) {
+      if(line.second) { // with indentation
+        ss << line.first << endline;
+      } else {
+        ss.ss() << line.first << std::endl;
+      }
+    }
+  }
+
+  // {(line, withIndentation)}
+  std::vector<std::pair<std::string, bool>> lines_;
+  friend class FortranInterfaceModuleGen;
+};
+
+class FortranInterfaceAPI : public FortranAPI {
+public:
+  FortranInterfaceAPI(std::string name, std::optional<InterfaceType> returnType = std::nullopt)
+      : FortranAPI(name, returnType) {}
+
+protected:
+  void streamAPISignature(IndentedStringStream& ss) const override {
+    FortranAPI::streamAPISignature(ss, /*isCBinding*/ true);
+  }
+  void streamArgsDecls(IndentedStringStream& ss) const override {
+    std::for_each(args_.begin(), args_.end(), [&ss](auto& arg) {
+      ss << std::get<1>(arg) << ", ";
+      if(std::get<2>(arg) == 0) {
+        ss << "value";
+      } else {
+        ss << "dimension(*)";
+      }
+      ss << ", target :: " << std::get<0>(arg) << endline;
+    });
+  }
+};
+
 class FortranInterfaceModuleGen {
 public:
   FortranInterfaceModuleGen(IndentedStringStream& ss, std::string moduleName)
       : moduleName_(moduleName), ss_(ss) {}
 
-  void addAPI(const FortranInterfaceAPI& api) { apis_.push_back(api); }
-  void addAPI(FortranInterfaceAPI&& api) { apis_.push_back(std::move(api)); }
+  void addInterfaceAPI(const FortranInterfaceAPI& api) { interfaces_.push_back(api); }
+  void addInterfaceAPI(FortranInterfaceAPI&& api) { interfaces_.push_back(std::move(api)); }
+
+  void addWrapperAPI(const FortranWrapperAPI& api) { wrappers_.push_back(api); }
+  void addWrapperAPI(FortranWrapperAPI&& api) { wrappers_.push_back(std::move(api)); }
 
   void commit() {
     ss_ << "module " << moduleName_ << endline;
@@ -174,12 +238,24 @@ public:
     ss_ << "interface" << endline;
     ss_.increaseIndent();
 
-    for(auto& api : apis_) {
-      api.streamInterface(ss_);
+    for(auto& interface : interfaces_) {
+      interface.streamAPI(ss_);
+      interface.streamFooter(ss_);
     }
 
     ss_.decreaseIndent();
     ss_ << "end interface" << endline;
+    if(!wrappers_.empty()) {
+      ss_ << "contains" << endline;
+      ss_.increaseIndent();
+      for(auto& wrapper : wrappers_) {
+        wrapper.streamAPI(ss_);
+        wrapper.streamStatements(ss_);
+        wrapper.streamFooter(ss_);
+      }
+      ss_.decreaseIndent();
+    }
+
     ss_.decreaseIndent();
     ss_ << "end module" << endline;
   }
@@ -187,7 +263,8 @@ public:
 protected:
   std::string moduleName_;
   IndentedStringStream& ss_;
-  std::vector<FortranInterfaceAPI> apis_;
+  std::vector<FortranInterfaceAPI> interfaces_;
+  std::vector<FortranWrapperAPI> wrappers_;
 };
 } // namespace codegen
 } // namespace dawn

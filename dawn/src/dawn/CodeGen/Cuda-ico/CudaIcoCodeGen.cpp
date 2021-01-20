@@ -1188,13 +1188,13 @@ generateF90InterfaceSI(FortranInterfaceModuleGen& fimGen,
   auto globalTypeToFortType = [](const ast::Global& global) {
     switch(global.getType()) {
     case ast::Value::Kind::Boolean:
-      return FortranInterfaceAPI::InterfaceType::BOOLEAN;
+      return FortranAPI::InterfaceType::BOOLEAN;
     case ast::Value::Kind::Double:
-      return FortranInterfaceAPI::InterfaceType::DOUBLE;
+      return FortranAPI::InterfaceType::DOUBLE;
     case ast::Value::Kind::Float:
-      return FortranInterfaceAPI::InterfaceType::FLOAT;
+      return FortranAPI::InterfaceType::FLOAT;
     case ast::Value::Kind::Integer:
-      return FortranInterfaceAPI::InterfaceType::INTEGER;
+      return FortranAPI::InterfaceType::INTEGER;
     case ast::Value::Kind::String:
     default:
       throw std::runtime_error("string globals not supported in cuda ico backend");
@@ -1208,39 +1208,108 @@ generateF90InterfaceSI(FortranInterfaceModuleGen& fimGen,
   DAWN_ASSERT_MSG(stencils.size() <= 1,
                   "Unable to generate interface. More than one stencil in stencil instantiation.");
 
-  std::vector<FortranInterfaceAPI> apis = {
+  std::vector<FortranInterfaceAPI> interfaces = {
       FortranInterfaceAPI("run_" + stencilInstantiation->getName(),
-                          FortranInterfaceAPI::InterfaceType::DOUBLE),
+                          FortranAPI::InterfaceType::DOUBLE),
       FortranInterfaceAPI("run_" + stencilInstantiation->getName() + "_from_fort_host",
-                          FortranInterfaceAPI::InterfaceType::DOUBLE)};
+                          FortranAPI::InterfaceType::DOUBLE),
+      FortranInterfaceAPI("run_and_verify_" + stencilInstantiation->getName())};
+
+  FortranWrapperAPI runWrapper = FortranWrapperAPI("wrap_run_" + stencilInstantiation->getName());
 
   // only from host convenience wrapper takes mesh and k_size
-  apis[1].addArg("mesh", FortranInterfaceAPI::InterfaceType::OBJ);
-  apis[1].addArg("k_size", FortranInterfaceAPI::InterfaceType::INTEGER);
-  for(auto&& api : apis) {
+  const int fromHostAPIIdx = 1;
+  interfaces[fromHostAPIIdx].addArg("mesh", FortranAPI::InterfaceType::OBJ);
+  interfaces[fromHostAPIIdx].addArg("k_size", FortranAPI::InterfaceType::INTEGER);
+
+  // TODO: these are temporarily needed, should not be needed in the end
+  const int runAndVerifyIdx = 2;
+  interfaces[runAndVerifyIdx].addArg("mesh", FortranAPI::InterfaceType::OBJ);
+  interfaces[runAndVerifyIdx].addArg("k_size", FortranAPI::InterfaceType::INTEGER);
+  interfaces[runAndVerifyIdx].addArg("edge_start_idx_c", FortranAPI::InterfaceType::INTEGER);
+  interfaces[runAndVerifyIdx].addArg("edge_end_idx_c", FortranAPI::InterfaceType::INTEGER);
+  runWrapper.addArg("mesh", FortranAPI::InterfaceType::OBJ);
+  runWrapper.addArg("k_size", FortranAPI::InterfaceType::INTEGER);
+  runWrapper.addArg("edge_start_idx_c", FortranAPI::InterfaceType::INTEGER);
+  runWrapper.addArg("edge_end_idx_c", FortranAPI::InterfaceType::INTEGER);
+  // ENDTODO
+
+  auto addArgsToAPI = [&](FortranAPI& api) {
     for(const auto& global : globalsMap) {
       api.addArg(global.first, globalTypeToFortType(global.second));
     }
     for(auto fieldID : stencilInstantiation->getMetaData().getAPIFields()) {
       api.addArg(
           stencilInstantiation->getMetaData().getNameFromAccessID(fieldID),
-          FortranInterfaceAPI::InterfaceType::DOUBLE /* Unfortunately we need to know at codegen
+          FortranAPI::InterfaceType::DOUBLE /* Unfortunately we need to know at codegen
                                                         time whether we have fields in SP/DP */
           ,
           stencilInstantiation->getMetaData().getFieldDimensions(fieldID).rank());
     }
+  };
 
-    fimGen.addAPI(std::move(api));
+  for(auto&& interface : interfaces) {
+    addArgsToAPI(interface);
+    fimGen.addInterfaceAPI(std::move(interface));
   }
+
+  addArgsToAPI(runWrapper);
+
+  auto getFieldArgs = [&]() -> std::vector<std::string> {
+    std::vector<std::string> args;
+    for(auto fieldID : stencilInstantiation->getMetaData().getAPIFields()) {
+      args.push_back(stencilInstantiation->getMetaData().getNameFromAccessID(fieldID));
+    }
+    return args;
+  };
+  auto getGlobalsArgs = [&]() -> std::vector<std::string> {
+    std::vector<std::string> args;
+    for(const auto& global : globalsMap) {
+      args.push_back(global.first);
+    }
+    return args;
+  };
+
+  auto genCallArgs = [&](FortranWrapperAPI& wrapper, std::string first) {
+    wrapper.addBodyLine("( &");
+
+    wrapper.addBodyLine("   " + first + ", &"); // TODO remove
+
+    auto args = getGlobalsArgs();
+    auto fields = getFieldArgs();
+    std::move(fields.begin(), fields.end(), std::back_inserter(args));
+
+    for(int i = 0; i < args.size(); ++i) {
+      wrapper.addBodyLine("   " + args[i] + (i == (args.size() - 1) ? " &" : ", &"));
+    }
+    wrapper.addBodyLine(")");
+  };
+  runWrapper.addBodyLine("real(c_double) :: timing");
+  runWrapper.addACCLine("host_data use_device( &");
+  auto fieldArgs = getFieldArgs();
+  for(int i = 0; i < fieldArgs.size(); ++i) {
+    runWrapper.addACCLine("   " + fieldArgs[i] + (i == (fieldArgs.size() - 1) ? " &" : ", &"));
+  }
+  runWrapper.addACCLine(")");
+  runWrapper.addBodyLine("#ifdef __DSL_VERIFY", /*withIndentation*/ false);
+  runWrapper.addBodyLine("CALL run_and_verify_" + stencilInstantiation->getName() + " &");
+  genCallArgs(runWrapper, "mesh, k_size, edge_start_idx_c, edge_end_idx_c"); // TODO remove
+  runWrapper.addBodyLine("#else", /*withIndentation*/ false);
+  runWrapper.addBodyLine("timing = run_" + stencilInstantiation->getName() + " &");
+  genCallArgs(runWrapper, "mesh, k_size"); // TODO remove
+  runWrapper.addBodyLine("#endif", /*withIndentation*/ false);
+  runWrapper.addACCLine("end host_data");
+
+  fimGen.addWrapperAPI(std::move(runWrapper));
 
   // memory management functions for production interface
   FortranInterfaceAPI setup("setup_" + stencilInstantiation->getName());
   FortranInterfaceAPI free("free_" + stencilInstantiation->getName());
-  setup.addArg("mesh", FortranInterfaceAPI::InterfaceType::OBJ);
-  setup.addArg("k_size", FortranInterfaceAPI::InterfaceType::INTEGER);
+  setup.addArg("mesh", FortranAPI::InterfaceType::OBJ);
+  setup.addArg("k_size", FortranAPI::InterfaceType::INTEGER);
 
-  fimGen.addAPI(std::move(setup));
-  fimGen.addAPI(std::move(free));
+  fimGen.addInterfaceAPI(std::move(setup));
+  fimGen.addInterfaceAPI(std::move(free));
 }
 
 std::string CudaIcoCodeGen::generateF90Interface(std::string moduleName) const {
@@ -1302,6 +1371,7 @@ std::unique_ptr<TranslationUnit> CudaIcoCodeGen::generateCode() {
       "#include \"driver-includes/unstructured_domain.hpp\"",
       "#include \"driver-includes/defs.hpp\"",
       "#include \"driver-includes/cuda_utils.hpp\"",
+      "#include \"driver-includes/cuda_verify.hpp\"",
       "#define GRIDTOOLS_DAWN_NO_INCLUDE", // Required to not include gridtools from math.hpp
       "#include \"driver-includes/math.hpp\"",
       "#include \"driver-includes/timer_cuda.hpp\"",
