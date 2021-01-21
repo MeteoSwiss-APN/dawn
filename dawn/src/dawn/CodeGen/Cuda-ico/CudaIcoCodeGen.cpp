@@ -63,6 +63,47 @@ static bool intervalsConsistent(const dawn::iir::Stage& stage) {
   return consistentHi && consistentLo;
 }
 
+namespace {
+std::vector<int> getUsedFields(const dawn::iir::Stencil& stencil,
+                               std::unordered_set<dawn::iir::Field::IntendKind> intend = {
+                                   dawn::iir::Field::IntendKind::Output,
+                                   dawn::iir::Field::IntendKind::InputOutput,
+                                   dawn::iir::Field::IntendKind::Input}) {
+  const auto& APIFields = stencil.getMetadata().getAPIFields();
+  const auto& stenFields = stencil.getOrderedFields();
+  auto usedAPIFields =
+      dawn::makeRange(APIFields, [&stenFields](int f) { return stenFields.count(f); });
+
+  std::vector<int> res;
+  for(auto fieldID : usedAPIFields) {
+    auto field = stenFields.at(fieldID);
+    if(intend.count(field.field.getIntend())) {
+      res.push_back(fieldID);
+    }
+  }
+
+  return res;
+}
+std::string getListUsedFields(const dawn::iir::Stencil& stencil,
+                              std::unordered_set<dawn::iir::Field::IntendKind> intend = {
+                                  dawn::iir::Field::IntendKind::Output,
+                                  dawn::iir::Field::IntendKind::InputOutput,
+                                  dawn::iir::Field::IntendKind::Input}) {
+  auto usedFields = getUsedFields(stencil, intend);
+  std::stringstream ioFieldStr;
+  bool first = true;
+  for(auto fieldID : usedFields) {
+    if(!first) {
+      ioFieldStr << ", ";
+    }
+    ioFieldStr << stencil.getMetadata().getFieldNameFromAccessID(fieldID);
+    first = false;
+  }
+
+  return ioFieldStr.str();
+}
+} // namespace
+
 namespace dawn {
 namespace codegen {
 namespace cudaico {
@@ -441,9 +482,7 @@ void CudaIcoCodeGen::generateStencilSetup(MemberFunction& stencilSetup,
 
 void CudaIcoCodeGen::generateCopyMemoryFun(MemberFunction& copyFun,
                                            const iir::Stencil& stencil) const {
-  const auto& APIFields = stencil.getMetadata().getAPIFields();
-  const auto& stenFields = stencil.getOrderedFields();
-  auto usedAPIFields = makeRange(APIFields, [&stenFields](int f) { return stenFields.count(f); });
+  auto usedAPIFields = getUsedFields(stencil);
 
   for(auto fieldID : usedAPIFields) {
     auto fname = stencil.getMetadata().getFieldNameFromAccessID(fieldID);
@@ -481,9 +520,7 @@ void CudaIcoCodeGen::generateCopyMemoryFun(MemberFunction& copyFun,
 
 void CudaIcoCodeGen::generateCopyPtrFun(MemberFunction& copyFun,
                                         const iir::Stencil& stencil) const {
-  const auto& APIFields = stencil.getMetadata().getAPIFields();
-  const auto& stenFields = stencil.getOrderedFields();
-  auto usedAPIFields = makeRange(APIFields, [&stenFields](int f) { return stenFields.count(f); });
+  auto usedAPIFields = getUsedFields(stencil);
 
   for(auto fieldID : usedAPIFields) {
     auto fname = stencil.getMetadata().getFieldNameFromAccessID(fieldID);
@@ -499,36 +536,32 @@ void CudaIcoCodeGen::generateCopyPtrFun(MemberFunction& copyFun,
 
 void CudaIcoCodeGen::generateCopyBackFun(MemberFunction& copyBackFun, const iir::Stencil& stencil,
                                          bool rawPtrs) const {
-  const auto& APIFields = stencil.getMetadata().getAPIFields();
-  const auto& stenFields = stencil.getOrderedFields();
-  auto usedAPIFields = makeRange(APIFields, [&stenFields](int f) { return stenFields.count(f); });
+  const auto& fieldInfos = stencil.getOrderedFields();
+  auto usedAPIFields = getUsedFields(
+      stencil, {dawn::iir::Field::IntendKind::Output, dawn::iir::Field::IntendKind::InputOutput});
 
   // signature
   for(auto fieldID : usedAPIFields) {
-    auto field = stenFields.at(fieldID);
-    if(field.field.getIntend() == dawn::iir::Field::IntendKind::Output ||
-       field.field.getIntend() == dawn::iir::Field::IntendKind::InputOutput) {
+    const auto& field = fieldInfos.at(fieldID);
 
-      if(field.field.getFieldDimensions().isVertical()) {
-        if(rawPtrs) {
-          copyBackFun.addArg("::dawn::float_type* " + field.Name);
-        } else {
-          copyBackFun.addArg("dawn::vertical_field_t<LibTag, ::dawn::float_type>& " + field.Name);
-        }
-        continue;
-      }
-
-      auto dims = sir::dimension_cast<sir::UnstructuredFieldDimension const&>(
-          field.field.getFieldDimensions().getHorizontalFieldDimension());
+    if(field.field.getFieldDimensions().isVertical()) {
       if(rawPtrs) {
         copyBackFun.addArg("::dawn::float_type* " + field.Name);
       } else {
-        if(dims.isDense()) {
-          copyBackFun.addArg(locToDenseTypeString(dims.getDenseLocationType()) + "& " + field.Name);
-        } else {
-          copyBackFun.addArg(locToSparseTypeString(dims.getDenseLocationType()) + "& " +
-                             field.Name);
-        }
+        copyBackFun.addArg("dawn::vertical_field_t<LibTag, ::dawn::float_type>& " + field.Name);
+      }
+      continue;
+    }
+
+    auto dims = sir::dimension_cast<sir::UnstructuredFieldDimension const&>(
+        field.field.getFieldDimensions().getHorizontalFieldDimension());
+    if(rawPtrs) {
+      copyBackFun.addArg("::dawn::float_type* " + field.Name);
+    } else {
+      if(dims.isDense()) {
+        copyBackFun.addArg(locToDenseTypeString(dims.getDenseLocationType()) + "& " + field.Name);
+      } else {
+        copyBackFun.addArg(locToSparseTypeString(dims.getDenseLocationType()) + "& " + field.Name);
       }
     }
   }
@@ -565,47 +598,43 @@ void CudaIcoCodeGen::generateCopyBackFun(MemberFunction& copyBackFun, const iir:
 
   // function body
   for(auto fieldID : usedAPIFields) {
-    auto field = stenFields.at(fieldID);
-    if(field.field.getIntend() == dawn::iir::Field::IntendKind::Output ||
-       field.field.getIntend() == dawn::iir::Field::IntendKind::InputOutput) {
+    const auto& field = fieldInfos.at(fieldID);
 
-      copyBackFun.addBlockStatement("if (do_reshape)", [&]() {
-        copyBackFun.addStatement("::dawn::float_type* host_buf = new ::dawn::float_type[" +
-                                 getNumElements(field) + "]");
-        copyBackFun.addStatement("gpuErrchk(cudaMemcpy((::dawn::float_type*) host_buf, " +
-                                 field.Name + "_, " + getNumElements(field) +
-                                 "*sizeof(::dawn::float_type), cudaMemcpyDeviceToHost))");
+    copyBackFun.addBlockStatement("if (do_reshape)", [&]() {
+      copyBackFun.addStatement("::dawn::float_type* host_buf = new ::dawn::float_type[" +
+                               getNumElements(field) + "]");
+      copyBackFun.addStatement("gpuErrchk(cudaMemcpy((::dawn::float_type*) host_buf, " +
+                               field.Name + "_, " + getNumElements(field) +
+                               "*sizeof(::dawn::float_type), cudaMemcpyDeviceToHost))");
 
-        if(!field.field.getFieldDimensions().isVertical()) {
-          auto dims = sir::dimension_cast<sir::UnstructuredFieldDimension const&>(
-              field.field.getFieldDimensions().getHorizontalFieldDimension());
+      if(!field.field.getFieldDimensions().isVertical()) {
+        auto dims = sir::dimension_cast<sir::UnstructuredFieldDimension const&>(
+            field.field.getFieldDimensions().getHorizontalFieldDimension());
 
-          bool isHorizontal = !field.field.getFieldDimensions().K();
-          std::string kSizeStr = (isHorizontal) ? "1" : "kSize_";
+        bool isHorizontal = !field.field.getFieldDimensions().K();
+        std::string kSizeStr = (isHorizontal) ? "1" : "kSize_";
 
-          if(dims.isDense()) {
-            copyBackFun.addStatement("dawn::reshape_back(host_buf, " + field.Name +
-                                     ((!rawPtrs) ? ".data()" : "") + " , " + kSizeStr + ", mesh_." +
-                                     locToDenseSizeStringGpuMesh(dims.getDenseLocationType(),
-                                                                 codeGenOptions.UnstrPadding) +
-                                     ")");
-          } else {
-            copyBackFun.addStatement("dawn::reshape_back(host_buf, " + field.Name +
-                                     ((!rawPtrs) ? ".data()" : "") + ", " + kSizeStr + ", mesh_." +
-                                     locToDenseSizeStringGpuMesh(dims.getDenseLocationType(),
-                                                                 codeGenOptions.UnstrPadding) +
-                                     ", " + chainToSparseSizeString(dims.getIterSpace()) + ")");
-          }
+        if(dims.isDense()) {
+          copyBackFun.addStatement("dawn::reshape_back(host_buf, " + field.Name +
+                                   ((!rawPtrs) ? ".data()" : "") + " , " + kSizeStr + ", mesh_." +
+                                   locToDenseSizeStringGpuMesh(dims.getDenseLocationType(),
+                                                               codeGenOptions.UnstrPadding) +
+                                   ")");
+        } else {
+          copyBackFun.addStatement("dawn::reshape_back(host_buf, " + field.Name +
+                                   ((!rawPtrs) ? ".data()" : "") + ", " + kSizeStr + ", mesh_." +
+                                   locToDenseSizeStringGpuMesh(dims.getDenseLocationType(),
+                                                               codeGenOptions.UnstrPadding) +
+                                   ", " + chainToSparseSizeString(dims.getIterSpace()) + ")");
         }
-        copyBackFun.addStatement("delete[] host_buf");
-      });
-      copyBackFun.addBlockStatement("else", [&]() {
-        copyBackFun.addStatement("gpuErrchk(cudaMemcpy(" + field.Name +
-                                 ((!rawPtrs) ? ".data()" : "") + ", " + field.Name + "_," +
-                                 getNumElements(field) +
-                                 "*sizeof(::dawn::float_type), cudaMemcpyDeviceToHost))");
-      });
-    }
+      }
+      copyBackFun.addStatement("delete[] host_buf");
+    });
+    copyBackFun.addBlockStatement("else", [&]() {
+      copyBackFun.addStatement(
+          "gpuErrchk(cudaMemcpy(" + field.Name + ((!rawPtrs) ? ".data()" : "") + ", " + field.Name +
+          "_," + getNumElements(field) + "*sizeof(::dawn::float_type), cudaMemcpyDeviceToHost))");
+    });
   }
 }
 
@@ -729,7 +758,7 @@ void CudaIcoCodeGen::generateAllAPIRunFunctions(
     }
 
     const auto& globalsMap = stencilInstantiation->getIIR()->getGlobalVariableMap();
-    auto addExplodedGlobals = [](const ast::GlobalVariableMap& globalsMap, MemberFunction& fun) {
+    auto addExplodedGlobals = [&globalsMap](MemberFunction& fun) {
       for(const auto& global : globalsMap) {
         std::string Name = global.first;
         std::string Type = ast::Value::typeToString(global.second.getType());
@@ -741,10 +770,10 @@ void CudaIcoCodeGen::generateAllAPIRunFunctions(
       for(auto& apiRunFun : apiRunFuns) {
         apiRunFun->addArg("dawn::GlobalGpuTriMesh *mesh");
         apiRunFun->addArg("int k_size");
-        addExplodedGlobals(globalsMap, *apiRunFun);
+        addExplodedGlobals(*apiRunFun);
       }
     } else {
-      addExplodedGlobals(globalsMap, *apiRunFuns[0]);
+      addExplodedGlobals(*apiRunFuns[0]);
     }
     for(auto& apiRunFun : apiRunFuns) {
       for(auto accessID : stencilInstantiation->getMetaData().getAPIFields()) {
@@ -768,38 +797,13 @@ void CudaIcoCodeGen::generateAllAPIRunFunctions(
         // we now know that there is exactly one stencil
         const auto& stencil = *stencils[0];
 
-        auto stenFields = stencil.getOrderedFields();
-        const auto& APIFields = stencilInstantiation->getMetaData().getAPIFields();
-        auto usedAPIFields =
-            makeRange(APIFields, [&stenFields](int f) { return stenFields.count(f); });
-
-        // listing all used API fields
-        std::stringstream fieldsStr;
-        {
-          bool first = true;
-          for(auto fieldID : usedAPIFields) {
-            if(!first) {
-              fieldsStr << ", ";
-            }
-            fieldsStr << stencil.getMetadata().getFieldNameFromAccessID(fieldID);
-            first = false;
-          }
-        }
+        // listing all API fields
+        std::string fieldsStr = getListUsedFields(stencil);
 
         // listing all input & output fields
-        std::stringstream ioFieldStr;
-        bool first = true;
-        for(auto fieldID : usedAPIFields) {
-          auto field = stenFields.at(fieldID);
-          if(field.field.getIntend() == dawn::iir::Field::IntendKind::Output ||
-             field.field.getIntend() == dawn::iir::Field::IntendKind::InputOutput) {
-            if(!first) {
-              ioFieldStr << ", ";
-            }
-            ioFieldStr << field.Name;
-            first = false;
-          }
-        }
+        std::string ioFieldStr =
+            getListUsedFields(stencil, {dawn::iir::Field::IntendKind::Output,
+                                        dawn::iir::Field::IntendKind::InputOutput});
 
         const std::string stencilName =
             codeGenProperties.getStencilName(StencilContext::SC_Stencil, stencil.getStencilID());
@@ -823,13 +827,13 @@ void CudaIcoCodeGen::generateAllAPIRunFunctions(
           }
           // depending if we are calling from c or from fortran, we need to transpose the data or
           // not
-          apiRunFuns[0]->addStatement("s.copy_memory(" + fieldsStr.str() + ", true)");
-          apiRunFuns[1]->addStatement("s.copy_memory(" + fieldsStr.str() + ", false)");
+          apiRunFuns[0]->addStatement("s.copy_memory(" + fieldsStr + ", true)");
+          apiRunFuns[1]->addStatement("s.copy_memory(" + fieldsStr + ", false)");
           for(auto& apiRunFun : apiRunFuns) {
             copyGlobals(globalsMap, *apiRunFun);
           }
         } else {
-          apiRunFuns[0]->addStatement("s.copy_pointers(" + fieldsStr.str() + ")");
+          apiRunFuns[0]->addStatement("s.copy_pointers(" + fieldsStr + ")");
           copyGlobals(globalsMap, *apiRunFuns[0]);
         }
         for(auto& apiRunFun : apiRunFuns) {
@@ -838,8 +842,8 @@ void CudaIcoCodeGen::generateAllAPIRunFunctions(
           apiRunFun->addStatement("s.reset()");
         }
         if(fromHost) {
-          apiRunFuns[0]->addStatement("s.CopyResultToHost(" + ioFieldStr.str() + ", true)");
-          apiRunFuns[1]->addStatement("s.CopyResultToHost(" + ioFieldStr.str() + ", false)");
+          apiRunFuns[0]->addStatement("s.CopyResultToHost(" + ioFieldStr + ", true)");
+          apiRunFuns[1]->addStatement("s.CopyResultToHost(" + ioFieldStr + ", false)");
           for(auto& apiRunFun : apiRunFuns) {
             apiRunFun->addStatement(fullStencilName + "::free()");
           }
@@ -862,6 +866,299 @@ void CudaIcoCodeGen::generateAllAPIRunFunctions(
         apiRunFun->commit();
       }
     }
+  }
+}
+
+void CudaIcoCodeGen::generateAllAPIVerifyFunctions(
+    std::stringstream& ssSW, const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation,
+    CodeGenProperties& codeGenProperties, bool onlyDecl) const {
+  const auto& stencils = stencilInstantiation->getStencils();
+  DAWN_ASSERT_MSG(stencils.size() <= 1, "code generation only for at most one stencil!\n");
+  const auto& stencil = *stencils[0];
+
+  const std::string wrapperName = stencilInstantiation->getName();
+
+  auto getStartIdxName = [](dawn::ast::LocationType locType) -> std::string {
+    using dawn::ast::LocationType;
+    switch(locType) {
+    case LocationType::Edges:
+      return "edge_start_idx_c";
+      break;
+    case LocationType::Cells:
+      return "cell_start_idx_c";
+      break;
+    case LocationType::Vertices:
+      return "vertex_start_idx_c";
+      break;
+    default:
+      dawn_unreachable("invalid location type");
+    }
+  };
+  auto getEndIdxName = [](dawn::ast::LocationType locType) -> std::string {
+    using dawn::ast::LocationType;
+    switch(locType) {
+    case LocationType::Edges:
+      return "edge_end_idx_c";
+      break;
+    case LocationType::Cells:
+      return "cell_end_idx_c";
+      break;
+    case LocationType::Vertices:
+      return "vertex_end_idx_c";
+      break;
+    default:
+      dawn_unreachable("invalid location type");
+    }
+  };
+  auto getDenseSizeName = [](dawn::ast::LocationType locType) -> std::string {
+    using dawn::ast::LocationType;
+    switch(locType) {
+    case LocationType::Edges:
+      return "dense_size_edges";
+      break;
+    case LocationType::Cells:
+      return "dense_size_cells";
+      break;
+    case LocationType::Vertices:
+      return "dense_size_vertices";
+      break;
+    default:
+      dawn_unreachable("invalid location type");
+    }
+  };
+  auto getSerializeCall = [](dawn::ast::LocationType locType) -> std::string {
+    using dawn::ast::LocationType;
+    switch(locType) {
+    case LocationType::Edges:
+      return "dense_edges_to_vtk";
+      break;
+    case LocationType::Cells:
+      return "dense_cells_to_vtk";
+      break;
+    case LocationType::Vertices:
+      return "dense_vertices_to_vtk";
+      break;
+    default:
+      dawn_unreachable("invalid location type");
+    }
+  };
+
+  std::stringstream verifySS, runAndVerifySS;
+
+  { // stringstreams need to outlive the correspondind MemberFunctions
+    const auto& globalsMap = stencilInstantiation->getIIR()->getGlobalVariableMap();
+    auto getExplodedGlobalsStr = [&globalsMap]() -> std::string {
+      std::string ret = "";
+      bool first = true;
+      for(const auto& global : globalsMap) {
+        if(!first) {
+          ret += ", ";
+        }
+        std::string Name = global.first;
+        ret += Name;
+        first = false;
+      }
+      return ret;
+    };
+    auto addExplodedGlobals = [&globalsMap](MemberFunction& fun) {
+      for(const auto& global : globalsMap) {
+        std::string Name = global.first;
+        std::string Type = ast::Value::typeToString(global.second.getType());
+        fun.addArg(Type + " " + Name);
+      }
+    };
+
+    MemberFunction verifyAPI("bool", "verify_" + wrapperName, verifySS, /*indent level*/ 0,
+                             onlyDecl);
+    MemberFunction runAndVerifyAPI("void", "run_and_verify_" + wrapperName, runAndVerifySS,
+                                   /*indent level*/ 0, onlyDecl);
+
+    // TODO to be removed
+    verifyAPI.addArg("const int edge_start_idx_c");
+    verifyAPI.addArg("const int edge_end_idx_c");
+    // ENDTODO
+    verifyAPI.addArg("const int " + getDenseSizeName(dawn::ast::LocationType::Edges));
+    verifyAPI.addArg("const int " + getDenseSizeName(dawn::ast::LocationType::Cells));
+    verifyAPI.addArg("const int " + getDenseSizeName(dawn::ast::LocationType::Vertices));
+    verifyAPI.addArg("const int k_size");
+
+    // TODO implement case in which IntendKind is InputOutput
+    for(auto fieldID : getUsedFields(stencil, {dawn::iir::Field::IntendKind::Output})) {
+      verifyAPI.addArg("const ::dawn::float_type *" +
+                       stencilInstantiation->getMetaData().getNameFromAccessID(fieldID) + "_dsl");
+      verifyAPI.addArg("const ::dawn::float_type *" +
+                       stencilInstantiation->getMetaData().getNameFromAccessID(fieldID));
+    }
+    verifyAPI.addArg("const int iteration");
+    verifyAPI.finishArgs();
+
+    // TODO to be removed
+    runAndVerifyAPI.addArg("dawn::GlobalGpuTriMesh *mesh");
+    runAndVerifyAPI.addArg("const int k_size");
+    runAndVerifyAPI.addArg("const int edge_start_idx_c");
+    runAndVerifyAPI.addArg("const int edge_end_idx_c");
+    // ENDTODO
+    addExplodedGlobals(runAndVerifyAPI);
+    for(auto accessID : stencilInstantiation->getMetaData().getAPIFields()) {
+      runAndVerifyAPI.addArg("::dawn::float_type *" +
+                             stencilInstantiation->getMetaData().getNameFromAccessID(accessID));
+    }
+    runAndVerifyAPI.finishArgs();
+
+    if(!onlyDecl) {
+      const auto& fieldInfos = stencil.getOrderedFields();
+
+      verifyAPI.startBody();
+      verifyAPI.addStatement("using namespace std::chrono");
+      verifyAPI.addStatement(
+          "high_resolution_clock::time_point t_start = high_resolution_clock::now()");
+      verifyAPI.addStatement("bool isValid = true");
+      verifyAPI.addStatement("double relErr");
+
+      for(auto fieldID : getUsedFields(stencil, {dawn::iir::Field::IntendKind::Output})) {
+        const auto& fieldInfo = fieldInfos.at(fieldID);
+        if(fieldInfo.field.getFieldDimensions().isVertical()) {
+          DAWN_LOG(WARNING) << "Verifying vertical output field not supported yet.";
+          continue;
+        }
+        if(!fieldInfo.field.getFieldDimensions().K()) {
+          DAWN_LOG(WARNING) << "Verifying horizontal output field not supported yet.";
+          continue;
+        }
+        auto hDims = sir::dimension_cast<sir::UnstructuredFieldDimension const&>(
+            fieldInfo.field.getFieldDimensions().getHorizontalFieldDimension());
+        if(hDims.isSparse()) {
+          DAWN_LOG(WARNING) << "Verifying sparse output field not supported yet.";
+          continue;
+        }
+        auto lt = hDims.getDenseLocationType();
+        const auto startIdxName = getStartIdxName(lt), endIdxName = getEndIdxName(lt),
+                   denseSizeName = getDenseSizeName(lt), serializeCall = getSerializeCall(lt);
+        verifyAPI.addStatement("relErr = verify_dense_full_field(" + startIdxName + ", " +
+                               endIdxName + ", " + denseSizeName + ", k_size, " + fieldInfo.Name +
+                               "_dsl, " + fieldInfo.Name + ", \"" + fieldInfo.Name + "\"" + ")");
+        verifyAPI.addBlockStatement("if (relErr > RELATIVE_ERROR_THRESHOLD)", [&]() {
+          verifyAPI.addStatement("isValid = false");
+          verifyAPI.addPreprocessorDirective("ifdef __SERIALIZE_ON_ERROR");
+          // serialize actual field
+          verifyAPI.addStatement(serializeCall + "(" + startIdxName + ", " + endIdxName +
+                                 ", k_size, " + denseSizeName + ", " + fieldInfo.Name + ", \"" +
+                                 wrapperName + "\", \"" + fieldInfo.Name + "\", iteration)");
+          // serialize dsl field
+          verifyAPI.addStatement(serializeCall + "(" + startIdxName + ", " + endIdxName +
+                                 ", k_size, " + denseSizeName + ", " + fieldInfo.Name + "_dsl" +
+                                 ", \"" + wrapperName + "\", \"" + fieldInfo.Name + "_dsl" +
+                                 "\", iteration)");
+          verifyAPI.addStatement("std::cout << \"[DSL] serializing " + fieldInfo.Name +
+                                 " as error is high.\\n\" << std::flush");
+          verifyAPI.addPreprocessorDirective("endif");
+        });
+      }
+      verifyAPI.addStatement(
+          "high_resolution_clock::time_point t_end = high_resolution_clock::now()");
+      verifyAPI.addStatement(
+          "duration<double> timing = duration_cast<duration<double>>(t_end - t_start)");
+      verifyAPI.addStatement("std::cout << \"[DSL] Verification took \" << timing.count() << \" "
+                             "seconds.\\n\" << std::flush");
+      verifyAPI.addStatement("return isValid");
+
+      // TODO runAndVerifyAPI body
+      runAndVerifyAPI.addStatement("static int iteration = 0");
+      runAndVerifyAPI.addStatement("const int dense_size_edges = mesh->NumEdges + " +
+                                   std::to_string(codeGenOptions.UnstrPadding.Edges()));
+      runAndVerifyAPI.addStatement("const int dense_size_cells = mesh->NumCells + " +
+                                   std::to_string(codeGenOptions.UnstrPadding.Cells()));
+      runAndVerifyAPI.addStatement("const int dense_size_vertices= mesh->NumVertices + " +
+                                   std::to_string(codeGenOptions.UnstrPadding.Vertices()));
+      runAndVerifyAPI.addStatement(
+          "std::cout << \"[DSL] Allocating output fields on the device\\n\" << std::flush");
+      for(auto fieldID : getUsedFields(stencil, {dawn::iir::Field::IntendKind::Output})) {
+        const auto& fieldInfo = fieldInfos.at(fieldID);
+        if(fieldInfo.field.getFieldDimensions().isVertical()) {
+          DAWN_LOG(WARNING) << "Verifying vertical output field not supported yet.";
+          continue;
+        }
+        if(!fieldInfo.field.getFieldDimensions().K()) {
+          DAWN_LOG(WARNING) << "Verifying horizontal output field not supported yet.";
+          continue;
+        }
+        auto hDims = sir::dimension_cast<sir::UnstructuredFieldDimension const&>(
+            fieldInfo.field.getFieldDimensions().getHorizontalFieldDimension());
+        if(hDims.isSparse()) {
+          DAWN_LOG(WARNING) << "Verifying sparse output field not supported yet.";
+          continue;
+        }
+        auto lt = hDims.getDenseLocationType();
+        runAndVerifyAPI.addStatement("double * dsl_" + fieldInfo.Name);
+        runAndVerifyAPI.addStatement("::dawn::allocField(&dsl_" + fieldInfo.Name + ", " +
+                                     getDenseSizeName(lt) + ", k_size)");
+      }
+      runAndVerifyAPI.addStatement("std::cout << \"[DSL] Running stencil " + wrapperName +
+                                   "...\\n\" << std::flush");
+
+      auto getListDSLFields = [&fieldInfos](const iir::Stencil& stencil) -> std::string {
+        auto usedFields = getUsedFields(stencil);
+        bool first = true;
+        std::string ret = "";
+        for(auto fieldID : usedFields) {
+          auto fieldInfo = fieldInfos.at(fieldID);
+          if(!first) {
+            ret += ", ";
+          }
+          ret += fieldInfo.field.getIntend() == dawn::iir::Field::IntendKind::Output
+                     ? ("dsl_" + fieldInfo.Name)
+                     : fieldInfo.Name;
+          first = false;
+        }
+        return ret;
+      };
+      std::string dslFieldsStr = getListDSLFields(stencil);
+      std::string globalsStr = getExplodedGlobalsStr();
+      runAndVerifyAPI.addStatement(
+          "double time = run_" + wrapperName + "(mesh, k_size," +
+          (globalsStr.empty() ? "" : (dslFieldsStr.empty() ? globalsStr : (globalsStr + ", "))) +
+          dslFieldsStr + ")");
+
+      runAndVerifyAPI.addStatement("std::cout << \"[DSL] " + wrapperName +
+                                   " run time: \" << "
+                                   "time << \"s\\n\" << std::flush");
+      runAndVerifyAPI.addStatement("std::cout << \"[DSL] Verifying stencil " + wrapperName +
+                                   "...\\n\" << std::flush");
+      std::string outputVerifyList = "";
+      {
+        bool first = true;
+        // TODO implement case in which IntendKind is InputOutput
+        for(auto fieldID : getUsedFields(stencil, {dawn::iir::Field::IntendKind::Output})) {
+          if(!first) {
+            outputVerifyList += ", ";
+          }
+          outputVerifyList +=
+              "dsl_" + stencilInstantiation->getMetaData().getNameFromAccessID(fieldID) + ", ";
+          outputVerifyList += stencilInstantiation->getMetaData().getNameFromAccessID(fieldID);
+          first = false;
+        }
+      }
+      // TODO: should not pass start and end indices, but take from mesh inside verify_*()
+      runAndVerifyAPI.addStatement("verify_" + wrapperName + "(edge_start_idx_c, edge_end_idx_c, " +
+                                   getDenseSizeName(dawn::ast::LocationType::Edges) + ", " +
+                                   getDenseSizeName(dawn::ast::LocationType::Cells) + ", " +
+                                   getDenseSizeName(dawn::ast::LocationType::Vertices) +
+                                   ", k_size, " + outputVerifyList + ", iteration)");
+
+      runAndVerifyAPI.addStatement("std::cout << \"[DSL] Freeing memory\\n\" << std::flush");
+
+      for(auto fieldID : getUsedFields(stencil, {dawn::iir::Field::IntendKind::Output})) {
+        const auto& fieldInfo = fieldInfos.at(fieldID);
+        runAndVerifyAPI.addStatement("gpuErrchk(cudaFree(dsl_" + fieldInfo.Name + "))");
+      }
+
+      runAndVerifyAPI.addStatement("iteration++");
+    }
+
+    verifyAPI.commit();
+    runAndVerifyAPI.commit();
+    ssSW << verifySS.str() + (onlyDecl ? ";" : "");
+    ssSW << runAndVerifySS.str() + (onlyDecl ? ";" : "");
   }
 }
 
@@ -1142,6 +1439,7 @@ std::string CudaIcoCodeGen::generateStencilInstantiation(
   bool fromHost = true;
   generateAllAPIRunFunctions(ssSW, stencilInstantiation, codeGenProperties, fromHost);
   generateAllAPIRunFunctions(ssSW, stencilInstantiation, codeGenProperties, !fromHost);
+  generateAllAPIVerifyFunctions(ssSW, stencilInstantiation, codeGenProperties);
   generateMemMgmtFunctions(ssSW, stencilInstantiation, codeGenProperties);
   ssSW << "}\n";
   generateStaticMembersTrailer(ssSW, stencilInstantiation, codeGenProperties);
@@ -1162,6 +1460,8 @@ void CudaIcoCodeGen::generateCHeaderSI(
                              /*onlyDecl=*/true);
   generateAllAPIRunFunctions(ssSW, stencilInstantiation, codeGenProperties, !fromHost,
                              /*onlyDecl=*/true);
+  generateAllAPIVerifyFunctions(ssSW, stencilInstantiation, codeGenProperties,
+                                /*onlyDecl=*/true);
   generateMemMgmtFunctions(ssSW, stencilInstantiation, codeGenProperties, /*onlyDecl=*/true);
   ssSW << "}\n";
 }
@@ -1377,6 +1677,9 @@ std::unique_ptr<TranslationUnit> CudaIcoCodeGen::generateCode() {
       "#include \"driver-includes/timer_cuda.hpp\"",
       "#define BLOCK_SIZE 16",
       "#define LEVELS_PER_THREAD 1",
+      "#ifndef RELATIVE_ERROR_THRESHOLD",
+      "#define RELATIVE_ERROR_THRESHOLD 1.0e-12",
+      "#endif",
       "using namespace gridtools::dawn;",
   };
 
