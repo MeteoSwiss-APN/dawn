@@ -33,6 +33,7 @@
 #include "dawn/Support/Exception.h"
 #include "dawn/Support/FileSystem.h"
 #include "dawn/Support/Logger.h"
+#include "dawn/Support/STLExtras.h"
 #include "driver-includes/unstructured_interface.hpp"
 
 #include <algorithm>
@@ -84,24 +85,65 @@ std::vector<int> getUsedFields(const dawn::iir::Stencil& stencil,
 
   return res;
 }
-std::string getListUsedFields(const dawn::iir::Stencil& stencil,
+std::vector<std::string> getUsedFieldsNames(
+    const dawn::iir::Stencil& stencil,
+    std::unordered_set<dawn::iir::Field::IntendKind> intend = {
+        dawn::iir::Field::IntendKind::Output, dawn::iir::Field::IntendKind::InputOutput,
+        dawn::iir::Field::IntendKind::Input}) {
+  auto usedFields = getUsedFields(stencil, intend);
+  std::vector<std::string> fieldsVec;
+  for(auto fieldID : usedFields) {
+    fieldsVec.push_back(stencil.getMetadata().getFieldNameFromAccessID(fieldID));
+  }
+  return fieldsVec;
+}
+
+std::vector<std::string> getGlobalsNames(const dawn::ast::GlobalVariableMap& globalsMap) {
+  std::vector<std::string> globalsNames;
+  for(const auto& global : globalsMap) {
+    globalsNames.push_back(global.first);
+  }
+  return globalsNames;
+}
+
+void addGlobalsArgs(const dawn::ast::GlobalVariableMap& globalsMap,
+                    dawn::codegen::MemberFunction& fun) {
+  for(const auto& global : globalsMap) {
+    std::string Name = global.first;
+    std::string Type = dawn::ast::Value::typeToString(global.second.getType());
+    fun.addArg(Type + " " + Name);
+  }
+};
+
+std::string explodeToStr(const std::vector<std::string>& vec, const std::string sep = ", ") {
+  std::string ret = "";
+  bool first = true;
+  for(const auto& el : vec) {
+    if(!first) {
+      ret += sep;
+    }
+    ret += el;
+    first = false;
+  }
+
+  return ret;
+}
+
+std::string explodeGlobals(const dawn::ast::GlobalVariableMap& globalsMap) {
+  std::vector<std::string> globalsNames;
+  for(const auto& global : globalsMap) {
+    globalsNames.push_back(global.first);
+  }
+  return explodeToStr(globalsNames);
+}
+std::string explodeUsedFields(const dawn::iir::Stencil& stencil,
                               std::unordered_set<dawn::iir::Field::IntendKind> intend = {
                                   dawn::iir::Field::IntendKind::Output,
                                   dawn::iir::Field::IntendKind::InputOutput,
                                   dawn::iir::Field::IntendKind::Input}) {
-  auto usedFields = getUsedFields(stencil, intend);
-  std::stringstream ioFieldStr;
-  bool first = true;
-  for(auto fieldID : usedFields) {
-    if(!first) {
-      ioFieldStr << ", ";
-    }
-    ioFieldStr << stencil.getMetadata().getFieldNameFromAccessID(fieldID);
-    first = false;
-  }
-
-  return ioFieldStr.str();
+  return explodeToStr(getUsedFieldsNames(stencil, intend));
 }
+
 } // namespace
 
 namespace dawn {
@@ -758,22 +800,15 @@ void CudaIcoCodeGen::generateAllAPIRunFunctions(
     }
 
     const auto& globalsMap = stencilInstantiation->getIIR()->getGlobalVariableMap();
-    auto addExplodedGlobals = [&globalsMap](MemberFunction& fun) {
-      for(const auto& global : globalsMap) {
-        std::string Name = global.first;
-        std::string Type = ast::Value::typeToString(global.second.getType());
-        fun.addArg(Type + " " + Name);
-      }
-    };
 
     if(fromHost) {
       for(auto& apiRunFun : apiRunFuns) {
         apiRunFun->addArg("dawn::GlobalGpuTriMesh *mesh");
         apiRunFun->addArg("int k_size");
-        addExplodedGlobals(*apiRunFun);
+        addGlobalsArgs(globalsMap, *apiRunFun);
       }
     } else {
-      addExplodedGlobals(*apiRunFuns[0]);
+      addGlobalsArgs(globalsMap, *apiRunFuns[0]);
     }
     for(auto& apiRunFun : apiRunFuns) {
       for(auto accessID : stencilInstantiation->getMetaData().getAPIFields()) {
@@ -798,11 +833,11 @@ void CudaIcoCodeGen::generateAllAPIRunFunctions(
         const auto& stencil = *stencils[0];
 
         // listing all API fields
-        std::string fieldsStr = getListUsedFields(stencil);
+        std::string fieldsStr = explodeUsedFields(stencil);
 
         // listing all input & output fields
         std::string ioFieldStr =
-            getListUsedFields(stencil, {dawn::iir::Field::IntendKind::Output,
+            explodeUsedFields(stencil, {dawn::iir::Field::IntendKind::Output,
                                         dawn::iir::Field::IntendKind::InputOutput});
 
         const std::string stencilName =
@@ -947,26 +982,6 @@ void CudaIcoCodeGen::generateAllAPIVerifyFunctions(
 
   { // stringstreams need to outlive the correspondind MemberFunctions
     const auto& globalsMap = stencilInstantiation->getIIR()->getGlobalVariableMap();
-    auto getExplodedGlobalsStr = [&globalsMap]() -> std::string {
-      std::string ret = "";
-      bool first = true;
-      for(const auto& global : globalsMap) {
-        if(!first) {
-          ret += ", ";
-        }
-        std::string Name = global.first;
-        ret += Name;
-        first = false;
-      }
-      return ret;
-    };
-    auto addExplodedGlobals = [&globalsMap](MemberFunction& fun) {
-      for(const auto& global : globalsMap) {
-        std::string Name = global.first;
-        std::string Type = ast::Value::typeToString(global.second.getType());
-        fun.addArg(Type + " " + Name);
-      }
-    };
 
     MemberFunction verifyAPI("bool", "verify_" + wrapperName, verifySS, /*indent level*/ 0,
                              onlyDecl);
@@ -998,7 +1013,7 @@ void CudaIcoCodeGen::generateAllAPIVerifyFunctions(
     runAndVerifyAPI.addArg("const int edge_start_idx_c");
     runAndVerifyAPI.addArg("const int edge_end_idx_c");
     // ENDTODO
-    addExplodedGlobals(runAndVerifyAPI);
+    addGlobalsArgs(globalsMap, runAndVerifyAPI);
     for(auto accessID : stencilInstantiation->getMetaData().getAPIFields()) {
       runAndVerifyAPI.addArg("::dawn::float_type *" +
                              stencilInstantiation->getMetaData().getNameFromAccessID(accessID));
@@ -1096,60 +1111,59 @@ void CudaIcoCodeGen::generateAllAPIVerifyFunctions(
       runAndVerifyAPI.addStatement("std::cout << \"[DSL] Running stencil " + wrapperName +
                                    "...\\n\" << std::flush");
 
-      auto getListDSLFields = [&fieldInfos](const iir::Stencil& stencil) -> std::string {
+      auto getDSLFieldsNames =
+          [&fieldInfos](const iir::Stencil& stencil) -> std::vector<std::string> {
         auto usedFields = getUsedFields(stencil);
-        bool first = true;
-        std::string ret = "";
+
+        std::vector<std::string> fieldNames;
         for(auto fieldID : usedFields) {
           auto fieldInfo = fieldInfos.at(fieldID);
-          if(!first) {
-            ret += ", ";
-          }
-          ret += fieldInfo.field.getIntend() == dawn::iir::Field::IntendKind::Output
-                     ? ("dsl_" + fieldInfo.Name)
-                     : fieldInfo.Name;
-          first = false;
+
+          fieldNames.push_back(fieldInfo.field.getIntend() == dawn::iir::Field::IntendKind::Output
+                                   ? ("dsl_" + fieldInfo.Name)
+                                   : fieldInfo.Name);
         }
-        return ret;
+        return fieldNames;
       };
-      std::string dslFieldsStr = getListDSLFields(stencil);
-      std::string globalsStr = getExplodedGlobalsStr();
+
       runAndVerifyAPI.addStatement(
-          "double time = run_" + wrapperName + "(mesh, k_size," +
-          (globalsStr.empty() ? "" : (dslFieldsStr.empty() ? globalsStr : (globalsStr + ", "))) +
-          dslFieldsStr + ")");
+          "double time = run_" + wrapperName + "(" +
+          explodeToStr(concatenateVectors(
+              {{"mesh", "k_size"}, getDSLFieldsNames(stencil), getGlobalsNames(globalsMap)})) +
+          ")");
 
       runAndVerifyAPI.addStatement("std::cout << \"[DSL] " + wrapperName +
                                    " run time: \" << "
                                    "time << \"s\\n\" << std::flush");
       runAndVerifyAPI.addStatement("std::cout << \"[DSL] Verifying stencil " + wrapperName +
                                    "...\\n\" << std::flush");
-      std::string outputVerifyList = "";
-      {
-        bool first = true;
-        // TODO implement case in which IntendKind is InputOutput
-        for(auto fieldID : getUsedFields(stencil, {dawn::iir::Field::IntendKind::Output})) {
-          if(!first) {
-            outputVerifyList += ", ";
-          }
-          outputVerifyList +=
-              "dsl_" + stencilInstantiation->getMetaData().getNameFromAccessID(fieldID) + ", ";
-          outputVerifyList += stencilInstantiation->getMetaData().getNameFromAccessID(fieldID);
-          first = false;
-        }
+
+      std::vector<std::string> outputVerifyFields;
+      // TODO implement case in which IntendKind is InputOutput
+      for(const auto& fieldName :
+          getUsedFieldsNames(stencil, {dawn::iir::Field::IntendKind::Output})) {
+
+        outputVerifyFields.push_back("dsl_" + fieldName);
+        outputVerifyFields.push_back(fieldName);
       }
+
       // TODO: should not pass start and end indices, but take from mesh inside verify_*()
-      runAndVerifyAPI.addStatement("verify_" + wrapperName + "(edge_start_idx_c, edge_end_idx_c, " +
-                                   getDenseSizeName(dawn::ast::LocationType::Edges) + ", " +
-                                   getDenseSizeName(dawn::ast::LocationType::Cells) + ", " +
-                                   getDenseSizeName(dawn::ast::LocationType::Vertices) +
-                                   ", k_size, " + outputVerifyList + ", iteration)");
+      runAndVerifyAPI.addStatement(
+          "verify_" + wrapperName + "(" +
+          explodeToStr(
+              concatenateVectors({{"edge_start_idx_c", "edge_end_idx_c",
+                                   getDenseSizeName(dawn::ast::LocationType::Edges),
+                                   getDenseSizeName(dawn::ast::LocationType::Cells),
+                                   getDenseSizeName(dawn::ast::LocationType::Vertices), "k_size"},
+                                  outputVerifyFields,
+                                  {"iteration"}})) +
+          ")");
 
       runAndVerifyAPI.addStatement("std::cout << \"[DSL] Freeing memory\\n\" << std::flush");
 
-      for(auto fieldID : getUsedFields(stencil, {dawn::iir::Field::IntendKind::Output})) {
-        const auto& fieldInfo = fieldInfos.at(fieldID);
-        runAndVerifyAPI.addStatement("gpuErrchk(cudaFree(dsl_" + fieldInfo.Name + "))");
+      for(const auto& fieldName :
+          getUsedFieldsNames(stencil, {dawn::iir::Field::IntendKind::Output})) {
+        runAndVerifyAPI.addStatement("gpuErrchk(cudaFree(dsl_" + fieldName + "))");
       }
 
       runAndVerifyAPI.addStatement("iteration++");
@@ -1562,22 +1576,13 @@ generateF90InterfaceSI(FortranInterfaceModuleGen& fimGen,
     }
     return args;
   };
-  auto getGlobalsArgs = [&]() -> std::vector<std::string> {
-    std::vector<std::string> args;
-    for(const auto& global : globalsMap) {
-      args.push_back(global.first);
-    }
-    return args;
-  };
 
   auto genCallArgs = [&](FortranWrapperAPI& wrapper, std::string first) {
     wrapper.addBodyLine("( &");
 
     wrapper.addBodyLine("   " + first + ", &"); // TODO remove
 
-    auto args = getGlobalsArgs();
-    auto fields = getFieldArgs();
-    std::move(fields.begin(), fields.end(), std::back_inserter(args));
+    auto args = concatenateVectors<std::string>({getGlobalsNames(globalsMap), getFieldArgs()});
 
     for(int i = 0; i < args.size(); ++i) {
       wrapper.addBodyLine("   " + args[i] + (i == (args.size() - 1) ? " &" : ", &"));
