@@ -348,7 +348,7 @@ struct MemberFunction : public NewLine {
   MemberFunction& finishArgs() {
     DAWN_ASSERT(!IsBodyDeclared);
     if(!AreArgsFinished) {
-      ss() << (NumArgs == 0 ? "()" : ")");
+      ss() << (NumArgs == 0 ? "() " : ") ");
       if(IsConst)
         ss() << " const ";
       AreArgsFinished = true;
@@ -424,7 +424,7 @@ struct MemberFunction : public NewLine {
     if(CanHaveBody) {
       if(!IsBodyDeclared) {
         if(NumInits == 0)
-          ss() << ")";
+          ss() << ") ";
         ss() << "{}";
       } else
         indentImpl(IndentLevel) << "}";
