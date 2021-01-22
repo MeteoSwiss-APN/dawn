@@ -958,13 +958,13 @@ void CudaIcoCodeGen::generateAllAPIVerifyFunctions(
     using dawn::ast::LocationType;
     switch(locType) {
     case LocationType::Edges:
-      return "::dawn::dense_edges_to_vtk";
+      return "dense_edges_to_vtk";
       break;
     case LocationType::Cells:
-      return "::dawn::dense_cells_to_vtk";
+      return "dense_cells_to_vtk";
       break;
     case LocationType::Vertices:
-      return "::dawn::dense_vertices_to_vtk";
+      return "dense_vertices_to_vtk";
       break;
     default:
       dawn_unreachable("invalid location type");
@@ -1669,6 +1669,7 @@ std::unique_ptr<TranslationUnit> CudaIcoCodeGen::generateCode() {
       "#define GRIDTOOLS_DAWN_NO_INCLUDE", // Required to not include gridtools from math.hpp
       "#include \"driver-includes/math.hpp\"",
       "#include \"driver-includes/timer_cuda.hpp\"",
+      "#include <chrono>",
       "#define BLOCK_SIZE 16",
       "#define LEVELS_PER_THREAD 1",
       "#ifndef RELATIVE_ERROR_THRESHOLD",

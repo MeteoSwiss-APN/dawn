@@ -42,14 +42,15 @@ struct compute_error<RelErrTag> {
     return error;
   }
 };
+} // namespace
 
 namespace dawn {
 template <typename error_type>
-inline __global__ void
-compare_dense_full_kernel(const int edge_start_idx_c, const int edge_end_idx_c,
-                          const int dense_size_edges, const int k_size,
-                          const double* __restrict__ dsl, const double* __restrict__ fortran,
-                          double* __restrict__ error) {
+__global__ void compare_dense_full_kernel(const int edge_start_idx_c, const int edge_end_idx_c,
+                                          const int dense_size_edges, const int k_size,
+                                          const double* __restrict__ dsl,
+                                          const double* __restrict__ fortran,
+                                          double* __restrict__ error) {
   unsigned int eidx = blockIdx.x * blockDim.x + threadIdx.x;
   unsigned int kidx = blockIdx.y * blockDim.y + threadIdx.y;
 
@@ -73,7 +74,6 @@ inline double verify_dense_full_field(const int dense_start_idx, const int dense
                                       const double* actual, std::string name) {
   double relErr, absErr;
   double* gpu_error;
-  bool isValid = true;
 
   const int blockSize = 16;
 
@@ -117,5 +117,4 @@ inline double verify_dense_full_field(const int dense_start_idx, const int dense
   return relErr;
 }
 
-}; // namespace dawn
-} // namespace
+} // namespace dawn

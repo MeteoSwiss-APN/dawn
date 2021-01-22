@@ -646,7 +646,7 @@ protected:
       return ctor;
     case ConstructorDefaultKind::Deleted:
       ctor.CanHaveBody = false;
-      ctor << ") = delete;";
+      ctor << ") = delete";
       return ctor;
     default:
       return ctor;
