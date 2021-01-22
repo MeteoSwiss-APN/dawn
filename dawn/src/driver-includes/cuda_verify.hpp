@@ -45,11 +45,11 @@ struct compute_error<RelErrTag> {
 
 namespace dawn {
 template <typename error_type>
-__global__ void compare_dense_full_kernel(const int edge_start_idx_c, const int edge_end_idx_c,
-                                          const int dense_size_edges, const int k_size,
-                                          const double* __restrict__ dsl,
-                                          const double* __restrict__ fortran,
-                                          double* __restrict__ error) {
+inline __global__ void
+compare_dense_full_kernel(const int edge_start_idx_c, const int edge_end_idx_c,
+                          const int dense_size_edges, const int k_size,
+                          const double* __restrict__ dsl, const double* __restrict__ fortran,
+                          double* __restrict__ error) {
   unsigned int eidx = blockIdx.x * blockDim.x + threadIdx.x;
   unsigned int kidx = blockIdx.y * blockDim.y + threadIdx.y;
 
@@ -66,8 +66,6 @@ __global__ void compare_dense_full_kernel(const int edge_start_idx_c, const int 
   error[kidx * blockDim.x * gridDim.x + eidx] = compute_error<error_type>::impl(
       fortran[kidx * dense_size_edges + eidx], dsl[kidx * dense_size_edges + eidx]);
 }
-
-}; // namespace dawn
 
 // Returns relative error. Prints relative and absolute error.
 inline double verify_dense_full_field(const int dense_start_idx, const int dense_end_idx,
@@ -118,4 +116,6 @@ inline double verify_dense_full_field(const int dense_start_idx, const int dense
 
   return relErr;
 }
+
+}; // namespace dawn
 } // namespace

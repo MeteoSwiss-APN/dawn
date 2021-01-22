@@ -958,13 +958,13 @@ void CudaIcoCodeGen::generateAllAPIVerifyFunctions(
     using dawn::ast::LocationType;
     switch(locType) {
     case LocationType::Edges:
-      return "dense_edges_to_vtk";
+      return "dawn::dense_edges_to_vtk";
       break;
     case LocationType::Cells:
-      return "dense_cells_to_vtk";
+      return "dawn::dense_cells_to_vtk";
       break;
     case LocationType::Vertices:
-      return "dense_vertices_to_vtk";
+      return "dawn::dense_vertices_to_vtk";
       break;
     default:
       dawn_unreachable("invalid location type");
@@ -1042,7 +1042,7 @@ void CudaIcoCodeGen::generateAllAPIVerifyFunctions(
         auto lt = hDims.getDenseLocationType();
         const auto startIdxName = getStartIdxName(lt), endIdxName = getEndIdxName(lt),
                    denseSizeName = getDenseSizeName(lt), serializeCall = getSerializeCall(lt);
-        verifyAPI.addStatement("relErr = verify_dense_full_field(" + startIdxName + ", " +
+        verifyAPI.addStatement("relErr = dawn::verify_dense_full_field(" + startIdxName + ", " +
                                endIdxName + ", " + denseSizeName + ", k_size, " + fieldInfo.Name +
                                "_dsl, " + fieldInfo.Name + ", \"" + fieldInfo.Name + "\"" + ")");
         verifyAPI.addBlockStatement("if (relErr > RELATIVE_ERROR_THRESHOLD)", [&]() {
@@ -1119,11 +1119,10 @@ void CudaIcoCodeGen::generateAllAPIVerifyFunctions(
         return fieldNames;
       };
 
-      runAndVerifyAPI.addStatement(
-          "double time = run_" + wrapperName + "(" +
-          explodeToStr(concatenateVectors(
-              {{"mesh", "k_size"}, getDSLFieldsNames(stencil), getGlobalsNames(globalsMap)})) +
-          ")");
+      runAndVerifyAPI.addStatement("double time = run_" + wrapperName + "(" +
+                                   explodeToStr(concatenateVectors(
+                                       {getGlobalsNames(globalsMap), getDSLFieldsNames(stencil)})) +
+                                   ")");
 
       runAndVerifyAPI.addStatement("std::cout << \"[DSL] " + wrapperName +
                                    " run time: \" << "
@@ -1664,6 +1663,7 @@ std::unique_ptr<TranslationUnit> CudaIcoCodeGen::generateCode() {
       "#include \"driver-includes/defs.hpp\"",
       "#include \"driver-includes/cuda_utils.hpp\"",
       "#include \"driver-includes/cuda_verify.hpp\"",
+      "#include \"driver-includes/to_vtk.h\"",
       "#define GRIDTOOLS_DAWN_NO_INCLUDE", // Required to not include gridtools from math.hpp
       "#include \"driver-includes/math.hpp\"",
       "#include \"driver-includes/timer_cuda.hpp\"",
