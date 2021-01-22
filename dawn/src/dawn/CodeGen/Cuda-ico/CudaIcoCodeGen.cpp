@@ -113,7 +113,7 @@ void addGlobalsArgs(const dawn::ast::GlobalVariableMap& globalsMap,
     std::string Type = dawn::ast::Value::typeToString(global.second.getType());
     fun.addArg(Type + " " + Name);
   }
-};
+}
 
 std::string explodeToStr(const std::vector<std::string>& vec, const std::string sep = ", ") {
   std::string ret = "";
@@ -129,13 +129,6 @@ std::string explodeToStr(const std::vector<std::string>& vec, const std::string 
   return ret;
 }
 
-std::string explodeGlobals(const dawn::ast::GlobalVariableMap& globalsMap) {
-  std::vector<std::string> globalsNames;
-  for(const auto& global : globalsMap) {
-    globalsNames.push_back(global.first);
-  }
-  return explodeToStr(globalsNames);
-}
 std::string explodeUsedFields(const dawn::iir::Stencil& stencil,
                               std::unordered_set<dawn::iir::Field::IntendKind> intend = {
                                   dawn::iir::Field::IntendKind::Output,
@@ -894,11 +887,11 @@ void CudaIcoCodeGen::generateAllAPIRunFunctions(
       }
 
     } else {
-      for(const auto& stream : apiRunFunStreams) {
-        ssSW << stream.str() << ";\n";
-      }
       for(auto& apiRunFun : apiRunFuns) {
         apiRunFun->commit();
+      }
+      for(const auto& stream : apiRunFunStreams) {
+        ssSW << stream.str();
       }
     }
   }
@@ -1171,8 +1164,8 @@ void CudaIcoCodeGen::generateAllAPIVerifyFunctions(
 
     verifyAPI.commit();
     runAndVerifyAPI.commit();
-    ssSW << verifySS.str() + (onlyDecl ? ";" : "");
-    ssSW << runAndVerifySS.str() + (onlyDecl ? ";" : "");
+    ssSW << verifySS.str();
+    ssSW << runAndVerifySS.str();
   }
 }
 
@@ -1192,9 +1185,6 @@ void CudaIcoCodeGen::generateMemMgmtFunctions(
   if(!onlyDecl) {
     setupFun.addStatement(fullStencilName + "::setup(mesh, k_size)");
   }
-  if(onlyDecl) {
-    ssSW << ";";
-  }
   setupFun.commit();
 
   MemberFunction freeFun("void", "free_" + wrapperName, ssSW, 0, onlyDecl);
@@ -1202,9 +1192,6 @@ void CudaIcoCodeGen::generateMemMgmtFunctions(
   if(!onlyDecl) {
     freeFun.startBody();
     freeFun.addStatement(fullStencilName + "::free()");
-  }
-  if(onlyDecl) {
-    ssSW << ";";
   }
   freeFun.commit();
 }
