@@ -958,13 +958,13 @@ void CudaIcoCodeGen::generateAllAPIVerifyFunctions(
     using dawn::ast::LocationType;
     switch(locType) {
     case LocationType::Edges:
-      return "dawn::dense_edges_to_vtk";
+      return "::dawn::dense_edges_to_vtk";
       break;
     case LocationType::Cells:
-      return "dawn::dense_cells_to_vtk";
+      return "::dawn::dense_cells_to_vtk";
       break;
     case LocationType::Vertices:
-      return "dawn::dense_vertices_to_vtk";
+      return "::dawn::dense_vertices_to_vtk";
       break;
     default:
       dawn_unreachable("invalid location type");
@@ -1042,7 +1042,7 @@ void CudaIcoCodeGen::generateAllAPIVerifyFunctions(
         auto lt = hDims.getDenseLocationType();
         const auto startIdxName = getStartIdxName(lt), endIdxName = getEndIdxName(lt),
                    denseSizeName = getDenseSizeName(lt), serializeCall = getSerializeCall(lt);
-        verifyAPI.addStatement("relErr = dawn::verify_dense_full_field(" + startIdxName + ", " +
+        verifyAPI.addStatement("relErr = ::dawn::verify_dense_full_field(" + startIdxName + ", " +
                                endIdxName + ", " + denseSizeName + ", k_size, " + fieldInfo.Name +
                                "_dsl, " + fieldInfo.Name + ", \"" + fieldInfo.Name + "\"" + ")");
         verifyAPI.addBlockStatement("if (relErr > RELATIVE_ERROR_THRESHOLD)", [&]() {
@@ -1563,10 +1563,12 @@ generateF90InterfaceSI(FortranInterfaceModuleGen& fimGen,
     return args;
   };
 
-  auto genCallArgs = [&](FortranWrapperAPI& wrapper, std::string first) {
+  auto genCallArgs = [&](FortranWrapperAPI& wrapper, std::string first = "") {
     wrapper.addBodyLine("( &");
 
-    wrapper.addBodyLine("   " + first + ", &"); // TODO remove
+    if(first != "") {
+      wrapper.addBodyLine("   " + first + ", &"); // TODO remove
+    }
 
     auto args = concatenateVectors<std::string>({getGlobalsNames(globalsMap), getFieldArgs()});
 
@@ -1587,7 +1589,7 @@ generateF90InterfaceSI(FortranInterfaceModuleGen& fimGen,
   genCallArgs(runWrapper, "mesh, k_size, edge_start_idx_c, edge_end_idx_c"); // TODO remove
   runWrapper.addBodyLine("#else", /*withIndentation*/ false);
   runWrapper.addBodyLine("timing = run_" + stencilInstantiation->getName() + " &");
-  genCallArgs(runWrapper, "mesh, k_size"); // TODO remove
+  genCallArgs(runWrapper);
   runWrapper.addBodyLine("#endif", /*withIndentation*/ false);
   runWrapper.addACCLine("end host_data");
 
