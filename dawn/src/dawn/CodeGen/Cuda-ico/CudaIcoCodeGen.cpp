@@ -910,7 +910,7 @@ void CudaIcoCodeGen::generateAllAPIVerifyFunctions(
     using dawn::ast::LocationType;
     switch(locType) {
     case LocationType::Edges:
-      return "edge_start_idx_c";
+      return "start_idx";
       break;
     case LocationType::Cells:
       return "cell_start_idx_c";
@@ -926,7 +926,7 @@ void CudaIcoCodeGen::generateAllAPIVerifyFunctions(
     using dawn::ast::LocationType;
     switch(locType) {
     case LocationType::Edges:
-      return "edge_end_idx_c";
+      return "end_idx";
       break;
     case LocationType::Cells:
       return "cell_end_idx_c";
@@ -982,20 +982,26 @@ void CudaIcoCodeGen::generateAllAPIVerifyFunctions(
                                    /*indent level*/ 0, onlyDecl);
 
     // TODO to be removed
-    verifyAPI.addArg("const int edge_start_idx_c");
-    verifyAPI.addArg("const int edge_end_idx_c");
+    verifyAPI.addArg("const int start_idx");
+    verifyAPI.addArg("const int end_idx");
     // ENDTODO
     verifyAPI.addArg("const int " + getDenseSizeName(dawn::ast::LocationType::Edges));
     verifyAPI.addArg("const int " + getDenseSizeName(dawn::ast::LocationType::Cells));
     verifyAPI.addArg("const int " + getDenseSizeName(dawn::ast::LocationType::Vertices));
     verifyAPI.addArg("const int k_size");
 
-    // TODO implement case in which IntendKind is InputOutput
     for(auto fieldID : getUsedFields(stencil, {dawn::iir::Field::IntendKind::Output})) {
       verifyAPI.addArg("const ::dawn::float_type *" +
                        stencilInstantiation->getMetaData().getNameFromAccessID(fieldID) + "_dsl");
       verifyAPI.addArg("const ::dawn::float_type *" +
                        stencilInstantiation->getMetaData().getNameFromAccessID(fieldID));
+    }
+    for(auto fieldID : getUsedFields(stencil, {dawn::iir::Field::IntendKind::InputOutput})) {
+      verifyAPI.addArg("const ::dawn::float_type *" +
+                       stencilInstantiation->getMetaData().getNameFromAccessID(fieldID));
+      verifyAPI.addArg("const ::dawn::float_type *" +
+                       stencilInstantiation->getMetaData().getNameFromAccessID(fieldID) +
+                       "_before");
     }
     verifyAPI.addArg("const int iteration");
     verifyAPI.finishArgs();
@@ -1003,13 +1009,18 @@ void CudaIcoCodeGen::generateAllAPIVerifyFunctions(
     // TODO to be removed
     runAndVerifyAPI.addArg("dawn::GlobalGpuTriMesh *mesh");
     runAndVerifyAPI.addArg("const int k_size");
-    runAndVerifyAPI.addArg("const int edge_start_idx_c");
-    runAndVerifyAPI.addArg("const int edge_end_idx_c");
+    runAndVerifyAPI.addArg("const int start_idx");
+    runAndVerifyAPI.addArg("const int end_idx");
     // ENDTODO
     addGlobalsArgs(globalsMap, runAndVerifyAPI);
     for(auto accessID : stencilInstantiation->getMetaData().getAPIFields()) {
       runAndVerifyAPI.addArg("::dawn::float_type *" +
                              stencilInstantiation->getMetaData().getNameFromAccessID(accessID));
+    }
+    for(auto fieldID : getUsedFields(stencil, {dawn::iir::Field::IntendKind::InputOutput})) {
+      runAndVerifyAPI.addArg("const ::dawn::float_type *" +
+                             stencilInstantiation->getMetaData().getNameFromAccessID(fieldID) +
+                             "_before");
     }
     runAndVerifyAPI.finishArgs();
 
@@ -1112,9 +1123,13 @@ void CudaIcoCodeGen::generateAllAPIVerifyFunctions(
         for(auto fieldID : usedFields) {
           auto fieldInfo = fieldInfos.at(fieldID);
 
-          fieldNames.push_back(fieldInfo.field.getIntend() == dawn::iir::Field::IntendKind::Output
-                                   ? ("dsl_" + fieldInfo.Name)
-                                   : fieldInfo.Name);
+          if(fieldInfo.field.getIntend() == dawn::iir::Field::IntendKind::Output) {
+            fieldNames.push_back("dsl_" + fieldInfo.Name);
+          } else if(fieldInfo.field.getIntend() == dawn::iir::Field::IntendKind::InputOutput) {
+            fieldNames.push_back(fieldInfo.Name + "_before");
+          } else {
+            fieldNames.push_back(fieldInfo.Name);
+          }
         }
         return fieldNames;
       };
@@ -1139,16 +1154,22 @@ void CudaIcoCodeGen::generateAllAPIVerifyFunctions(
         outputVerifyFields.push_back(fieldName);
       }
 
+      for(const auto& fieldName :
+          getUsedFieldsNames(stencil, {dawn::iir::Field::IntendKind::InputOutput})) {
+
+        outputVerifyFields.push_back(fieldName);
+        outputVerifyFields.push_back(fieldName + "_before");
+      }
+
       // TODO: should not pass start and end indices, but take from mesh inside verify_*()
       runAndVerifyAPI.addStatement(
           "verify_" + wrapperName + "(" +
-          explodeToStr(
-              concatenateVectors({{"edge_start_idx_c", "edge_end_idx_c",
-                                   getDenseSizeName(dawn::ast::LocationType::Edges),
-                                   getDenseSizeName(dawn::ast::LocationType::Cells),
-                                   getDenseSizeName(dawn::ast::LocationType::Vertices), "k_size"},
-                                  outputVerifyFields,
-                                  {"iteration"}})) +
+          explodeToStr(concatenateVectors(
+              {{"start_idx", "end_idx", getDenseSizeName(dawn::ast::LocationType::Edges),
+                getDenseSizeName(dawn::ast::LocationType::Cells),
+                getDenseSizeName(dawn::ast::LocationType::Vertices), "k_size"},
+               outputVerifyFields,
+               {"iteration"}})) +
           ")");
 
       runAndVerifyAPI.addStatement("std::cout << \"[DSL] Freeing memory\\n\" << std::flush");
@@ -1526,12 +1547,12 @@ generateF90InterfaceSI(FortranInterfaceModuleGen& fimGen,
   const int runAndVerifyIdx = 2;
   interfaces[runAndVerifyIdx].addArg("mesh", FortranAPI::InterfaceType::OBJ);
   interfaces[runAndVerifyIdx].addArg("k_size", FortranAPI::InterfaceType::INTEGER);
-  interfaces[runAndVerifyIdx].addArg("edge_start_idx_c", FortranAPI::InterfaceType::INTEGER);
-  interfaces[runAndVerifyIdx].addArg("edge_end_idx_c", FortranAPI::InterfaceType::INTEGER);
+  interfaces[runAndVerifyIdx].addArg("start_idx", FortranAPI::InterfaceType::INTEGER);
+  interfaces[runAndVerifyIdx].addArg("end_idx", FortranAPI::InterfaceType::INTEGER);
   runWrapper.addArg("mesh", FortranAPI::InterfaceType::OBJ);
   runWrapper.addArg("k_size", FortranAPI::InterfaceType::INTEGER);
-  runWrapper.addArg("edge_start_idx_c", FortranAPI::InterfaceType::INTEGER);
-  runWrapper.addArg("edge_end_idx_c", FortranAPI::InterfaceType::INTEGER);
+  runWrapper.addArg("start_idx", FortranAPI::InterfaceType::INTEGER);
+  runWrapper.addArg("end_idx", FortranAPI::InterfaceType::INTEGER);
   // ENDTODO
 
   auto addArgsToAPI = [&](FortranAPI& api) {
@@ -1586,7 +1607,7 @@ generateF90InterfaceSI(FortranInterfaceModuleGen& fimGen,
   runWrapper.addACCLine(")");
   runWrapper.addBodyLine("#ifdef __DSL_VERIFY", /*withIndentation*/ false);
   runWrapper.addBodyLine("CALL run_and_verify_" + stencilInstantiation->getName() + " &");
-  genCallArgs(runWrapper, "mesh, k_size, edge_start_idx_c, edge_end_idx_c"); // TODO remove
+  genCallArgs(runWrapper, "mesh, k_size, start_idx, end_idx"); // TODO remove
   runWrapper.addBodyLine("#else", /*withIndentation*/ false);
   runWrapper.addBodyLine("timing = run_" + stencilInstantiation->getName() + " &");
   genCallArgs(runWrapper);
