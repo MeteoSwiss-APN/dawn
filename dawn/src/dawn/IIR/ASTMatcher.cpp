@@ -156,7 +156,7 @@ void ASTMatcher::visit(const std::shared_ptr<ast::VarAccessExpr>& expr) { check(
 
 void ASTMatcher::visit(const std::shared_ptr<ast::FieldAccessExpr>& expr) {
   check(expr);
-  ASTVisitorForwarding::visit(expr);
+  ASTVisitorForwardingNonConst::visit(expr);
 }
 
 void ASTMatcher::visit(const std::shared_ptr<ast::LiteralAccessExpr>& expr) { check(expr); }

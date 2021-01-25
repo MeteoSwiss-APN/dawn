@@ -25,7 +25,7 @@ namespace dawn {
 //     IntegrityChecker
 //===------------------------------------------------------------------------------------------===//
 /// @brief Perform basic integrity checks on the AST.
-class IntegrityChecker : public ast::ASTVisitorForwarding {
+class IntegrityChecker : public ast::ASTVisitorForwardingNonConst {
   iir::StencilInstantiation* instantiation_;
   iir::StencilMetaInformation& metadata_;
   // are we in a loop or reduction expression?

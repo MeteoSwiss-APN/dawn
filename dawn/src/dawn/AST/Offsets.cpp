@@ -165,6 +165,10 @@ std::shared_ptr<Expr>& VerticalOffset::getIndirectionFieldAsExpr() {
   DAWN_ASSERT(hasIndirection());
   return verticalIndirection_;
 }
+const std::shared_ptr<Expr>& VerticalOffset::getIndirectionFieldAsExpr() const {
+  DAWN_ASSERT(hasIndirection());
+  return verticalIndirection_;
+}
 
 VerticalOffset VerticalOffset::operator+=(VerticalOffset const& other) {
   DAWN_ASSERT_MSG(!verticalIndirection_ && !other.verticalIndirection_,
@@ -231,6 +235,10 @@ std::optional<int> Offsets::getVerticalIndirectionAccessID() const {
   return verticalOffset_.getIndirectionAccessID();
 }
 std::shared_ptr<Expr>& Offsets::getVerticalIndirectionFieldAsExpr() {
+  DAWN_ASSERT(hasVerticalIndirection());
+  return verticalOffset_.getIndirectionFieldAsExpr();
+}
+const std::shared_ptr<Expr>& Offsets::getVerticalIndirectionFieldAsExpr() const {
   DAWN_ASSERT(hasVerticalIndirection());
   return verticalOffset_.getIndirectionFieldAsExpr();
 }

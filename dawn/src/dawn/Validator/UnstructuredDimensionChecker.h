@@ -28,7 +28,7 @@ namespace dawn {
 class UnstructuredDimensionChecker {
 
 private:
-  class UnstructuredDimensionCheckerImpl : public ast::ASTVisitorForwarding {
+  class UnstructuredDimensionCheckerImpl : public ast::ASTVisitorForwardingNonConst {
   public:
     enum class checkType { runOnIIR, runOnSIR };
     struct UnstructuredDimensionCheckerConfig {

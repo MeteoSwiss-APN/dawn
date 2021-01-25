@@ -33,7 +33,7 @@ namespace {
 
 static constexpr int TERMINAL_CHAR_WIDTH = 70;
 
-class ReadWriteCounter : public ast::ASTVisitorForwarding {
+class ReadWriteCounter : public ast::ASTVisitorForwardingNonConst {
   const iir::StencilMetaInformation& metadata_;
   const Options& options_;
 

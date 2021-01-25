@@ -278,7 +278,10 @@ public:
   const std::shared_ptr<sir::Stencil> getSIRStencil() const;
 
   /// @brief Apply the visitor to all statements in the stencil
-  void accept(ast::ASTVisitor& visitor);
+  void accept(ast::ASTVisitor& visitor) const;
+
+  /// @brief Apply the non const visitor to all statements in the stencil
+  void accept(ast::ASTVisitorNonConst& visitor) const;
 
   /// @brief Get the pair <AccessID, field> for the fields used within the multi-stage
   const std::unordered_map<int, FieldInfo>& getFields() const { return derivedInfo_.fields_; }

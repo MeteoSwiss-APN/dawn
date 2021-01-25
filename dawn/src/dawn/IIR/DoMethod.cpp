@@ -34,7 +34,7 @@ namespace dawn {
 namespace iir {
 
 namespace {
-class ReplaceNamesVisitor : public ast::ASTVisitorForwarding, public NonCopyable {
+class ReplaceNamesVisitor : public ast::ASTVisitorForwardingNonConst, public NonCopyable {
   const StencilMetaInformation& metadata_;
 
 public:
@@ -293,7 +293,7 @@ void DoMethod::updateLevel() {
   }
 }
 
-class CheckNonNullStatementVisitor : public ast::ASTVisitorForwarding, public NonCopyable {
+class CheckNonNullStatementVisitor : public ast::ASTVisitorForwardingNonConst, public NonCopyable {
 private:
   bool result_ = false;
 
@@ -307,7 +307,7 @@ public:
     if(!isa<ast::NOPExpr>(expr->getExpr().get()))
       result_ = true;
     else {
-      ast::ASTVisitorForwarding::visit(expr);
+      ast::ASTVisitorForwardingNonConst::visit(expr);
     }
   }
 };

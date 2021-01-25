@@ -50,7 +50,7 @@ using namespace iir;
 
 /// @brief Map the statements of the stencil description AST to a flat list of statements and
 /// inline all calls to other stencils
-class StencilDescStatementMapper : public ast::ASTVisitor {
+class StencilDescStatementMapper : public ast::ASTVisitorNonConst {
 
   /// @brief Record of the current scope (each StencilCall will create a new scope)
   struct Scope : public NonCopyable {
@@ -190,7 +190,7 @@ public:
 
     // We only need to remove "nested" nodes as the top-level VerticalRegions or StencilCalls are
     // not inserted into the statement list in the frist place
-    class RemoveStencilDescNodes : public ast::ASTVisitorForwarding {
+    class RemoveStencilDescNodes : public ast::ASTVisitorForwardingNonConst {
     public:
       RemoveStencilDescNodes() {}
 

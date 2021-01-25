@@ -54,7 +54,7 @@ void setAccesses(dawn::proto::statements::Accesses* protoAccesses,
 
 iir::Extents makeExtents(const dawn::proto::statements::Extents* protoExtents);
 
-class ProtoStmtBuilder : public ast::ASTVisitor {
+class ProtoStmtBuilder : public ast::ASTVisitorNonConst {
   std::stack<dawn::proto::statements::Stmt*> currentStmtProto_;
   std::stack<dawn::proto::statements::Expr*> currentExprProto_;
   const dawn::ast::StmtData::DataType dataType_;

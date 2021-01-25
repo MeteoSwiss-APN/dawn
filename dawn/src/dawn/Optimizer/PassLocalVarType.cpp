@@ -23,7 +23,7 @@
 namespace dawn {
 namespace {
 
-class VarTypeFinder : public ast::ASTVisitorForwarding {
+class VarTypeFinder : public ast::ASTVisitorForwardingNonConst {
 
   iir::StencilMetaInformation& metadata_;
   // AccessID of variable being processed.
@@ -202,7 +202,7 @@ public:
     }
     // If we encounter an assignment to a local variable inside the then and else blocks, we
     // should impose the recorded type.
-    ast::ASTVisitorForwarding::visit(ifStmt);
+    ast::ASTVisitorForwardingNonConst::visit(ifStmt);
     // Reset as we are exiting the visit of the (outermost) if statement
     if(outerIf) {
       conditionalType_ = std::nullopt;
@@ -256,7 +256,7 @@ public:
       recordVariablePair(accessedVariableID, *curVarID_, stmt->getSourceLocation());
     }
     // Visit rhs
-    ast::ASTVisitorForwarding::visit(stmt);
+    ast::ASTVisitorForwardingNonConst::visit(stmt);
     // Reset as we are exiting the VarDeclStmt's visit
     curVarID_ = std::nullopt;
   }

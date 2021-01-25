@@ -49,7 +49,7 @@ public:
   }
 };
 
-class CheckVisitor : public ast::ASTVisitorForwarding, public NonCopyable {
+class CheckVisitor : public ast::ASTVisitorForwardingNonConst, public NonCopyable {
 
   bool result_ = true;
 
@@ -156,7 +156,7 @@ public:
   }
 };
 
-class CheckAssignVisitor : public ast::ASTVisitorForwarding, public NonCopyable {
+class CheckAssignVisitor : public ast::ASTVisitorForwardingNonConst, public NonCopyable {
 
   bool result_ = true;
 
@@ -213,7 +213,7 @@ public:
   }
 };
 
-class CheckIfVisitor : public ast::ASTVisitorForwarding, public NonCopyable {
+class CheckIfVisitor : public ast::ASTVisitorForwardingNonConst, public NonCopyable {
 
   bool result_ = true;
 

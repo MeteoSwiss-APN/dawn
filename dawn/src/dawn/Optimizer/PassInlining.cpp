@@ -39,7 +39,7 @@ static std::pair<bool, std::shared_ptr<Inliner>> tryInlineStencilFunction(
     int AccessIDOfCaller, const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation);
 
 /// @brief Perform the inlining of a stencil-function
-class Inliner : public ast::ASTVisitor {
+class Inliner : public ast::ASTVisitorNonConst {
   PassInlining::InlineStrategy strategy_;
   const std::shared_ptr<iir::StencilFunctionInstantiation>& curStencilFunctioninstantiation_;
   const std::shared_ptr<iir::StencilInstantiation>& instantiation_;
@@ -322,7 +322,7 @@ public:
 };
 
 /// @brief Detect inline candidates
-class DetectInlineCandiates : public ast::ASTVisitorForwarding {
+class DetectInlineCandiates : public ast::ASTVisitorForwardingNonConst {
   PassInlining::InlineStrategy strategy_;
   const std::shared_ptr<iir::StencilInstantiation>& instantiation_;
 
@@ -351,7 +351,7 @@ class DetectInlineCandiates : public ast::ASTVisitorForwarding {
   std::stack<ArgListScope> argListScope_;
 
 public:
-  using Base = ast::ASTVisitorForwarding;
+  using Base = ast::ASTVisitorForwardingNonConst;
 
   DetectInlineCandiates(PassInlining::InlineStrategy strategy,
                         const std::shared_ptr<iir::StencilInstantiation>& instantiation)

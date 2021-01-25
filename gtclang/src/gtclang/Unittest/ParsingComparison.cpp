@@ -183,9 +183,9 @@ private:
   std::string filename_;
 };
 
-class FieldFinder : public dawn::ast::ASTVisitorForwarding {
+class FieldFinder : public dawn::ast::ASTVisitorForwardingNonConst {
 public:
-  virtual void visit(const std::shared_ptr<dawn::ast::FieldAccessExpr>& expr) {
+  virtual void visit(const std::shared_ptr<dawn::ast::FieldAccessExpr>& expr) override {
     auto fieldFromExpression = dawn::sir::Field(
         expr->getName(),
         dawn::sir::FieldDimensions(
@@ -194,10 +194,10 @@ public:
     auto iter = std::find(allFields_.begin(), allFields_.end(), fieldFromExpression);
     if(iter == allFields_.end())
       allFields_.push_back(fieldFromExpression);
-    dawn::ast::ASTVisitorForwarding::visit(expr);
+    dawn::ast::ASTVisitorForwardingNonConst::visit(expr);
   }
 
-  virtual void visit(const std::shared_ptr<dawn::ast::VerticalRegionDeclStmt>& stmt) {
+  virtual void visit(const std::shared_ptr<dawn::ast::VerticalRegionDeclStmt>& stmt) override {
     stmt->getVerticalRegion()->Ast->accept(*this);
   }
 

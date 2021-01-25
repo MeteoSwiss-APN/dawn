@@ -189,7 +189,7 @@ bool Stage::overlaps(const Interval& interval, const std::unordered_map<int, Fie
 /// @brief The CaptureStencilFunctionCallGlobalParams class
 /// is an AST visitor used to capture accesses to global accessor from within
 /// stencil functions called from a stage
-class CaptureStencilFunctionCallGlobalParams : public ast::ASTVisitorForwarding {
+class CaptureStencilFunctionCallGlobalParams : public ast::ASTVisitorForwardingNonConst {
 
   std::unordered_set<int>& globalVariables_;
   const StencilMetaInformation& metaData_;

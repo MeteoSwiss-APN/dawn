@@ -537,7 +537,13 @@ std::optional<Interval> Stencil::getEnclosingIntervalTemporaries() const {
   return tmpInterval;
 }
 
-void Stencil::accept(ast::ASTVisitor& visitor) {
+void Stencil::accept(ast::ASTVisitor& visitor) const {
+  for(const auto& stmt : iterateIIROverStmt(*this)) {
+    stmt->accept(visitor);
+  }
+}
+
+void Stencil::accept(ast::ASTVisitorNonConst& visitor) const {
   for(const auto& stmt : iterateIIROverStmt(*this)) {
     stmt->accept(visitor);
   }
