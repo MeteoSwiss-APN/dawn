@@ -443,7 +443,8 @@ bool LoopStmt::equals(const Stmt* other, bool compareData) const {
          iterationDescr_->equals(otherPtr->iterationDescr_.get());
 }
 
-MutableArrayRef<std::shared_ptr<Stmt>> LoopStmt::getChildren() { return blockStmt_->getChildren(); }
+LoopStmt::StmtRangeType LoopStmt::getChildren() { return blockStmt_->getChildren(); }
+LoopStmt::StmtRangeTypeConst LoopStmt::getChildren() const { return blockStmt_->getChildren(); }
 void LoopStmt::replaceChildren(const std::shared_ptr<Stmt>& oldStmt,
                                const std::shared_ptr<Stmt>& newStmt) {
   blockStmt_->replaceChildren(oldStmt, newStmt);

@@ -24,7 +24,7 @@ namespace iir {
 //     ASTMatcher
 //===------------------------------------------------------------------------------------------===//
 /// @brief Traverses AST and return all matching statement or expression types
-class ASTMatcher : public ast::ASTVisitorForwarding {
+class ASTMatcher : public ast::ASTVisitorForwardingNonConst {
   iir::StencilInstantiation* instantiation_;
   iir::StencilMetaInformation& metadata_;
   ast::Stmt::Kind stmtKind_;

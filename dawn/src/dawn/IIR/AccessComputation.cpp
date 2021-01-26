@@ -28,7 +28,7 @@ namespace dawn {
 namespace {
 
 /// @brief Compute and fill the access map of the given statement
-class AccessMapper : public ast::ASTVisitor {
+class AccessMapper : public ast::ASTVisitorNonConst {
   const iir::StencilMetaInformation& metadata_;
 
   /// Keep track of the current statement

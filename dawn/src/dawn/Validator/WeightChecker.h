@@ -38,7 +38,7 @@ namespace dawn {
 
 class WeightChecker {
 private:
-  class WeightCheckerImpl : public dawn::ast::ASTVisitorForwarding {
+  class WeightCheckerImpl : public dawn::ast::ASTVisitorForwardingNonConst {
   private:
     bool weightsValid_ = true;
     bool parentIsWeight_ = false;

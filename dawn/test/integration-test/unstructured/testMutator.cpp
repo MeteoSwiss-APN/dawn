@@ -11,7 +11,7 @@
 #include <map>
 #include <optional>
 
-class accessMutator : public dawn::ast::ASTVisitorForwarding {
+class accessMutator : public dawn::ast::ASTVisitorForwardingNonConst {
   void visit(const std::shared_ptr<dawn::ast::FieldAccessExpr>& expr) override {
     if(mutatedFields_.count(expr->getName())) {
       expr->getOffset().setVerticalIndirection(expr->getName() + "_indirection");

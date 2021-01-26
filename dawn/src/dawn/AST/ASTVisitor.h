@@ -27,6 +27,42 @@ public:
 
   /// @brief Statements
   /// @{
+  virtual void visit(const std::shared_ptr<const BlockStmt>& stmt) = 0;
+  virtual void visit(const std::shared_ptr<const ExprStmt>& stmt) = 0;
+  virtual void visit(const std::shared_ptr<const ReturnStmt>& stmt) = 0;
+  virtual void visit(const std::shared_ptr<const VarDeclStmt>& stmt) = 0;
+  virtual void visit(const std::shared_ptr<const VerticalRegionDeclStmt>& stmt) = 0;
+  virtual void visit(const std::shared_ptr<const StencilCallDeclStmt>& stmt) = 0;
+  virtual void visit(const std::shared_ptr<const BoundaryConditionDeclStmt>& stmt) = 0;
+  virtual void visit(const std::shared_ptr<const IfStmt>& stmt) = 0;
+  virtual void visit(const std::shared_ptr<const LoopStmt>& stmt) = 0;
+  /// @}
+
+  /// @brief Expressions
+  /// @{
+  virtual void visit(const std::shared_ptr<const ReductionOverNeighborExpr>& expr) = 0;
+  virtual void visit(const std::shared_ptr<const NOPExpr>& expr) final {}
+  virtual void visit(const std::shared_ptr<const UnaryOperator>& expr) = 0;
+  virtual void visit(const std::shared_ptr<const BinaryOperator>& expr) = 0;
+  virtual void visit(const std::shared_ptr<const AssignmentExpr>& expr) = 0;
+  virtual void visit(const std::shared_ptr<const TernaryOperator>& expr) = 0;
+  virtual void visit(const std::shared_ptr<const FunCallExpr>& expr) = 0;
+  virtual void visit(const std::shared_ptr<const StencilFunCallExpr>& expr) = 0;
+  virtual void visit(const std::shared_ptr<const StencilFunArgExpr>& expr) = 0;
+  virtual void visit(const std::shared_ptr<const VarAccessExpr>& expr) = 0;
+  virtual void visit(const std::shared_ptr<const FieldAccessExpr>& expr) = 0;
+  virtual void visit(const std::shared_ptr<const LiteralAccessExpr>& expr) = 0;
+  /// @}
+};
+
+/// @brief Base class of all Visitor for ASTs and ASTNodes
+/// @ingroup ast
+class ASTVisitorNonConst {
+public:
+  virtual ~ASTVisitorNonConst();
+
+  /// @brief Statements
+  /// @{
   virtual void visit(const std::shared_ptr<BlockStmt>& stmt) = 0;
   virtual void visit(const std::shared_ptr<ExprStmt>& stmt) = 0;
   virtual void visit(const std::shared_ptr<ReturnStmt>& stmt) = 0;
@@ -41,7 +77,7 @@ public:
   /// @brief Expressions
   /// @{
   virtual void visit(const std::shared_ptr<ReductionOverNeighborExpr>& expr) = 0;
-  virtual void visit(const std::shared_ptr<NOPExpr>& stmt) final {}
+  virtual void visit(const std::shared_ptr<NOPExpr>& expr) final {}
   virtual void visit(const std::shared_ptr<UnaryOperator>& expr) = 0;
   virtual void visit(const std::shared_ptr<BinaryOperator>& expr) = 0;
   virtual void visit(const std::shared_ptr<AssignmentExpr>& expr) = 0;
@@ -55,42 +91,6 @@ public:
   /// @}
 };
 
-/// @brief Base class of all Visitor for ASTs and ASTNodes
-/// @ingroup ast
-class ASTVisitorNonConst {
-public:
-  virtual ~ASTVisitorNonConst();
-
-  /// @brief Statements
-  /// @{
-  virtual void visit(std::shared_ptr<BlockStmt> stmt) = 0;
-  virtual void visit(std::shared_ptr<ExprStmt> stmt) = 0;
-  virtual void visit(std::shared_ptr<ReturnStmt> stmt) = 0;
-  virtual void visit(std::shared_ptr<VarDeclStmt> stmt) = 0;
-  virtual void visit(std::shared_ptr<VerticalRegionDeclStmt> stmt) = 0;
-  virtual void visit(std::shared_ptr<StencilCallDeclStmt> stmt) = 0;
-  virtual void visit(std::shared_ptr<BoundaryConditionDeclStmt> stmt) = 0;
-  virtual void visit(std::shared_ptr<IfStmt> stmt) = 0;
-  virtual void visit(std::shared_ptr<LoopStmt> stmt) = 0;
-  /// @}
-
-  /// @brief Expressions
-  /// @{
-  virtual void visit(std::shared_ptr<ReductionOverNeighborExpr> expr) = 0;
-  virtual void visit(std::shared_ptr<NOPExpr> expr) final {}
-  virtual void visit(std::shared_ptr<UnaryOperator> expr) = 0;
-  virtual void visit(std::shared_ptr<BinaryOperator> expr) = 0;
-  virtual void visit(std::shared_ptr<AssignmentExpr> expr) = 0;
-  virtual void visit(std::shared_ptr<TernaryOperator> expr) = 0;
-  virtual void visit(std::shared_ptr<FunCallExpr> expr) = 0;
-  virtual void visit(std::shared_ptr<StencilFunCallExpr> expr) = 0;
-  virtual void visit(std::shared_ptr<StencilFunArgExpr> expr) = 0;
-  virtual void visit(std::shared_ptr<VarAccessExpr> expr) = 0;
-  virtual void visit(std::shared_ptr<FieldAccessExpr> expr) = 0;
-  virtual void visit(std::shared_ptr<LiteralAccessExpr> expr) = 0;
-  /// @}
-};
-
 /// @brief Visitor which forwards all calls to their children by default
 /// @ingroup ast
 class ASTVisitorForwarding : public ASTVisitor {
@@ -99,30 +99,30 @@ public:
 
   /// @brief Statements
   /// @{
-  virtual void visit(const std::shared_ptr<BlockStmt>& stmt) override;
-  virtual void visit(const std::shared_ptr<ExprStmt>& stmt) override;
-  virtual void visit(const std::shared_ptr<ReturnStmt>& stmt) override;
-  virtual void visit(const std::shared_ptr<VarDeclStmt>& stmt) override;
-  virtual void visit(const std::shared_ptr<VerticalRegionDeclStmt>& stmt) override;
-  virtual void visit(const std::shared_ptr<StencilCallDeclStmt>& stmt) override;
-  virtual void visit(const std::shared_ptr<BoundaryConditionDeclStmt>& stmt) override;
-  virtual void visit(const std::shared_ptr<IfStmt>& stmt) override;
-  virtual void visit(const std::shared_ptr<LoopStmt>& stmt) override;
+  virtual void visit(const std::shared_ptr<const BlockStmt>& stmt) override;
+  virtual void visit(const std::shared_ptr<const ExprStmt>& stmt) override;
+  virtual void visit(const std::shared_ptr<const ReturnStmt>& stmt) override;
+  virtual void visit(const std::shared_ptr<const VarDeclStmt>& stmt) override;
+  virtual void visit(const std::shared_ptr<const VerticalRegionDeclStmt>& stmt) override;
+  virtual void visit(const std::shared_ptr<const StencilCallDeclStmt>& stmt) override;
+  virtual void visit(const std::shared_ptr<const BoundaryConditionDeclStmt>& stmt) override;
+  virtual void visit(const std::shared_ptr<const IfStmt>& stmt) override;
+  virtual void visit(const std::shared_ptr<const LoopStmt>& stmt) override;
   /// @}
 
   /// @brief Expressions
   /// @{
-  virtual void visit(const std::shared_ptr<ReductionOverNeighborExpr>& expr) override;
-  virtual void visit(const std::shared_ptr<UnaryOperator>& expr) override;
-  virtual void visit(const std::shared_ptr<BinaryOperator>& expr) override;
-  virtual void visit(const std::shared_ptr<AssignmentExpr>& expr) override;
-  virtual void visit(const std::shared_ptr<TernaryOperator>& expr) override;
-  virtual void visit(const std::shared_ptr<FunCallExpr>& expr) override;
-  virtual void visit(const std::shared_ptr<StencilFunCallExpr>& expr) override;
-  virtual void visit(const std::shared_ptr<StencilFunArgExpr>& expr) override;
-  virtual void visit(const std::shared_ptr<VarAccessExpr>& expr) override;
-  virtual void visit(const std::shared_ptr<FieldAccessExpr>& expr) override;
-  virtual void visit(const std::shared_ptr<LiteralAccessExpr>& expr) override;
+  virtual void visit(const std::shared_ptr<const ReductionOverNeighborExpr>& expr) override;
+  virtual void visit(const std::shared_ptr<const UnaryOperator>& expr) override;
+  virtual void visit(const std::shared_ptr<const BinaryOperator>& expr) override;
+  virtual void visit(const std::shared_ptr<const AssignmentExpr>& expr) override;
+  virtual void visit(const std::shared_ptr<const TernaryOperator>& expr) override;
+  virtual void visit(const std::shared_ptr<const FunCallExpr>& expr) override;
+  virtual void visit(const std::shared_ptr<const StencilFunCallExpr>& expr) override;
+  virtual void visit(const std::shared_ptr<const StencilFunArgExpr>& expr) override;
+  virtual void visit(const std::shared_ptr<const VarAccessExpr>& expr) override;
+  virtual void visit(const std::shared_ptr<const FieldAccessExpr>& expr) override;
+  virtual void visit(const std::shared_ptr<const LiteralAccessExpr>& expr) override;
   /// @}
 };
 
@@ -247,30 +247,30 @@ public:
 
   /// @brief Statements
   /// @{
-  virtual void visit(std::shared_ptr<BlockStmt> stmt) override;
-  virtual void visit(std::shared_ptr<ExprStmt> stmt) override;
-  virtual void visit(std::shared_ptr<ReturnStmt> stmt) override;
-  virtual void visit(std::shared_ptr<VarDeclStmt> stmt) override;
-  virtual void visit(std::shared_ptr<VerticalRegionDeclStmt> stmt) override;
-  virtual void visit(std::shared_ptr<StencilCallDeclStmt> stmt) override;
-  virtual void visit(std::shared_ptr<BoundaryConditionDeclStmt> stmt) override;
-  virtual void visit(std::shared_ptr<IfStmt> stmt) override;
-  virtual void visit(std::shared_ptr<LoopStmt> stmt) override;
+  virtual void visit(const std::shared_ptr<BlockStmt>& stmt) override;
+  virtual void visit(const std::shared_ptr<ExprStmt>& stmt) override;
+  virtual void visit(const std::shared_ptr<ReturnStmt>& stmt) override;
+  virtual void visit(const std::shared_ptr<VarDeclStmt>& stmt) override;
+  virtual void visit(const std::shared_ptr<VerticalRegionDeclStmt>& stmt) override;
+  virtual void visit(const std::shared_ptr<StencilCallDeclStmt>& stmt) override;
+  virtual void visit(const std::shared_ptr<BoundaryConditionDeclStmt>& stmt) override;
+  virtual void visit(const std::shared_ptr<IfStmt>& stmt) override;
+  virtual void visit(const std::shared_ptr<LoopStmt>& stmt) override;
   /// @}
 
   /// @brief Expressions
   /// @{
-  virtual void visit(std::shared_ptr<ReductionOverNeighborExpr> expr) override;
-  virtual void visit(std::shared_ptr<UnaryOperator> expr) override;
-  virtual void visit(std::shared_ptr<BinaryOperator> expr) override;
-  virtual void visit(std::shared_ptr<AssignmentExpr> expr) override;
-  virtual void visit(std::shared_ptr<TernaryOperator> expr) override;
-  virtual void visit(std::shared_ptr<FunCallExpr> expr) override;
-  virtual void visit(std::shared_ptr<StencilFunCallExpr> expr) override;
-  virtual void visit(std::shared_ptr<StencilFunArgExpr> expr) override;
-  virtual void visit(std::shared_ptr<VarAccessExpr> expr) override;
-  virtual void visit(std::shared_ptr<FieldAccessExpr> expr) override;
-  virtual void visit(std::shared_ptr<LiteralAccessExpr> expr) override;
+  virtual void visit(const std::shared_ptr<ReductionOverNeighborExpr>& expr) override;
+  virtual void visit(const std::shared_ptr<UnaryOperator>& expr) override;
+  virtual void visit(const std::shared_ptr<BinaryOperator>& expr) override;
+  virtual void visit(const std::shared_ptr<AssignmentExpr>& expr) override;
+  virtual void visit(const std::shared_ptr<TernaryOperator>& expr) override;
+  virtual void visit(const std::shared_ptr<FunCallExpr>& expr) override;
+  virtual void visit(const std::shared_ptr<StencilFunCallExpr>& expr) override;
+  virtual void visit(const std::shared_ptr<StencilFunArgExpr>& expr) override;
+  virtual void visit(const std::shared_ptr<VarAccessExpr>& expr) override;
+  virtual void visit(const std::shared_ptr<FieldAccessExpr>& expr) override;
+  virtual void visit(const std::shared_ptr<LiteralAccessExpr>& expr) override;
   /// @}
 };
 
@@ -278,7 +278,7 @@ public:
 /// (in order to implement the corresponding functionality of a node, the method should be overrided
 /// by the inherited class)
 /// @ingroup ast
-class ASTVisitorDisabled : public ASTVisitor {
+class ASTVisitorDisabled : public ASTVisitorNonConst {
 public:
   virtual ~ASTVisitorDisabled();
 

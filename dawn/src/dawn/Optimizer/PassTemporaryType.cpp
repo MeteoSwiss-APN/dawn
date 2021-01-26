@@ -31,7 +31,7 @@ namespace dawn {
 
 namespace {
 
-class StencilFunArgumentDetector : public ast::ASTVisitorForwarding {
+class StencilFunArgumentDetector : public ast::ASTVisitorForwardingNonConst {
   int AccessID_;
 
   int argListNesting_;
@@ -43,7 +43,7 @@ public:
 
   virtual void visit(const std::shared_ptr<ast::StencilFunCallExpr>& expr) override {
     argListNesting_++;
-    ast::ASTVisitorForwarding::visit(expr);
+    ast::ASTVisitorForwardingNonConst::visit(expr);
     argListNesting_--;
   }
 

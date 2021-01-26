@@ -88,7 +88,7 @@ CudaIcoCodeGen::CudaIcoCodeGen(const StencilInstantiationContext& ctx, int maxHa
 
 CudaIcoCodeGen::~CudaIcoCodeGen() {}
 
-class CollectIterationSpaces : public ast::ASTVisitorForwarding {
+class CollectIterationSpaces : public ast::ASTVisitorForwardingNonConst {
 
 public:
   struct IterSpaceHash {

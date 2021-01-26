@@ -29,7 +29,7 @@ namespace dawn {
 /// @brief Converts an AST with SIR data to one (duplicated) with IIR data.
 /// Can retrieve the converted nodes from the the stmt conversion map that is filled with the AST
 /// visit.
-class ASTConverter : public ast::ASTVisitorForwarding {
+class ASTConverter : public ast::ASTVisitorForwardingNonConst {
 public:
   using StmtMap = std::unordered_map<std::shared_ptr<ast::Stmt>, std::shared_ptr<ast::Stmt>>;
 

@@ -26,7 +26,7 @@ namespace dawn {
 
 namespace {
 
-class UnusedFieldVisitor : public ast::ASTVisitorForwarding {
+class UnusedFieldVisitor : public ast::ASTVisitorForwardingNonConst {
   int AccessID_;
   bool fieldIsUnused_;
   const std::shared_ptr<iir::StencilInstantiation>& instantiation_;
@@ -54,7 +54,7 @@ public:
     funCall->getAST()->accept(*this);
 
     // Visit arguments
-    ast::ASTVisitorForwarding::visit(expr);
+    ast::ASTVisitorForwardingNonConst::visit(expr);
     functionInstantiationStack_.pop();
   }
 

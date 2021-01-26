@@ -34,7 +34,7 @@ namespace dawn {
 namespace {
 
 /// @brief Register all referenced AccessIDs
-struct AccessIDGetter : public ast::ASTVisitorForwarding {
+struct AccessIDGetter : public ast::ASTVisitorForwardingNonConst {
   const iir::StencilMetaInformation& metadata_;
   std::set<int> AccessIDs;
 

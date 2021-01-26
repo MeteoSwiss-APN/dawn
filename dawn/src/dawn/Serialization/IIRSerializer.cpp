@@ -543,17 +543,17 @@ void IIRSerializer::deserializeMetaData(std::shared_ptr<iir::StencilInstantiatio
     }
   }
 
-  struct DeclStmtFinder : public ast::ASTVisitorForwarding {
+  struct DeclStmtFinder : public ast::ASTVisitorForwardingNonConst {
     DeclStmtFinder(int& maxid) : maxID(maxid) {}
     void visit(const std::shared_ptr<ast::StencilCallDeclStmt>& stmt) override {
       stencilCallDecl.insert(std::make_pair(stmt->getID(), stmt));
       maxID = std::max(std::abs(stmt->getID()), maxID);
-      ASTVisitorForwarding::visit(stmt);
+      ASTVisitorForwardingNonConst::visit(stmt);
     }
     void visit(const std::shared_ptr<ast::BoundaryConditionDeclStmt>& stmt) override {
       boundaryConditionDecl.insert(std::make_pair(stmt->getID(), stmt));
       maxID = std::max(std::abs(stmt->getID()), maxID);
-      ASTVisitorForwarding::visit(stmt);
+      ASTVisitorForwardingNonConst::visit(stmt);
     }
     std::map<int, std::shared_ptr<ast::StencilCallDeclStmt>> stencilCallDecl;
     std::map<int, std::shared_ptr<ast::BoundaryConditionDeclStmt>> boundaryConditionDecl;
