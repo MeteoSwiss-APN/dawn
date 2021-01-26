@@ -13,14 +13,15 @@
 //===------------------------------------------------------------------------------------------===//
 
 #include "dawn/IIR/DoMethod.h"
-#include "dawn/IIR/ASTExpr.h"
-#include "dawn/IIR/ASTStmt.h"
 #include "dawn/AST/ASTStringifier.h"
 #include "dawn/AST/ASTVisitor.h"
+#include "dawn/IIR/ASTExpr.h"
+#include "dawn/IIR/ASTStmt.h"
 #include "dawn/IIR/AccessToNameMapper.h"
 #include "dawn/IIR/AccessUtils.h"
 #include "dawn/IIR/Accesses.h"
 #include "dawn/IIR/DependencyGraphAccesses.h"
+#include "dawn/IIR/FieldAccessMetadata.h"
 #include "dawn/IIR/IIR.h"
 #include "dawn/IIR/MultiStage.h"
 #include "dawn/IIR/Stage.h"
@@ -206,20 +207,9 @@ DoMethod::getFieldDimensionsByName() const {
 
 void DoMethod::updateLevel() {
 
-  // Compute the fields and their intended usage. Fields can be in one of three states: `Output`,
-  // `InputOutput` or `Input` which implements the following state machine:
-  //
-  //    +-------+                               +--------+
-  //    | Input |                               | Output |
-  //    +-------+                               +--------+
-  //        |                                       |
-  //        |            +-------------+            |
-  //        +----------> | InputOutput | <----------+
-  //                     +-------------+
-  //
-  std::unordered_map<int, Field> inputOutputFields;
-  std::unordered_map<int, Field> inputFields;
-  std::unordered_map<int, Field> outputFields;
+  // Compute the fields and maintain their access intervals
+
+  std::unordered_map<int, Field> fields;
 
   for(const auto& stmt : getAST().getStatements()) {
     const auto& access = stmt->getData<iir::IIRStmtData>().CallerAccesses;
@@ -234,9 +224,13 @@ void DoMethod::updateLevel() {
         continue;
       }
 
-      AccessUtils::recordWriteAccess(inputOutputFields, inputFields, outputFields, AccessID,
-                                     extents, getInterval(),
-                                     metaData_.getFieldDimensions(AccessID));
+      if(fields.count(AccessID)) {
+        fields.at(AccessID).extendInterval(getInterval());
+      } else {
+        fields.emplace(AccessID, iir::Field(AccessID, iir::Field::IntendKind::Output,
+                                            std::optional<iir::Extents>(), extents, getInterval(),
+                                            metaData_.getFieldDimensions(AccessID)));
+      }
     }
 
     for(const auto& accessPair : access->getReadAccesses()) {
@@ -248,15 +242,18 @@ void DoMethod::updateLevel() {
         continue;
       }
 
-      AccessUtils::recordReadAccess(inputOutputFields, inputFields, outputFields, AccessID, extents,
-                                    getInterval(), metaData_.getFieldDimensions(AccessID));
+      if(fields.count(AccessID)) {
+        fields.at(AccessID).extendInterval(getInterval());
+      } else {
+        fields.emplace(AccessID, iir::Field(AccessID, iir::Field::IntendKind::Output,
+                                            std::optional<iir::Extents>(), extents, getInterval(),
+                                            metaData_.getFieldDimensions(AccessID)));
+      }
     }
   }
 
   // Merge inputFields, outputFields and fields
-  derivedInfo_.fields_.insert(outputFields.begin(), outputFields.end());
-  derivedInfo_.fields_.insert(inputOutputFields.begin(), inputOutputFields.end());
-  derivedInfo_.fields_.insert(inputFields.begin(), inputFields.end());
+  derivedInfo_.fields_.insert(fields.begin(), fields.end());
 
   if(derivedInfo_.fields_.empty()) {
     DAWN_LOG(WARNING) << "no fields referenced in stage";

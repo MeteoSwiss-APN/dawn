@@ -75,9 +75,7 @@ public:
   bool hasFieldAccessID(const int accessID) const { return derivedInfo_.fields_.count(accessID); }
 
   /// @brief Get the pair <AccessID, field> for the fields used within the multi-stage
-  const std::unordered_map<int, Stencil::FieldInfo>& getFields() const {
-    return derivedInfo_.fields_;
-  }
+  std::unordered_map<int, Stencil::FieldInfo>& getFields() { return derivedInfo_.fields_; }
 
   const std::vector<std::shared_ptr<sir::StencilFunction>>& getStencilFunctions() {
     return stencilFunctions_;

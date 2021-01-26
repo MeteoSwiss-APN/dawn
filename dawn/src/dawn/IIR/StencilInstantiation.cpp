@@ -13,10 +13,10 @@
 //===------------------------------------------------------------------------------------------===//
 #include "dawn/IIR/StencilInstantiation.h"
 #include "dawn/AST/ASTStringifier.h"
+#include "dawn/AST/ASTVisitor.h"
 #include "dawn/AST/LocationType.h"
 #include "dawn/IIR/AST.h"
 #include "dawn/IIR/ASTExpr.h"
-#include "dawn/AST/ASTVisitor.h"
 #include "dawn/IIR/Extents.h"
 #include "dawn/IIR/IIRNodeIterator.h"
 #include "dawn/SIR/SIR.h"
@@ -371,6 +371,77 @@ void StencilInstantiation::computeDerivedInfo() {
 
   for(const auto& MS : iterateIIROver<iir::MultiStage>(*(this->getIIR()))) {
     MS->update(iir::NodeUpdateType::levelAndTreeAbove);
+  }
+
+  std::set<int> inputOutputFields;
+  std::set<int> inputFields;
+  std::set<int> outputFields;
+
+  for(auto& stmt : iterateIIROverStmt(*(this->getIIR()))) {
+    const auto& access = stmt->getData<iir::IIRStmtData>().CallerAccesses;
+    DAWN_ASSERT(access);
+
+    std::cout << ast::ASTStringifier::toString(stmt);
+
+    for(const auto& accessPair : access->getWriteAccesses()) {
+      int AccessID = accessPair.first;
+
+      // Does this AccessID correspond to a field access?
+      if(!metadata_.isAccessType(iir::FieldAccessType::Field, AccessID)) {
+        continue;
+      }
+
+      if(inputOutputFields.count(AccessID)) {
+        continue;
+      }
+
+      // Field was recorded as `Input`, change it's state to `InputOutput`
+      if(inputFields.count(AccessID)) {
+        inputOutputFields.insert(AccessID);
+        inputFields.erase(AccessID);
+        continue;
+      }
+
+      // Field not yet present, record it as output
+      outputFields.insert(AccessID);
+    }
+
+    for(const auto& accessPair : access->getReadAccesses()) {
+      int AccessID = accessPair.first;
+
+      // Does this AccessID correspond to a field access?
+      if(!metadata_.isAccessType(iir::FieldAccessType::Field, AccessID)) {
+        continue;
+      }
+
+      if(inputOutputFields.count(AccessID)) {
+        continue;
+      }
+
+      // Field was recorded as `Output`, change it's state to `InputOutput`
+      if(outputFields.count(AccessID)) {
+        inputOutputFields.insert(AccessID);
+        outputFields.erase(AccessID);
+        continue;
+      }
+
+      // Field not yet present, record it as input
+      inputFields.insert(AccessID);
+    }
+  }
+
+  for(auto& sten : this->getStencils()) {
+    for(auto& f : sten->getFields()) {
+      if(inputFields.count(f.first)) {
+        f.second.field.setIntend(iir::Field::IntendKind::Input);
+      }
+      if(outputFields.count(f.first)) {
+        f.second.field.setIntend(iir::Field::IntendKind::Output);
+      }
+      if(inputOutputFields.count(f.first)) {
+        f.second.field.setIntend(iir::Field::IntendKind::InputOutput);
+      }
+    }
   }
 }
 
