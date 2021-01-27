@@ -245,6 +245,7 @@ public:
   /// @{
   void updateFields();
   void updateFields(const Lifetime& lifetime);
+  void updateFieldIntends();
   /// @}
 
   /// @brief Get/Set the dependency graph of the stages

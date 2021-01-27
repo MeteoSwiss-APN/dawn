@@ -113,6 +113,77 @@ bool Stencil::containsRedundantComputations() const {
   return false;
 }
 
+void Stencil::updateFieldIntends() {
+  std::unordered_map<int, Field> fields;
+
+  for(const auto& MSPtr : children_) {
+    mergeFields(MSPtr->getFields(), fields);
+  }
+
+  std::set<int> inputOutputFields;
+  std::set<int> inputFields;
+  std::set<int> outputFields;
+
+  for(auto& stmt : iterateIIROverStmt(*this)) {
+    const auto& access = stmt->getData<iir::IIRStmtData>().CallerAccesses;
+    DAWN_ASSERT(access);
+
+    for(const auto& accessPair : access->getWriteAccesses()) {
+      int AccessID = accessPair.first;
+
+      // Does this AccessID correspond to a field access?
+      if(!metadata_.isAccessType(iir::FieldAccessType::Field, AccessID)) {
+        continue;
+      }
+
+      if(inputOutputFields.count(AccessID)) {
+        continue;
+      }
+
+      // Field was recorded as `Input`, change it's state to `InputOutput`
+      if(inputFields.count(AccessID)) {
+        inputOutputFields.insert(AccessID);
+        fields.at(AccessID).setIntend(iir::Field::IntendKind::InputOutput);
+        inputFields.erase(AccessID);
+        continue;
+      }
+
+      // Field not yet present, record it as output
+      fields.at(AccessID).setIntend(iir::Field::IntendKind::Output);
+      outputFields.insert(AccessID);
+    }
+
+    for(const auto& accessPair : access->getReadAccesses()) {
+      int AccessID = accessPair.first;
+
+      // Does this AccessID correspond to a field access?
+      if(!metadata_.isAccessType(iir::FieldAccessType::Field, AccessID)) {
+        continue;
+      }
+
+      if(inputOutputFields.count(AccessID)) {
+        continue;
+      }
+
+      // Field was recorded as `Output`, change it's state to `InputOutput`
+      if(outputFields.count(AccessID)) {
+        inputOutputFields.insert(AccessID);
+        fields.at(AccessID).setIntend(iir::Field::IntendKind::InputOutput);
+        outputFields.erase(AccessID);
+        continue;
+      }
+
+      // Field not yet present, record it as input
+      fields.at(AccessID).setIntend(iir::Field::IntendKind::Input);
+      inputFields.insert(AccessID);
+    }
+  }
+
+  for(const auto& field : fields) {
+    derivedInfo_.fields_.at(field.first).field.setIntend(field.second.getIntend());
+  }
+}
+
 void Stencil::updateFromChildren() {
   derivedInfo_.fields_.clear();
   std::unordered_map<int, Field> fields;
