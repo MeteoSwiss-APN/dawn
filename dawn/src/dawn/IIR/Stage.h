@@ -100,6 +100,7 @@ public:
 
   /// @brief update the derived info from children
   virtual void updateFromChildren() override;
+  void updateFieldsFromParent();
 
   /// @brief update the global variables derived info
   void updateGlobalVariablesInfo();

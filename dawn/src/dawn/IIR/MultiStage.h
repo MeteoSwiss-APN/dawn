@@ -94,6 +94,7 @@ public:
   void setLoopOrder(LoopOrderKind loopOrder) { loopOrder_ = loopOrder; }
 
   virtual void updateFromChildren() override;
+  void updateFieldsFromParent();
 
   /// @brief Index containing the information for splitting MultiStages
   ///

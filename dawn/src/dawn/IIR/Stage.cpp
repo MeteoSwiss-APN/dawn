@@ -14,6 +14,7 @@
 
 #include "dawn/IIR/Stage.h"
 #include "dawn/AST/ASTStmt.h"
+#include "dawn/AST/ASTVisitor.h"
 #include "dawn/AST/GridType.h"
 #include "dawn/AST/LocationType.h"
 #include "dawn/IIR/DependencyGraphAccesses.h"
@@ -23,7 +24,6 @@
 #include "dawn/IIR/Interval.h"
 #include "dawn/IIR/StencilFunctionInstantiation.h"
 #include "dawn/IIR/StencilMetaInformation.h"
-#include "dawn/AST/ASTVisitor.h"
 #include "dawn/Support/Logger.h"
 #include <algorithm>
 #include <set>
@@ -353,6 +353,18 @@ void Stage::updateFromChildren() {
 
   for(const auto& doMethod : children_) {
     mergeFields(doMethod->getFields(), derivedInfo_.fields_, std::optional<Extents>());
+  }
+}
+
+void Stage::updateFieldsFromParent() {
+  for(const auto& field : (*parent_)->getFields()) {
+    if(derivedInfo_.fields_.count(field.second.getAccessID())) {
+      derivedInfo_.fields_.at(field.second.getAccessID()).setIntend(field.second.getIntend());
+    }
+  }
+
+  for(auto& child : children_) {
+    child->updateFieldsFromParent();
   }
 }
 

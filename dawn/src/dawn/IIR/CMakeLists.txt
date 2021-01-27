@@ -54,7 +54,9 @@ add_library(DawnIIR
   ASTMatcher.cpp
   ASTMatcher.h
   Accesses.cpp
-  Accesses.h  
+  Accesses.h
+  AccessUtils.cpp
+  AccessUtils.h
   AccessToNameMapper.cpp
   AccessToNameMapper.h
   Cache.cpp

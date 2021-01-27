@@ -54,6 +54,8 @@ TEST(TestCaching, test_global_iteration_space_01) {
   PassSetCaches cachingPass;
   cachingPass.run(stencil);
 
+  stencil->computeDerivedInfo();
+
   ASSERT_TRUE(stencil->getStencils().size() ==
               1); // we expect the instantiation to contain one stencil...
   ASSERT_TRUE(stencil->getStencils().at(0)->getChildren().size() == 1); //... with one multistage
