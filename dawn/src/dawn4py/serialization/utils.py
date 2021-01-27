@@ -820,7 +820,8 @@ def make_reduction_over_neighbor_expr(
     init: ExprType,
     chain: List[LocationTypeValue],
     weights: List[ExprType] = None,
-    include_center: bool = False
+    include_center: bool = False,
+    offsets: List[int] = None
 ) -> ReductionOverNeighborExpr:
     """ Create a ReductionOverNeighborExpr
 
@@ -839,6 +840,8 @@ def make_reduction_over_neighbor_expr(
     iterSpace.chain.extend(chain)
     if weights is not None and len(weights) != 0:
         expr.weights.extend([make_expr(weight) for weight in weights])
+    if offsets is not None and len(offsets) != 0:
+        expr.offsets.extend([offset for offset in offsets])
     iterSpace.include_center = include_center
     expr.iter_space.CopyFrom(iterSpace)
     return expr

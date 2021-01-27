@@ -42,6 +42,7 @@ private:
   private:
     bool weightsValid_ = true;
     bool parentIsWeight_ = false;
+    bool parentAllowsSparse_ = false;
     const std::unordered_map<std::string, sir::FieldDimensions> nameToDimensions_;
     const std::unordered_map<int, std::string> idToNameMap_;
     std::stack<std::shared_ptr<const iir::StencilFunctionInstantiation>>

@@ -530,14 +530,19 @@ static std::shared_ptr<ast::Expr> makeExpr(const dawn::proto::statements::Expr& 
       chain.push_back(getLocationTypeFromProtoLocationType(exprProto.iter_space().chain(i)));
     }
 
+    std::vector<int> offsets;
+    for(int i = 0; i < exprProto.offsets_size(); ++i) {
+      offsets.push_back(exprProto.offsets(i));
+    }
+
     if(weights.size() > 0) {
       return std::make_shared<ast::ReductionOverNeighborExpr>(
           exprProto.op(), makeExpr(exprProto.rhs()), makeExpr(exprProto.init()), weights, chain,
-          exprProto.iter_space().include_center(), makeLocation(exprProto));
+          exprProto.iter_space().include_center(), offsets, makeLocation(exprProto));
     } else {
       return std::make_shared<ast::ReductionOverNeighborExpr>(
           exprProto.op(), makeExpr(exprProto.rhs()), makeExpr(exprProto.init()), chain,
-          exprProto.iter_space().include_center(), makeLocation(exprProto));
+          exprProto.iter_space().include_center(), offsets, makeLocation(exprProto));
     }
   }
   case dawn::proto::statements::Expr::EXPR_NOT_SET:
@@ -764,20 +769,24 @@ static std::shared_ptr<SIR> deserializeImpl(const std::string& str, SIRSerialize
 
       switch(sirValue.Value_case()) {
       case sir::proto::GlobalVariableValue::kBooleanValue:
-        value = std::make_shared<ast::Global>(static_cast<bool>(sirValue.boolean_value()), isConstExpr);
+        value =
+            std::make_shared<ast::Global>(static_cast<bool>(sirValue.boolean_value()), isConstExpr);
         break;
       case sir::proto::GlobalVariableValue::kIntegerValue:
-        value = std::make_shared<ast::Global>(static_cast<int>(sirValue.integer_value()), isConstExpr);
+        value =
+            std::make_shared<ast::Global>(static_cast<int>(sirValue.integer_value()), isConstExpr);
         break;
       case sir::proto::GlobalVariableValue::kFloatValue:
-        value = std::make_shared<ast::Global>(static_cast<float>(sirValue.float_value()), isConstExpr);
+        value =
+            std::make_shared<ast::Global>(static_cast<float>(sirValue.float_value()), isConstExpr);
         break;
       case sir::proto::GlobalVariableValue::kDoubleValue:
-        value = std::make_shared<ast::Global>(static_cast<double>(sirValue.double_value()), isConstExpr);
+        value = std::make_shared<ast::Global>(static_cast<double>(sirValue.double_value()),
+                                              isConstExpr);
         break;
       case sir::proto::GlobalVariableValue::kStringValue:
         value = std::make_shared<ast::Global>(static_cast<std::string>(sirValue.string_value()),
-                                         isConstExpr);
+                                              isConstExpr);
         break;
       case sir::proto::GlobalVariableValue::VALUE_NOT_SET:
       default:

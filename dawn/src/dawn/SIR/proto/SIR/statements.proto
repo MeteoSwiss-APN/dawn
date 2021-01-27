@@ -48,9 +48,7 @@ message CartesianDimension {
 // It could also have a sparse dimension. In such case the sparse part is
 // non-empty.
 // @ingroup sir_proto
-message UnstructuredDimension {
-  UnstructuredIterationSpace iter_space = 1;
-}
+message UnstructuredDimension { UnstructuredIterationSpace iter_space = 1; }
 
 // @brief Dimensions spanned by a field
 //
@@ -323,9 +321,7 @@ message LoopDescriptorGeneral {
   // dummy message for future use
 }
 
-message LoopDescriptorChain {
-  UnstructuredIterationSpace iter_space = 1;
-}
+message LoopDescriptorChain { UnstructuredIterationSpace iter_space = 1; }
 
 message LoopDescriptor {
   oneof desc {
@@ -335,7 +331,7 @@ message LoopDescriptor {
 }
 
 message LoopStmt {
-  Stmt statements = 1; // List of statements (must be a BlockStmt)
+  Stmt statements = 1;                // List of statements (must be a BlockStmt)
   LoopDescriptor loop_descriptor = 2; // Loop bounds description
   SourceLocation loc = 3;             // Source location
   StmtData data = 4;                  // Generic Stmt's data container
@@ -366,8 +362,7 @@ message ReturnStmt {
 //
 // @ingroup sir_proto
 message VarDeclStmtData {
-  google.protobuf.Int32Value accessID =
-      1; // ID of the variable declared in the statement
+  google.protobuf.Int32Value accessID = 1; // ID of the variable declared in the statement
 }
 
 // @brief Declaration of a variable
@@ -543,7 +538,7 @@ message FunCallExpr {
 // @endcode
 // @ingroup sir_proto
 message StencilFunCallExpr {
-  string callee = 1; // Identifier of the stencil function (i.e callee)
+  string callee = 1;           // Identifier of the stencil function (i.e callee)
   repeated Expr arguments = 2; // List of arguments
   SourceLocation loc = 3;      // Source location
   int32 ID = 4;                // ID of the Expr
@@ -601,18 +596,16 @@ message StencilFunArgExpr {
 //
 // @ingroup sir_proto
 message AccessExprData {
-  google.protobuf.Int32Value accessID =
-      1; // Access ID of variable/literal/field accessed
+  google.protobuf.Int32Value accessID = 1; // Access ID of variable/literal/field accessed
 }
 
 // @brief Access to a variable
 //
 // @ingroup sir_proto
 message VarAccessExpr {
-  string name = 1; // Name of the variable
-  Expr index = 2;  // Is it an array access (i.e var[2])?
-  bool is_external =
-      3; // Is this an access to a external variable (e.g a global)?
+  string name = 1;         // Name of the variable
+  Expr index = 2;          // Is it an array access (i.e var[2])?
+  bool is_external = 3;    // Is this an access to a external variable (e.g a global)?
   SourceLocation loc = 4;  // Source location
   AccessExprData data = 5; // Access data
   int32 ID = 6;            // ID of the Expr
@@ -709,15 +702,15 @@ message LiteralAccessExpr {
 //
 // @ingroup sir_proto
 message ReductionOverNeighborExpr {
-  string op = 1; // Reduction operation
-  Expr rhs = 2;  // Operation to be applied for each neighbor
-  Expr init = 3; // Initial value of reduction
-  repeated Expr weights =
-      4; // weights (required to be of equal type, e.g. just floats)
+  string op = 1;             // Reduction operation
+  Expr rhs = 2;              // Operation to be applied for each neighbor
+  Expr init = 3;             // Initial value of reduction
+  repeated Expr weights = 4; // weights (required to be of equal type, e.g. just floats)
   UnstructuredIterationSpace iter_space =
       5; // Neighbor chain definining the neighbors to reduce from and the
          // location type to reduce to (first element)
-  SourceLocation loc = 6;  
+  SourceLocation loc = 6;
+  repeated int32 offsets = 7;
 }
 
 // @brief Abstract syntax tree of the SIR

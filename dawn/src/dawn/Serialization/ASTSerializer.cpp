@@ -741,6 +741,10 @@ void ProtoStmtBuilder::visit(const std::shared_ptr<ReductionOverNeighborExpr>& e
       currentExprProto_.pop();
     }
   }
+
+  for(int offset : expr->getOffsets()) {
+    protoExpr->add_offsets(offset);
+  }
 }
 
 void setAST(proto::statements::AST* astProto, const AST* ast) {
@@ -1034,11 +1038,16 @@ std::shared_ptr<Expr> makeExpr(const proto::statements::Expr& expressionProto,
       chain.push_back(getLocationTypeFromProtoLocationType(exprProto.iter_space().chain(i)));
     }
 
+    std::vector<int> offsets;
+    for(int i = 0; i < exprProto.offsets_size(); ++i) {
+      offsets.push_back(exprProto.offsets(i));
+    }
+
     if(weights.empty()) {
       auto expr = std::make_shared<ReductionOverNeighborExpr>(
           exprProto.op(), makeExpr(exprProto.rhs(), dataType, maxID),
           makeExpr(exprProto.init(), dataType, maxID), chain,
-          exprProto.iter_space().include_center(), makeLocation(exprProto));
+          exprProto.iter_space().include_center(), offsets, makeLocation(exprProto));
       return expr;
     } else {
       std::vector<std::shared_ptr<ast::Expr>> deserializedWeights;
@@ -1048,7 +1057,7 @@ std::shared_ptr<Expr> makeExpr(const proto::statements::Expr& expressionProto,
       auto expr = std::make_shared<ReductionOverNeighborExpr>(
           exprProto.op(), makeExpr(exprProto.rhs(), dataType, maxID),
           makeExpr(exprProto.init(), dataType, maxID), deserializedWeights, chain,
-          exprProto.iter_space().include_center(), makeLocation(exprProto));
+          exprProto.iter_space().include_center(), offsets, makeLocation(exprProto));
       return expr;
     }
   }
