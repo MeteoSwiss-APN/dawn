@@ -214,10 +214,6 @@ void Stencil::updateFieldIntends() {
   for(auto field : fields) {
     derivedInfo_.fields_.at(field.first).field.setIntend(field.second.getIntend());
   }
-
-  for(const auto& MSPtr : children_) {
-    MSPtr->updateFieldsFromParent();
-  }
 }
 
 void Stencil::updateFromChildren() {
