@@ -380,19 +380,6 @@ void MultiStage::updateFromChildren() {
   }
 }
 
-void MultiStage::updateFieldsFromParent() {
-  for(const auto& field : (*parent_)->getFields()) {
-    if(derivedInfo_.fields_.count(field.second.field.getAccessID())) {
-      derivedInfo_.fields_.at(field.second.field.getAccessID())
-          .setIntend(field.second.field.getIntend());
-    }
-  }
-
-  for(auto& child : children_) {
-    child->updateFieldsFromParent();
-  }
-}
-
 const Field& MultiStage::getField(int accessID) const {
   DAWN_ASSERT(derivedInfo_.fields_.count(accessID));
   return derivedInfo_.fields_.at(accessID);

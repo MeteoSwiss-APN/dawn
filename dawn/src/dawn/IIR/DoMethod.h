@@ -81,7 +81,6 @@ public:
   /// @}
 
   virtual void clearDerivedInfo() override;
-  void updateFieldsFromParent();
 
   /// @brief computes the maximum extent among all the accesses of accessID
   std::optional<Extents> computeMaximumExtents(const int accessID) const;

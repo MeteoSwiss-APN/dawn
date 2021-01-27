@@ -356,18 +356,6 @@ void Stage::updateFromChildren() {
   }
 }
 
-void Stage::updateFieldsFromParent() {
-  for(const auto& field : (*parent_)->getFields()) {
-    if(derivedInfo_.fields_.count(field.second.getAccessID())) {
-      derivedInfo_.fields_.at(field.second.getAccessID()).setIntend(field.second.getIntend());
-    }
-  }
-
-  for(auto& child : children_) {
-    child->updateFieldsFromParent();
-  }
-}
-
 bool Stage::isEmptyOrNullStmt() const {
   for(auto const& doMethod : getChildren()) {
     if(!doMethod->isEmptyOrNullStmt()) {

@@ -136,14 +136,6 @@ void DoMethod::DerivedInfo::clear() { fields_.clear(); }
 
 void DoMethod::clearDerivedInfo() { derivedInfo_.clear(); }
 
-void DoMethod::updateFieldsFromParent() {
-  for(const auto& field : (*parent_)->getFields()) {
-    if(derivedInfo_.fields_.count(field.second.getAccessID())) {
-      derivedInfo_.fields_.at(field.second.getAccessID()).setIntend(field.second.getIntend());
-    }
-  }
-}
-
 namespace {
 json::json print(const StencilMetaInformation& metadata,
                  const AccessToNameMapper& accessToNameMapper,
