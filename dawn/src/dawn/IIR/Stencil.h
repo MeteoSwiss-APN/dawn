@@ -282,7 +282,6 @@ public:
   void accept(ast::ASTVisitor& visitor);
 
   /// @brief Get the pair <AccessID, field> for the fields used within the multi-stage
-  std::unordered_map<int, FieldInfo>& getFields() { return derivedInfo_.fields_; }
   const std::unordered_map<int, FieldInfo>& getFields() const { return derivedInfo_.fields_; }
 
   /// @brief Get the pair <AccessID, field> for the fields used within the multi-stage
