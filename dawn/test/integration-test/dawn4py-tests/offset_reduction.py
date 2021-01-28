@@ -29,7 +29,7 @@ from dawn4py.serialization import SIR
 from dawn4py.serialization import utils as sir_utils
 from google.protobuf.json_format import MessageToJson, Parse
 
-OUTPUT_NAME = "unstructured_stencil"
+OUTPUT_NAME = "offset_reduction"
 OUTPUT_FILE = f"{OUTPUT_NAME}.cpp"
 OUTPUT_PATH = f"{OUTPUT_NAME}.cpp"
 
@@ -114,7 +114,7 @@ def main(args: argparse.Namespace):
     )
 
     # print the SIR
-    f = open("unstructured_stencil.sir", "w")
+    f = open("offset_reduction.sir", "w")
     f.write(MessageToJson(sir))
     f.close()
    

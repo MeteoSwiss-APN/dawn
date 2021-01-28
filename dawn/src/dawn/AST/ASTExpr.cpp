@@ -476,7 +476,8 @@ ReductionOverNeighborExpr::ReductionOverNeighborExpr(
 
 ReductionOverNeighborExpr::ReductionOverNeighborExpr(ReductionOverNeighborExpr const& expr)
     : Expr(Kind::ReductionOverNeighborExpr, expr.getSourceLocation()), op_(expr.getOp()),
-      weights_(expr.getWeights()), iterSpace_(expr.iterSpace_), operands_(expr.operands_) {}
+      weights_(expr.getWeights()), iterSpace_(expr.iterSpace_), operands_(expr.operands_),
+      offsets_(expr.offsets_) {}
 
 ReductionOverNeighborExpr&
 ReductionOverNeighborExpr::operator=(ReductionOverNeighborExpr const& expr) {

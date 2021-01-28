@@ -62,6 +62,7 @@ protected:
   bool parentIsReduction_ = false;
   bool parentIsForLoop_ = false;
   std::vector<ast::LocationType> currentChain_;
+  std::optional<std::deque<int>> offsets_;
 
   size_t reductionDepth_ = 0;
 

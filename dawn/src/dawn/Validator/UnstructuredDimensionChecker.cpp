@@ -482,7 +482,7 @@ void UnstructuredDimensionChecker::UnstructuredDimensionCheckerImpl::visit(
   }
 
   // check weighs for consistency w.r.t dimensions
-  if(reductionExpr->getWeights().has_value()) {
+  if(reductionExpr->getWeights().has_value() && reductionExpr->getOffsets().empty()) {
     // check weights one by one
     UnstructuredDimensionChecker::UnstructuredDimensionCheckerImpl weightChecker(
         nameToDimensions_, idToNameMap_, idToLocalVariableData_, config_);

@@ -17,6 +17,7 @@
 #include "dawn/IIR/AST.h"
 #include "dawn/IIR/ASTExpr.h"
 #include <memory>
+#include <optional>
 #include <sstream>
 #include <string>
 
@@ -115,11 +116,20 @@ std::string ASTStencilBody::makeIndexString(const std::shared_ptr<ast::FieldAcce
   std::string denseSize =
       locToDenseSizeStringGpuMesh(unstrDims.getDenseLocationType(), padding_, /*addParens*/ true);
 
+  std::string nbhIdx = "nbhIdx";
+  std::string nbhIter = "nbhIdx";
+
+  if(offsets_.has_value()) {
+    nbhIdx = std::to_string(offsets_->front());
+    nbhIter = std::to_string(offsets_->front());
+    offsets_->pop_front();
+  }
+
   if(isFullField && isDense) {
     if((parentIsReduction_ || parentIsForLoop_) &&
        ast::offset_cast<const ast::UnstructuredOffset&>(expr->getOffset().horizontalOffset())
            .hasOffset()) {
-      return kiterStr + "*" + denseSize + "+ nbhIdx";
+      return kiterStr + "*" + denseSize + " + " + nbhIdx;
     } else {
       return kiterStr + "*" + denseSize + "+ pidx";
     }
@@ -129,7 +139,7 @@ std::string ASTStencilBody::makeIndexString(const std::shared_ptr<ast::FieldAcce
     DAWN_ASSERT_MSG(parentIsForLoop_ || parentIsReduction_,
                     "Sparse Field Access not allowed in this context");
     std::string sparseSize = chainToSparseSizeString(unstrDims.getIterSpace());
-    return kiterStr + "*" + denseSize + " * " + sparseSize + " + " + "nbhIter * " + denseSize +
+    return kiterStr + "*" + denseSize + " * " + sparseSize + " + " + nbhIter + " * " + denseSize +
            " + pidx";
   }
 
@@ -137,7 +147,7 @@ std::string ASTStencilBody::makeIndexString(const std::shared_ptr<ast::FieldAcce
     if((parentIsReduction_ || parentIsForLoop_) &&
        ast::offset_cast<const ast::UnstructuredOffset&>(expr->getOffset().horizontalOffset())
            .hasOffset()) {
-      return "nbhIdx";
+      return nbhIdx;
     } else {
       return "pidx";
     }
@@ -147,7 +157,7 @@ std::string ASTStencilBody::makeIndexString(const std::shared_ptr<ast::FieldAcce
     DAWN_ASSERT_MSG(parentIsForLoop_ || parentIsReduction_,
                     "Sparse Field Access not allowed in this context");
     std::string sparseSize = chainToSparseSizeString(unstrDims.getIterSpace());
-    return "nbhIter * " + denseSize + " + pidx";
+    return nbhIter + " * " + denseSize + " + pidx";
   }
 
   DAWN_ASSERT_MSG(false, "Bad Field configuration found in code gen!");
@@ -220,6 +230,9 @@ void ASTStencilBody::visit(const std::shared_ptr<ast::ReductionOverNeighborExpr>
   expr->getInit()->accept(*this);
   ss_ << ";\n";
   auto weights = expr->getWeights();
+  if(!expr->getOffsets().empty()) {
+    offsets_ = std::deque<int>(std::begin(expr->getOffsets()), std::end(expr->getOffsets()));
+  }
   if(weights.has_value()) {
     ss_ << "::dawn::float_type " << weights_name << "[" << weights->size() << "] = {";
     bool first = true;
@@ -232,6 +245,7 @@ void ASTStencilBody::visit(const std::shared_ptr<ast::ReductionOverNeighborExpr>
     }
     ss_ << "};\n";
   }
+  offsets_ = std::nullopt;
   ss_ << "for (int nbhIter = 0; nbhIter < " << chainToSparseSizeString(expr->getIterSpace())
       << "; nbhIter++)";
 

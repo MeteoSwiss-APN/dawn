@@ -841,7 +841,7 @@ def make_reduction_over_neighbor_expr(
     if weights is not None and len(weights) != 0:
         expr.weights.extend([make_expr(weight) for weight in weights])
     if offsets is not None and len(offsets) != 0:
-        expr.offsets.extend([offset for offset in offsets])
+        expr.offsets.extend([offset for offset in offsets])    
     iterSpace.include_center = include_center
     expr.iter_space.CopyFrom(iterSpace)
     return expr
