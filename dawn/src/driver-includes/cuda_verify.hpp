@@ -46,15 +46,13 @@ struct compute_error<RelErrTag> {
 
 namespace dawn {
 template <typename error_type>
-__global__ void compare_dense_full_kernel(const int edge_start_idx_c, const int edge_end_idx_c,
-                                          const int dense_size_edges, const int k_size,
-                                          const double* __restrict__ dsl,
-                                          const double* __restrict__ fortran,
-                                          double* __restrict__ error) {
+__global__ void compare_kernel(const int start_idx, const int end_idx, const int stride,
+                               const int k_size, const double* __restrict__ dsl,
+                               const double* __restrict__ fortran, double* __restrict__ error) {
   unsigned int eidx = blockIdx.x * blockDim.x + threadIdx.x;
   unsigned int kidx = blockIdx.y * blockDim.y + threadIdx.y;
 
-  if(eidx < edge_start_idx_c || eidx > edge_end_idx_c) {
+  if(eidx < start_idx || eidx > end_idx) {
     error[kidx * blockDim.x * gridDim.x + eidx] = 0.;
     return;
   }
@@ -64,20 +62,20 @@ __global__ void compare_dense_full_kernel(const int edge_start_idx_c, const int 
     return;
   }
 
-  error[kidx * blockDim.x * gridDim.x + eidx] = compute_error<error_type>::impl(
-      fortran[kidx * dense_size_edges + eidx], dsl[kidx * dense_size_edges + eidx]);
+  error[kidx * blockDim.x * gridDim.x + eidx] =
+      compute_error<error_type>::impl(fortran[kidx * stride + eidx], dsl[kidx * stride + eidx]);
 }
 
 // Returns relative error. Prints relative and absolute error.
-inline double verify_dense_full_field(const int dense_start_idx, const int dense_end_idx,
-                                      const int dense_stride, const int k_size, const double* dsl,
-                                      const double* actual, std::string name) {
+inline double verify_field(const int start_idx, const int end_idx, const int stride,
+                           const int k_size, const double* dsl, const double* actual,
+                           std::string name) {
   double relErr, absErr;
   double* gpu_error;
 
   const int blockSize = 16;
 
-  const int gridSizeX = ((dense_end_idx + 1) + blockSize - 1) / blockSize,
+  const int gridSizeX = ((end_idx + 1) + blockSize - 1) / blockSize,
             gridSizeY = (k_size + blockSize - 1) / blockSize;
   const int num_threads_tot = gridSizeX * gridSizeY * blockSize * blockSize;
 
@@ -89,8 +87,8 @@ inline double verify_dense_full_field(const int dense_start_idx, const int dense
 
   gpuErrchk(cudaDeviceSynchronize());
 
-  compare_dense_full_kernel<RelErrTag>
-      <<<dGE, dB>>>(dense_start_idx, dense_end_idx, dense_stride, k_size, dsl, actual, gpu_error);
+  compare_kernel<RelErrTag>
+      <<<dGE, dB>>>(start_idx, end_idx, stride, k_size, dsl, actual, gpu_error);
   gpuErrchk(cudaPeekAtLastError());
 
   thrust::device_ptr<double> dev_ptr;
@@ -101,8 +99,8 @@ inline double verify_dense_full_field(const int dense_start_idx, const int dense
   std::cout << "[DSL] " << name << " relative error: " << std::scientific << relErr << "\n"
             << std::flush;
 
-  compare_dense_full_kernel<AbsErrTag>
-      <<<dGE, dB>>>(dense_start_idx, dense_end_idx, dense_stride, k_size, dsl, actual, gpu_error);
+  compare_kernel<AbsErrTag>
+      <<<dGE, dB>>>(start_idx, end_idx, stride, k_size, dsl, actual, gpu_error);
   gpuErrchk(cudaPeekAtLastError());
 
   dev_ptr = thrust::device_pointer_cast(gpu_error);

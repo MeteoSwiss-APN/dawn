@@ -253,7 +253,7 @@ void CudaIcoCodeGen::generateRunFun(
   runFun.addBlockStatement("if (!is_setup_)", [&]() {
     std::string stencilName = stencilInstantiation->getName();
     runFun.addStatement("printf(\"" + stencilName +
-                        "has not been set up! make sure setup() is called before run!\\n\")");
+                        " has not been set up! make sure setup() is called before run!\\n\")");
     runFun.addStatement("return");
   });
 
@@ -906,38 +906,6 @@ void CudaIcoCodeGen::generateAllAPIVerifyFunctions(
 
   const std::string wrapperName = stencilInstantiation->getName();
 
-  auto getStartIdxName = [](dawn::ast::LocationType locType) -> std::string {
-    using dawn::ast::LocationType;
-    switch(locType) {
-    case LocationType::Edges:
-      return "start_idx";
-      break;
-    case LocationType::Cells:
-      return "cell_start_idx_c";
-      break;
-    case LocationType::Vertices:
-      return "vertex_start_idx_c";
-      break;
-    default:
-      dawn_unreachable("invalid location type");
-    }
-  };
-  auto getEndIdxName = [](dawn::ast::LocationType locType) -> std::string {
-    using dawn::ast::LocationType;
-    switch(locType) {
-    case LocationType::Edges:
-      return "end_idx";
-      break;
-    case LocationType::Cells:
-      return "cell_end_idx_c";
-      break;
-    case LocationType::Vertices:
-      return "vertex_end_idx_c";
-      break;
-    default:
-      dawn_unreachable("invalid location type");
-    }
-  };
   auto getDenseSizeName = [](dawn::ast::LocationType locType) -> std::string {
     using dawn::ast::LocationType;
     switch(locType) {
@@ -985,9 +953,6 @@ void CudaIcoCodeGen::generateAllAPIVerifyFunctions(
     verifyAPI.addArg("const int start_idx");
     verifyAPI.addArg("const int end_idx");
     // ENDTODO
-    verifyAPI.addArg("const int " + getDenseSizeName(dawn::ast::LocationType::Edges));
-    verifyAPI.addArg("const int " + getDenseSizeName(dawn::ast::LocationType::Cells));
-    verifyAPI.addArg("const int " + getDenseSizeName(dawn::ast::LocationType::Vertices));
     verifyAPI.addArg("const int k_size");
 
     for(auto fieldID : getUsedFields(stencil, {dawn::iir::Field::IntendKind::Output})) {
@@ -1036,40 +1001,71 @@ void CudaIcoCodeGen::generateAllAPIVerifyFunctions(
 
       for(auto fieldID : getUsedFields(stencil, {dawn::iir::Field::IntendKind::Output})) {
         const auto& fieldInfo = fieldInfos.at(fieldID);
-        if(fieldInfo.field.getFieldDimensions().isVertical()) {
-          DAWN_LOG(WARNING) << "Verifying vertical output field not supported yet.";
-          continue;
+
+        bool isVertical = fieldInfo.field.getFieldDimensions().isVertical();
+        bool isHorizontal = false, isFullField = false, isDense = false, isSparse = false;
+        if(!isVertical) {
+          isHorizontal = !fieldInfo.field.getFieldDimensions().K();
+          isFullField = !isHorizontal && !isVertical;
+          auto unstrDims = sir::dimension_cast<const sir::UnstructuredFieldDimension&>(
+              fieldInfo.field.getFieldDimensions().getHorizontalFieldDimension());
+          isDense = unstrDims.isDense();
+          isSparse = unstrDims.isSparse();
         }
-        if(!fieldInfo.field.getFieldDimensions().K()) {
-          DAWN_LOG(WARNING) << "Verifying horizontal output field not supported yet.";
-          continue;
+
+        std::string startIdxName = "start_idx", endIdxName = "end_idx", stride;
+        if(isVertical) {
+          // NOTE: this is may not be approriate since not every stencil runs on all k levels
+          // NOTE: this also raises questions w.r.t. the full field verification, we allow to only
+          //       validate a subset of edges / cells / vertices but the same is not true for the k
+          //       levels
+          // NOTE: I'm note even sure this is necessary since I believe we can't have a vertical
+          //       field being an out field in the current SIR/IIR
+          startIdxName = "0";
+          endIdxName = "num_k";
+          stride = "1";
+        } else {
+          auto unstrDims = sir::dimension_cast<const sir::UnstructuredFieldDimension&>(
+              fieldInfo.field.getFieldDimensions().getHorizontalFieldDimension());
+          auto lt = unstrDims.getDenseLocationType();
+          std::string denseSize =
+              locToDenseSizeStringGpuMesh(lt, codeGenOptions.UnstrPadding, /*addParens*/ true);
+          stride = denseSize;
+          if(isSparse) {
+            std::string sparseSize = chainToSparseSizeString(unstrDims.getIterSpace());
+            stride = denseSize + " * " + sparseSize;
+          }
         }
-        auto hDims = sir::dimension_cast<sir::UnstructuredFieldDimension const&>(
-            fieldInfo.field.getFieldDimensions().getHorizontalFieldDimension());
-        if(hDims.isSparse()) {
-          DAWN_LOG(WARNING) << "Verifying sparse output field not supported yet.";
-          continue;
-        }
-        auto lt = hDims.getDenseLocationType();
-        const auto startIdxName = getStartIdxName(lt), endIdxName = getEndIdxName(lt),
-                   denseSizeName = getDenseSizeName(lt), serializeCall = getSerializeCall(lt);
-        verifyAPI.addStatement("relErr = ::dawn::verify_dense_full_field(" + startIdxName + ", " +
-                               endIdxName + ", " + denseSizeName + ", k_size, " + fieldInfo.Name +
-                               "_dsl, " + fieldInfo.Name + ", \"" + fieldInfo.Name + "\"" + ")");
+        std::string num_lev = (!fieldInfo.field.getFieldDimensions().K()) ? "1" : "k_size";
+
+        verifyAPI.addStatement("relErr = ::dawn::verify_field(" + startIdxName + ", " + endIdxName +
+                               ", " + stride + ", " + num_lev + ", " + fieldInfo.Name + "_dsl, " +
+                               fieldInfo.Name + ", \"" + fieldInfo.Name + "\"" + ")");
         verifyAPI.addBlockStatement("if (relErr > RELATIVE_ERROR_THRESHOLD)", [&]() {
           verifyAPI.addStatement("isValid = false");
           verifyAPI.addPreprocessorDirective("ifdef __SERIALIZE_ON_ERROR");
-          // serialize actual field
-          verifyAPI.addStatement(serializeCall + "(" + startIdxName + ", " + endIdxName +
-                                 ", k_size, " + denseSizeName + ", " + fieldInfo.Name + ", \"" +
-                                 wrapperName + "\", \"" + fieldInfo.Name + "\", iteration)");
-          // serialize dsl field
-          verifyAPI.addStatement(serializeCall + "(" + startIdxName + ", " + endIdxName +
-                                 ", k_size, " + denseSizeName + ", " + fieldInfo.Name + "_dsl" +
-                                 ", \"" + wrapperName + "\", \"" + fieldInfo.Name + "_dsl" +
-                                 "\", iteration)");
-          verifyAPI.addStatement("std::cout << \"[DSL] serializing " + fieldInfo.Name +
-                                 " as error is high.\\n\" << std::flush");
+          if(!isVertical && !isSparse) {
+            // serialize actual field
+            auto unstrDims = sir::dimension_cast<const sir::UnstructuredFieldDimension&>(
+                fieldInfo.field.getFieldDimensions().getHorizontalFieldDimension());
+            auto lt = unstrDims.getDenseLocationType();
+            auto serializeCall = getSerializeCall(lt);
+            verifyAPI.addStatement(serializeCall + "(" + startIdxName + ", " + endIdxName + ", " +
+                                   num_lev + ", " + stride + ", " + fieldInfo.Name + ", \"" +
+                                   wrapperName + "\", \"" + fieldInfo.Name + "\", iteration)");
+            // serialize dsl field
+            verifyAPI.addStatement(serializeCall + "(" + startIdxName + ", " + endIdxName + ", " +
+                                   num_lev + ", " + stride + ", " + fieldInfo.Name + "_dsl" + "\"" +
+                                   wrapperName + "\", \"" + fieldInfo.Name + "_dsl" +
+                                   "\", iteration)");
+            verifyAPI.addStatement("std::cout << \"[DSL] serializing " + fieldInfo.Name +
+                                   " as error is high.\\n\" << std::flush");
+          } else {
+            verifyAPI.addStatement(
+                "std::cout << \"[DSL] can not serialize " +
+                ((isVertical) ? " vertical field " : " sparse field " + fieldInfo.Name) +
+                ", error is high.\\n\" << std::flush");
+          }
           verifyAPI.addPreprocessorDirective("endif");
         });
       }
@@ -1083,30 +1079,12 @@ void CudaIcoCodeGen::generateAllAPIVerifyFunctions(
 
       // TODO runAndVerifyAPI body
       runAndVerifyAPI.addStatement("static int iteration = 0");
-      runAndVerifyAPI.addStatement("const int dense_size_edges = mesh->NumEdges + " +
-                                   std::to_string(codeGenOptions.UnstrPadding.Edges()));
-      runAndVerifyAPI.addStatement("const int dense_size_cells = mesh->NumCells + " +
-                                   std::to_string(codeGenOptions.UnstrPadding.Cells()));
-      runAndVerifyAPI.addStatement("const int dense_size_vertices= mesh->NumVertices + " +
-                                   std::to_string(codeGenOptions.UnstrPadding.Vertices()));
       runAndVerifyAPI.addStatement(
           "std::cout << \"[DSL] Allocating output fields on the device\\n\" << std::flush");
       for(auto fieldID : getUsedFields(stencil, {dawn::iir::Field::IntendKind::Output})) {
         const auto& fieldInfo = fieldInfos.at(fieldID);
-        if(fieldInfo.field.getFieldDimensions().isVertical()) {
-          DAWN_LOG(WARNING) << "Verifying vertical output field not supported yet.";
-          continue;
-        }
-        if(!fieldInfo.field.getFieldDimensions().K()) {
-          DAWN_LOG(WARNING) << "Verifying horizontal output field not supported yet.";
-          continue;
-        }
         auto hDims = sir::dimension_cast<sir::UnstructuredFieldDimension const&>(
             fieldInfo.field.getFieldDimensions().getHorizontalFieldDimension());
-        if(hDims.isSparse()) {
-          DAWN_LOG(WARNING) << "Verifying sparse output field not supported yet.";
-          continue;
-        }
         auto lt = hDims.getDenseLocationType();
         runAndVerifyAPI.addStatement("double * dsl_" + fieldInfo.Name);
         runAndVerifyAPI.addStatement("::dawn::allocField(&dsl_" + fieldInfo.Name + ", " +
@@ -1165,11 +1143,7 @@ void CudaIcoCodeGen::generateAllAPIVerifyFunctions(
       runAndVerifyAPI.addStatement(
           "verify_" + wrapperName + "(" +
           explodeToStr(concatenateVectors(
-              {{"start_idx", "end_idx", getDenseSizeName(dawn::ast::LocationType::Edges),
-                getDenseSizeName(dawn::ast::LocationType::Cells),
-                getDenseSizeName(dawn::ast::LocationType::Vertices), "k_size"},
-               outputVerifyFields,
-               {"iteration"}})) +
+              {{"start_idx", "end_idx", "k_size"}, outputVerifyFields, {"iteration"}})) +
           ")");
 
       runAndVerifyAPI.addStatement("std::cout << \"[DSL] Freeing memory\\n\" << std::flush");
