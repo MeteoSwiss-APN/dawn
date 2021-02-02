@@ -16,7 +16,7 @@
 
 """pytest definitions and utilities"""
 
-from dawn4py.serialization import SIR
+from dawn4py.serialization import SIR, AST
 from dawn4py.serialization import utils as sir_utils
 
 
@@ -32,7 +32,7 @@ def make_copy_stencil_sir(name=None):
     OUTPUT_FILE = f"{OUTPUT_NAME}.cpp"
 
     interval = sir_utils.make_interval(
-        SIR.Interval.Start, SIR.Interval.End, 0, 0)
+        AST.Interval.Start, AST.Interval.End, 0, 0)
 
     # create the out = in[i+1] statement
     body_ast = sir_utils.make_ast(
@@ -46,7 +46,7 @@ def make_copy_stencil_sir(name=None):
     )
 
     vertical_region_stmt = sir_utils.make_vertical_region_decl_stmt(
-        body_ast, interval, SIR.VerticalRegion.Forward)
+        body_ast, interval, AST.VerticalRegion.Forward)
 
     sir = sir_utils.make_sir(
         OUTPUT_FILE,
@@ -71,7 +71,7 @@ def make_hori_diff_stencil_sir(name=None):
     OUTPUT_FILE = f"{OUTPUT_NAME}.cpp"
 
     interval = sir_utils.make_interval(
-        SIR.Interval.Start, SIR.Interval.End, 0, 0)
+        AST.Interval.Start, AST.Interval.End, 0, 0)
 
     # create the stencil body AST
     body_ast = sir_utils.make_ast(
@@ -81,7 +81,7 @@ def make_hori_diff_stencil_sir(name=None):
                 sir_utils.make_binary_operator(
                     sir_utils.make_binary_operator(
                         sir_utils.make_literal_access_expr(
-                            "-4.0", SIR.BuiltinType.Float),
+                            "-4.0", AST.BuiltinType.Float),
                         "*",
                         sir_utils.make_field_access_expr("in"),
                     ),
@@ -114,7 +114,7 @@ def make_hori_diff_stencil_sir(name=None):
                 sir_utils.make_binary_operator(
                     sir_utils.make_binary_operator(
                         sir_utils.make_literal_access_expr(
-                            "-4.0", SIR.BuiltinType.Float),
+                            "-4.0", AST.BuiltinType.Float),
                         "*",
                         sir_utils.make_field_access_expr("lap"),
                     ),
@@ -146,7 +146,7 @@ def make_hori_diff_stencil_sir(name=None):
     )
 
     vertical_region_stmt = sir_utils.make_vertical_region_decl_stmt(
-        body_ast, interval, SIR.VerticalRegion.Forward)
+        body_ast, interval, AST.VerticalRegion.Forward)
 
     sir = sir_utils.make_sir(
         OUTPUT_FILE,
@@ -178,7 +178,7 @@ def make_tridiagonal_solve_stencil_sir(name=None):
 
     # ---- First vertical region statement ----
     interval_1 = sir_utils.make_interval(
-        SIR.Interval.Start, SIR.Interval.End, 0, 0)
+        AST.Interval.Start, AST.Interval.End, 0, 0)
     body_ast_1 = sir_utils.make_ast(
         [
             sir_utils.make_assignment_stmt(
@@ -193,24 +193,24 @@ def make_tridiagonal_solve_stencil_sir(name=None):
     )
 
     vertical_region_stmt_1 = sir_utils.make_vertical_region_decl_stmt(
-        body_ast_1, interval_1, SIR.VerticalRegion.Forward
+        body_ast_1, interval_1, AST.VerticalRegion.Forward
     )
 
     # ---- Second vertical region statement ----
     interval_2 = sir_utils.make_interval(
-        SIR.Interval.Start, SIR.Interval.End, 1, 0)
+        AST.Interval.Start, AST.Interval.End, 1, 0)
 
     body_ast_2 = sir_utils.make_ast(
         [
             sir_utils.make_var_decl_stmt(
-                sir_utils.make_type(SIR.BuiltinType.Integer),
+                sir_utils.make_type(AST.BuiltinType.Integer),
                 "m",
                 0,
                 "=",
                 sir_utils.make_expr(
                     sir_utils.make_binary_operator(
                         sir_utils.make_literal_access_expr(
-                            "1.0", SIR.BuiltinType.Float),
+                            "1.0", AST.BuiltinType.Float),
                         "/",
                         sir_utils.make_binary_operator(
                             sir_utils.make_field_access_expr("b"),
@@ -253,12 +253,12 @@ def make_tridiagonal_solve_stencil_sir(name=None):
         ]
     )
     vertical_region_stmt_2 = sir_utils.make_vertical_region_decl_stmt(
-        body_ast_2, interval_2, SIR.VerticalRegion.Forward
+        body_ast_2, interval_2, AST.VerticalRegion.Forward
     )
 
     # ---- Third vertical region statement ----
     interval_3 = sir_utils.make_interval(
-        SIR.Interval.Start, SIR.Interval.End, 0, -1)
+        AST.Interval.Start, AST.Interval.End, 0, -1)
     body_ast_3 = sir_utils.make_ast(
         [
             sir_utils.make_assignment_stmt(
@@ -273,7 +273,7 @@ def make_tridiagonal_solve_stencil_sir(name=None):
     )
 
     vertical_region_stmt_3 = sir_utils.make_vertical_region_decl_stmt(
-        body_ast_3, interval_3, SIR.VerticalRegion.Backward
+        body_ast_3, interval_3, AST.VerticalRegion.Backward
     )
 
     sir = sir_utils.make_sir(
@@ -306,7 +306,7 @@ def make_unstructured_stencil_sir(name=None):
     OUTPUT_NAME = name if name is not None else "unstructured_stencil"
     OUTPUT_FILE = f"{OUTPUT_NAME}.cpp"
     interval = sir_utils.make_interval(
-        SIR.Interval.Start, SIR.Interval.End, 0, 0)
+        AST.Interval.Start, AST.Interval.End, 0, 0)
 
     # create the out = in[i+1] statement
     body_ast = sir_utils.make_ast(
@@ -316,9 +316,9 @@ def make_unstructured_stencil_sir(name=None):
                 sir_utils.make_reduction_over_neighbor_expr(
                     "+",
                     sir_utils.make_literal_access_expr(
-                        "1.0", SIR.BuiltinType.Float),
+                        "1.0", AST.BuiltinType.Float),
                     sir_utils.make_unstructured_field_access_expr("in"),
-                    chain=[SIR.LocationType.Value('Edge'), SIR.LocationType.Value('Cell')]
+                    chain=[AST.LocationType.Value('Edge'), AST.LocationType.Value('Cell')]
                 ),
                 "=",
             )
@@ -326,7 +326,7 @@ def make_unstructured_stencil_sir(name=None):
     )
 
     vertical_region_stmt = sir_utils.make_vertical_region_decl_stmt(
-        body_ast, interval, SIR.VerticalRegion.Forward)
+        body_ast, interval, AST.VerticalRegion.Forward)
 
     sir = sir_utils.make_sir(
         OUTPUT_FILE,
@@ -337,9 +337,9 @@ def make_unstructured_stencil_sir(name=None):
                 sir_utils.make_ast([vertical_region_stmt]),
                 [
                     sir_utils.make_field("in", sir_utils.make_field_dimensions_unstructured(
-                        [SIR.LocationType.Value('Cell')], 1)),
+                        [AST.LocationType.Value('Cell')], 1)),
                     sir_utils.make_field("out", sir_utils.make_field_dimensions_unstructured(
-                        [SIR.LocationType.Value('Edge')], 1))
+                        [AST.LocationType.Value('Edge')], 1))
                 ],
             )
         ],

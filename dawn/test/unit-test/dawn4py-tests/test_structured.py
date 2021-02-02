@@ -17,7 +17,7 @@ import io
 import pytest
 
 import dawn4py
-from dawn4py.serialization import SIR
+from dawn4py.serialization import SIR, AST
 from dawn4py.serialization import utils as sir_utils
 
 import utils

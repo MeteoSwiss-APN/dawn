@@ -23,7 +23,7 @@ import argparse
 import os
 
 import dawn4py
-from dawn4py.serialization import SIR
+from dawn4py.serialization import SIR, AST
 from dawn4py.serialization import utils as sir_utils
 from google.protobuf.json_format import MessageToJson, Parse
 
@@ -34,7 +34,7 @@ def main(args: argparse.Namespace):
     sir_outputfile = f"{stencil_name}.sir"
 
     interval = sir_utils.make_interval(
-        SIR.Interval.Start, SIR.Interval.End, 0, 0)
+        AST.Interval.Start, AST.Interval.End, 0, 0)
 
     body_ast = sir_utils.make_ast(
         [
@@ -49,8 +49,8 @@ def main(args: argparse.Namespace):
                             "v_vert", [True, 0]), "*", sir_utils.make_field_access_expr("primal_normal_y", [True, 0])),
                     ),
                     "=")],
-                [SIR.LocationType.Value(
-                    "Edge"), SIR.LocationType.Value("Cell"), SIR.LocationType.Value("Vertex")]
+                [AST.LocationType.Value(
+                    "Edge"), AST.LocationType.Value("Cell"), AST.LocationType.Value("Vertex")]
             ),
             # dvt_tang for smagorinsky
             sir_utils.make_assignment_stmt(
@@ -58,20 +58,20 @@ def main(args: argparse.Namespace):
                 sir_utils.make_reduction_over_neighbor_expr(
                     op="+",
                     init=sir_utils.make_literal_access_expr(
-                        "0.0", SIR.BuiltinType.Double),
+                        "0.0", AST.BuiltinType.Double),
                     rhs=sir_utils.make_binary_operator(
                         sir_utils.make_binary_operator(sir_utils.make_field_access_expr(
                             "u_vert", [True, 0]), "*", sir_utils.make_field_access_expr("dual_normal_x", [True, 0])),
                         "+", sir_utils.make_binary_operator(sir_utils.make_field_access_expr(
                             "v_vert", [True, 0]), "*", sir_utils.make_field_access_expr("dual_normal_y", [True, 0])),
                     ),
-                    chain=[SIR.LocationType.Value("Edge"), SIR.LocationType.Value(
-                        "Cell"), SIR.LocationType.Value("Vertex")],
+                    chain=[AST.LocationType.Value("Edge"), AST.LocationType.Value(
+                        "Cell"), AST.LocationType.Value("Vertex")],
                     weights=[sir_utils.make_literal_access_expr(
-                        "-1.0", SIR.BuiltinType.Double), sir_utils.make_literal_access_expr(
-                        "1.0", SIR.BuiltinType.Double), sir_utils.make_literal_access_expr(
-                        "0.0", SIR.BuiltinType.Double), sir_utils.make_literal_access_expr(
-                        "0.0", SIR.BuiltinType.Double)]
+                        "-1.0", AST.BuiltinType.Double), sir_utils.make_literal_access_expr(
+                        "1.0", AST.BuiltinType.Double), sir_utils.make_literal_access_expr(
+                        "0.0", AST.BuiltinType.Double), sir_utils.make_literal_access_expr(
+                        "0.0", AST.BuiltinType.Double)]
 
                 ),
                 "=",
@@ -85,20 +85,20 @@ def main(args: argparse.Namespace):
                 sir_utils.make_reduction_over_neighbor_expr(
                     op="+",
                     init=sir_utils.make_literal_access_expr(
-                        "0.0", SIR.BuiltinType.Double),
+                        "0.0", AST.BuiltinType.Double),
                     rhs=sir_utils.make_binary_operator(
                         sir_utils.make_binary_operator(sir_utils.make_field_access_expr(
                             "u_vert", [True, 0]), "*", sir_utils.make_field_access_expr("dual_normal_x", [True, 0])),
                         "+", sir_utils.make_binary_operator(sir_utils.make_field_access_expr(
                             "v_vert", [True, 0]), "*", sir_utils.make_field_access_expr("dual_normal_y", [True, 0])),
                     ),
-                    chain=[SIR.LocationType.Value("Edge"), SIR.LocationType.Value(
-                        "Cell"), SIR.LocationType.Value("Vertex")],
+                    chain=[AST.LocationType.Value("Edge"), AST.LocationType.Value(
+                        "Cell"), AST.LocationType.Value("Vertex")],
                     weights=[sir_utils.make_literal_access_expr(
-                        "0.0", SIR.BuiltinType.Double), sir_utils.make_literal_access_expr(
-                        "0.0", SIR.BuiltinType.Double), sir_utils.make_literal_access_expr(
-                        "-1.0", SIR.BuiltinType.Double), sir_utils.make_literal_access_expr(
-                        "1.0", SIR.BuiltinType.Double)]
+                        "0.0", AST.BuiltinType.Double), sir_utils.make_literal_access_expr(
+                        "0.0", AST.BuiltinType.Double), sir_utils.make_literal_access_expr(
+                        "-1.0", AST.BuiltinType.Double), sir_utils.make_literal_access_expr(
+                        "1.0", AST.BuiltinType.Double)]
 
                 ),
                 "=",
@@ -109,15 +109,15 @@ def main(args: argparse.Namespace):
                 sir_utils.make_reduction_over_neighbor_expr(
                     op="+",
                     init=sir_utils.make_literal_access_expr(
-                        "0.0", SIR.BuiltinType.Double),
+                        "0.0", AST.BuiltinType.Double),
                     rhs=sir_utils.make_field_access_expr("vn_vert"),
-                    chain=[SIR.LocationType.Value("Edge"), SIR.LocationType.Value(
-                        "Cell"), SIR.LocationType.Value("Vertex")],
+                    chain=[AST.LocationType.Value("Edge"), AST.LocationType.Value(
+                        "Cell"), AST.LocationType.Value("Vertex")],
                     weights=[sir_utils.make_literal_access_expr(
-                        "-1.0", SIR.BuiltinType.Double), sir_utils.make_literal_access_expr(
-                        "1.0", SIR.BuiltinType.Double), sir_utils.make_literal_access_expr(
-                        "0.0", SIR.BuiltinType.Double), sir_utils.make_literal_access_expr(
-                        "0.0", SIR.BuiltinType.Double)]
+                        "-1.0", AST.BuiltinType.Double), sir_utils.make_literal_access_expr(
+                        "1.0", AST.BuiltinType.Double), sir_utils.make_literal_access_expr(
+                        "0.0", AST.BuiltinType.Double), sir_utils.make_literal_access_expr(
+                        "0.0", AST.BuiltinType.Double)]
 
                 ),
                 "=",
@@ -144,15 +144,15 @@ def main(args: argparse.Namespace):
                 sir_utils.make_reduction_over_neighbor_expr(
                     op="+",
                     init=sir_utils.make_literal_access_expr(
-                        "0.0", SIR.BuiltinType.Double),
+                        "0.0", AST.BuiltinType.Double),
                     rhs=sir_utils.make_field_access_expr("vn_vert"),
-                    chain=[SIR.LocationType.Value("Edge"), SIR.LocationType.Value(
-                        "Cell"), SIR.LocationType.Value("Vertex")],
+                    chain=[AST.LocationType.Value("Edge"), AST.LocationType.Value(
+                        "Cell"), AST.LocationType.Value("Vertex")],
                     weights=[sir_utils.make_literal_access_expr(
-                        "0.0", SIR.BuiltinType.Double), sir_utils.make_literal_access_expr(
-                        "0.0", SIR.BuiltinType.Double), sir_utils.make_literal_access_expr(
-                        "-1.0", SIR.BuiltinType.Double), sir_utils.make_literal_access_expr(
-                        " 1.0", SIR.BuiltinType.Double)]
+                        "0.0", AST.BuiltinType.Double), sir_utils.make_literal_access_expr(
+                        "0.0", AST.BuiltinType.Double), sir_utils.make_literal_access_expr(
+                        "-1.0", AST.BuiltinType.Double), sir_utils.make_literal_access_expr(
+                        " 1.0", AST.BuiltinType.Double)]
 
                 ),
                 "=",
@@ -186,11 +186,11 @@ def main(args: argparse.Namespace):
                 sir_utils.make_reduction_over_neighbor_expr(
                     op="+",
                     init=sir_utils.make_literal_access_expr(
-                        "0.0", SIR.BuiltinType.Double),
+                        "0.0", AST.BuiltinType.Double),
                     rhs=sir_utils.make_binary_operator(sir_utils.make_literal_access_expr(
-                        "4.0", SIR.BuiltinType.Double), "*", sir_utils.make_field_access_expr("vn_vert")),
-                    chain=[SIR.LocationType.Value("Edge"), SIR.LocationType.Value(
-                        "Cell"), SIR.LocationType.Value("Vertex")],
+                        "4.0", AST.BuiltinType.Double), "*", sir_utils.make_field_access_expr("vn_vert")),
+                    chain=[AST.LocationType.Value("Edge"), AST.LocationType.Value(
+                        "Cell"), AST.LocationType.Value("Vertex")],
                     weights=[
                         sir_utils.make_binary_operator(
                             sir_utils.make_field_access_expr(
@@ -227,7 +227,7 @@ def main(args: argparse.Namespace):
                     "-",
                     sir_utils.make_binary_operator(
                         sir_utils.make_binary_operator(sir_utils.make_binary_operator(sir_utils.make_literal_access_expr(
-                            "8.0", SIR.BuiltinType.Double), "*", sir_utils.make_field_access_expr("vn")), "*",
+                            "8.0", AST.BuiltinType.Double), "*", sir_utils.make_field_access_expr("vn")), "*",
                             sir_utils.make_binary_operator(
                                 sir_utils.make_field_access_expr(
                                     "inv_primal_edge_length"),
@@ -236,7 +236,7 @@ def main(args: argparse.Namespace):
                                     "inv_primal_edge_length"))),
                         "+",
                         sir_utils.make_binary_operator(sir_utils.make_binary_operator(sir_utils.make_literal_access_expr(
-                            "8.0", SIR.BuiltinType.Double), "*", sir_utils.make_field_access_expr("vn")), "*",
+                            "8.0", AST.BuiltinType.Double), "*", sir_utils.make_field_access_expr("vn")), "*",
                             sir_utils.make_binary_operator(
                                 sir_utils.make_field_access_expr(
                                     "inv_vert_vert_length"),
@@ -248,12 +248,12 @@ def main(args: argparse.Namespace):
     )
 
     vertical_region_stmt = sir_utils.make_vertical_region_decl_stmt(
-        body_ast, interval, SIR.VerticalRegion.Forward
+        body_ast, interval, AST.VerticalRegion.Forward
     )
 
     sir = sir_utils.make_sir(
         gen_outputfile,
-        SIR.GridType.Value("Unstructured"),
+        AST.GridType.Value("Unstructured"),
         [
             sir_utils.make_stencil(
                 stencil_name,
@@ -262,115 +262,115 @@ def main(args: argparse.Namespace):
                     sir_utils.make_field(
                         "diff_multfac_smag",
                         sir_utils.make_field_dimensions_unstructured(
-                            [SIR.LocationType.Value(
+                            [AST.LocationType.Value(
                                 "Edge")], 1
                         ),
                     ),
                     sir_utils.make_field(
                         "tangent_orientation",
                         sir_utils.make_field_dimensions_unstructured(
-                            [SIR.LocationType.Value("Edge")], 1
+                            [AST.LocationType.Value("Edge")], 1
                         ),
                     ),
                     sir_utils.make_field(
                         "inv_primal_edge_length",
                         sir_utils.make_field_dimensions_unstructured(
-                            [SIR.LocationType.Value("Edge")], 1
+                            [AST.LocationType.Value("Edge")], 1
                         ),
                     ),
                     sir_utils.make_field(
                         "inv_vert_vert_length",
                         sir_utils.make_field_dimensions_unstructured(
-                            [SIR.LocationType.Value("Edge")], 1
+                            [AST.LocationType.Value("Edge")], 1
                         ),
                     ),
                     sir_utils.make_field(
                         "u_vert",
                         sir_utils.make_field_dimensions_unstructured(
-                            [SIR.LocationType.Value("Vertex")], 1
+                            [AST.LocationType.Value("Vertex")], 1
                         ),
                     ),
                     sir_utils.make_field(
                         "v_vert",
                         sir_utils.make_field_dimensions_unstructured(
-                            [SIR.LocationType.Value("Vertex")], 1
+                            [AST.LocationType.Value("Vertex")], 1
                         ),
                     ),
                     sir_utils.make_field(
                         "primal_normal_x",
                         sir_utils.make_field_dimensions_unstructured(
-                            [SIR.LocationType.Value("Edge"), SIR.LocationType.Value(
-                                "Cell"), SIR.LocationType.Value("Vertex")], 1
+                            [AST.LocationType.Value("Edge"), AST.LocationType.Value(
+                                "Cell"), AST.LocationType.Value("Vertex")], 1
                         ),
                     ),
                     sir_utils.make_field(
                         "primal_normal_y",
                         sir_utils.make_field_dimensions_unstructured(
-                            [SIR.LocationType.Value("Edge"), SIR.LocationType.Value(
-                                "Cell"), SIR.LocationType.Value("Vertex")], 1
+                            [AST.LocationType.Value("Edge"), AST.LocationType.Value(
+                                "Cell"), AST.LocationType.Value("Vertex")], 1
                         ),
                     ),
                     sir_utils.make_field(
                         "dual_normal_x",
                         sir_utils.make_field_dimensions_unstructured(
-                            [SIR.LocationType.Value("Edge"), SIR.LocationType.Value(
-                                "Cell"), SIR.LocationType.Value("Vertex")], 1
+                            [AST.LocationType.Value("Edge"), AST.LocationType.Value(
+                                "Cell"), AST.LocationType.Value("Vertex")], 1
                         ),
                     ),
                     sir_utils.make_field(
                         "dual_normal_y",
                         sir_utils.make_field_dimensions_unstructured(
-                            [SIR.LocationType.Value("Edge"), SIR.LocationType.Value(
-                                "Cell"), SIR.LocationType.Value("Vertex")], 1
+                            [AST.LocationType.Value("Edge"), AST.LocationType.Value(
+                                "Cell"), AST.LocationType.Value("Vertex")], 1
                         ),
                     ),
                     sir_utils.make_field(
                         "vn_vert",
                         sir_utils.make_field_dimensions_unstructured(
-                            [SIR.LocationType.Value("Edge"), SIR.LocationType.Value(
-                                "Cell"), SIR.LocationType.Value("Vertex")], 1
+                            [AST.LocationType.Value("Edge"), AST.LocationType.Value(
+                                "Cell"), AST.LocationType.Value("Vertex")], 1
                         ),
                     ),
                     sir_utils.make_field(
                         "vn",
                         sir_utils.make_field_dimensions_unstructured(
-                            [SIR.LocationType.Value("Edge")], 1
+                            [AST.LocationType.Value("Edge")], 1
                         ),
                     ),
                     sir_utils.make_field(
                         "dvt_tang",
                         sir_utils.make_field_dimensions_unstructured(
-                            [SIR.LocationType.Value("Edge")], 1
+                            [AST.LocationType.Value("Edge")], 1
                         ),
                     ),
                     sir_utils.make_field(
                         "dvt_norm",
                         sir_utils.make_field_dimensions_unstructured(
-                            [SIR.LocationType.Value("Edge")], 1
+                            [AST.LocationType.Value("Edge")], 1
                         ),
                     ),
                     sir_utils.make_field(
                         "kh_smag_1",
                         sir_utils.make_field_dimensions_unstructured(
-                            [SIR.LocationType.Value("Edge")], 1
+                            [AST.LocationType.Value("Edge")], 1
                         ),
                     ),
                     sir_utils.make_field(
                         "kh_smag_2",
                         sir_utils.make_field_dimensions_unstructured(
-                            [SIR.LocationType.Value("Edge")], 1
+                            [AST.LocationType.Value("Edge")], 1
                         ),
                     ),
                     sir_utils.make_field(
                         "kh_smag",
                         sir_utils.make_field_dimensions_unstructured(
-                            [SIR.LocationType.Value("Edge")], 1
+                            [AST.LocationType.Value("Edge")], 1
                         ),
                     ),
                     sir_utils.make_field(
                         "nabla2",
                         sir_utils.make_field_dimensions_unstructured(
-                            [SIR.LocationType.Value("Edge")], 1
+                            [AST.LocationType.Value("Edge")], 1
                         ),
                     ),
                 ],

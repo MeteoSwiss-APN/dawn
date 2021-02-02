@@ -32,7 +32,7 @@ import argparse
 import os
 
 import dawn4py
-from dawn4py.serialization import SIR
+from dawn4py.serialization import SIR, AST
 from dawn4py.serialization import utils as sir_utils
 from google.protobuf.json_format import MessageToJson, Parse
 
@@ -42,7 +42,7 @@ OUTPUT_PATH = f"{OUTPUT_NAME}.cpp"
 
 
 def main(args: argparse.Namespace):
-    interval = sir_utils.make_interval(SIR.Interval.Start, SIR.Interval.End, 0, 0)
+    interval = sir_utils.make_interval(AST.Interval.Start, AST.Interval.End, 0, 0)
 
     # create the out = in[i+1] statement
     body_ast = sir_utils.make_ast(
@@ -56,12 +56,12 @@ def main(args: argparse.Namespace):
     )
 
     vertical_region_stmt = sir_utils.make_vertical_region_decl_stmt(
-        body_ast, interval, SIR.VerticalRegion.Forward
+        body_ast, interval, AST.VerticalRegion.Forward
     )
 
     sir = sir_utils.make_sir(
         OUTPUT_FILE,
-        SIR.GridType.Value("Cartesian"),
+        AST.GridType.Value("Cartesian"),
         [
             sir_utils.make_stencil(
                 OUTPUT_NAME,

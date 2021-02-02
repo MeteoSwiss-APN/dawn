@@ -19,8 +19,8 @@
 syntax = "proto3";
 
 package dawn.sir.proto;
-import "SIR/statements.proto";
-import "SIR/enums.proto";
+import "AST/statements.proto";
+import "AST/enums.proto";
 
 option java_package = "dawn.sir";
 option java_outer_classname = "SIR_pb2";
@@ -31,8 +31,8 @@ option java_outer_classname = "SIR_pb2";
 
 // @brief Stencil description of the SIR
 //
-// A stencil represents the executation of a series of statements on a finite number of input fields
-// producing a finite number of output fields, hence a stencilcan have multiple output fields.
+// A stencil represents the execution of a series of statements on a finite number of input fields
+// producing a finite number of output fields, hence a stencil can have multiple output fields.
 // Hence, a stencil is described by an AST and a list of participating Field(s).
 //
 // @ingroup sir_proto
@@ -57,7 +57,7 @@ message Stencil {
 // @brief Stencil function description of the SIR
 //
 // Stencil functions are represented, like stencils, by a unique identifier, a list of arguments
-// and a list vertical intervals and coressponding AST(s). The latter allows to *specialize* the
+// and a list vertical intervals and corresponding AST(s). The latter allows to *specialize* the
 // stencil function for a specific vertical interval enabling straight-forward incorporation of
 // vertical boundary conditions. Next to simple field and scalar arguments, stencil functions can be
 // parametrized on Direction `(i, j or k)` and Offset `(i+1) arguments.

@@ -16,7 +16,7 @@
 #include "dawn/SIR/AST.h"
 #include "dawn/SIR/SIR.h"
 #include "dawn/SIR/SIR/SIR.pb.h"
-#include "dawn/SIR/SIR/statements.pb.h"
+#include "dawn/AST/AST/statements.pb.h"
 #include "dawn/Serialization/ASTSerializer.h"
 #include "dawn/Support/Exception.h"
 #include "dawn/Support/Format.h"

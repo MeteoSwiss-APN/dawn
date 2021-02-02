@@ -12,7 +12,7 @@
 //
 //===----------------------------------------TypeKind--------------------------------------------------===//
 #include "dawn/Serialization/IIRSerializer.h"
-#include "SIR/enums.pb.h"
+#include "dawn/AST/AST/enums.pb.h"
 #include "dawn/AST/ASTStmt.h"
 #include "dawn/AST/LocationType.h"
 #include "dawn/IIR/ASTStmt.h"

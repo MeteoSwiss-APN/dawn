@@ -18,5 +18,3 @@ import sys
 sys.modules[__name__.split(".")[-1]] = sys.modules[__name__]
 
 from .SIR_pb2 import *
-from .statements_pb2 import *
-from .enums_pb2 import *

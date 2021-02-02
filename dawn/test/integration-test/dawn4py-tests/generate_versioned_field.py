@@ -23,7 +23,7 @@ import argparse
 import os
 
 import dawn4py
-from dawn4py.serialization import SIR
+from dawn4py.serialization import SIR, AST
 from dawn4py.serialization import utils as sir_utils
 from google.protobuf.json_format import MessageToJson, Parse
 
@@ -34,14 +34,14 @@ OUTPUT_PATH = f"{OUTPUT_NAME}.cpp"
 
 def main(args: argparse.Namespace):
     interval = sir_utils.make_interval(
-        SIR.Interval.Start, SIR.Interval.End, 0, 0)
+        AST.Interval.Start, AST.Interval.End, 0, 0)
 
     line_1 = sir_utils.make_assignment_stmt(
         sir_utils.make_field_access_expr("a"), sir_utils.make_binary_operator(sir_utils.make_binary_operator(
             sir_utils.make_field_access_expr("b"),
             "/",
             sir_utils.make_field_access_expr("c"),
-        ), "+", sir_utils.make_literal_access_expr("5", SIR.BuiltinType.Float)), "=")
+        ), "+", sir_utils.make_literal_access_expr("5", AST.BuiltinType.Float)), "=")
 
     line_2 = sir_utils.make_block_stmt(sir_utils.make_assignment_stmt(
         sir_utils.make_field_access_expr("a"), sir_utils.make_field_access_expr("b"), "="))
@@ -49,7 +49,7 @@ def main(args: argparse.Namespace):
     line_3 = sir_utils.make_block_stmt(sir_utils.make_assignment_stmt(
         sir_utils.make_field_access_expr("c"),
         sir_utils.make_binary_operator(
-            sir_utils.make_field_access_expr("a"), "+", sir_utils.make_literal_access_expr("1", SIR.BuiltinType.Float)),
+            sir_utils.make_field_access_expr("a"), "+", sir_utils.make_literal_access_expr("1", AST.BuiltinType.Float)),
         "="))
 
     body_ast = sir_utils.make_ast(
@@ -66,12 +66,12 @@ def main(args: argparse.Namespace):
     )
 
     vertical_region_stmt = sir_utils.make_vertical_region_decl_stmt(
-        body_ast, interval, SIR.VerticalRegion.Forward
+        body_ast, interval, AST.VerticalRegion.Forward
     )
 
     sir = sir_utils.make_sir(
         OUTPUT_FILE,
-        SIR.GridType.Value("Unstructured"),
+        AST.GridType.Value("Unstructured"),
         [
             sir_utils.make_stencil(
                 OUTPUT_NAME,
@@ -80,31 +80,31 @@ def main(args: argparse.Namespace):
                     sir_utils.make_field(
                         "a",
                         sir_utils.make_field_dimensions_unstructured(
-                            [SIR.LocationType.Value("Edge")], 1
+                            [AST.LocationType.Value("Edge")], 1
                         ),
                     ),
                     sir_utils.make_field(
                         "b",
                         sir_utils.make_field_dimensions_unstructured(
-                            [SIR.LocationType.Value("Edge")], 1
+                            [AST.LocationType.Value("Edge")], 1
                         ),
                     ),
                     sir_utils.make_field(
                         "c",
                         sir_utils.make_field_dimensions_unstructured(
-                            [SIR.LocationType.Value("Edge")], 1
+                            [AST.LocationType.Value("Edge")], 1
                         ),
                     ),
                     sir_utils.make_field(
                         "d",
                         sir_utils.make_field_dimensions_unstructured(
-                            [SIR.LocationType.Value("Edge")], 1
+                            [AST.LocationType.Value("Edge")], 1
                         ),
                     ),
                     sir_utils.make_field(
                         "e",
                         sir_utils.make_field_dimensions_unstructured(
-                            [SIR.LocationType.Value("Edge")], 1
+                            [AST.LocationType.Value("Edge")], 1
                         ),
                     ),
                 ],

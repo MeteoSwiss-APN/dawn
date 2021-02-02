@@ -19,8 +19,8 @@
 syntax = "proto3";
 
 package dawn.proto.iir;
-import "SIR/statements.proto";
-import "SIR/enums.proto";
+import "AST/statements.proto";
+import "AST/enums.proto";
 
 /* ===-----------------------------------------------------------------------------------------===*/
 //      Caches

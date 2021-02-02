@@ -34,7 +34,7 @@ import argparse
 import os
 
 import dawn4py
-from dawn4py.serialization import SIR
+from dawn4py.serialization import SIR, AST
 from dawn4py.serialization import utils as sir_utils
 from google.protobuf.json_format import MessageToJson, Parse
 
@@ -46,7 +46,7 @@ OUTPUT_PATH = f"{OUTPUT_NAME}.cpp"
 def main(args: argparse.Namespace):
 
     # ---- First vertical region statement ----
-    interval_1 = sir_utils.make_interval(SIR.Interval.Start, SIR.Interval.End, 0, 0)
+    interval_1 = sir_utils.make_interval(AST.Interval.Start, AST.Interval.End, 0, 0)
     body_ast_1 = sir_utils.make_ast(
         [
             sir_utils.make_assignment_stmt(
@@ -62,22 +62,22 @@ def main(args: argparse.Namespace):
     )
 
     vertical_region_stmt_1 = sir_utils.make_vertical_region_decl_stmt(
-        body_ast_1, interval_1, SIR.VerticalRegion.Forward
+        body_ast_1, interval_1, AST.VerticalRegion.Forward
     )
 
     # ---- Second vertical region statement ----
-    interval_2 = sir_utils.make_interval(SIR.Interval.Start, SIR.Interval.End, 1, 0)
+    interval_2 = sir_utils.make_interval(AST.Interval.Start, AST.Interval.End, 1, 0)
 
     body_ast_2 = sir_utils.make_ast(
         [
             sir_utils.make_var_decl_stmt(
-                sir_utils.make_type(SIR.BuiltinType.Integer),
+                sir_utils.make_type(AST.BuiltinType.Integer),
                 "m",
                 0,
                 "=",
                 sir_utils.make_expr(
                     sir_utils.make_binary_operator(
-                        sir_utils.make_literal_access_expr("1.0", SIR.BuiltinType.Float),
+                        sir_utils.make_literal_access_expr("1.0", AST.BuiltinType.Float),
                         "/",
                         sir_utils.make_binary_operator(
                             sir_utils.make_field_access_expr("b"),
@@ -118,11 +118,11 @@ def main(args: argparse.Namespace):
         ]
     )
     vertical_region_stmt_2 = sir_utils.make_vertical_region_decl_stmt(
-        body_ast_2, interval_2, SIR.VerticalRegion.Forward
+        body_ast_2, interval_2, AST.VerticalRegion.Forward
     )
 
     # ---- Third vertical region statement ----
-    interval_3 = sir_utils.make_interval(SIR.Interval.Start, SIR.Interval.End, 0, -1)
+    interval_3 = sir_utils.make_interval(AST.Interval.Start, AST.Interval.End, 0, -1)
     body_ast_3 = sir_utils.make_ast(
         [
             sir_utils.make_assignment_stmt(
@@ -138,12 +138,12 @@ def main(args: argparse.Namespace):
     )
 
     vertical_region_stmt_3 = sir_utils.make_vertical_region_decl_stmt(
-        body_ast_3, interval_3, SIR.VerticalRegion.Backward
+        body_ast_3, interval_3, AST.VerticalRegion.Backward
     )
 
     sir = sir_utils.make_sir(
         OUTPUT_FILE,
-        SIR.GridType.Value("Cartesian"),
+        AST.GridType.Value("Cartesian"),
         [
             sir_utils.make_stencil(
                 OUTPUT_NAME,

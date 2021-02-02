@@ -18,7 +18,7 @@
 #include "dawn/IIR/StencilInstantiation.h"
 #include "dawn/AST/ASTVisitor.h"
 #include "dawn/SIR/SIR.h"
-#include "dawn/SIR/SIR/statements.pb.h"
+#include "dawn/AST/AST/statements.pb.h"
 #include <stack>
 
 using namespace dawn;

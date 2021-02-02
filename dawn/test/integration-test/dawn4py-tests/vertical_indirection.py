@@ -25,7 +25,7 @@ import argparse
 import os
 
 import dawn4py
-from dawn4py.serialization import SIR
+from dawn4py.serialization import SIR, AST
 from dawn4py.serialization import utils as sir_utils
 from dawn4py.serialization import to_json as sir_to_json
 from google.protobuf.json_format import MessageToJson, Parse
@@ -37,7 +37,7 @@ OUTPUT_PATH = f"{OUTPUT_NAME}.cpp"
 
 def main(args: argparse.Namespace):
     interval = sir_utils.make_interval(
-        SIR.Interval.Start, SIR.Interval.End, 0, 0)
+        AST.Interval.Start, AST.Interval.End, 0, 0)
 
     # out[c,k] = in[c,vert_nbh[k]]
     body_ast_1 = sir_utils.make_ast(
@@ -134,32 +134,32 @@ def main(args: argparse.Namespace):
     )
 
     vertical_region_stmt_1 = sir_utils.make_vertical_region_decl_stmt(
-        body_ast_1, interval, SIR.VerticalRegion.Forward
+        body_ast_1, interval, AST.VerticalRegion.Forward
     )
 
     vertical_region_stmt_2 = sir_utils.make_vertical_region_decl_stmt(
-        body_ast_2, interval, SIR.VerticalRegion.Forward
+        body_ast_2, interval, AST.VerticalRegion.Forward
     )
 
     vertical_region_stmt_3 = sir_utils.make_vertical_region_decl_stmt(
-        body_ast_3, interval, SIR.VerticalRegion.Forward
+        body_ast_3, interval, AST.VerticalRegion.Forward
     )
 
     vertical_region_stmt_4 = sir_utils.make_vertical_region_decl_stmt(
-        body_ast_4, interval, SIR.VerticalRegion.Forward
+        body_ast_4, interval, AST.VerticalRegion.Forward
     )
 
     vertical_region_stmt_5 = sir_utils.make_vertical_region_decl_stmt(
-        body_ast_5, interval, SIR.VerticalRegion.Forward
+        body_ast_5, interval, AST.VerticalRegion.Forward
     )
 
     vertical_region_stmt_6 = sir_utils.make_vertical_region_decl_stmt(
-        body_ast_6, interval, SIR.VerticalRegion.Forward
+        body_ast_6, interval, AST.VerticalRegion.Forward
     )
 
     sir = sir_utils.make_sir(
         OUTPUT_FILE,
-        SIR.GridType.Value("Unstructured"),
+        AST.GridType.Value("Unstructured"),
         [
             sir_utils.make_stencil(
                 OUTPUT_NAME,
@@ -174,25 +174,25 @@ def main(args: argparse.Namespace):
                     sir_utils.make_field(
                         "in",
                         sir_utils.make_field_dimensions_unstructured(
-                            [SIR.LocationType.Value("Cell")], 1
+                            [AST.LocationType.Value("Cell")], 1
                         ),
                     ),
                     sir_utils.make_field(
                         "in_out",
                         sir_utils.make_field_dimensions_unstructured(
-                            [SIR.LocationType.Value("Cell")], 1
+                            [AST.LocationType.Value("Cell")], 1
                         ),
                     ),
                     sir_utils.make_field(
                         "out",
                         sir_utils.make_field_dimensions_unstructured(
-                            [SIR.LocationType.Value("Cell")], 1
+                            [AST.LocationType.Value("Cell")], 1
                         ),
                     ),
                     sir_utils.make_field(
                         "vert_nbh",
                         sir_utils.make_field_dimensions_unstructured(
-                            [SIR.LocationType.Value("Cell")], 1
+                            [AST.LocationType.Value("Cell")], 1
                         ),
                     ),
                 ],
