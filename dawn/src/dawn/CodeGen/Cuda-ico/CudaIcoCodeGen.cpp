@@ -1001,7 +1001,7 @@ void CudaIcoCodeGen::generateAllAPIVerifyFunctions(
                              stencilInstantiation->getMetaData().getNameFromAccessID(accessID));
     }
     for(auto fieldID : getUsedFields(stencil, {dawn::iir::Field::IntendKind::InputOutput})) {
-      runAndVerifyAPI.addArg("const ::dawn::float_type *" +
+      runAndVerifyAPI.addArg("::dawn::float_type *" +
                              stencilInstantiation->getMetaData().getNameFromAccessID(fieldID) +
                              "_before");
     }
@@ -1109,6 +1109,8 @@ void CudaIcoCodeGen::generateAllAPIVerifyFunctions(
 
           if(fieldInfo.field.getIntend() == dawn::iir::Field::IntendKind::Output) {
             fieldNames.push_back("dsl_" + fieldInfo.Name);
+          } else if(fieldInfo.field.getIntend() == dawn::iir::Field::IntendKind::InputOutput) {
+            fieldNames.push_back(fieldInfo.Name + "_before");
           } else {
             fieldNames.push_back(fieldInfo.Name);
           }
@@ -1514,6 +1516,7 @@ generateF90InterfaceSI(FortranInterfaceModuleGen& fimGen,
   FortranWrapperAPI runWrapper = FortranWrapperAPI("wrap_run_" + stencilInstantiation->getName());
 
   // only from host convenience wrapper takes mesh and k_size
+  const int fromDeviceAPIIdx = 0;
   const int fromHostAPIIdx = 1;
   interfaces[fromHostAPIIdx].addArg("mesh", FortranAPI::InterfaceType::OBJ);
   interfaces[fromHostAPIIdx].addArg("k_size", FortranAPI::InterfaceType::INTEGER);
@@ -1530,7 +1533,7 @@ generateF90InterfaceSI(FortranInterfaceModuleGen& fimGen,
   runWrapper.addArg("end_idx", FortranAPI::InterfaceType::INTEGER);
   // ENDTODO
 
-  auto addArgsToAPI = [&](FortranAPI& api) {
+  auto addArgsToAPI = [&](FortranAPI& api, bool includeInouts) {
     for(const auto& global : globalsMap) {
       api.addArg(global.first, globalTypeToFortType(global.second));
     }
@@ -1540,33 +1543,49 @@ generateF90InterfaceSI(FortranInterfaceModuleGen& fimGen,
           FortranAPI::InterfaceType::DOUBLE /* Unfortunately we need to know at codegen
                                                         time whether we have fields in SP/DP */
           ,
+          stencilInstantiation->getMetaData().getFieldDimensions(fieldID).rank());      
+    }
+    for(auto fieldID : stencilInstantiation->getMetaData().getAPIFields()) {      
+      if (includeInouts && stencils[0]->getFields().at(fieldID).field.getIntend() == dawn::iir::Field::IntendKind::InputOutput) {
+        api.addArg(stencilInstantiation->getMetaData().getNameFromAccessID(fieldID) + "_before",
+          FortranAPI::InterfaceType::DOUBLE /* Unfortunately we need to know at codegen
+                                                        time whether we have fields in SP/DP */
+          ,
           stencilInstantiation->getMetaData().getFieldDimensions(fieldID).rank());
+      }
     }
   };
+  
+  addArgsToAPI(interfaces[fromDeviceAPIIdx], /*includeInouts*/ false);
+  fimGen.addInterfaceAPI(std::move(interfaces[fromDeviceAPIIdx]));  
+  addArgsToAPI(interfaces[fromHostAPIIdx], /*includeInouts*/ false);
+  fimGen.addInterfaceAPI(std::move(interfaces[fromHostAPIIdx]));  
+  addArgsToAPI(interfaces[runAndVerifyIdx], /*includeInouts*/ true);
+  fimGen.addInterfaceAPI(std::move(interfaces[runAndVerifyIdx]));  
 
-  for(auto&& interface : interfaces) {
-    addArgsToAPI(interface);
-    fimGen.addInterfaceAPI(std::move(interface));
-  }
+  addArgsToAPI(runWrapper, /*includeInouts*/ true);
 
-  addArgsToAPI(runWrapper);
-
-  auto getFieldArgs = [&]() -> std::vector<std::string> {
+  auto getFieldArgs = [&](bool includeInouts) -> std::vector<std::string> {
     std::vector<std::string> args;
     for(auto fieldID : stencilInstantiation->getMetaData().getAPIFields()) {
-      args.push_back(stencilInstantiation->getMetaData().getNameFromAccessID(fieldID));
+      args.push_back(stencilInstantiation->getMetaData().getNameFromAccessID(fieldID));      
+    }
+    for(auto fieldID : stencilInstantiation->getMetaData().getAPIFields()) {
+      if (includeInouts && stencils[0]->getFields().at(fieldID).field.getIntend() == dawn::iir::Field::IntendKind::InputOutput) {
+        args.push_back(stencilInstantiation->getMetaData().getNameFromAccessID(fieldID) + "_before");
+      }
     }
     return args;
   };
 
-  auto genCallArgs = [&](FortranWrapperAPI& wrapper, std::string first = "") {
+  auto genCallArgs = [&](FortranWrapperAPI& wrapper, std::string first = "", bool includeInouts = false) {
     wrapper.addBodyLine("( &");
 
     if(first != "") {
       wrapper.addBodyLine("   " + first + ", &"); // TODO remove
     }
 
-    auto args = concatenateVectors<std::string>({getGlobalsNames(globalsMap), getFieldArgs()});
+    auto args = concatenateVectors<std::string>({getGlobalsNames(globalsMap), getFieldArgs(includeInouts)});
 
     for(int i = 0; i < args.size(); ++i) {
       wrapper.addBodyLine("   " + args[i] + (i == (args.size() - 1) ? " &" : ", &"));
@@ -1575,14 +1594,14 @@ generateF90InterfaceSI(FortranInterfaceModuleGen& fimGen,
   };
   runWrapper.addBodyLine("real(c_double) :: timing");
   runWrapper.addACCLine("host_data use_device( &");
-  auto fieldArgs = getFieldArgs();
+  auto fieldArgs = getFieldArgs(/*includeInouts*/ true);
   for(int i = 0; i < fieldArgs.size(); ++i) {
     runWrapper.addACCLine("   " + fieldArgs[i] + (i == (fieldArgs.size() - 1) ? " &" : ", &"));
   }
   runWrapper.addACCLine(")");
   runWrapper.addBodyLine("#ifdef __DSL_VERIFY", /*withIndentation*/ false);
   runWrapper.addBodyLine("CALL run_and_verify_" + stencilInstantiation->getName() + " &");
-  genCallArgs(runWrapper, "mesh, k_size, start_idx, end_idx"); // TODO remove
+  genCallArgs(runWrapper, "mesh, k_size, start_idx, end_idx", /*includeInouts*/ true); // TODO remove
   runWrapper.addBodyLine("#else", /*withIndentation*/ false);
   runWrapper.addBodyLine("timing = run_" + stencilInstantiation->getName() + " &");
   genCallArgs(runWrapper);
