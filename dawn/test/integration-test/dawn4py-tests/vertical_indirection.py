@@ -26,7 +26,7 @@ import os
 
 import dawn4py
 from dawn4py.serialization import SIR, AST
-from dawn4py.serialization import utils as sir_utils
+from dawn4py.serialization import utils as serial_utils
 from dawn4py.serialization import to_json as sir_to_json
 from google.protobuf.json_format import MessageToJson, Parse
 
@@ -36,15 +36,15 @@ OUTPUT_PATH = f"{OUTPUT_NAME}.cpp"
 
 
 def main(args: argparse.Namespace):
-    interval = sir_utils.make_interval(
+    interval = serial_utils.make_interval(
         AST.Interval.Start, AST.Interval.End, 0, 0)
 
     # out[c,k] = in[c,vert_nbh[k]]
-    body_ast_1 = sir_utils.make_ast(
+    body_ast_1 = serial_utils.make_ast(
         [
-            sir_utils.make_assignment_stmt(
-                sir_utils.make_field_access_expr("out"),
-                sir_utils.make_unstructured_field_access_expr(
+            serial_utils.make_assignment_stmt(
+                serial_utils.make_field_access_expr("out"),
+                serial_utils.make_unstructured_field_access_expr(
                     "in", vertical_shift=0, vertical_indirection="vert_nbh"),
 
                 "=")
@@ -53,11 +53,11 @@ def main(args: argparse.Namespace):
     )
 
     # out[c,k] = in[c,vert_nbh[k]+1]
-    body_ast_2 = sir_utils.make_ast(
+    body_ast_2 = serial_utils.make_ast(
         [
-            sir_utils.make_assignment_stmt(
-                sir_utils.make_field_access_expr("out"),
-                sir_utils.make_unstructured_field_access_expr(
+            serial_utils.make_assignment_stmt(
+                serial_utils.make_field_access_expr("out"),
+                serial_utils.make_unstructured_field_access_expr(
                     "in", vertical_shift=1, vertical_indirection="vert_nbh"),
 
                 "=")
@@ -66,11 +66,11 @@ def main(args: argparse.Namespace):
     )
 
     # in_out[c,k] = in_out[c,vert_nbh[k]+1]
-    body_ast_3 = sir_utils.make_ast(
+    body_ast_3 = serial_utils.make_ast(
         [
-            sir_utils.make_assignment_stmt(
-                sir_utils.make_field_access_expr("in_out"),
-                sir_utils.make_unstructured_field_access_expr(
+            serial_utils.make_assignment_stmt(
+                serial_utils.make_field_access_expr("in_out"),
+                serial_utils.make_unstructured_field_access_expr(
                     "in_out", vertical_shift=1, vertical_indirection="vert_nbh"),
 
                 "=")
@@ -80,17 +80,17 @@ def main(args: argparse.Namespace):
 
     # vert_nbh[c,k] = vert_nbh[c,k+1]
     # out[c,k] = in[c,vert_nbh[k]]
-    body_ast_4 = sir_utils.make_ast(
+    body_ast_4 = serial_utils.make_ast(
         [
-            sir_utils.make_assignment_stmt(
-                sir_utils.make_field_access_expr("vert_nbh"),
-                sir_utils.make_unstructured_field_access_expr(
+            serial_utils.make_assignment_stmt(
+                serial_utils.make_field_access_expr("vert_nbh"),
+                serial_utils.make_unstructured_field_access_expr(
                     "vert_nbh", vertical_shift=1),
 
                 "="),
-            sir_utils.make_assignment_stmt(
-                sir_utils.make_field_access_expr("out"),
-                sir_utils.make_unstructured_field_access_expr(
+            serial_utils.make_assignment_stmt(
+                serial_utils.make_field_access_expr("out"),
+                serial_utils.make_unstructured_field_access_expr(
                     "in", vertical_shift=0, vertical_indirection="vert_nbh"),
 
                 "=")
@@ -100,17 +100,17 @@ def main(args: argparse.Namespace):
 
     # vert_nbh[c,k] = vert_nbh[c,k+1]
     # in_out[c,k] = in_out[c,vert_nbh[k]+1]
-    body_ast_5 = sir_utils.make_ast(
+    body_ast_5 = serial_utils.make_ast(
         [
-            sir_utils.make_assignment_stmt(
-                sir_utils.make_field_access_expr("vert_nbh"),
-                sir_utils.make_unstructured_field_access_expr(
+            serial_utils.make_assignment_stmt(
+                serial_utils.make_field_access_expr("vert_nbh"),
+                serial_utils.make_unstructured_field_access_expr(
                     "vert_nbh", vertical_shift=1),
 
                 "="),
-            sir_utils.make_assignment_stmt(
-                sir_utils.make_field_access_expr("in_out"),
-                sir_utils.make_unstructured_field_access_expr(
+            serial_utils.make_assignment_stmt(
+                serial_utils.make_field_access_expr("in_out"),
+                serial_utils.make_unstructured_field_access_expr(
                     "in_out", vertical_shift=1, vertical_indirection="vert_nbh"),
 
                 "=")
@@ -121,11 +121,11 @@ def main(args: argparse.Namespace):
     # in_out[c,k] = in_out[c,vert_nbh[k]-1]
     # technically a solver, but vert_nbh makes it a stencil
     #       => access expected to be treated like a stencil
-    body_ast_6 = sir_utils.make_ast(
+    body_ast_6 = serial_utils.make_ast(
         [
-            sir_utils.make_assignment_stmt(
-                sir_utils.make_field_access_expr("in"),
-                sir_utils.make_unstructured_field_access_expr(
+            serial_utils.make_assignment_stmt(
+                serial_utils.make_field_access_expr("in"),
+                serial_utils.make_unstructured_field_access_expr(
                     "in", vertical_shift=-1, vertical_indirection="vert_nbh"),
 
                 "="),
@@ -133,37 +133,37 @@ def main(args: argparse.Namespace):
         ]
     )
 
-    vertical_region_stmt_1 = sir_utils.make_vertical_region_decl_stmt(
+    vertical_region_stmt_1 = serial_utils.make_vertical_region_decl_stmt(
         body_ast_1, interval, AST.VerticalRegion.Forward
     )
 
-    vertical_region_stmt_2 = sir_utils.make_vertical_region_decl_stmt(
+    vertical_region_stmt_2 = serial_utils.make_vertical_region_decl_stmt(
         body_ast_2, interval, AST.VerticalRegion.Forward
     )
 
-    vertical_region_stmt_3 = sir_utils.make_vertical_region_decl_stmt(
+    vertical_region_stmt_3 = serial_utils.make_vertical_region_decl_stmt(
         body_ast_3, interval, AST.VerticalRegion.Forward
     )
 
-    vertical_region_stmt_4 = sir_utils.make_vertical_region_decl_stmt(
+    vertical_region_stmt_4 = serial_utils.make_vertical_region_decl_stmt(
         body_ast_4, interval, AST.VerticalRegion.Forward
     )
 
-    vertical_region_stmt_5 = sir_utils.make_vertical_region_decl_stmt(
+    vertical_region_stmt_5 = serial_utils.make_vertical_region_decl_stmt(
         body_ast_5, interval, AST.VerticalRegion.Forward
     )
 
-    vertical_region_stmt_6 = sir_utils.make_vertical_region_decl_stmt(
+    vertical_region_stmt_6 = serial_utils.make_vertical_region_decl_stmt(
         body_ast_6, interval, AST.VerticalRegion.Forward
     )
 
-    sir = sir_utils.make_sir(
+    sir = serial_utils.make_sir(
         OUTPUT_FILE,
         AST.GridType.Value("Unstructured"),
         [
-            sir_utils.make_stencil(
+            serial_utils.make_stencil(
                 OUTPUT_NAME,
-                sir_utils.make_ast(
+                serial_utils.make_ast(
                     [vertical_region_stmt_1,
                      vertical_region_stmt_2,
                      vertical_region_stmt_3,
@@ -171,27 +171,27 @@ def main(args: argparse.Namespace):
                      vertical_region_stmt_5,
                      vertical_region_stmt_6]),
                 [
-                    sir_utils.make_field(
+                    serial_utils.make_field(
                         "in",
-                        sir_utils.make_field_dimensions_unstructured(
+                        serial_utils.make_field_dimensions_unstructured(
                             [AST.LocationType.Value("Cell")], 1
                         ),
                     ),
-                    sir_utils.make_field(
+                    serial_utils.make_field(
                         "in_out",
-                        sir_utils.make_field_dimensions_unstructured(
+                        serial_utils.make_field_dimensions_unstructured(
                             [AST.LocationType.Value("Cell")], 1
                         ),
                     ),
-                    sir_utils.make_field(
+                    serial_utils.make_field(
                         "out",
-                        sir_utils.make_field_dimensions_unstructured(
+                        serial_utils.make_field_dimensions_unstructured(
                             [AST.LocationType.Value("Cell")], 1
                         ),
                     ),
-                    sir_utils.make_field(
+                    serial_utils.make_field(
                         "vert_nbh",
-                        sir_utils.make_field_dimensions_unstructured(
+                        serial_utils.make_field_dimensions_unstructured(
                             [AST.LocationType.Value("Cell")], 1
                         ),
                     ),

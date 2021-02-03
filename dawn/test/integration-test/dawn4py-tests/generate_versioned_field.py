@@ -24,7 +24,7 @@ import os
 
 import dawn4py
 from dawn4py.serialization import SIR, AST
-from dawn4py.serialization import utils as sir_utils
+from dawn4py.serialization import utils as serial_utils
 from google.protobuf.json_format import MessageToJson, Parse
 
 OUTPUT_NAME = "generate_versioned_field"
@@ -33,77 +33,77 @@ OUTPUT_PATH = f"{OUTPUT_NAME}.cpp"
 
 
 def main(args: argparse.Namespace):
-    interval = sir_utils.make_interval(
+    interval = serial_utils.make_interval(
         AST.Interval.Start, AST.Interval.End, 0, 0)
 
-    line_1 = sir_utils.make_assignment_stmt(
-        sir_utils.make_field_access_expr("a"), sir_utils.make_binary_operator(sir_utils.make_binary_operator(
-            sir_utils.make_field_access_expr("b"),
+    line_1 = serial_utils.make_assignment_stmt(
+        serial_utils.make_field_access_expr("a"), serial_utils.make_binary_operator(serial_utils.make_binary_operator(
+            serial_utils.make_field_access_expr("b"),
             "/",
-            sir_utils.make_field_access_expr("c"),
-        ), "+", sir_utils.make_literal_access_expr("5", AST.BuiltinType.Float)), "=")
+            serial_utils.make_field_access_expr("c"),
+        ), "+", serial_utils.make_literal_access_expr("5", AST.BuiltinType.Float)), "=")
 
-    line_2 = sir_utils.make_block_stmt(sir_utils.make_assignment_stmt(
-        sir_utils.make_field_access_expr("a"), sir_utils.make_field_access_expr("b"), "="))
+    line_2 = serial_utils.make_block_stmt(serial_utils.make_assignment_stmt(
+        serial_utils.make_field_access_expr("a"), serial_utils.make_field_access_expr("b"), "="))
 
-    line_3 = sir_utils.make_block_stmt(sir_utils.make_assignment_stmt(
-        sir_utils.make_field_access_expr("c"),
-        sir_utils.make_binary_operator(
-            sir_utils.make_field_access_expr("a"), "+", sir_utils.make_literal_access_expr("1", AST.BuiltinType.Float)),
+    line_3 = serial_utils.make_block_stmt(serial_utils.make_assignment_stmt(
+        serial_utils.make_field_access_expr("c"),
+        serial_utils.make_binary_operator(
+            serial_utils.make_field_access_expr("a"), "+", serial_utils.make_literal_access_expr("1", AST.BuiltinType.Float)),
         "="))
 
-    body_ast = sir_utils.make_ast(
+    body_ast = serial_utils.make_ast(
         [
             line_1,
-            sir_utils.make_if_stmt(sir_utils.make_expr_stmt(sir_utils.make_field_access_expr("d")), line_2,
-                                   sir_utils.make_block_stmt(sir_utils.make_if_stmt(
-                                       sir_utils.make_expr_stmt(
-                                           sir_utils.make_field_access_expr("e")),
+            serial_utils.make_if_stmt(serial_utils.make_expr_stmt(serial_utils.make_field_access_expr("d")), line_2,
+                                   serial_utils.make_block_stmt(serial_utils.make_if_stmt(
+                                       serial_utils.make_expr_stmt(
+                                           serial_utils.make_field_access_expr("e")),
                                        line_3
                                    ))
                                    )
         ]
     )
 
-    vertical_region_stmt = sir_utils.make_vertical_region_decl_stmt(
+    vertical_region_stmt = serial_utils.make_vertical_region_decl_stmt(
         body_ast, interval, AST.VerticalRegion.Forward
     )
 
-    sir = sir_utils.make_sir(
+    sir = serial_utils.make_sir(
         OUTPUT_FILE,
         AST.GridType.Value("Unstructured"),
         [
-            sir_utils.make_stencil(
+            serial_utils.make_stencil(
                 OUTPUT_NAME,
-                sir_utils.make_ast([vertical_region_stmt]),
+                serial_utils.make_ast([vertical_region_stmt]),
                 [
-                    sir_utils.make_field(
+                    serial_utils.make_field(
                         "a",
-                        sir_utils.make_field_dimensions_unstructured(
+                        serial_utils.make_field_dimensions_unstructured(
                             [AST.LocationType.Value("Edge")], 1
                         ),
                     ),
-                    sir_utils.make_field(
+                    serial_utils.make_field(
                         "b",
-                        sir_utils.make_field_dimensions_unstructured(
+                        serial_utils.make_field_dimensions_unstructured(
                             [AST.LocationType.Value("Edge")], 1
                         ),
                     ),
-                    sir_utils.make_field(
+                    serial_utils.make_field(
                         "c",
-                        sir_utils.make_field_dimensions_unstructured(
+                        serial_utils.make_field_dimensions_unstructured(
                             [AST.LocationType.Value("Edge")], 1
                         ),
                     ),
-                    sir_utils.make_field(
+                    serial_utils.make_field(
                         "d",
-                        sir_utils.make_field_dimensions_unstructured(
+                        serial_utils.make_field_dimensions_unstructured(
                             [AST.LocationType.Value("Edge")], 1
                         ),
                     ),
-                    sir_utils.make_field(
+                    serial_utils.make_field(
                         "e",
-                        sir_utils.make_field_dimensions_unstructured(
+                        serial_utils.make_field_dimensions_unstructured(
                             [AST.LocationType.Value("Edge")], 1
                         ),
                     ),

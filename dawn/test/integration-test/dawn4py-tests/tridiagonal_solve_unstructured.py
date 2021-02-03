@@ -30,7 +30,7 @@ import os
 
 import dawn4py
 from dawn4py.serialization import SIR, AST
-from dawn4py.serialization import utils as sir_utils
+from dawn4py.serialization import utils as serial_utils
 from google.protobuf.json_format import MessageToJson, Parse
 
 OUTPUT_NAME = "unstructured_vertical_solver"
@@ -42,32 +42,32 @@ def create_vertical_region_stmt1():
     """ create a vertical region statement for the stencil
     """
 
-    interval = sir_utils.make_interval(sir_utils.Interval.Start, sir_utils.Interval.Start, 0, 0)
+    interval = serial_utils.make_interval(serial_utils.Interval.Start, serial_utils.Interval.Start, 0, 0)
 
-    body_ast = sir_utils.make_ast(
+    body_ast = serial_utils.make_ast(
         [
-            sir_utils.make_assignment_stmt(
-                sir_utils.make_unstructured_field_access_expr("c"),
-                sir_utils.make_binary_operator(
-                    sir_utils.make_unstructured_field_access_expr("c"),
+            serial_utils.make_assignment_stmt(
+                serial_utils.make_unstructured_field_access_expr("c"),
+                serial_utils.make_binary_operator(
+                    serial_utils.make_unstructured_field_access_expr("c"),
                     "/",
-                    sir_utils.make_unstructured_field_access_expr("b"),
+                    serial_utils.make_unstructured_field_access_expr("b"),
                 ),
                 "=",
             ),
-            sir_utils.make_assignment_stmt(
-                sir_utils.make_unstructured_field_access_expr("d"),
-                sir_utils.make_binary_operator(
-                    sir_utils.make_unstructured_field_access_expr("d"),
+            serial_utils.make_assignment_stmt(
+                serial_utils.make_unstructured_field_access_expr("d"),
+                serial_utils.make_binary_operator(
+                    serial_utils.make_unstructured_field_access_expr("d"),
                     "/",
-                    sir_utils.make_unstructured_field_access_expr("b"),
+                    serial_utils.make_unstructured_field_access_expr("b"),
                 ),
                 "=",
             ),
         ]
     )
 
-    vertical_region_stmt = sir_utils.make_vertical_region_decl_stmt(
+    vertical_region_stmt = serial_utils.make_vertical_region_decl_stmt(
         body_ast, interval, AST.VerticalRegion.Forward
     )
     return vertical_region_stmt
@@ -77,65 +77,65 @@ def create_vertical_region_stmt2():
     """ create a vertical region statement for the stencil
     """
 
-    interval = sir_utils.make_interval(sir_utils.Interval.Start, sir_utils.Interval.End, 1, 0)
+    interval = serial_utils.make_interval(serial_utils.Interval.Start, serial_utils.Interval.End, 1, 0)
 
-    body_ast = sir_utils.make_ast(
+    body_ast = serial_utils.make_ast(
         [
-            sir_utils.make_var_decl_stmt(
-                sir_utils.make_type(sir_utils.BuiltinType.Float),
+            serial_utils.make_var_decl_stmt(
+                serial_utils.make_type(serial_utils.BuiltinType.Float),
                 "m",
                 0,
                 "=",
-                sir_utils.make_expr(
-                    sir_utils.make_binary_operator(
-                        sir_utils.make_literal_access_expr("1.0", sir_utils.BuiltinType.Float),
+                serial_utils.make_expr(
+                    serial_utils.make_binary_operator(
+                        serial_utils.make_literal_access_expr("1.0", serial_utils.BuiltinType.Float),
                         "/",
-                        sir_utils.make_binary_operator(
-                            sir_utils.make_unstructured_field_access_expr("b"),
+                        serial_utils.make_binary_operator(
+                            serial_utils.make_unstructured_field_access_expr("b"),
                             "-",
-                            sir_utils.make_binary_operator(
-                                sir_utils.make_unstructured_field_access_expr("a"),
+                            serial_utils.make_binary_operator(
+                                serial_utils.make_unstructured_field_access_expr("a"),
                                 "*",
-                                sir_utils.make_unstructured_field_access_expr(
-                                    "c", sir_utils.make_unstructured_offset(False), -1
+                                serial_utils.make_unstructured_field_access_expr(
+                                    "c", serial_utils.make_unstructured_offset(False), -1
                                 ),
                             ),
                         ),
                     )
                 ),
             ),
-            sir_utils.make_assignment_stmt(
-                sir_utils.make_unstructured_field_access_expr("c"),
-                sir_utils.make_binary_operator(
-                    sir_utils.make_unstructured_field_access_expr("c"),
+            serial_utils.make_assignment_stmt(
+                serial_utils.make_unstructured_field_access_expr("c"),
+                serial_utils.make_binary_operator(
+                    serial_utils.make_unstructured_field_access_expr("c"),
                     "*",
-                    sir_utils.make_var_access_expr("m"),
+                    serial_utils.make_var_access_expr("m"),
                 ),
                 "=",
             ),
-            sir_utils.make_assignment_stmt(
-                sir_utils.make_unstructured_field_access_expr("d"),
-                sir_utils.make_binary_operator(
-                    sir_utils.make_binary_operator(
-                        sir_utils.make_unstructured_field_access_expr("d"),
+            serial_utils.make_assignment_stmt(
+                serial_utils.make_unstructured_field_access_expr("d"),
+                serial_utils.make_binary_operator(
+                    serial_utils.make_binary_operator(
+                        serial_utils.make_unstructured_field_access_expr("d"),
                         "-",
-                        sir_utils.make_binary_operator(
-                            sir_utils.make_unstructured_field_access_expr("a"),
+                        serial_utils.make_binary_operator(
+                            serial_utils.make_unstructured_field_access_expr("a"),
                             "*",
-                            sir_utils.make_unstructured_field_access_expr(
-                                "d", sir_utils.make_unstructured_offset(False), -1
+                            serial_utils.make_unstructured_field_access_expr(
+                                "d", serial_utils.make_unstructured_offset(False), -1
                             ),
                         ),
                     ),
                     "*",
-                    sir_utils.make_var_access_expr("m"),
+                    serial_utils.make_var_access_expr("m"),
                 ),
                 "=",
             ),
         ]
     )
 
-    vertical_region_stmt = sir_utils.make_vertical_region_decl_stmt(
+    vertical_region_stmt = serial_utils.make_vertical_region_decl_stmt(
         body_ast, interval, AST.VerticalRegion.Forward
     )
     return vertical_region_stmt
@@ -145,17 +145,17 @@ def create_vertical_region_stmt3():
     """ create a vertical region statement for the stencil
     """
 
-    interval = sir_utils.make_interval(sir_utils.Interval.Start, sir_utils.Interval.End, 0, -1)
+    interval = serial_utils.make_interval(serial_utils.Interval.Start, serial_utils.Interval.End, 0, -1)
 
-    body_ast = sir_utils.make_ast(
+    body_ast = serial_utils.make_ast(
         [
-            sir_utils.make_assignment_stmt(
-                sir_utils.make_unstructured_field_access_expr("d"),
-                sir_utils.make_binary_operator(
-                    sir_utils.make_unstructured_field_access_expr("c"),
+            serial_utils.make_assignment_stmt(
+                serial_utils.make_unstructured_field_access_expr("d"),
+                serial_utils.make_binary_operator(
+                    serial_utils.make_unstructured_field_access_expr("c"),
                     "*",
-                    sir_utils.make_unstructured_field_access_expr(
-                        "d", sir_utils.make_unstructured_offset(False), 1
+                    serial_utils.make_unstructured_field_access_expr(
+                        "d", serial_utils.make_unstructured_offset(False), 1
                     ),
                 ),
                 "-=",
@@ -163,20 +163,20 @@ def create_vertical_region_stmt3():
         ]
     )
 
-    vertical_region_stmt = sir_utils.make_vertical_region_decl_stmt(
+    vertical_region_stmt = serial_utils.make_vertical_region_decl_stmt(
         body_ast, interval, AST.VerticalRegion.Backward
     )
     return vertical_region_stmt
 
 
 def main(args: argparse.Namespace):
-    sir = sir_utils.make_sir(
+    sir = serial_utils.make_sir(
         OUTPUT_FILE,
         AST.GridType.Value("Unstructured"),
         [
-            sir_utils.make_stencil(
+            serial_utils.make_stencil(
                 OUTPUT_NAME,
-                sir_utils.make_ast(
+                serial_utils.make_ast(
                     [
                         create_vertical_region_stmt1(),
                         create_vertical_region_stmt2(),
@@ -184,27 +184,27 @@ def main(args: argparse.Namespace):
                     ]
                 ),
                 [
-                    sir_utils.make_field(
+                    serial_utils.make_field(
                         "a",
-                        sir_utils.make_field_dimensions_unstructured(
+                        serial_utils.make_field_dimensions_unstructured(
                             [AST.LocationType.Value("Cell")], 1
                         ),
                     ),
-                    sir_utils.make_field(
+                    serial_utils.make_field(
                         "b",
-                        sir_utils.make_field_dimensions_unstructured(
+                        serial_utils.make_field_dimensions_unstructured(
                             [AST.LocationType.Value("Cell")], 1
                         ),
                     ),
-                    sir_utils.make_field(
+                    serial_utils.make_field(
                         "c",
-                        sir_utils.make_field_dimensions_unstructured(
+                        serial_utils.make_field_dimensions_unstructured(
                             [AST.LocationType.Value("Cell")], 1
                         ),
                     ),
-                    sir_utils.make_field(
+                    serial_utils.make_field(
                         "d",
-                        sir_utils.make_field_dimensions_unstructured(
+                        serial_utils.make_field_dimensions_unstructured(
                             [AST.LocationType.Value("Cell")], 1
                         ),
                     ),

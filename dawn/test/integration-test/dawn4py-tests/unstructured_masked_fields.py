@@ -26,7 +26,7 @@ import os
 
 import dawn4py
 from dawn4py.serialization import SIR, AST
-from dawn4py.serialization import utils as sir_utils
+from dawn4py.serialization import utils as serial_utils
 from google.protobuf.json_format import MessageToJson, Parse
 
 OUTPUT_NAME = "unstructured_masked_fields"
@@ -35,28 +35,28 @@ OUTPUT_PATH = f"{OUTPUT_NAME}.cpp"
 
 
 def main(args: argparse.Namespace):
-    interval = sir_utils.make_interval(
+    interval = serial_utils.make_interval(
         AST.Interval.Start, AST.Interval.End, 0, 0)
 
-    body_ast = sir_utils.make_ast(
+    body_ast = serial_utils.make_ast(
         [
-            sir_utils.make_assignment_stmt(
-                sir_utils.make_field_access_expr("out"),
-                sir_utils.make_binary_operator(
-                    sir_utils.make_field_access_expr("full"),
+            serial_utils.make_assignment_stmt(
+                serial_utils.make_field_access_expr("out"),
+                serial_utils.make_binary_operator(
+                    serial_utils.make_field_access_expr("full"),
                     "+",
-                    sir_utils.make_binary_operator(
-                        sir_utils.make_field_access_expr("horizontal"),
+                    serial_utils.make_binary_operator(
+                        serial_utils.make_field_access_expr("horizontal"),
                         "+",
-                        sir_utils.make_field_access_expr("vertical"))),
+                        serial_utils.make_field_access_expr("vertical"))),
                 "="),
-            sir_utils.make_assignment_stmt(
-                sir_utils.make_field_access_expr("out"),
-                sir_utils.make_reduction_over_neighbor_expr(
+            serial_utils.make_assignment_stmt(
+                serial_utils.make_field_access_expr("out"),
+                serial_utils.make_reduction_over_neighbor_expr(
                     op="+",
-                    init=sir_utils.make_literal_access_expr(
+                    init=serial_utils.make_literal_access_expr(
                         "1.0", AST.BuiltinType.Float),
-                    rhs=sir_utils.make_field_access_expr(
+                    rhs=serial_utils.make_field_access_expr(
                         "horizontal_sparse", [True, 0]),
                     chain=[AST.LocationType.Value(
                         "Edge"), AST.LocationType.Value("Cell")],
@@ -66,44 +66,44 @@ def main(args: argparse.Namespace):
         ]
     )
 
-    vertical_region_stmt = sir_utils.make_vertical_region_decl_stmt(
+    vertical_region_stmt = serial_utils.make_vertical_region_decl_stmt(
         body_ast, interval, AST.VerticalRegion.Forward
     )
 
-    sir = sir_utils.make_sir(
+    sir = serial_utils.make_sir(
         OUTPUT_FILE,
         AST.GridType.Value("Unstructured"),
         [
-            sir_utils.make_stencil(
+            serial_utils.make_stencil(
                 OUTPUT_NAME,
-                sir_utils.make_ast([vertical_region_stmt]),
+                serial_utils.make_ast([vertical_region_stmt]),
                 [
-                    sir_utils.make_field(
+                    serial_utils.make_field(
                         "out",
-                        sir_utils.make_field_dimensions_unstructured(
+                        serial_utils.make_field_dimensions_unstructured(
                             [AST.LocationType.Value("Edge")], 1
                         ),
                     ),
-                    sir_utils.make_field(
+                    serial_utils.make_field(
                         "full",
-                        sir_utils.make_field_dimensions_unstructured(
+                        serial_utils.make_field_dimensions_unstructured(
                             [AST.LocationType.Value("Edge")], 1
                         ),
                     ),
-                    sir_utils.make_field(
+                    serial_utils.make_field(
                         "horizontal",
-                        sir_utils.make_field_dimensions_unstructured(
+                        serial_utils.make_field_dimensions_unstructured(
                             [AST.LocationType.Value("Edge")], 0
                         ),
                     ),
-                    sir_utils.make_field(
+                    serial_utils.make_field(
                         "horizontal_sparse",
-                        sir_utils.make_field_dimensions_unstructured(
+                        serial_utils.make_field_dimensions_unstructured(
                             [AST.LocationType.Value(
                                 "Edge"), AST.LocationType.Value("Cell")], 0
                         ),
                     ),
-                    sir_utils.make_vertical_field("vertical"),
+                    serial_utils.make_vertical_field("vertical"),
                 ],
             ),
         ],
@@ -114,7 +114,7 @@ def main(args: argparse.Namespace):
         print(MessageToJson(sir))
 
     with open("out.json", "w+") as f:
-        f.write(sir_utils.to_json(sir))
+        f.write(serial_utils.to_json(sir))
 
     # compile
     code = dawn4py.compile(sir, backend=dawn4py.CodeGenBackend.CUDAIco)

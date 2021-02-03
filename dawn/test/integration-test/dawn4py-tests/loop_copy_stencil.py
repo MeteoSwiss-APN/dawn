@@ -19,7 +19,7 @@ import os
 
 import dawn4py
 from dawn4py.serialization import SIR, AST
-from dawn4py.serialization import utils as sir_utils
+from dawn4py.serialization import utils as serial_utils
 from google.protobuf.json_format import MessageToJson
 
 OUTPUT_NAME = "loop_copy_stencil"
@@ -28,15 +28,15 @@ OUTPUT_PATH = f"{OUTPUT_NAME}.cpp"
 
 
 def main(args: argparse.Namespace):
-    interval = sir_utils.make_interval(
+    interval = serial_utils.make_interval(
         AST.Interval.Start, AST.Interval.End, 0, 0)
 
-    body_ast = sir_utils.make_ast(
+    body_ast = serial_utils.make_ast(
         [
-            sir_utils.make_loop_stmt(
-                [sir_utils.make_assignment_stmt(
-                    sir_utils.make_field_access_expr("out"),
-                    sir_utils.make_field_access_expr("in"),
+            serial_utils.make_loop_stmt(
+                [serial_utils.make_assignment_stmt(
+                    serial_utils.make_field_access_expr("out"),
+                    serial_utils.make_field_access_expr("in"),
                     "=",
                 )],
                 [AST.LocationType.Value("Cell"),
@@ -45,27 +45,27 @@ def main(args: argparse.Namespace):
         ]
     )
 
-    vertical_region_stmt = sir_utils.make_vertical_region_decl_stmt(
+    vertical_region_stmt = serial_utils.make_vertical_region_decl_stmt(
         body_ast, interval, AST.VerticalRegion.Forward)
 
-    sir = sir_utils.make_sir(
+    sir = serial_utils.make_sir(
         OUTPUT_FILE,
         AST.GridType.Value("Unstructured"),
         [
-            sir_utils.make_stencil(
+            serial_utils.make_stencil(
                 OUTPUT_NAME,
-                sir_utils.make_ast([vertical_region_stmt]),
+                serial_utils.make_ast([vertical_region_stmt]),
                 [
-                    sir_utils.make_field(
+                    serial_utils.make_field(
                         "out",
-                        sir_utils.make_field_dimensions_unstructured(
+                        serial_utils.make_field_dimensions_unstructured(
                             [AST.LocationType.Value("Cell"),
                              AST.LocationType.Value("Edge")], 1
                         ),
                     ),
-                    sir_utils.make_field(
+                    serial_utils.make_field(
                         "in",
-                        sir_utils.make_field_dimensions_unstructured(
+                        serial_utils.make_field_dimensions_unstructured(
                             [AST.LocationType.Value("Edge")], 1
                         ),
                     ),

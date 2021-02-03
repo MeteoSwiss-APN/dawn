@@ -32,7 +32,7 @@ import os.path
 
 import dawn4py
 from dawn4py.serialization import SIR, AST
-from dawn4py.serialization import utils as sir_utils
+from dawn4py.serialization import utils as serial_utils
 from google.protobuf.json_format import MessageToJson, Parse
 
 OUTPUT_NAME = "global_index_stencil"
@@ -44,20 +44,20 @@ def create_vertical_region_stmt() -> AST.VerticalRegionDeclStmt:
     """ create a vertical region statement for the stencil
     """
 
-    interval = sir_utils.make_interval(AST.Interval.Start, AST.Interval.End, 0, 0)
+    interval = serial_utils.make_interval(AST.Interval.Start, AST.Interval.End, 0, 0)
 
     # create the out = in[i+1] statement
-    body_ast = sir_utils.make_ast(
+    body_ast = serial_utils.make_ast(
         [
-            sir_utils.make_assignment_stmt(
-                sir_utils.make_field_access_expr("out", [0, 0, 0]),
-                sir_utils.make_field_access_expr("in", [0, 0, 0]),
+            serial_utils.make_assignment_stmt(
+                serial_utils.make_field_access_expr("out", [0, 0, 0]),
+                serial_utils.make_field_access_expr("in", [0, 0, 0]),
                 "=",
             )
         ]
     )
 
-    vertical_region_stmt = sir_utils.make_vertical_region_decl_stmt(
+    vertical_region_stmt = serial_utils.make_vertical_region_decl_stmt(
         body_ast, interval, AST.VerticalRegion.Forward
     )
     return vertical_region_stmt
@@ -66,97 +66,97 @@ def create_vertical_region_stmt() -> AST.VerticalRegionDeclStmt:
 def create_boundary_correction_region(
     value="0", i_interval=None, j_interval=None
 ) -> AST.VerticalRegionDeclStmt:
-    interval = sir_utils.make_interval(AST.Interval.Start, AST.Interval.End, 0, 0)
-    boundary_body = sir_utils.make_ast(
+    interval = serial_utils.make_interval(AST.Interval.Start, AST.Interval.End, 0, 0)
+    boundary_body = serial_utils.make_ast(
         [
-            sir_utils.make_assignment_stmt(
-                sir_utils.make_field_access_expr("out", [0, 0, 0]),
-                sir_utils.make_literal_access_expr(value, AST.BuiltinType.Float),
+            serial_utils.make_assignment_stmt(
+                serial_utils.make_field_access_expr("out", [0, 0, 0]),
+                serial_utils.make_literal_access_expr(value, AST.BuiltinType.Float),
                 "=",
             )
         ]
     )
-    vertical_region_stmt = sir_utils.make_vertical_region_decl_stmt(
+    vertical_region_stmt = serial_utils.make_vertical_region_decl_stmt(
         boundary_body, interval, AST.VerticalRegion.Forward, IRange=i_interval, JRange=j_interval
     )
     return vertical_region_stmt
 
 
 def main(args: argparse.Namespace):
-    sir = sir_utils.make_sir(
+    sir = serial_utils.make_sir(
         OUTPUT_FILE,
         AST.GridType.Value("Cartesian"),
         [
-            sir_utils.make_stencil(
+            serial_utils.make_stencil(
                 "global_indexing",
-                sir_utils.make_ast(
+                serial_utils.make_ast(
                     [
                         create_vertical_region_stmt(),
                         create_boundary_correction_region(
                             value="4",
-                            i_interval=sir_utils.make_interval(
+                            i_interval=serial_utils.make_interval(
                                 AST.Interval.End, AST.Interval.End, -1, 0
                             ),
                         ),
                         create_boundary_correction_region(
                             value="8",
-                            i_interval=sir_utils.make_interval(
+                            i_interval=serial_utils.make_interval(
                                 AST.Interval.Start, AST.Interval.Start, 0, 1
                             ),
                         ),
                         create_boundary_correction_region(
                             value="6",
-                            j_interval=sir_utils.make_interval(
+                            j_interval=serial_utils.make_interval(
                                 AST.Interval.End, AST.Interval.End, -1, 0
                             ),
                         ),
                         create_boundary_correction_region(
                             value="2",
-                            j_interval=sir_utils.make_interval(
+                            j_interval=serial_utils.make_interval(
                                 AST.Interval.Start, AST.Interval.Start, 0, 1
                             ),
                         ),
                         create_boundary_correction_region(
                             value="1",
-                            j_interval=sir_utils.make_interval(
+                            j_interval=serial_utils.make_interval(
                                 AST.Interval.Start, AST.Interval.Start, 0, 1
                             ),
-                            i_interval=sir_utils.make_interval(
+                            i_interval=serial_utils.make_interval(
                                 AST.Interval.Start, AST.Interval.Start, 0, 1
                             ),
                         ),
                         create_boundary_correction_region(
                             value="3",
-                            j_interval=sir_utils.make_interval(
+                            j_interval=serial_utils.make_interval(
                                 AST.Interval.Start, AST.Interval.Start, 0, 1
                             ),
-                            i_interval=sir_utils.make_interval(
+                            i_interval=serial_utils.make_interval(
                                 AST.Interval.End, AST.Interval.End, -1, 0
                             ),
                         ),
                         create_boundary_correction_region(
                             value="7",
-                            j_interval=sir_utils.make_interval(
+                            j_interval=serial_utils.make_interval(
                                 AST.Interval.End, AST.Interval.End, -1, 0
                             ),
-                            i_interval=sir_utils.make_interval(
+                            i_interval=serial_utils.make_interval(
                                 AST.Interval.Start, AST.Interval.Start, 0, 1
                             ),
                         ),
                         create_boundary_correction_region(
                             value="5",
-                            j_interval=sir_utils.make_interval(
+                            j_interval=serial_utils.make_interval(
                                 AST.Interval.End, AST.Interval.End, -1, 0
                             ),
-                            i_interval=sir_utils.make_interval(
+                            i_interval=serial_utils.make_interval(
                                 AST.Interval.End, AST.Interval.End, -1, 0
                             ),
                         ),
                     ]
                 ),
                 [
-                    sir_utils.make_field("in", sir_utils.make_field_dimensions_cartesian()),
-                    sir_utils.make_field("out", sir_utils.make_field_dimensions_cartesian()),
+                    serial_utils.make_field("in", serial_utils.make_field_dimensions_cartesian()),
+                    serial_utils.make_field("out", serial_utils.make_field_dimensions_cartesian()),
                 ],
             )
         ],
