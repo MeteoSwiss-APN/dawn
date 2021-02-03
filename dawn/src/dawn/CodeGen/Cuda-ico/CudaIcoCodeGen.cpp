@@ -340,7 +340,7 @@ void CudaIcoCodeGen::generateRunFun(
         if(field.second.getFieldDimensions().isVertical()) {
           continue;
         }
-        auto dims = sir::dimension_cast<sir::UnstructuredFieldDimension const&>(
+        auto dims = ast::dimension_cast<ast::UnstructuredFieldDimension const&>(
             field.second.getFieldDimensions().getHorizontalFieldDimension());
         // dont add sizes twice
         if(dims.getDenseLocationType() == *stage->getLocationType()) {
@@ -405,7 +405,7 @@ static void allocTempFields(MemberFunction& ctor, const iir::Stencil& stencil, P
       bool isHorizontal = !dims.K();
       std::string kSizeStr = (isHorizontal) ? "1" : "kSize_";
 
-      auto hdims = sir::dimension_cast<sir::UnstructuredFieldDimension const&>(
+      auto hdims = ast::dimension_cast<ast::UnstructuredFieldDimension const&>(
           dims.getHorizontalFieldDimension());
       if(hdims.isDense()) {
         ctor.addStatement("::dawn::allocField(&" + fname + "_, mesh_." +
@@ -463,7 +463,7 @@ void CudaIcoCodeGen::generateCopyMemoryFun(MemberFunction& copyFun,
     bool isHorizontal = !dims.K();
     std::string kSizeStr = (isHorizontal) ? "1" : "kSize_";
 
-    auto hdims = sir::dimension_cast<sir::UnstructuredFieldDimension const&>(
+    auto hdims = ast::dimension_cast<ast::UnstructuredFieldDimension const&>(
         dims.getHorizontalFieldDimension());
     if(hdims.isDense()) {
       copyFun.addStatement(
@@ -518,7 +518,7 @@ void CudaIcoCodeGen::generateCopyBackFun(MemberFunction& copyBackFun, const iir:
         continue;
       }
 
-      auto dims = sir::dimension_cast<sir::UnstructuredFieldDimension const&>(
+      auto dims = ast::dimension_cast<ast::UnstructuredFieldDimension const&>(
           field.field.getFieldDimensions().getHorizontalFieldDimension());
       if(rawPtrs) {
         copyBackFun.addArg("::dawn::float_type* " + field.Name);
@@ -541,7 +541,7 @@ void CudaIcoCodeGen::generateCopyBackFun(MemberFunction& copyBackFun, const iir:
         return "kSize_";
       }
 
-      auto hdims = sir::dimension_cast<sir::UnstructuredFieldDimension const&>(
+      auto hdims = ast::dimension_cast<ast::UnstructuredFieldDimension const&>(
           field.field.getFieldDimensions().getHorizontalFieldDimension());
 
       std::string sizestr = "(mesh_.";
@@ -577,7 +577,7 @@ void CudaIcoCodeGen::generateCopyBackFun(MemberFunction& copyBackFun, const iir:
                                  "*sizeof(::dawn::float_type), cudaMemcpyDeviceToHost))");
 
         if(!field.field.getFieldDimensions().isVertical()) {
-          auto dims = sir::dimension_cast<sir::UnstructuredFieldDimension const&>(
+          auto dims = ast::dimension_cast<ast::UnstructuredFieldDimension const&>(
               field.field.getFieldDimensions().getHorizontalFieldDimension());
 
           bool isHorizontal = !field.field.getFieldDimensions().K();
@@ -978,7 +978,7 @@ void CudaIcoCodeGen::generateAllCudaKernels(
         if(field.second.getFieldDimensions().isVertical()) {
           continue;
         }
-        auto dims = sir::dimension_cast<sir::UnstructuredFieldDimension const&>(
+        auto dims = ast::dimension_cast<ast::UnstructuredFieldDimension const&>(
             field.second.getFieldDimensions().getHorizontalFieldDimension());
         if(dims.getDenseLocationType() == loc) {
           continue;

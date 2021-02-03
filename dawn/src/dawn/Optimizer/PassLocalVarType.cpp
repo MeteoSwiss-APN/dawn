@@ -117,7 +117,7 @@ class VarTypeFinder : public ast::ASTVisitorForwardingNonConst {
       return iir::LocalVariableType::Scalar;
     }
 
-    if(sir::dimension_isa<sir::CartesianFieldDimension>(
+    if(ast::dimension_isa<ast::CartesianFieldDimension>(
            metadata_.getFieldDimensions(fieldAccessID).getHorizontalFieldDimension())) {
       // Cartesian case
       return iir::LocalVariableType::OnIJ;

@@ -57,11 +57,13 @@ add_library(DawnAST OBJECT
   ASTVisitor.h
   ASTVisitorHelpers.h
   Attr.h
+  FieldDimension.h
+  FieldDimension.cpp
+  GridType.h
+  GridType.cpp
   Interval.h
   Interval.cpp
   LocationType.h
-  GridType.h
-  GridType.cpp
   Offsets.h
   Offsets.cpp
   Tags.h

@@ -762,8 +762,8 @@ void StencilParser::parseStorage(clang::FieldDecl* field) {
                                .Default({{false, false, false}});
     auto SIRField = std::make_shared<Field>(
         name,
-        dawn::sir::FieldDimensions(
-            dawn::sir::HorizontalFieldDimension(dawn::ast::cartesian,
+        dawn::ast::FieldDimensions(
+            dawn::ast::HorizontalFieldDimension(dawn::ast::cartesian,
                                                 {fieldDimensions[0], fieldDimensions[1]}),
             fieldDimensions[2]),
         getLocation(field));
@@ -776,8 +776,8 @@ void StencilParser::parseStorage(clang::FieldDecl* field) {
     DAWN_LOG(INFO) << "Parsing temporary field: " << name;
     auto SIRField = std::make_shared<dawn::sir::Field>(
         name,
-        dawn::sir::FieldDimensions(
-            dawn::sir::HorizontalFieldDimension(dawn::ast::cartesian, {true, true}), true),
+        dawn::ast::FieldDimensions(
+            dawn::ast::HorizontalFieldDimension(dawn::ast::cartesian, {true, true}), true),
         getLocation(field));
     SIRField->IsTemporary = true;
     currentParserRecord_->CurrentStencil->Fields.emplace_back(SIRField);
@@ -820,8 +820,8 @@ void StencilParser::parseArgument(clang::FieldDecl* arg) {
 
     auto SIRField = std::make_shared<dawn::sir::Field>(
         name,
-        dawn::sir::FieldDimensions(
-            dawn::sir::HorizontalFieldDimension(dawn::ast::cartesian,
+        dawn::ast::FieldDimensions(
+            dawn::ast::HorizontalFieldDimension(dawn::ast::cartesian,
                                                 {fieldDimensions[0], fieldDimensions[1]}),
             fieldDimensions[2]),
         getLocation(arg));

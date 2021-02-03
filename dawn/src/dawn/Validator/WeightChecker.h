@@ -42,7 +42,7 @@ private:
   private:
     bool weightsValid_ = true;
     bool parentIsWeight_ = false;
-    const std::unordered_map<std::string, sir::FieldDimensions> nameToDimensions_;
+    const std::unordered_map<std::string, ast::FieldDimensions> nameToDimensions_;
     const std::unordered_map<int, std::string> idToNameMap_;
     std::stack<std::shared_ptr<const iir::StencilFunctionInstantiation>>
         functionInstantiationStack_;
@@ -63,12 +63,12 @@ private:
     // This constructor is used when the check is performed on the SIR. In this case, each
     // Field is uniquely identified by its name
     WeightCheckerImpl(
-        const std::unordered_map<std::string, sir::FieldDimensions> nameToDimensionsMap);
+        const std::unordered_map<std::string, ast::FieldDimensions> nameToDimensionsMap);
     // This constructor is used when the check is performed from IIR. In this case, the fields may
     // have been renamed if stencils had to be merged. Hence, an additional map with key AccessID
     // is needed
     WeightCheckerImpl(
-        const std::unordered_map<std::string, sir::FieldDimensions> nameToDimensionsMap,
+        const std::unordered_map<std::string, ast::FieldDimensions> nameToDimensionsMap,
         const std::unordered_map<int, std::string> idToNameMap,
         const std::unordered_map<std::shared_ptr<ast::StencilFunCallExpr>,
                                  std::shared_ptr<iir::StencilFunctionInstantiation>>& exprToFunMap);

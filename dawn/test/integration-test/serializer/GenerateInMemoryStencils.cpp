@@ -59,8 +59,8 @@ std::shared_ptr<iir::StencilInstantiation> createCopyStencilIIRInMemory(ast::Gri
   IIRDoMethod->setID(target->nextUID());
 
   // create the statement
-  auto makeFieldDimensions = []() -> sir::FieldDimensions {
-    return sir::FieldDimensions(sir::HorizontalFieldDimension(ast::cartesian, {true, true}), true);
+  auto makeFieldDimensions = []() -> ast::FieldDimensions {
+    return ast::FieldDimensions(ast::HorizontalFieldDimension(ast::cartesian, {true, true}), true);
   };
 
   auto sirInField = std::make_shared<sir::Field>("in_field", makeFieldDimensions());
@@ -167,8 +167,8 @@ std::shared_ptr<iir::StencilInstantiation> createLapStencilIIRInMemory(ast::Grid
   IIRMSS->insertChild(std::move(IIRStage2));
 
   // create the statement
-  auto makeFieldDimensions = []() -> sir::FieldDimensions {
-    return sir::FieldDimensions(sir::HorizontalFieldDimension(ast::cartesian, {true, true}), true);
+  auto makeFieldDimensions = []() -> ast::FieldDimensions {
+    return ast::FieldDimensions(ast::HorizontalFieldDimension(ast::cartesian, {true, true}), true);
   };
 
   auto sirInField = std::make_shared<sir::Field>("in", makeFieldDimensions());

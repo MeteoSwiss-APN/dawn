@@ -48,11 +48,11 @@ createAssignmentStatement(int assignmentID, int assigneeID,
   // If the field is sparse, we need to wrap it in a for loop statement
   auto hDimensions = metadata.getFieldDimensions(assignmentID).getHorizontalFieldDimension();
   if(hDimensions.getType() == ast::GridType::Unstructured &&
-     sir::dimension_cast<const sir::UnstructuredFieldDimension&>(hDimensions).isSparse()) {
+     ast::dimension_cast<const ast::UnstructuredFieldDimension&>(hDimensions).isSparse()) {
     auto blockAssignmentStatement =
         iir::makeBlockStmt(std::vector<std::shared_ptr<ast::Stmt>>{assignmentStmt});
     auto chain =
-        sir::dimension_cast<const sir::UnstructuredFieldDimension&>(hDimensions).getNeighborChain();
+        ast::dimension_cast<const ast::UnstructuredFieldDimension&>(hDimensions).getNeighborChain();
     auto wrappedAssignmentStatement =
         iir::makeLoopStmt(std::move(chain), std::move(blockAssignmentStatement));
     return wrappedAssignmentStatement;

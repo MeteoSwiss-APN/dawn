@@ -194,9 +194,9 @@ json::json DoMethod::jsonDump(const StencilMetaInformation& metaData) const {
   return node;
 }
 
-const std::unordered_map<std::string, sir::FieldDimensions>
+const std::unordered_map<std::string, ast::FieldDimensions>
 DoMethod::getFieldDimensionsByName() const {
-  std::unordered_map<std::string, sir::FieldDimensions> fieldDimensionsByName;
+  std::unordered_map<std::string, ast::FieldDimensions> fieldDimensionsByName;
   for(const auto& it : getFields()) {
     fieldDimensionsByName.insert(
         {metaData_.getFieldNameFromAccessID(it.first), it.second.getFieldDimensions()});

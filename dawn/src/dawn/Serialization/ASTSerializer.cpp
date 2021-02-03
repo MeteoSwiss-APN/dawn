@@ -273,13 +273,13 @@ void setOffset(dawn::proto::ast::Offset* offsetProto, const sir::Offset* offset)
 }
 
 void setFieldDimensions(dawn::proto::ast::FieldDimensions* protoFieldDimensions,
-                        const sir::FieldDimensions& fieldDimensions) {
+                        const ast::FieldDimensions& fieldDimensions) {
   protoFieldDimensions->set_mask_k(fieldDimensions.K());
   if(!fieldDimensions.isVertical()) {
-    if(dawn::sir::dimension_isa<sir::CartesianFieldDimension const&>(
+    if(dawn::ast::dimension_isa<ast::CartesianFieldDimension const&>(
            fieldDimensions.getHorizontalFieldDimension())) {
       auto const& cartesianDimension =
-          dawn::sir::dimension_cast<dawn::sir::CartesianFieldDimension const&>(
+          dawn::ast::dimension_cast<dawn::ast::CartesianFieldDimension const&>(
               fieldDimensions.getHorizontalFieldDimension());
 
       dawn::proto::ast::CartesianDimension* protoCartesianDimension =
@@ -290,7 +290,7 @@ void setFieldDimensions(dawn::proto::ast::FieldDimensions* protoFieldDimensions,
 
     } else {
       auto const& unstructuredDimension =
-          dawn::sir::dimension_cast<dawn::sir::UnstructuredFieldDimension const&>(
+          dawn::ast::dimension_cast<dawn::ast::UnstructuredFieldDimension const&>(
               fieldDimensions.getHorizontalFieldDimension());
 
       auto protoIterSpace =
@@ -754,13 +754,13 @@ void setAST(proto::ast::AST* astProto, const AST* ast) {
 // Deserialization
 //===------------------------------------------------------------------------------------------===//
 
-sir::FieldDimensions
+ast::FieldDimensions
 makeFieldDimensions(const proto::ast::FieldDimensions& protoFieldDimensions) {
 
   if(protoFieldDimensions.has_cartesian_horizontal_dimension()) {
     const auto& protoCartesianDimension = protoFieldDimensions.cartesian_horizontal_dimension();
-    return sir::FieldDimensions(
-        sir::HorizontalFieldDimension(
+    return ast::FieldDimensions(
+        ast::HorizontalFieldDimension(
             dawn::ast::cartesian,
             std::array<bool, 2>({(bool)protoCartesianDimension.mask_cart_i(),
                                  (bool)protoCartesianDimension.mask_cart_j()})),
@@ -776,13 +776,13 @@ makeFieldDimensions(const proto::ast::FieldDimensions& protoFieldDimensions) {
           getLocationTypeFromProtoLocationType(protoUnstructuredDimension.iter_space().chain(i)));
     }
 
-    return sir::FieldDimensions(
-        sir::HorizontalFieldDimension(dawn::ast::unstructured, neighborChain,
+    return ast::FieldDimensions(
+        ast::HorizontalFieldDimension(dawn::ast::unstructured, neighborChain,
                                       protoUnstructuredDimension.iter_space().include_center()),
         protoFieldDimensions.mask_k());
 
   } else {
-    return sir::FieldDimensions(protoFieldDimensions.mask_k());
+    return ast::FieldDimensions(protoFieldDimensions.mask_k());
   }
 }
 

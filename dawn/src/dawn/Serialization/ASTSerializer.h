@@ -43,7 +43,7 @@ void setDirection(dawn::proto::ast::Direction* directionProto,
 void setOffset(dawn::proto::ast::Offset* offsetProto, const sir::Offset* offset);
 
 void setFieldDimensions(dawn::proto::ast::FieldDimensions* protoFieldDimensions,
-                        const sir::FieldDimensions& fieldDimensions);
+                        const ast::FieldDimensions& fieldDimensions);
 
 void setField(dawn::proto::ast::Field* fieldProto, const sir::Field* field);
 
@@ -122,7 +122,7 @@ SourceLocation makeLocation(const T& proto) {
                          : SourceLocation{};
 }
 
-sir::FieldDimensions
+ast::FieldDimensions
 makeFieldDimensions(const proto::ast::FieldDimensions& protoFieldDimensions);
 
 std::shared_ptr<sir::Field> makeField(const proto::ast::Field& fieldProto);

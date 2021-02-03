@@ -182,7 +182,7 @@ bool PassTemporaryType::run(const std::shared_ptr<iir::StencilInstantiation>& in
           auto hDims =
               metadata.getFieldIDToDimsMap().at(temporary.accessID_).getHorizontalFieldDimension();
           if(hDims.getType() == ast::GridType::Unstructured) {
-            sparse = sir::dimension_cast<sir::UnstructuredFieldDimension const&>(hDims).isSparse();
+            sparse = ast::dimension_cast<ast::UnstructuredFieldDimension const&>(hDims).isSparse();
           }
         }
         if(temporary.lifetime_.Begin.inSameDoMethod(temporary.lifetime_.End) &&

@@ -65,8 +65,8 @@ TEST_P(StencilTest, SourceLocation) {
 }
 
 TEST_P(StencilTest, Fields) {
-  auto makeFieldDimensions = []() -> sir::FieldDimensions {
-    return sir::FieldDimensions(sir::HorizontalFieldDimension(ast::cartesian, {true, true}), true);
+  auto makeFieldDimensions = []() -> ast::FieldDimensions {
+    return ast::FieldDimensions(ast::HorizontalFieldDimension(ast::cartesian, {true, true}), true);
   };
 
   sirRef->Stencils[0]->Fields.emplace_back(
@@ -76,15 +76,15 @@ TEST_P(StencilTest, Fields) {
   SIR_EXCPECT_EQ(sirRef, serializeAndDeserializeRef());
 }
 TEST_P(StencilTest, UnstructuredFields) {
-  auto makeFieldDimensionsDense = []() -> sir::FieldDimensions {
-    return sir::FieldDimensions(sir::HorizontalFieldDimension(ast::unstructured,
+  auto makeFieldDimensionsDense = []() -> ast::FieldDimensions {
+    return ast::FieldDimensions(ast::HorizontalFieldDimension(ast::unstructured,
                                                               dawn::ast::LocationType::Cells,
                                                               /*includeCenter*/ true),
                                 true);
   };
 
-  auto makeFieldDimensionsSparse = []() -> sir::FieldDimensions {
-    return sir::FieldDimensions(sir::HorizontalFieldDimension(ast::unstructured,
+  auto makeFieldDimensionsSparse = []() -> ast::FieldDimensions {
+    return ast::FieldDimensions(ast::HorizontalFieldDimension(ast::unstructured,
                                                               {dawn::ast::LocationType::Cells,
                                                                dawn::ast::LocationType::Edges,
                                                                dawn::ast::LocationType::Cells},
@@ -101,11 +101,11 @@ TEST_P(StencilTest, UnstructuredFields) {
 
 TEST_P(StencilTest, FieldsWithAttributes) {
   sirRef->Stencils[0]->Fields.emplace_back(std::make_shared<sir::Field>(
-      "foo", sir::FieldDimensions(sir::HorizontalFieldDimension(dawn::ast::cartesian, {true, true}),
+      "foo", ast::FieldDimensions(ast::HorizontalFieldDimension(dawn::ast::cartesian, {true, true}),
                                   true)));
   sirRef->Stencils[0]->Fields[0]->IsTemporary = true;
-  sirRef->Stencils[0]->Fields[0]->Dimensions = sir::FieldDimensions(
-      sir::HorizontalFieldDimension(dawn::ast::cartesian, {true, true}), false);
+  sirRef->Stencils[0]->Fields[0]->Dimensions = ast::FieldDimensions(
+      ast::HorizontalFieldDimension(dawn::ast::cartesian, {true, true}), false);
   SIR_EXCPECT_EQ(sirRef, serializeAndDeserializeRef());
 }
 
@@ -204,8 +204,8 @@ TEST_P(StencilFunctionTest, SourceLocation) {
 }
 
 TEST_P(StencilFunctionTest, Arguments) {
-  auto makeFieldDimensions = []() -> sir::FieldDimensions {
-    return sir::FieldDimensions(sir::HorizontalFieldDimension(ast::cartesian, {true, true}), true);
+  auto makeFieldDimensions = []() -> ast::FieldDimensions {
+    return ast::FieldDimensions(ast::HorizontalFieldDimension(ast::cartesian, {true, true}), true);
   };
 
   sirRef->StencilFunctions[0]->Args.emplace_back(

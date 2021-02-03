@@ -188,8 +188,8 @@ public:
   virtual void visit(const std::shared_ptr<dawn::ast::FieldAccessExpr>& expr) override {
     auto fieldFromExpression = dawn::sir::Field(
         expr->getName(),
-        dawn::sir::FieldDimensions(
-            dawn::sir::HorizontalFieldDimension(dawn::ast::cartesian, {true, true}), true));
+        dawn::ast::FieldDimensions(
+            dawn::ast::HorizontalFieldDimension(dawn::ast::cartesian, {true, true}), true));
 
     auto iter = std::find(allFields_.begin(), allFields_.end(), fieldFromExpression);
     if(iter == allFields_.end())

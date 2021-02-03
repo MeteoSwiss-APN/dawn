@@ -45,7 +45,7 @@ class Stencil : public IIRNode<IIR, Stencil, MultiStage, impl::StdList> {
 public:
   // FieldInfo desribes the properties of a given Field
   struct FieldInfo {
-    FieldInfo(bool t, std::string fieldName, dawn::sir::FieldDimensions dim, const Field& f)
+    FieldInfo(bool t, std::string fieldName, dawn::ast::FieldDimensions dim, const Field& f)
         : Name(fieldName), field(f), IsTemporary(t) {}
 
     std::string Name;
