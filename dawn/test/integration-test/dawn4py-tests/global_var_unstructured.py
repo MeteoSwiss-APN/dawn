@@ -45,7 +45,7 @@ def main(args: argparse.Namespace):
         body_ast, interval, AST.VerticalRegion.Forward
     )
 
-    globals = SIR.GlobalVariableMap()
+    globals = AST.GlobalVariableMap()
     globals.map["dt"].double_value = 0.5
 
     sir = serial_utils.make_sir(

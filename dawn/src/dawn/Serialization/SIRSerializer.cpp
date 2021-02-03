@@ -190,7 +190,7 @@ static std::string serializeImpl(const SIR* sir, SIRSerializer::Format kind) {
   for(const auto& [name, value] : *sir->GlobalVariableMap) {
 
     // is_constexpr
-    proto::sir::GlobalVariableValue valueProto;
+    proto::ast::GlobalVariableValue valueProto;
     valueProto.set_is_constexpr(value.isConstexpr());
 
     // Value
@@ -758,28 +758,28 @@ static std::shared_ptr<SIR> deserializeImpl(const std::string& str, SIRSerialize
     // AST.GlobalVariableMap
     for(const auto& nameValuePair : sirProto.global_variables().map()) {
       const std::string& sirName = nameValuePair.first;
-      const proto::sir::GlobalVariableValue& sirValue = nameValuePair.second;
+      const proto::ast::GlobalVariableValue& sirValue = nameValuePair.second;
       std::shared_ptr<ast::Global> value = nullptr;
       bool isConstExpr = sirValue.is_constexpr();
 
       switch(sirValue.Value_case()) {
-      case proto::sir::GlobalVariableValue::kBooleanValue:
+      case proto::ast::GlobalVariableValue::kBooleanValue:
         value = std::make_shared<ast::Global>(static_cast<bool>(sirValue.boolean_value()), isConstExpr);
         break;
-      case proto::sir::GlobalVariableValue::kIntegerValue:
+      case proto::ast::GlobalVariableValue::kIntegerValue:
         value = std::make_shared<ast::Global>(static_cast<int>(sirValue.integer_value()), isConstExpr);
         break;
-      case proto::sir::GlobalVariableValue::kFloatValue:
+      case proto::ast::GlobalVariableValue::kFloatValue:
         value = std::make_shared<ast::Global>(static_cast<float>(sirValue.float_value()), isConstExpr);
         break;
-      case proto::sir::GlobalVariableValue::kDoubleValue:
+      case proto::ast::GlobalVariableValue::kDoubleValue:
         value = std::make_shared<ast::Global>(static_cast<double>(sirValue.double_value()), isConstExpr);
         break;
-      case proto::sir::GlobalVariableValue::kStringValue:
+      case proto::ast::GlobalVariableValue::kStringValue:
         value = std::make_shared<ast::Global>(static_cast<std::string>(sirValue.string_value()),
                                          isConstExpr);
         break;
-      case proto::sir::GlobalVariableValue::VALUE_NOT_SET:
+      case proto::ast::GlobalVariableValue::VALUE_NOT_SET:
       default:
         throw std::out_of_range("value not set");
       }

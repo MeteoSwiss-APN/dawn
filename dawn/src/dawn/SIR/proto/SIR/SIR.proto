@@ -81,40 +81,6 @@ message StencilFunction {
 }
 
 /*===------------------------------------------------------------------------------------------===*\
- *     GlobalVariableMap
-\*===------------------------------------------------------------------------------------------===*/
-
-// TODO this needs to be changed to accept a type independent of a value if we
-// want it to be 1-to-1 with the SIR structures.
-// @brief Value of a global variable
-message GlobalVariableValue {
-  // Type and value of the variable
-  oneof Value {
-    bool boolean_value = 1;
-    int32 integer_value = 2;
-    double double_value = 3;
-    string string_value = 4;
-    float float_value = 5;
-  }
-
-  // Is the value a a compile time constant?
-  bool is_constexpr = 6;
-}
-
-// @brief Map of global variables
-//
-// The support of global variables is essential for scientific models to store switches to
-// control the flow of the execution, like the order of the horizontal advection, or simulation
-// parameters such as the time step of the model. A global variable is identified by a unique
-// name and a value which can either be set statically at compile time or dynamically at run
-// time.
-//
-// @ingroup sir_proto
-message GlobalVariableMap {
-  map<string, GlobalVariableValue> map = 1; // Mape of global variables (name to value)
-}
-
-/*===------------------------------------------------------------------------------------------===*\
  *     SIR
 \*===------------------------------------------------------------------------------------------===*/
 
@@ -138,5 +104,5 @@ message SIR {
   repeated StencilFunction stencil_functions = 4;
 
   // Map of global variables
-  GlobalVariableMap global_variables = 5;
+  dawn.proto.ast.GlobalVariableMap global_variables = 5;
 }
