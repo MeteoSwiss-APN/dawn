@@ -23,52 +23,52 @@
 
 using namespace dawn;
 
-proto::enums::LocationType getProtoLocationTypeFromLocationType(ast::LocationType locationType);
+proto::ast::LocationType getProtoLocationTypeFromLocationType(ast::LocationType locationType);
 
 ast::LocationType
-getLocationTypeFromProtoLocationType(proto::enums::LocationType protoLocationType);
+getLocationTypeFromProtoLocationType(proto::ast::LocationType protoLocationType);
 
-void setAST(dawn::proto::statements::AST* astProto, const ast::AST* ast);
+void setAST(dawn::proto::ast::AST* astProto, const ast::AST* ast);
 
-void setLocation(dawn::proto::statements::SourceLocation* locProto, const SourceLocation& loc);
+void setLocation(dawn::proto::ast::SourceLocation* locProto, const SourceLocation& loc);
 
-void setBuiltinType(dawn::proto::statements::BuiltinType* builtinTypeProto,
+void setBuiltinType(dawn::proto::ast::BuiltinType* builtinTypeProto,
                     const BuiltinTypeID& builtinType);
 
-void setInterval(dawn::proto::statements::Interval* intervalProto, const ast::Interval* interval);
+void setInterval(dawn::proto::ast::Interval* intervalProto, const ast::Interval* interval);
 
-void setDirection(dawn::proto::statements::Direction* directionProto,
+void setDirection(dawn::proto::ast::Direction* directionProto,
                   const sir::Direction* direction);
 
-void setOffset(dawn::proto::statements::Offset* offsetProto, const sir::Offset* offset);
+void setOffset(dawn::proto::ast::Offset* offsetProto, const sir::Offset* offset);
 
-void setFieldDimensions(dawn::proto::statements::FieldDimensions* protoFieldDimensions,
+void setFieldDimensions(dawn::proto::ast::FieldDimensions* protoFieldDimensions,
                         const sir::FieldDimensions& fieldDimensions);
 
-void setField(dawn::proto::statements::Field* fieldProto, const sir::Field* field);
+void setField(dawn::proto::ast::Field* fieldProto, const sir::Field* field);
 
-dawn::proto::statements::Extents makeProtoExtents(dawn::iir::Extents const& extents);
+dawn::proto::ast::Extents makeProtoExtents(dawn::iir::Extents const& extents);
 
-void setAccesses(dawn::proto::statements::Accesses* protoAccesses,
+void setAccesses(dawn::proto::ast::Accesses* protoAccesses,
                  const std::optional<iir::Accesses>& accesses);
 
-iir::Extents makeExtents(const dawn::proto::statements::Extents* protoExtents);
+iir::Extents makeExtents(const dawn::proto::ast::Extents* protoExtents);
 
 class ProtoStmtBuilder : public ast::ASTVisitorNonConst {
-  std::stack<dawn::proto::statements::Stmt*> currentStmtProto_;
-  std::stack<dawn::proto::statements::Expr*> currentExprProto_;
+  std::stack<dawn::proto::ast::Stmt*> currentStmtProto_;
+  std::stack<dawn::proto::ast::Expr*> currentExprProto_;
   const dawn::ast::StmtData::DataType dataType_;
 
 public:
-  ProtoStmtBuilder(dawn::proto::statements::Stmt* stmtProto,
+  ProtoStmtBuilder(dawn::proto::ast::Stmt* stmtProto,
                    dawn::ast::StmtData::DataType dataType);
 
-  ProtoStmtBuilder(dawn::proto::statements::Expr* exprProto,
+  ProtoStmtBuilder(dawn::proto::ast::Expr* exprProto,
                    dawn::ast::StmtData::DataType dataType);
 
-  dawn::proto::statements::Stmt* getCurrentStmtProto();
+  dawn::proto::ast::Stmt* getCurrentStmtProto();
 
-  dawn::proto::statements::Expr* getCurrentExprProto();
+  dawn::proto::ast::Expr* getCurrentExprProto();
 
   void visit(const std::shared_ptr<ast::BlockStmt>& stmt) override;
 
@@ -110,7 +110,7 @@ public:
   void visit(const std::shared_ptr<ast::ReductionOverNeighborExpr>& expr) override;
 };
 
-void setAST(proto::statements::AST* astProto, const ast::AST* ast);
+void setAST(proto::ast::AST* astProto, const ast::AST* ast);
 
 //===------------------------------------------------------------------------------------------===//
 // Deserialization
@@ -123,23 +123,23 @@ SourceLocation makeLocation(const T& proto) {
 }
 
 sir::FieldDimensions
-makeFieldDimensions(const proto::statements::FieldDimensions& protoFieldDimensions);
+makeFieldDimensions(const proto::ast::FieldDimensions& protoFieldDimensions);
 
-std::shared_ptr<sir::Field> makeField(const proto::statements::Field& fieldProto);
+std::shared_ptr<sir::Field> makeField(const proto::ast::Field& fieldProto);
 
-BuiltinTypeID makeBuiltinTypeID(const proto::statements::BuiltinType& builtinTypeProto);
+BuiltinTypeID makeBuiltinTypeID(const proto::ast::BuiltinType& builtinTypeProto);
 
-std::shared_ptr<sir::Direction> makeDirection(const proto::statements::Direction& directionProto);
+std::shared_ptr<sir::Direction> makeDirection(const proto::ast::Direction& directionProto);
 
-std::shared_ptr<sir::Offset> makeOffset(const proto::statements::Offset& offsetProto);
+std::shared_ptr<sir::Offset> makeOffset(const proto::ast::Offset& offsetProto);
 
-std::shared_ptr<ast::Interval> makeInterval(const proto::statements::Interval& intervalProto);
+std::shared_ptr<ast::Interval> makeInterval(const proto::ast::Interval& intervalProto);
 
-std::shared_ptr<ast::Expr> makeExpr(const proto::statements::Expr& expressionProto,
+std::shared_ptr<ast::Expr> makeExpr(const proto::ast::Expr& expressionProto,
                                     ast::StmtData::DataType dataType, int& maxID);
 
-std::shared_ptr<ast::Stmt> makeStmt(const proto::statements::Stmt& statementProto,
+std::shared_ptr<ast::Stmt> makeStmt(const proto::ast::Stmt& statementProto,
                                     ast::StmtData::DataType dataType, int& maxID);
 
-std::shared_ptr<ast::AST> makeAST(const dawn::proto::statements::AST& astProto,
+std::shared_ptr<ast::AST> makeAST(const dawn::proto::ast::AST& astProto,
                                   ast::StmtData::DataType dataType, int& maxID);

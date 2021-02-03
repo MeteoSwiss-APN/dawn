@@ -41,18 +41,18 @@ IIRSerializer::Format IIRSerializer::parseFormatString(const std::string& format
     throw std::invalid_argument(std::string("SIRSerializer::Format parse failed: ") + format);
 }
 
-proto::enums::LocationType
+proto::ast::LocationType
 optionalLocationTypeToProto(std::optional<ast::LocationType> locationType) {
   if(locationType.has_value()) {
     return getProtoLocationTypeFromLocationType(*locationType);
   } else {
-    return proto::enums::LocationTypeUnknown;
+    return proto::ast::LocationTypeUnknown;
   }
 }
 
 std::optional<ast::LocationType>
-protoLocationTypeToOptional(proto::enums::LocationType protoLocationType) {
-  if(protoLocationType == proto::enums::LocationTypeUnknown) {
+protoLocationTypeToOptional(proto::ast::LocationType protoLocationType) {
+  if(protoLocationType == proto::ast::LocationTypeUnknown) {
     return std::nullopt;
   } else {
     return getLocationTypeFromProtoLocationType(protoLocationType);
@@ -226,7 +226,7 @@ void IIRSerializer::serializeMetaData(proto::iir::StencilInstantiation& target,
   // map<string, dawn.proto.statements.BoundaryConditionDeclStmt> FieldnameToBoundaryCondition = 9;
   auto& protoFieldNameToBC = *protoMetaData->mutable_fieldnametoboundarycondition();
   for(auto fieldNameToBC : metaData.fieldnameToBoundaryConditionMap_) {
-    proto::statements::Stmt protoStencilCall;
+    proto::ast::Stmt protoStencilCall;
     ProtoStmtBuilder builder(&protoStencilCall, ast::StmtData::IIR_DATA_TYPE);
     fieldNameToBC.second->accept(builder);
     protoFieldNameToBC.insert({fieldNameToBC.first, protoStencilCall});
@@ -235,7 +235,7 @@ void IIRSerializer::serializeMetaData(proto::iir::StencilInstantiation& target,
   // Filling Field: map<int32, Array3i> fieldIDtoLegalDimensions = 10;
   auto& protoInitializedDimensionsMap = *protoMetaData->mutable_fieldidtodimensions();
   for(auto IDToLegalDimension : metaData.fieldIDToInitializedDimensionsMap_) {
-    dawn::proto::statements::FieldDimensions protoFieldDimensions;
+    dawn::proto::ast::FieldDimensions protoFieldDimensions;
     setFieldDimensions(&protoFieldDimensions, IDToLegalDimension.second);
     protoInitializedDimensionsMap.insert({IDToLegalDimension.first, protoFieldDimensions});
   }
@@ -243,7 +243,7 @@ void IIRSerializer::serializeMetaData(proto::iir::StencilInstantiation& target,
   // Filling Field: map<int32, dawn.proto.statements.StencilCallDeclStmt> IDToStencilCall = 11;
   auto& protoIDToStencilCallMap = *protoMetaData->mutable_idtostencilcall();
   for(auto IDToStencilCall : metaData.getStencilIDToStencilCallMap().getDirectMap()) {
-    proto::statements::Stmt protoStencilCall;
+    proto::ast::Stmt protoStencilCall;
     ProtoStmtBuilder builder(&protoStencilCall, ast::StmtData::IIR_DATA_TYPE);
     IDToStencilCall.second->accept(builder);
     protoIDToStencilCallMap.insert({IDToStencilCall.first, protoStencilCall});
@@ -276,10 +276,10 @@ void IIRSerializer::serializeIIR(proto::iir::StencilInstantiation& target,
 
   switch(iir->getGridType()) {
   case ast::GridType::Cartesian:
-    protoIIR->set_gridtype(proto::enums::GridType::Cartesian);
+    protoIIR->set_gridtype(proto::ast::GridType::Cartesian);
     break;
   case ast::GridType::Unstructured:
-    protoIIR->set_gridtype(proto::enums::GridType::Unstructured);
+    protoIIR->set_gridtype(proto::ast::GridType::Unstructured);
     break;
   }
 
@@ -783,10 +783,10 @@ IIRSerializer::deserializeImpl(const std::string& str, IIRSerializer::Format kin
   std::shared_ptr<iir::StencilInstantiation> target;
 
   switch(protoStencilInstantiation.internalir().gridtype()) {
-  case dawn::proto::enums::GridType::Cartesian:
+  case dawn::proto::ast::GridType::Cartesian:
     target = std::make_shared<iir::StencilInstantiation>(ast::GridType::Cartesian);
     break;
-  case dawn::proto::enums::GridType::Unstructured:
+  case dawn::proto::ast::GridType::Unstructured:
     target = std::make_shared<iir::StencilInstantiation>(ast::GridType::Unstructured);
     break;
   default:

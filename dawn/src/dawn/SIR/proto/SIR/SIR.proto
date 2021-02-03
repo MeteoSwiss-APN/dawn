@@ -18,7 +18,7 @@
 
 syntax = "proto3";
 
-package dawn.sir.proto;
+package dawn.proto.sir;
 import "AST/statements.proto";
 import "AST/enums.proto";
 
@@ -41,13 +41,13 @@ message Stencil {
   string name = 3;
 
   // Source location of the stencil
-  dawn.proto.statements.SourceLocation loc = 4;
+  dawn.proto.ast.SourceLocation loc = 4;
 
   // Stencil description AST
-  dawn.proto.statements.AST ast = 1;
+  dawn.proto.ast.AST ast = 1;
 
   // Fields referenced by this stencil
-  repeated dawn.proto.statements.Field fields = 2;
+  repeated dawn.proto.ast.Field fields = 2;
 }
 
 /*===------------------------------------------------------------------------------------------===*\
@@ -68,16 +68,16 @@ message StencilFunction {
   string name = 5;
 
   // Source location of the stencil function
-  dawn.proto.statements.SourceLocation loc = 4;
+  dawn.proto.ast.SourceLocation loc = 4;
 
   // Stencil body ASTs
-  repeated dawn.proto.statements.AST asts = 1;
+  repeated dawn.proto.ast.AST asts = 1;
 
   // Associated intervals of the AST
-  repeated dawn.proto.statements.Interval intervals = 2;
+  repeated dawn.proto.ast.Interval intervals = 2;
 
   // Fields referenced by this stencil
-  repeated dawn.proto.statements.StencilFunctionArg arguments = 3;
+  repeated dawn.proto.ast.StencilFunctionArg arguments = 3;
 }
 
 /*===------------------------------------------------------------------------------------------===*\
@@ -126,7 +126,7 @@ message GlobalVariableMap {
 // @ingroup sir_proto
 message SIR {
 
-  dawn.proto.enums.GridType gridType = 1;
+  dawn.proto.ast.GridType gridType = 1;
 
   // Name of the file the SIR was parsed from (can be empty)
   string filename = 2;

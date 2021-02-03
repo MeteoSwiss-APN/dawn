@@ -18,7 +18,7 @@ proto -*-===*\
 // <a href="https://developers.google.com/protocol-buffers/">Protobuf</a>.
 
 syntax = "proto3";
-package dawn.proto.enums;
+package dawn.proto.ast;
 
 // Don't use the 0 value, because it's the default and doesn't get serialized,
 // see https://developers.google.com/protocol-buffers/docs/proto3#default
