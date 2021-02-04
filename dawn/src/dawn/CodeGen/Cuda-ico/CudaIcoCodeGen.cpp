@@ -706,10 +706,16 @@ void CudaIcoCodeGen::generateStencilClasses(
       }
     }
     stencilClass.addMember("static int", "kSize_");
+    stencilClass.addMember("static GpuTriMesh", "mesh_");
     stencilClass.addMember("static bool", "is_setup_");
 
     stencilClass.changeAccessibility("public");
-    stencilClass.addMember("static GpuTriMesh", "mesh_");
+    auto meshGetter = stencilClass.addMemberFunction("const GpuTriMesh &", "getMesh");
+    meshGetter.isConst(true);
+    meshGetter.finishArgs();
+    meshGetter.startBody();
+    meshGetter.addStatement("return mesh_");
+    meshGetter.commit();
 
     if(!globalsMap.empty()) {
       stencilClass.addMember("globals", "m_globals");
