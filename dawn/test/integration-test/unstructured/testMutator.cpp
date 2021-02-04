@@ -32,7 +32,7 @@ void injectRedirectedReads(std::shared_ptr<dawn::iir::StencilInstantiation> sten
       if(field.second.field.getReadExtents().has_value()) {
         int accessID = stencilInstantiation->getMetaData().addField(
             dawn::iir::FieldAccessType::APIField, field.second.Name + "_indirection",
-            dawn::sir::FieldDimensions(field.second.field.getFieldDimensions()), std::nullopt);
+            dawn::ast::FieldDimensions(field.second.field.getFieldDimensions()), std::nullopt);
         mutatedFields.insert({field.second.Name, accessID});
       }
     }

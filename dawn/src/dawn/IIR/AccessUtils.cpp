@@ -23,7 +23,7 @@ void recordWriteAccess(std::unordered_map<int, iir::Field>& inputOutputFields,
                        std::unordered_map<int, iir::Field>& outputFields, int AccessID,
                        const std::optional<iir::Extents>& writeExtents,
                        iir::Interval const& doMethodInterval,
-                       sir::FieldDimensions&& fieldDimensions) {
+                       ast::FieldDimensions&& fieldDimensions) {
   // Field was recorded as `InputOutput`, state can't change ...
   if(inputOutputFields.count(AccessID)) {
     inputOutputFields.at(AccessID).extendInterval(doMethodInterval);
@@ -55,7 +55,7 @@ void recordReadAccess(std::unordered_map<int, iir::Field>& inputOutputFields,
                       std::unordered_map<int, iir::Field>& outputFields, int AccessID,
                       std::optional<iir::Extents> const& readExtents,
                       const iir::Interval& doMethodInterval,
-                      sir::FieldDimensions&& fieldDimensions) {
+                      ast::FieldDimensions&& fieldDimensions) {
 
   // Field was recorded as `InputOutput`, state can't change ...
   if(inputOutputFields.count(AccessID)) {

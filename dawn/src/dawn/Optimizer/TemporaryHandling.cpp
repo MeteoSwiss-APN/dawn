@@ -26,15 +26,15 @@
 namespace dawn {
 
 namespace {
-sir::HorizontalFieldDimension
+ast::HorizontalFieldDimension
 getHorizontalFieldDimensionFromVar(iir::StencilInstantiation const* instantiation, int accessID) {
   auto cartesian = instantiation->getIIR()->getGridType() == ast::GridType::Cartesian;
   if(cartesian) {
-    return sir::HorizontalFieldDimension(ast::cartesian, {true, true});
+    return ast::HorizontalFieldDimension(ast::cartesian, {true, true});
   } else {
     auto locType =
         instantiation->getMetaData().getLocalVariableDataFromAccessID(accessID).getLocationType();
-    return sir::HorizontalFieldDimension(ast::unstructured, locType);
+    return ast::HorizontalFieldDimension(ast::unstructured, locType);
   }
 }
 } // namespace
@@ -46,8 +46,8 @@ void promoteLocalVariableToTemporaryField(iir::StencilInstantiation* instantiati
   std::string varname = instantiation->getMetaData().getFieldNameFromAccessID(accessID);
 
   // Figure out dimensions
-  sir::FieldDimensions fieldDims =
-      sir::FieldDimensions{getHorizontalFieldDimensionFromVar(instantiation, accessID), true};
+  ast::FieldDimensions fieldDims =
+      ast::FieldDimensions{getHorizontalFieldDimensionFromVar(instantiation, accessID), true};
 
   // Compute name of field
   std::string fieldname = iir::InstantiationHelper::makeTemporaryFieldname(

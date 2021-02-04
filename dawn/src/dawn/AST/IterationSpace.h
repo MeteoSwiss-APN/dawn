@@ -57,7 +57,7 @@ struct UnstructuredIterationSpace {
   bool operator==(const UnstructuredIterationSpace& other) const {
     return Chain == other.Chain && IncludeCenter == other.IncludeCenter;
   }
-}; // namespace ast
+};
 
 } // namespace ast
 } // namespace dawn

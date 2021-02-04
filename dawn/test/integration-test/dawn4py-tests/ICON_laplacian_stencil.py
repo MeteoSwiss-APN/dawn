@@ -21,8 +21,8 @@ import argparse
 import os
 
 import dawn4py
-from dawn4py.serialization import SIR
-from dawn4py.serialization import utils as sir_utils
+from dawn4py.serialization import SIR, AST
+from dawn4py.serialization import utils as serial_utils
 from google.protobuf.json_format import MessageToJson, Parse
 
 
@@ -31,180 +31,180 @@ def main(args: argparse.Namespace):
     gen_outputfile = f"{stencil_name}.cpp"
     sir_outputfile = f"{stencil_name}.sir"
 
-    interval = sir_utils.make_interval(SIR.Interval.Start, SIR.Interval.End, 0, 0)
+    interval = serial_utils.make_interval(AST.Interval.Start, AST.Interval.End, 0, 0)
 
-    body_ast = sir_utils.make_ast(
+    body_ast = serial_utils.make_ast(
         [
-            sir_utils.make_assignment_stmt(
-                sir_utils.make_field_access_expr("rot_vec"),
-                sir_utils.make_reduction_over_neighbor_expr(
+            serial_utils.make_assignment_stmt(
+                serial_utils.make_field_access_expr("rot_vec"),
+                serial_utils.make_reduction_over_neighbor_expr(
                     op="+",
-                    init=sir_utils.make_literal_access_expr("0.0", SIR.BuiltinType.Double),
-                    rhs=sir_utils.make_binary_operator(
-                        sir_utils.make_field_access_expr("vec", [True, 0]),
+                    init=serial_utils.make_literal_access_expr("0.0", AST.BuiltinType.Double),
+                    rhs=serial_utils.make_binary_operator(
+                        serial_utils.make_field_access_expr("vec", [True, 0]),
                         "*",
-                        sir_utils.make_field_access_expr("geofac_rot"),
+                        serial_utils.make_field_access_expr("geofac_rot"),
                     ),
-                    chain=[SIR.LocationType.Value("Vertex"), SIR.LocationType.Value("Edge")],
+                    chain=[AST.LocationType.Value("Vertex"), AST.LocationType.Value("Edge")],
                 ),
                 "=",
             ),
-            sir_utils.make_assignment_stmt(
-                sir_utils.make_field_access_expr("div_vec"),
-                sir_utils.make_reduction_over_neighbor_expr(
+            serial_utils.make_assignment_stmt(
+                serial_utils.make_field_access_expr("div_vec"),
+                serial_utils.make_reduction_over_neighbor_expr(
                     op="+",
-                    init=sir_utils.make_literal_access_expr("0.0", SIR.BuiltinType.Double),
-                    rhs=sir_utils.make_binary_operator(
-                        sir_utils.make_field_access_expr("vec", [True, 0]),
+                    init=serial_utils.make_literal_access_expr("0.0", AST.BuiltinType.Double),
+                    rhs=serial_utils.make_binary_operator(
+                        serial_utils.make_field_access_expr("vec", [True, 0]),
                         "*",
-                        sir_utils.make_field_access_expr("geofac_div"),
+                        serial_utils.make_field_access_expr("geofac_div"),
                     ),
-                    chain=[SIR.LocationType.Value("Cell"), SIR.LocationType.Value("Edge")],
+                    chain=[AST.LocationType.Value("Cell"), AST.LocationType.Value("Edge")],
                 ),
                 "=",
             ),
-            sir_utils.make_assignment_stmt(
-                sir_utils.make_field_access_expr("nabla2t1_vec"),
-                sir_utils.make_reduction_over_neighbor_expr(
+            serial_utils.make_assignment_stmt(
+                serial_utils.make_field_access_expr("nabla2t1_vec"),
+                serial_utils.make_reduction_over_neighbor_expr(
                     op="+",
-                    init=sir_utils.make_literal_access_expr(
-                        "0.0", SIR.BuiltinType.Double),
-                    rhs=sir_utils.make_field_access_expr("rot_vec", [True, 0]),
-                    chain=[SIR.LocationType.Value(
-                        "Edge"), SIR.LocationType.Value("Vertex")],
-                    weights=[sir_utils.make_literal_access_expr(
-                        "-1.0", SIR.BuiltinType.Double), sir_utils.make_literal_access_expr(
-                        "1.0", SIR.BuiltinType.Double)]
+                    init=serial_utils.make_literal_access_expr(
+                        "0.0", AST.BuiltinType.Double),
+                    rhs=serial_utils.make_field_access_expr("rot_vec", [True, 0]),
+                    chain=[AST.LocationType.Value(
+                        "Edge"), AST.LocationType.Value("Vertex")],
+                    weights=[serial_utils.make_literal_access_expr(
+                        "-1.0", AST.BuiltinType.Double), serial_utils.make_literal_access_expr(
+                        "1.0", AST.BuiltinType.Double)]
                 ),
                 "=",
             ),
-            sir_utils.make_assignment_stmt(
-                sir_utils.make_field_access_expr("nabla2t1_vec"),
-                sir_utils.make_binary_operator(
-                    sir_utils.make_binary_operator(
-                        sir_utils.make_field_access_expr("tangent_orientation"),
+            serial_utils.make_assignment_stmt(
+                serial_utils.make_field_access_expr("nabla2t1_vec"),
+                serial_utils.make_binary_operator(
+                    serial_utils.make_binary_operator(
+                        serial_utils.make_field_access_expr("tangent_orientation"),
                         "*",
-                        sir_utils.make_field_access_expr("nabla2t1_vec"),
+                        serial_utils.make_field_access_expr("nabla2t1_vec"),
                     ),
                     "/",
-                    sir_utils.make_field_access_expr("primal_edge_length"),
+                    serial_utils.make_field_access_expr("primal_edge_length"),
                 ),
                 "=",
             ),
-            sir_utils.make_assignment_stmt(
-                sir_utils.make_field_access_expr("nabla2t2_vec"),
-                sir_utils.make_reduction_over_neighbor_expr(
+            serial_utils.make_assignment_stmt(
+                serial_utils.make_field_access_expr("nabla2t2_vec"),
+                serial_utils.make_reduction_over_neighbor_expr(
                     op="+",
-                    init=sir_utils.make_literal_access_expr(
-                        "0.0", SIR.BuiltinType.Double),
-                    rhs=sir_utils.make_field_access_expr("div_vec", [True, 0]),
-                    chain=[SIR.LocationType.Value(
-                        "Edge"), SIR.LocationType.Value("Cell")],
-                    weights=[sir_utils.make_literal_access_expr(
-                        "-1.0", SIR.BuiltinType.Double), sir_utils.make_literal_access_expr(
-                        "1.0", SIR.BuiltinType.Double)]
+                    init=serial_utils.make_literal_access_expr(
+                        "0.0", AST.BuiltinType.Double),
+                    rhs=serial_utils.make_field_access_expr("div_vec", [True, 0]),
+                    chain=[AST.LocationType.Value(
+                        "Edge"), AST.LocationType.Value("Cell")],
+                    weights=[serial_utils.make_literal_access_expr(
+                        "-1.0", AST.BuiltinType.Double), serial_utils.make_literal_access_expr(
+                        "1.0", AST.BuiltinType.Double)]
                 ),
                 "=",
             ),
-            sir_utils.make_assignment_stmt(
-                sir_utils.make_field_access_expr("nabla2t2_vec"),
-                sir_utils.make_binary_operator(
-                    sir_utils.make_field_access_expr("nabla2t2_vec"),
+            serial_utils.make_assignment_stmt(
+                serial_utils.make_field_access_expr("nabla2t2_vec"),
+                serial_utils.make_binary_operator(
+                    serial_utils.make_field_access_expr("nabla2t2_vec"),
                     "/",
-                    sir_utils.make_field_access_expr("dual_edge_length"),
+                    serial_utils.make_field_access_expr("dual_edge_length"),
                 ),
                 "=",
             ),
-            sir_utils.make_assignment_stmt(
-                sir_utils.make_field_access_expr("nabla2_vec"),
-                sir_utils.make_binary_operator(
-                    sir_utils.make_field_access_expr("nabla2t2_vec"),
+            serial_utils.make_assignment_stmt(
+                serial_utils.make_field_access_expr("nabla2_vec"),
+                serial_utils.make_binary_operator(
+                    serial_utils.make_field_access_expr("nabla2t2_vec"),
                     "-",
-                    sir_utils.make_field_access_expr("nabla2t1_vec"),
+                    serial_utils.make_field_access_expr("nabla2t1_vec"),
                 ),
                 "=",
             ),
         ]
     )
 
-    vertical_region_stmt = sir_utils.make_vertical_region_decl_stmt(
-        body_ast, interval, SIR.VerticalRegion.Forward
+    vertical_region_stmt = serial_utils.make_vertical_region_decl_stmt(
+        body_ast, interval, AST.VerticalRegion.Forward
     )
 
-    sir = sir_utils.make_sir(
+    sir = serial_utils.make_sir(
         gen_outputfile,
-        SIR.GridType.Value("Unstructured"),
+        AST.GridType.Value("Unstructured"),
         [
-            sir_utils.make_stencil(
+            serial_utils.make_stencil(
                 stencil_name,
-                sir_utils.make_ast([vertical_region_stmt]),
+                serial_utils.make_ast([vertical_region_stmt]),
                 [
-                    sir_utils.make_field(
+                    serial_utils.make_field(
                         "vec",
-                        sir_utils.make_field_dimensions_unstructured(
-                            [SIR.LocationType.Value("Edge")], 1
+                        serial_utils.make_field_dimensions_unstructured(
+                            [AST.LocationType.Value("Edge")], 1
                         ),
                     ),
-                    sir_utils.make_field(
+                    serial_utils.make_field(
                         "div_vec",
-                        sir_utils.make_field_dimensions_unstructured(
-                            [SIR.LocationType.Value("Cell")], 1
+                        serial_utils.make_field_dimensions_unstructured(
+                            [AST.LocationType.Value("Cell")], 1
                         ),
                     ),
-                    sir_utils.make_field(
+                    serial_utils.make_field(
                         "rot_vec",
-                        sir_utils.make_field_dimensions_unstructured(
-                            [SIR.LocationType.Value("Vertex")], 1
+                        serial_utils.make_field_dimensions_unstructured(
+                            [AST.LocationType.Value("Vertex")], 1
                         ),
                     ),
-                    sir_utils.make_field(
+                    serial_utils.make_field(
                         "nabla2t1_vec",
-                        sir_utils.make_field_dimensions_unstructured(
-                            [SIR.LocationType.Value("Edge")], 1
+                        serial_utils.make_field_dimensions_unstructured(
+                            [AST.LocationType.Value("Edge")], 1
                         ),
                         is_temporary = True
                     ),
-                    sir_utils.make_field(
+                    serial_utils.make_field(
                         "nabla2t2_vec",
-                        sir_utils.make_field_dimensions_unstructured(
-                            [SIR.LocationType.Value("Edge")], 1
+                        serial_utils.make_field_dimensions_unstructured(
+                            [AST.LocationType.Value("Edge")], 1
                         ),
                         is_temporary = True
                     ),
-                    sir_utils.make_field(
+                    serial_utils.make_field(
                         "nabla2_vec",
-                        sir_utils.make_field_dimensions_unstructured(
-                            [SIR.LocationType.Value("Edge")], 1
+                        serial_utils.make_field_dimensions_unstructured(
+                            [AST.LocationType.Value("Edge")], 1
                         ),
                     ),
-                    sir_utils.make_field(
+                    serial_utils.make_field(
                         "primal_edge_length",
-                        sir_utils.make_field_dimensions_unstructured(
-                            [SIR.LocationType.Value("Edge")], 1
+                        serial_utils.make_field_dimensions_unstructured(
+                            [AST.LocationType.Value("Edge")], 1
                         ),
                     ),
-                    sir_utils.make_field(
+                    serial_utils.make_field(
                         "dual_edge_length",
-                        sir_utils.make_field_dimensions_unstructured(
-                            [SIR.LocationType.Value("Edge")], 1
+                        serial_utils.make_field_dimensions_unstructured(
+                            [AST.LocationType.Value("Edge")], 1
                         ),
                     ),
-                    sir_utils.make_field(
+                    serial_utils.make_field(
                         "tangent_orientation",
-                        sir_utils.make_field_dimensions_unstructured(
-                            [SIR.LocationType.Value("Edge")], 1
+                        serial_utils.make_field_dimensions_unstructured(
+                            [AST.LocationType.Value("Edge")], 1
                         ),
                     ),
-                    sir_utils.make_field(
+                    serial_utils.make_field(
                         "geofac_rot",
-                        sir_utils.make_field_dimensions_unstructured(
-                            [SIR.LocationType.Value("Vertex"), SIR.LocationType.Value("Edge")], 1
+                        serial_utils.make_field_dimensions_unstructured(
+                            [AST.LocationType.Value("Vertex"), AST.LocationType.Value("Edge")], 1
                         ),
                     ),
-                    sir_utils.make_field(
+                    serial_utils.make_field(
                         "geofac_div",
-                        sir_utils.make_field_dimensions_unstructured(
-                            [SIR.LocationType.Value("Cell"), SIR.LocationType.Value("Edge")], 1
+                        serial_utils.make_field_dimensions_unstructured(
+                            [AST.LocationType.Value("Cell"), AST.LocationType.Value("Edge")], 1
                         ),
                     ),
                 ],
