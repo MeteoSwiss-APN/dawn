@@ -21,7 +21,6 @@
 #include "dawn/IIR/AccessUtils.h"
 #include "dawn/IIR/Accesses.h"
 #include "dawn/IIR/DependencyGraphAccesses.h"
-#include "dawn/IIR/FieldAccessMetadata.h"
 #include "dawn/IIR/IIR.h"
 #include "dawn/IIR/MultiStage.h"
 #include "dawn/IIR/Stage.h"
