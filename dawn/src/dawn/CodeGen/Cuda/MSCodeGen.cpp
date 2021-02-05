@@ -901,10 +901,10 @@ void MSCodeGen::generateCudaKernelCode() {
     for(const auto& fieldInfo : ms_->getParent()->getFields()) {
       if(fieldInfo.second.field.getAccessID() == fieldPair.second.getAccessID()) {
         DAWN_ASSERT_MSG(
-            dawn::sir::dimension_isa<dawn::sir::CartesianFieldDimension>(
+            dawn::ast::dimension_isa<dawn::ast::CartesianFieldDimension>(
                 fieldInfo.second.field.getFieldDimensions().getHorizontalFieldDimension()),
             "Field has non cartesian horizontal dimension");
-        auto const& cartDim = sir::dimension_cast<sir::CartesianFieldDimension const&>(
+        auto const& cartDim = ast::dimension_cast<ast::CartesianFieldDimension const&>(
             fieldInfo.second.field.getFieldDimensions().getHorizontalFieldDimension());
         dims[0] = cartDim.I() == 1;
         dims[1] = cartDim.J() == 1;

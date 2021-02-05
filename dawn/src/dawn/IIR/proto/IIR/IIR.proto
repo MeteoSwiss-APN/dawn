@@ -19,8 +19,8 @@
 syntax = "proto3";
 
 package dawn.proto.iir;
-import "SIR/statements.proto";
-import "SIR/enums.proto";
+import "AST/statements.proto";
+import "AST/enums.proto";
 
 /* ===-----------------------------------------------------------------------------------------===*/
 //      Caches
@@ -48,10 +48,10 @@ message Cache {
     int32 accessID = 3;
 
     // optional field: Interval on which cache is used
-    dawn.proto.statements.Interval interval = 4;
+    dawn.proto.ast.Interval interval = 4;
 
     // optional field: Interval that is the union of all the accessIntervals
-    dawn.proto.statements.Interval enclosingAccessInterval = 5;
+    dawn.proto.ast.Interval enclosingAccessInterval = 5;
 
     // optional field: Window on which we need to fill and flush
     Window cacheWindow = 6;
@@ -65,9 +65,9 @@ message Cache {
 //
 // A Do-method contains an AST (BlockStmt) of a specific vertical region
 message DoMethod {
-    dawn.proto.statements.Stmt ast = 1; // ast is of type BlockStmt
+    dawn.proto.ast.Stmt ast = 1; // ast is of type BlockStmt
     int32 doMethodID = 2;
-    dawn.proto.statements.Interval interval = 3;
+    dawn.proto.ast.Interval interval = 3;
 }
 
 // @brief The Protobuf description of all the required members to describe a Stage of the IIR
@@ -77,9 +77,9 @@ message DoMethod {
 message Stage {
     repeated DoMethod doMethods = 1;
     int32 stageID = 2;
-    dawn.proto.statements.Interval i_range = 3; // Global index space in the I dimension
-    dawn.proto.statements.Interval j_range = 4; // Global index space in the J dimension
-    dawn.proto.enums.LocationType locationType = 5;
+    dawn.proto.ast.Interval i_range = 3; // Global index space in the I dimension
+    dawn.proto.ast.Interval j_range = 4; // Global index space in the J dimension
+    dawn.proto.ast.LocationType locationType = 5;
 }
 
 // @brief The Protobuf description of all the required members to describe a MultiStage of the IIR
@@ -127,7 +127,7 @@ message Stencil {
 message BoundaryConditionFunctor {
     string name = 1;
     repeated string args = 2;
-    dawn.proto.statements.Stmt ASTStmt = 3;
+    dawn.proto.ast.Stmt ASTStmt = 3;
 }
 
 // @brief The Protobuf description of the root node of the IIR
@@ -135,7 +135,7 @@ message BoundaryConditionFunctor {
 // The root node of the tree, holding multiple stencils. There is one IIR object for each user
 // defined Stencil.
 message IIR {
-    dawn.proto.enums.GridType gridType = 1;
+    dawn.proto.ast.GridType gridType = 1;
 
     // Map of the globally defined variable names to their Values
     map<string, GlobalValueAndType> globalVariableToValue = 2;
@@ -143,7 +143,7 @@ message IIR {
     repeated Stencil stencils = 3;
 
     // Stencil description statements for the overall program flow
-    repeated dawn.proto.statements.Stmt controlFlowStatements = 4;
+    repeated dawn.proto.ast.Stmt controlFlowStatements = 4;
 
     repeated BoundaryConditionFunctor boundaryConditions = 5;
 }
@@ -215,22 +215,22 @@ message StencilMetaInfo {
     VariableVersions versionedFields = 8;
 
     // Map of field names to their respective Boundary Condition
-    map<string, dawn.proto.statements.Stmt> fieldnameToBoundaryCondition = 9;
+    map<string, dawn.proto.ast.Stmt> fieldnameToBoundaryCondition = 9;
 
     // Map of field ID's to the user-specified dimensions
-    map<int32, dawn.proto.statements.FieldDimensions> fieldIDtoDimensions = 10;
+    map<int32, dawn.proto.ast.FieldDimensions> fieldIDtoDimensions = 10;
 
     // Map of the StencilID's to their respective StencilCall
-    map<int32, dawn.proto.statements.Stmt> idToStencilCall = 11;
+    map<int32, dawn.proto.ast.Stmt> idToStencilCall = 11;
 
     // Map of the BoundaryConditionCall to its extent
-    map<int32, dawn.proto.statements.Extents> boundaryCallToExtent = 12;
+    map<int32, dawn.proto.ast.Extents> boundaryCallToExtent = 12;
 
     // AccessIDs of allocated fields
     repeated int32 allocatedFieldIDs = 13;
 
     // The source-location of the stencil (for better error-handeling)
-    dawn.proto.statements.SourceLocation stencilLocation = 14;
+    dawn.proto.ast.SourceLocation stencilLocation = 14;
 
     // The user-given name of the stencil
     // (remember the 1-1 mapping of user-stencil - StencilInstantiation)

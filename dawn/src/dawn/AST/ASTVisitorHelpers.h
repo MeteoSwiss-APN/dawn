@@ -15,8 +15,8 @@
 #include "dawn/AST/ASTVisitor.h"
 
 #define ACCEPTVISITOR(subtype, type)                                                               \
-  virtual inline void accept(ASTVisitor& visitor) override {                                       \
-    visitor.visit(std::static_pointer_cast<type>(shared_from_this()));                             \
+  virtual inline void accept(ASTVisitor& visitor) const override {                                 \
+    visitor.visit(std::static_pointer_cast<const type>(shared_from_this()));                       \
   }                                                                                                \
   virtual inline void accept(ASTVisitorNonConst& visitor) override {                               \
     visitor.visit(std::static_pointer_cast<type>(shared_from_this()));                             \

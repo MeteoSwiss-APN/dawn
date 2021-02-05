@@ -69,7 +69,7 @@ public:
   /// @}
 
   /// @brief Hook for Visitors
-  virtual void accept(ASTVisitor& visitor) = 0;
+  virtual void accept(ASTVisitor& visitor) const = 0;
   virtual void accept(ASTVisitorNonConst& visitor) = 0;
   virtual std::shared_ptr<Expr> acceptAndReplace(ASTVisitorPostOrder& visitor) = 0;
 
@@ -83,7 +83,7 @@ public:
   const SourceLocation& getSourceLocation() const { return loc_; }
 
   /// @brief Iterate children (if any)
-  virtual ExprRangeType getChildren() { return ExprRangeType(); }
+  virtual ExprRangeType getChildren() const { return ExprRangeType(); }
 
   virtual void replaceChildren(const std::shared_ptr<Expr>& old_,
                                const std::shared_ptr<Expr>& new_) {
@@ -150,7 +150,7 @@ public:
   virtual std::shared_ptr<Expr> clone() const override;
   virtual bool equals(const Expr* other, bool compareData = true) const override;
   static bool classof(const Expr* expr) { return expr->getKind() == Kind::UnaryOperator; }
-  virtual ExprRangeType getChildren() override { return ExprRangeType(operand_); }
+  virtual ExprRangeType getChildren() const override { return ExprRangeType(operand_); }
   virtual void replaceChildren(const std::shared_ptr<Expr>& oldExpr,
                                const std::shared_ptr<Expr>& newExpr) override;
   ACCEPTVISITOR(Expr, UnaryOperator)
@@ -191,7 +191,7 @@ public:
   virtual std::shared_ptr<Expr> clone() const override;
   virtual bool equals(const Expr* other, bool compareData = true) const override;
   static bool classof(const Expr* expr) { return expr->getKind() == Kind::BinaryOperator; }
-  virtual ExprRangeType getChildren() override { return ExprRangeType(operands_); }
+  virtual ExprRangeType getChildren() const override { return ExprRangeType(operands_); }
   virtual void replaceChildren(const std::shared_ptr<Expr>& oldExpr,
                                const std::shared_ptr<Expr>& newExpr) override;
 
@@ -282,7 +282,7 @@ public:
   virtual std::shared_ptr<Expr> clone() const override;
   virtual bool equals(const Expr* other, bool compareData = true) const override;
   static bool classof(const Expr* expr) { return expr->getKind() == Kind::TernaryOperator; }
-  virtual ExprRangeType getChildren() override { return ExprRangeType(operands_); }
+  virtual ExprRangeType getChildren() const override { return ExprRangeType(operands_); }
   virtual void replaceChildren(const std::shared_ptr<Expr>& oldExpr,
                                const std::shared_ptr<Expr>& newExpr) override;
   ACCEPTVISITOR(Expr, TernaryOperator)
@@ -328,7 +328,7 @@ public:
   virtual std::shared_ptr<Expr> clone() const override;
   virtual bool equals(const Expr* other, bool compareData = true) const override;
   static bool classof(const Expr* expr) { return expr->getKind() == Kind::FunCallExpr; }
-  virtual ExprRangeType getChildren() override { return ExprRangeType(arguments_); }
+  virtual ExprRangeType getChildren() const override { return ExprRangeType(arguments_); }
   virtual void replaceChildren(const std::shared_ptr<Expr>& oldExpr,
                                const std::shared_ptr<Expr>& newExpr) override;
   ACCEPTVISITOR(Expr, FunCallExpr)
@@ -463,7 +463,7 @@ public:
   virtual std::shared_ptr<Expr> clone() const override;
   virtual bool equals(const Expr* other, bool compareData = true) const override;
   static bool classof(const Expr* expr) { return expr->getKind() == Kind::VarAccessExpr; }
-  virtual ExprRangeType getChildren() override {
+  virtual ExprRangeType getChildren() const override {
     return (isArrayAccess() ? ExprRangeType(index_) : ExprRangeType());
   }
   virtual void replaceChildren(const std::shared_ptr<Expr>& oldExpr,
@@ -541,7 +541,7 @@ public:
     return (argumentMap_[0] != -1 || argumentMap_[1] != -1 || argumentMap_[2] != -1);
   }
 
-  ExprRangeType getChildren() override;
+  ExprRangeType getChildren() const override;
 
   /// @brief Set the `offset` and reset the argument and argument-offset maps
   ///
@@ -674,7 +674,7 @@ public:
   bool getIncludeCenter() const { return iterSpace_.IncludeCenter; };
   ast::UnstructuredIterationSpace getIterSpace() const { return iterSpace_; }
 
-  ExprRangeType getChildren() override;
+  ExprRangeType getChildren() const override;
 
   static bool classof(const Expr* expr) {
     return expr->getKind() == Kind::ReductionOverNeighborExpr;

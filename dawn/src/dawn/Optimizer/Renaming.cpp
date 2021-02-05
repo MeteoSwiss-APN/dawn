@@ -29,7 +29,7 @@ namespace {
 
 /// @brief Remap all accesses from `oldAccessID` to `newAccessID` in all statements
 template <class InstantiationType>
-class AccessIDRemapper : public ast::ASTVisitorForwarding {
+class AccessIDRemapper : public ast::ASTVisitorForwardingNonConst {
   InstantiationType* instantiation_;
 
   int oldAccessID_;
@@ -44,7 +44,7 @@ public:
     if(varAccessID == oldAccessID_) {
       varAccessID = newAccessID_;
     }
-    ast::ASTVisitorForwarding::visit(stmt);
+    ast::ASTVisitorForwardingNonConst::visit(stmt);
     stmt->getName() = instantiation_->getNameFromAccessID(varAccessID);
   }
 
@@ -52,7 +52,7 @@ public:
     std::shared_ptr<iir::StencilFunctionInstantiation> fun =
         instantiation_->getStencilFunctionInstantiation(expr);
     renameCallerAccessIDInStencilFunction(fun.get(), oldAccessID_, newAccessID_);
-    ast::ASTVisitorForwarding::visit(expr);
+    ast::ASTVisitorForwardingNonConst::visit(expr);
   }
 
   void visit(const std::shared_ptr<ast::VarAccessExpr>& expr) override {

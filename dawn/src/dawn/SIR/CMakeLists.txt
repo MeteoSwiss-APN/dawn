@@ -18,6 +18,7 @@ include(proto/DawnSIR.cmake)
 include(DawnProtobufGenerate)
 dawn_protobuf_generate(
   OUT_FILES sir_proto_cpp_files
+  INC_DIR ${CMAKE_CURRENT_SOURCE_DIR}/../AST/proto/
   WDIR ${CMAKE_CURRENT_SOURCE_DIR}/proto
   PROTOS ${dawn_sir_proto_files}
   PACKG SIR
@@ -38,7 +39,7 @@ target_include_directories(DawnSIRProto
 )
 
 # ... and linked to protobuf
-target_link_libraries(DawnSIRProto PUBLIC protobuf::libprotobuf)
+target_link_libraries(DawnSIRProto PUBLIC DawnASTProto protobuf::libprotobuf)
 
 # Builds one library for both SIR and AST
 add_library(DawnSIR

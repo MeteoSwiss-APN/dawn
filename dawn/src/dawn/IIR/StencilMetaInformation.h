@@ -156,8 +156,8 @@ public:
   std::string getNameFromAccessID(int accessID) const;
 
   /// @brief returns the dimensions (see sir::FieldDimensions) of field with id fieldID
-  sir::FieldDimensions getFieldDimensions(int fieldID) const;
-  void setFieldDimensions(int fieldID, sir::FieldDimensions&& fieldDimensions);
+  ast::FieldDimensions getFieldDimensions(int fieldID) const;
+  void setFieldDimensions(int fieldID, ast::FieldDimensions&& fieldDimensions);
 
   template <FieldAccessType... TFieldAccessType>
   bool hasAccessesOfType() const {
@@ -176,10 +176,10 @@ public:
   void insertAccessOfType(FieldAccessType type, int AccessID, const std::string& name);
 
   int addField(FieldAccessType type, const std::string& name,
-               sir::FieldDimensions&& fieldDimensions, std::optional<int> accessID = std::nullopt);
+               ast::FieldDimensions&& fieldDimensions, std::optional<int> accessID = std::nullopt);
 
   int addTmpField(FieldAccessType type, const std::string& basename,
-                  sir::FieldDimensions&& fieldDimensions,
+                  ast::FieldDimensions&& fieldDimensions,
                   std::optional<int> accessID = std::nullopt);
 
   /// @brief Adds an existing variable declaration to the metadata: assigns an accessID to the
@@ -386,7 +386,7 @@ public:
     stencilFunInstantiationCandidate_.emplace(stencilFun, candidate);
   }
 
-  const std::unordered_map<int, sir::FieldDimensions>& getFieldIDToDimsMap() const {
+  const std::unordered_map<int, ast::FieldDimensions>& getFieldIDToDimsMap() const {
     return fieldIDToInitializedDimensionsMap_;
   }
 
@@ -437,7 +437,7 @@ private:
       fieldnameToBoundaryConditionMap_;
 
   /// Map of Field ID's to their respecive legal dimensions for offsets if specified in the code
-  std::unordered_map<int, dawn::sir::FieldDimensions> fieldIDToInitializedDimensionsMap_;
+  std::unordered_map<int, dawn::ast::FieldDimensions> fieldIDToInitializedDimensionsMap_;
 
   /// Can be filled from the StencilIDToStencilCallMap that is in Metainformation
   DoubleSidedMap<int, std::shared_ptr<ast::StencilCallDeclStmt>> StencilIDToStencilCallMap_;

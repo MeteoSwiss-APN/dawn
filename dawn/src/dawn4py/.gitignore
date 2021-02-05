@@ -35,6 +35,7 @@ pip-wheel-metadata/
 MANIFEST
 
 # Generated Protobuf files
+serialization/AST/*pb2.py
 serialization/SIR/*pb2.py
 serialization/IIR/*pb2.py
 

@@ -19,15 +19,15 @@
 
 namespace dawn {
 namespace ast {
-ASTVisitor::~ASTVisitor() {}
-ASTVisitorNonConst::~ASTVisitorNonConst() {}
-ASTVisitorForwarding::~ASTVisitorForwarding() {}
-ASTVisitorForwardingNonConst::~ASTVisitorForwardingNonConst() {}
-ASTVisitorDisabled::~ASTVisitorDisabled() {}
-ASTVisitorPostOrder::~ASTVisitorPostOrder() {}
+ASTVisitor::~ASTVisitor() = default;
+ASTVisitorNonConst::~ASTVisitorNonConst() = default;
+ASTVisitorForwarding::~ASTVisitorForwarding() = default;
+ASTVisitorForwardingNonConst::~ASTVisitorForwardingNonConst() = default;
+ASTVisitorDisabled::~ASTVisitorDisabled() = default;
+ASTVisitorPostOrder::~ASTVisitorPostOrder() = default;
 
 #define ASTVISITORFORWARDING_VISIT_IMPL(Type)                                                      \
-  void ASTVisitorForwarding::visit(const std::shared_ptr<Type>& node) {                            \
+  void ASTVisitorForwarding::visit(const std::shared_ptr<const Type>& node) {                      \
     for(const auto& s : node->getChildren())                                                       \
       s->accept(*this);                                                                            \
   }
@@ -51,25 +51,25 @@ ASTVISITORFORWARDING_VISIT_IMPL(ReductionOverNeighborExpr)
 
 #undef ASTVISITORFORWARDING_VISIT_IMPL
 
-void ASTVisitorForwarding::visit(const std::shared_ptr<ExprStmt>& node) {
+void ASTVisitorForwarding::visit(const std::shared_ptr<const ExprStmt>& node) {
   node->getExpr()->accept(*this);
 }
 
-void ASTVisitorForwarding::visit(const std::shared_ptr<ReturnStmt>& node) {
+void ASTVisitorForwarding::visit(const std::shared_ptr<const ReturnStmt>& node) {
   node->getExpr()->accept(*this);
 }
 
-void ASTVisitorForwarding::visit(const std::shared_ptr<VarDeclStmt>& node) {
+void ASTVisitorForwarding::visit(const std::shared_ptr<const VarDeclStmt>& node) {
   for(const auto& expr : node->getInitList())
     expr->accept(*this);
 }
 
-void ASTVisitorForwarding::visit(const std::shared_ptr<VerticalRegionDeclStmt>& stmt) {
+void ASTVisitorForwarding::visit(const std::shared_ptr<const VerticalRegionDeclStmt>& stmt) {
   stmt->getVerticalRegion()->Ast->accept(*this);
 }
 
 #define ASTVISITORFORWARDINGNONCONST_VISIT_IMPL(Type)                                              \
-  void ASTVisitorForwardingNonConst::visit(std::shared_ptr<Type> node) {                           \
+  void ASTVisitorForwardingNonConst::visit(const std::shared_ptr<Type>& node) {                     \
     for(auto& s : node->getChildren())                                                             \
       s->accept(*this);                                                                            \
   }
@@ -93,20 +93,20 @@ ASTVISITORFORWARDINGNONCONST_VISIT_IMPL(ReductionOverNeighborExpr)
 
 #undef ASTVISITORFORWARDINGNONCONST_VISIT_IMPL
 
-void ASTVisitorForwardingNonConst::visit(std::shared_ptr<ExprStmt> node) {
+void ASTVisitorForwardingNonConst::visit(const std::shared_ptr<ExprStmt>& node) {
   node->getExpr()->accept(*this);
 }
 
-void ASTVisitorForwardingNonConst::visit(std::shared_ptr<ReturnStmt> node) {
+void ASTVisitorForwardingNonConst::visit(const std::shared_ptr<ReturnStmt>& node) {
   node->getExpr()->accept(*this);
 }
 
-void ASTVisitorForwardingNonConst::visit(std::shared_ptr<VarDeclStmt> node) {
+void ASTVisitorForwardingNonConst::visit(const std::shared_ptr<VarDeclStmt>& node) {
   for(const auto& expr : node->getInitList())
     expr->accept(*this);
 }
 
-void ASTVisitorForwardingNonConst::visit(std::shared_ptr<VerticalRegionDeclStmt> stmt) {
+void ASTVisitorForwardingNonConst::visit(const std::shared_ptr<VerticalRegionDeclStmt>& stmt) {
   stmt->getVerticalRegion()->Ast->accept(*this);
 }
 

@@ -26,7 +26,7 @@ import os
 
 import dawn4py
 from dawn4py.serialization import SIR
-from dawn4py.serialization import utils as sir_utils
+from dawn4py.serialization import utils as serial_utils
 
 OUTPUT_NAME = "unstructured_stencil"
 OUTPUT_FILE = f"{OUTPUT_NAME}.cpp"
@@ -34,16 +34,16 @@ OUTPUT_PATH = f"{OUTPUT_NAME}.cpp"
 
 
 def main(args: argparse.Namespace):
-    interval = sir_utils.make_interval(SIR.Interval.Start, SIR.Interval.End, 0, 0)
+    interval = serial_utils.make_interval(SIR.Interval.Start, SIR.Interval.End, 0, 0)
 
-    body_ast = sir_utils.make_ast(
+    body_ast = serial_utils.make_ast(
         [
-            sir_utils.make_assignment_stmt(
-                sir_utils.make_field_access_expr("out"),
-                sir_utils.make_reduction_over_neighbor_expr(
+            serial_utils.make_assignment_stmt(
+                serial_utils.make_field_access_expr("out"),
+                serial_utils.make_reduction_over_neighbor_expr(
                     "+",
-                    sir_utils.make_literal_access_expr("1.0", SIR.BuiltinType.Float),
-                    sir_utils.make_field_access_expr("in"),
+                    serial_utils.make_literal_access_expr("1.0", SIR.BuiltinType.Float),
+                    serial_utils.make_field_access_expr("in"),
                     chain=[SIR.LocationType.Value("Edge"), SIR.LocationType.Value("Cell")],
                 ),
                 "=",
@@ -51,27 +51,27 @@ def main(args: argparse.Namespace):
         ]
     )
 
-    vertical_region_stmt = sir_utils.make_vertical_region_decl_stmt(
+    vertical_region_stmt = serial_utils.make_vertical_region_decl_stmt(
         body_ast, interval, SIR.VerticalRegion.Forward
     )
 
-    sir = sir_utils.make_sir(
+    sir = serial_utils.make_sir(
         OUTPUT_FILE,
         SIR.GridType.Value("Unstructured"),
         [
-            sir_utils.make_stencil(
+            serial_utils.make_stencil(
                 OUTPUT_NAME,
-                sir_utils.make_ast([vertical_region_stmt]),
+                serial_utils.make_ast([vertical_region_stmt]),
                 [
-                    sir_utils.make_field(
+                    serial_utils.make_field(
                         "in",
-                        sir_utils.make_field_dimensions_unstructured(
+                        serial_utils.make_field_dimensions_unstructured(
                             [SIR.LocationType.Value("Cell")], 1
                         ),
                     ),
-                    sir_utils.make_field(
+                    serial_utils.make_field(
                         "out",
-                        sir_utils.make_field_dimensions_unstructured(
+                        serial_utils.make_field_dimensions_unstructured(
                             [SIR.LocationType.Value("Edge")], 1
                         ),
                     ),
@@ -82,7 +82,7 @@ def main(args: argparse.Namespace):
 
     # print the SIR
     if args.verbose:
-        sir_utils.pprint(sir)
+        serial_utils.pprint(sir)
 
     # compile
     code = dawn4py.compile(sir, backend=dawn4py.CodeGenBackend.CXXNaiveIco)

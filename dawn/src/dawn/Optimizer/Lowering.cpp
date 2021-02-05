@@ -50,7 +50,7 @@ using namespace iir;
 
 /// @brief Map the statements of the stencil description AST to a flat list of statements and
 /// inline all calls to other stencils
-class StencilDescStatementMapper : public ast::ASTVisitor {
+class StencilDescStatementMapper : public ast::ASTVisitorNonConst {
 
   /// @brief Record of the current scope (each StencilCall will create a new scope)
   struct Scope : public NonCopyable {
@@ -190,7 +190,7 @@ public:
 
     // We only need to remove "nested" nodes as the top-level VerticalRegions or StencilCalls are
     // not inserted into the statement list in the frist place
-    class RemoveStencilDescNodes : public ast::ASTVisitorForwarding {
+    class RemoveStencilDescNodes : public ast::ASTVisitorForwardingNonConst {
     public:
       RemoveStencilDescNodes() {}
 
@@ -467,7 +467,7 @@ public:
         // We add a new temporary field for each temporary field argument
         AccessID = metadata_.addTmpField(
             iir::FieldAccessType::StencilTemporary, stencil.Fields[stencilArgIdx]->Name,
-            sir::FieldDimensions(stencil.Fields[stencilArgIdx]->Dimensions));
+            ast::FieldDimensions(stencil.Fields[stencilArgIdx]->Dimensions));
       } else {
         AccessID = curScope->LocalFieldnameToAccessIDMap.at(stencilCall->Args[stencilCallArgIdx]);
         stencilCallArgIdx++;
@@ -614,7 +614,7 @@ void fillIIRFromSIR(std::shared_ptr<iir::StencilInstantiation> stencilInstantiat
   for(const auto& field : SIRStencil->Fields) {
     metadata.addField((field->IsTemporary ? iir::FieldAccessType::StencilTemporary
                                           : iir::FieldAccessType::APIField),
-                      field->Name, sir::FieldDimensions(field->Dimensions));
+                      field->Name, ast::FieldDimensions(field->Dimensions));
   }
 
   StencilDescStatementMapper stencilDeclMapper(stencilInstantiation, SIRStencil.get(),

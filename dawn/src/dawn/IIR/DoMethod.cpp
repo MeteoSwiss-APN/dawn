@@ -34,7 +34,7 @@ namespace dawn {
 namespace iir {
 
 namespace {
-class ReplaceNamesVisitor : public ast::ASTVisitorForwarding, public NonCopyable {
+class ReplaceNamesVisitor : public ast::ASTVisitorForwardingNonConst, public NonCopyable {
   const StencilMetaInformation& metadata_;
 
 public:
@@ -194,9 +194,9 @@ json::json DoMethod::jsonDump(const StencilMetaInformation& metaData) const {
   return node;
 }
 
-const std::unordered_map<std::string, sir::FieldDimensions>
+const std::unordered_map<std::string, ast::FieldDimensions>
 DoMethod::getFieldDimensionsByName() const {
-  std::unordered_map<std::string, sir::FieldDimensions> fieldDimensionsByName;
+  std::unordered_map<std::string, ast::FieldDimensions> fieldDimensionsByName;
   for(const auto& it : getFields()) {
     fieldDimensionsByName.insert(
         {metaData_.getFieldNameFromAccessID(it.first), it.second.getFieldDimensions()});
@@ -292,7 +292,7 @@ void DoMethod::updateLevel() {
   }
 }
 
-class CheckNonNullStatementVisitor : public ast::ASTVisitorForwarding, public NonCopyable {
+class CheckNonNullStatementVisitor : public ast::ASTVisitorForwardingNonConst, public NonCopyable {
 private:
   bool result_ = false;
 
@@ -306,7 +306,7 @@ public:
     if(!isa<ast::NOPExpr>(expr->getExpr().get()))
       result_ = true;
     else {
-      ast::ASTVisitorForwarding::visit(expr);
+      ast::ASTVisitorForwardingNonConst::visit(expr);
     }
   }
 };
