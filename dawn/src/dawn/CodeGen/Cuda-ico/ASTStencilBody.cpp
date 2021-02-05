@@ -240,8 +240,8 @@ void ASTStencilBody::visit(const std::shared_ptr<ast::ReductionOverNeighborExpr>
       << "pidx * " << chainToSparseSizeString(expr->getIterSpace()) << " + nbhIter"
       << "];\n";
   ss_ << "if (nbhIdx == DEVICE_MISSING_VALUE) { continue; }";
-  std::vector<std::string> num_ops {"+", "-", "*", "/", "%"};
-  if(none_of(num_ops, [&](std::string op){ return expr->getOp() == op; })) {
+  std::vector<std::string> arithmetic_ops{"+", "-", "*", "/", "%"};
+  if(none_of(arithmetic_ops, [&](std::string op){ return expr->getOp() == op; })) {
     ss_ << lhs_name << " = " << expr->getOp() << "(" << lhs_name << ", ";
   } else {
     ss_ << lhs_name << " " << expr->getOp() << "= ";
@@ -250,7 +250,7 @@ void ASTStencilBody::visit(const std::shared_ptr<ast::ReductionOverNeighborExpr>
     ss_  << weights_name << "[nbhIter] * ";
   }
   expr->getRhs()->accept(*this);
-  if(none_of(num_ops, [&](std::string op){ return expr->getOp() == op; })) {
+  if(none_of(arithmetic_ops, [&](std::string op){ return expr->getOp() == op; })) {
     ss_ << ")";
   }
   ss_ << ";}\n";
