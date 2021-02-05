@@ -46,65 +46,46 @@ struct compute_error<RelErrTag> {
 
 namespace dawn {
 template <typename error_type>
-__global__ void compare_kernel(const int start_idx, const int end_idx, const int stride,
-                               const int k_size, const double* __restrict__ dsl,
+__global__ void compare_kernel(const int num_el, const double* __restrict__ dsl,
                                const double* __restrict__ fortran, double* __restrict__ error) {
   unsigned int eidx = blockIdx.x * blockDim.x + threadIdx.x;
-  unsigned int kidx = blockIdx.y * blockDim.y + threadIdx.y;
-
-  if(eidx < start_idx || eidx > end_idx) {
-    error[kidx * blockDim.x * gridDim.x + eidx] = 0.;
+  if(eidx >= num_el) {
     return;
   }
 
-  if(kidx >= k_size) {
-    error[kidx * blockDim.x * gridDim.x + eidx] = 0.;
-    return;
-  }
-
-  error[kidx * blockDim.x * gridDim.x + eidx] =
-      compute_error<error_type>::impl(fortran[kidx * stride + eidx], dsl[kidx * stride + eidx]);
+  error[eidx] = compute_error<error_type>::impl(fortran[eidx], dsl[eidx]);
 }
 
 // Returns relative error. Prints relative and absolute error.
-inline double verify_field(const int start_idx, const int end_idx, const int stride,
-                           const int k_size, const double* dsl, const double* actual,
+inline double verify_field(const int num_el, const double* dsl, const double* actual,
                            std::string name) {
   double relErr, absErr;
   double* gpu_error;
 
   const int blockSize = 16;
+  dim3 dG((num_el + blockSize - 1) / blockSize);
+  dim3 dB(blockSize);
 
-  const int gridSizeX = ((end_idx + 1) + blockSize - 1) / blockSize,
-            gridSizeY = (k_size + blockSize - 1) / blockSize;
-  const int num_threads_tot = gridSizeX * gridSizeY * blockSize * blockSize;
-
-  gpuErrchk(cudaMalloc((void**)&gpu_error, num_threads_tot * sizeof(double)));
+  gpuErrchk(cudaMalloc((void**)&gpu_error, num_el * sizeof(double)));
   gpuErrchk(cudaPeekAtLastError());
-
-  dim3 dGE(gridSizeX, gridSizeY, 1);
-  dim3 dB(blockSize, blockSize, 1);
-
   gpuErrchk(cudaDeviceSynchronize());
 
-  compare_kernel<RelErrTag>
-      <<<dGE, dB>>>(start_idx, end_idx, stride, k_size, dsl, actual, gpu_error);
+  compare_kernel<RelErrTag><<<dG, dB>>>(num_el, dsl, actual, gpu_error);
   gpuErrchk(cudaPeekAtLastError());
 
   thrust::device_ptr<double> dev_ptr;
   dev_ptr = thrust::device_pointer_cast(gpu_error);
-  relErr = thrust::reduce(dev_ptr, dev_ptr + num_threads_tot, 0., thrust::maximum<double>());
+  relErr = thrust::reduce(dev_ptr, dev_ptr + num_el, 0., thrust::maximum<double>());
 
   gpuErrchk(cudaPeekAtLastError());
   std::cout << "[DSL] " << name << " relative error: " << std::scientific << relErr << "\n"
             << std::flush;
 
-  compare_kernel<AbsErrTag>
-      <<<dGE, dB>>>(start_idx, end_idx, stride, k_size, dsl, actual, gpu_error);
+  compare_kernel<AbsErrTag><<<dG, dB>>>(num_el, dsl, actual, gpu_error);
   gpuErrchk(cudaPeekAtLastError());
 
   dev_ptr = thrust::device_pointer_cast(gpu_error);
-  absErr = thrust::reduce(dev_ptr, dev_ptr + num_threads_tot, 0., thrust::maximum<double>());
+  absErr = thrust::reduce(dev_ptr, dev_ptr + num_el, 0., thrust::maximum<double>());
   gpuErrchk(cudaPeekAtLastError());
 
   std::cout << "[DSL] " << name << " absolute error: " << std::scientific << absErr << "\n"
