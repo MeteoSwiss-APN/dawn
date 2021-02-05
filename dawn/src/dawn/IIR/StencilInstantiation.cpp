@@ -372,10 +372,6 @@ void StencilInstantiation::computeDerivedInfo() {
   for(const auto& MS : iterateIIROver<iir::MultiStage>(*(this->getIIR()))) {
     MS->update(iir::NodeUpdateType::levelAndTreeAbove);
   }
-
-  for(auto& sten : getStencils()) {
-    sten->updateFieldIntends();
-  }
 }
 
 } // namespace iir
