@@ -1500,16 +1500,10 @@ generateF90InterfaceSI(FortranInterfaceModuleGen& fimGen,
   const int fromHostAPIIdx = 1;
   interfaces[fromHostAPIIdx].addArg("mesh", FortranAPI::InterfaceType::OBJ);
   interfaces[fromHostAPIIdx].addArg("k_size", FortranAPI::InterfaceType::INTEGER);
+  
+  const int runAndVerifyIdx = 2;  
 
-  // TODO: these are temporarily needed, should not be needed in the end
-  const int runAndVerifyIdx = 2;
-  runWrapper.addArg("mesh", FortranAPI::InterfaceType::OBJ);
-  runWrapper.addArg("k_size", FortranAPI::InterfaceType::INTEGER);
-  runWrapper.addArg("start_idx", FortranAPI::InterfaceType::INTEGER);
-  runWrapper.addArg("end_idx", FortranAPI::InterfaceType::INTEGER);
-  // ENDTODO
-
-  auto addArgsToAPI = [&](FortranAPI& api, bool includeInouts) {
+  auto addArgsToAPI = [&](FortranAPI& api, bool includeOuts) {
     for(const auto& global : globalsMap) {
       api.addArg(global.first, globalTypeToFortType(global.second));
     }
@@ -1522,8 +1516,9 @@ generateF90InterfaceSI(FortranInterfaceModuleGen& fimGen,
           stencilInstantiation->getMetaData().getFieldDimensions(fieldID).rank());
     }
     for(auto fieldID : stencilInstantiation->getMetaData().getAPIFields()) {
-      if(includeInouts && stencils[0]->getFields().at(fieldID).field.getIntend() ==
-                              dawn::iir::Field::IntendKind::InputOutput) {
+      if(includeOuts && (stencils[0]->getFields().at(fieldID).field.getIntend() ==
+                              dawn::iir::Field::IntendKind::InputOutput || stencils[0]->getFields().at(fieldID).field.getIntend() ==
+                              dawn::iir::Field::IntendKind::Output)) {
         api.addArg(
             stencilInstantiation->getMetaData().getNameFromAccessID(fieldID) + "_before",
             FortranAPI::InterfaceType::DOUBLE /* Unfortunately we need to know at codegen
@@ -1534,23 +1529,24 @@ generateF90InterfaceSI(FortranInterfaceModuleGen& fimGen,
     }
   };
 
-  addArgsToAPI(interfaces[fromDeviceAPIIdx], /*includeInouts*/ false);
+  addArgsToAPI(interfaces[fromDeviceAPIIdx], /*includeOuts*/ false);
   fimGen.addInterfaceAPI(std::move(interfaces[fromDeviceAPIIdx]));
-  addArgsToAPI(interfaces[fromHostAPIIdx], /*includeInouts*/ false);
+  addArgsToAPI(interfaces[fromHostAPIIdx], /*includeOuts*/ false);
   fimGen.addInterfaceAPI(std::move(interfaces[fromHostAPIIdx]));
-  addArgsToAPI(interfaces[runAndVerifyIdx], /*includeInouts*/ true);
+  addArgsToAPI(interfaces[runAndVerifyIdx], /*includeOuts*/ true);
   fimGen.addInterfaceAPI(std::move(interfaces[runAndVerifyIdx]));
 
-  addArgsToAPI(runWrapper, /*includeInouts*/ true);
+  addArgsToAPI(runWrapper, /*includeOuts*/ true);
 
-  auto getFieldArgs = [&](bool includeInouts) -> std::vector<std::string> {
+  auto getFieldArgs = [&](bool includeOuts) -> std::vector<std::string> {
     std::vector<std::string> args;
     for(auto fieldID : stencilInstantiation->getMetaData().getAPIFields()) {
       args.push_back(stencilInstantiation->getMetaData().getNameFromAccessID(fieldID));
     }
     for(auto fieldID : stencilInstantiation->getMetaData().getAPIFields()) {
-      if(includeInouts && stencils[0]->getFields().at(fieldID).field.getIntend() ==
-                              dawn::iir::Field::IntendKind::InputOutput) {
+      if(includeOuts && (stencils[0]->getFields().at(fieldID).field.getIntend() ==
+                              dawn::iir::Field::IntendKind::InputOutput || stencils[0]->getFields().at(fieldID).field.getIntend() ==
+                              dawn::iir::Field::IntendKind::Output)) {
         args.push_back(stencilInstantiation->getMetaData().getNameFromAccessID(fieldID) +
                        "_before");
       }
@@ -1583,8 +1579,7 @@ generateF90InterfaceSI(FortranInterfaceModuleGen& fimGen,
   runWrapper.addACCLine(")");
   runWrapper.addBodyLine("#ifdef __DSL_VERIFY", /*withIndentation*/ false);
   runWrapper.addBodyLine("CALL run_and_verify_" + stencilInstantiation->getName() + " &");
-  genCallArgs(runWrapper, "mesh, k_size, start_idx, end_idx",
-              /*includeInouts*/ true); // TODO remove
+  genCallArgs(runWrapper, "", /*includeInouts*/ true); 
   runWrapper.addBodyLine("#else", /*withIndentation*/ false);
   runWrapper.addBodyLine("timing = run_" + stencilInstantiation->getName() + " &");
   genCallArgs(runWrapper);
