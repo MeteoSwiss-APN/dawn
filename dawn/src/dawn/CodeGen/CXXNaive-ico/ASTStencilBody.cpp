@@ -376,13 +376,20 @@ void ASTStencilBody::visit(const std::shared_ptr<ast::ReductionOverNeighborExpr>
                "lhs, auto "
         << ASTStencilBody::ReductionIndexVarName(reductionDepth_ + 1)
         << ", auto const& weight) mutable {\n";
-    ss_ << "lhs " << expr->getOp() << "= ";
-    ss_ << "weight * ";
   } else {
     ss_ << ", [&, " + ASTStencilBody::ReductionSparseIndexVarName(reductionDepth_) +
                " = int(0)](auto& lhs, auto "
         << ASTStencilBody::ReductionIndexVarName(reductionDepth_ + 1) << ") mutable { ";
+  }
+
+  if(expr->getOp() != "+") {
+    ss_ << "lhs = " << expr->getOp() << "(lhs, ";
+  } else {
     ss_ << "lhs " << expr->getOp() << "= ";
+  }
+
+  if(hasWeights) {
+    ss_ << "weight * ";
   }
 
   auto argName = denseArgName_;
@@ -407,6 +414,9 @@ void ASTStencilBody::visit(const std::shared_ptr<ast::ReductionOverNeighborExpr>
   }
   // "pop" argName
   denseArgName_ = argName;
+  if(expr->getOp() != "+") {
+    ss_ << ")";
+  }
   ss_ << ";\n";
   ss_ << ASTStencilBody::ReductionSparseIndexVarName(reductionDepth_) << "++;\n";
   ss_ << "return lhs;\n";

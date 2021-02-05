@@ -1017,14 +1017,23 @@ void CudaIcoCodeGen::generateAllCudaKernels(
       DAWN_ASSERT_MSG(intervalsConsistent(*stage),
                       "intervals in a stage must have same bounds for now!\n");
       auto interval = stage->getChild(0)->getInterval();
-      int kStart = interval.lowerLevel() + interval.lowerOffset();
 
       // pidx
       cudaKernel.addStatement("unsigned int pidx = blockIdx.x * blockDim.x + threadIdx.x");
       cudaKernel.addStatement("unsigned int kidx = blockIdx.y * blockDim.y + threadIdx.y");
-      cudaKernel.addStatement("int klo = kidx * LEVELS_PER_THREAD + " + std::to_string(kStart));
-      cudaKernel.addStatement("int khi = (kidx + 1) * LEVELS_PER_THREAD + " +
-                              std::to_string(kStart));
+
+      if(interval.lowerLevelIsEnd() && interval.upperLevelIsEnd()) {
+        cudaKernel.addStatement("int klo = kidx * LEVELS_PER_THREAD + (kSize + " +
+                                std::to_string(interval.lowerOffset()) + ")");
+        cudaKernel.addStatement("int khi = (kidx + 1) * LEVELS_PER_THREAD + (kSize + " +
+                                std::to_string(interval.lowerOffset()) + ")");
+
+      } else {
+        cudaKernel.addStatement("int klo = kidx * LEVELS_PER_THREAD + " +
+                                std::to_string(interval.lowerOffset()));
+        cudaKernel.addStatement("int khi = (kidx + 1) * LEVELS_PER_THREAD + " +
+                                std::to_string(interval.lowerOffset()));
+      }
 
       switch(loc) {
       case ast::LocationType::Cells:
