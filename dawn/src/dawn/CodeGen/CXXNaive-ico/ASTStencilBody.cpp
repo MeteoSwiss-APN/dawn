@@ -382,7 +382,8 @@ void ASTStencilBody::visit(const std::shared_ptr<ast::ReductionOverNeighborExpr>
         << ASTStencilBody::ReductionIndexVarName(reductionDepth_ + 1) << ") mutable { ";
   }
 
-  if(expr->getOp() != "+") {
+  std::vector<std::string> num_ops {"+", "-", "*", "/", "%"};
+  if(none_of(num_ops, [&](std::string op){ return expr->getOp() == op; })) {
     ss_ << "lhs = " << expr->getOp() << "(lhs, ";
   } else {
     ss_ << "lhs " << expr->getOp() << "= ";
@@ -414,7 +415,7 @@ void ASTStencilBody::visit(const std::shared_ptr<ast::ReductionOverNeighborExpr>
   }
   // "pop" argName
   denseArgName_ = argName;
-  if(expr->getOp() != "+") {
+  if(none_of(num_ops, [&](std::string op){ return expr->getOp() == op; })) {
     ss_ << ")";
   }
   ss_ << ";\n";
