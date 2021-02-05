@@ -13,10 +13,10 @@
 //===------------------------------------------------------------------------------------------===//
 
 #include "dawn/IIR/DoMethod.h"
-#include "dawn/AST/ASTStringifier.h"
-#include "dawn/AST/ASTVisitor.h"
 #include "dawn/IIR/ASTExpr.h"
 #include "dawn/IIR/ASTStmt.h"
+#include "dawn/AST/ASTStringifier.h"
+#include "dawn/AST/ASTVisitor.h"
 #include "dawn/IIR/AccessToNameMapper.h"
 #include "dawn/IIR/AccessUtils.h"
 #include "dawn/IIR/Accesses.h"
@@ -262,6 +262,7 @@ void DoMethod::updateLevel() {
     DAWN_LOG(WARNING) << "no fields referenced in stage";
     return;
   }
+
   // Compute the extents of each field by accumulating the extents of each access to field in the
   // stage
   for(const auto& stmt : getAST().getStatements()) {
