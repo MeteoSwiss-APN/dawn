@@ -649,6 +649,7 @@ private:
   bool chainIsValid() const;
 
 public:
+  inline static const std::vector<std::string> arithmetic_ops{"+", "-", "*", "/", "%"};
   /// @name Constructor & Destructor
   /// @{
   ReductionOverNeighborExpr(std::string const& op, std::shared_ptr<Expr> const& rhs,
@@ -682,6 +683,7 @@ public:
 
   std::shared_ptr<Expr> clone() const override;
   bool equals(const Expr* other, bool compareData = true) const override;
+  bool is_arithmetic() const;
 
   ACCEPTVISITOR(Expr, ReductionOverNeighborExpr)
 };
