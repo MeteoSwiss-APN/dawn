@@ -18,9 +18,9 @@
 
 syntax = "proto3";
 
-package dawn.sir.proto;
-import "SIR/statements.proto";
-import "SIR/enums.proto";
+package dawn.proto.sir;
+import "AST/statements.proto";
+import "AST/enums.proto";
 
 option java_package = "dawn.sir";
 option java_outer_classname = "SIR_pb2";
@@ -31,8 +31,8 @@ option java_outer_classname = "SIR_pb2";
 
 // @brief Stencil description of the SIR
 //
-// A stencil represents the executation of a series of statements on a finite number of input fields
-// producing a finite number of output fields, hence a stencilcan have multiple output fields.
+// A stencil represents the execution of a series of statements on a finite number of input fields
+// producing a finite number of output fields, hence a stencil can have multiple output fields.
 // Hence, a stencil is described by an AST and a list of participating Field(s).
 //
 // @ingroup sir_proto
@@ -41,13 +41,13 @@ message Stencil {
   string name = 3;
 
   // Source location of the stencil
-  dawn.proto.statements.SourceLocation loc = 4;
+  dawn.proto.ast.SourceLocation loc = 4;
 
   // Stencil description AST
-  dawn.proto.statements.AST ast = 1;
+  dawn.proto.ast.AST ast = 1;
 
   // Fields referenced by this stencil
-  repeated dawn.proto.statements.Field fields = 2;
+  repeated dawn.proto.ast.Field fields = 2;
 }
 
 /*===------------------------------------------------------------------------------------------===*\
@@ -57,7 +57,7 @@ message Stencil {
 // @brief Stencil function description of the SIR
 //
 // Stencil functions are represented, like stencils, by a unique identifier, a list of arguments
-// and a list vertical intervals and coressponding AST(s). The latter allows to *specialize* the
+// and a list vertical intervals and corresponding AST(s). The latter allows to *specialize* the
 // stencil function for a specific vertical interval enabling straight-forward incorporation of
 // vertical boundary conditions. Next to simple field and scalar arguments, stencil functions can be
 // parametrized on Direction `(i, j or k)` and Offset `(i+1) arguments.
@@ -68,50 +68,16 @@ message StencilFunction {
   string name = 5;
 
   // Source location of the stencil function
-  dawn.proto.statements.SourceLocation loc = 4;
+  dawn.proto.ast.SourceLocation loc = 4;
 
   // Stencil body ASTs
-  repeated dawn.proto.statements.AST asts = 1;
+  repeated dawn.proto.ast.AST asts = 1;
 
   // Associated intervals of the AST
-  repeated dawn.proto.statements.Interval intervals = 2;
+  repeated dawn.proto.ast.Interval intervals = 2;
 
   // Fields referenced by this stencil
-  repeated dawn.proto.statements.StencilFunctionArg arguments = 3;
-}
-
-/*===------------------------------------------------------------------------------------------===*\
- *     GlobalVariableMap
-\*===------------------------------------------------------------------------------------------===*/
-
-// TODO this needs to be changed to accept a type independent of a value if we
-// want it to be 1-to-1 with the SIR structures.
-// @brief Value of a global variable
-message GlobalVariableValue {
-  // Type and value of the variable
-  oneof Value {
-    bool boolean_value = 1;
-    int32 integer_value = 2;
-    double double_value = 3;
-    string string_value = 4;
-    float float_value = 5;
-  }
-
-  // Is the value a a compile time constant?
-  bool is_constexpr = 6;
-}
-
-// @brief Map of global variables
-//
-// The support of global variables is essential for scientific models to store switches to
-// control the flow of the execution, like the order of the horizontal advection, or simulation
-// parameters such as the time step of the model. A global variable is identified by a unique
-// name and a value which can either be set statically at compile time or dynamically at run
-// time.
-//
-// @ingroup sir_proto
-message GlobalVariableMap {
-  map<string, GlobalVariableValue> map = 1; // Mape of global variables (name to value)
+  repeated dawn.proto.ast.StencilFunctionArg arguments = 3;
 }
 
 /*===------------------------------------------------------------------------------------------===*\
@@ -126,7 +92,7 @@ message GlobalVariableMap {
 // @ingroup sir_proto
 message SIR {
 
-  dawn.proto.enums.GridType gridType = 1;
+  dawn.proto.ast.GridType gridType = 1;
 
   // Name of the file the SIR was parsed from (can be empty)
   string filename = 2;
@@ -138,5 +104,5 @@ message SIR {
   repeated StencilFunction stencil_functions = 4;
 
   // Map of global variables
-  GlobalVariableMap global_variables = 5;
+  dawn.proto.ast.GlobalVariableMap global_variables = 5;
 }

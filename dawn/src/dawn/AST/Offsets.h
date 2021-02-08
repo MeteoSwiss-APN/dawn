@@ -183,6 +183,7 @@ public:
   std::shared_ptr<const FieldAccessExpr> getIndirectionField() const;
   // unfortunately we need this to be compatible with the visitor infrastructure
   std::shared_ptr<Expr>& getIndirectionFieldAsExpr();
+  const std::shared_ptr<Expr>& getIndirectionFieldAsExpr() const;
   void setIndirectionAccessID(int accessID);
   std::optional<int> getIndirectionAccessID() const;
   bool operator==(VerticalOffset const& other) const;
@@ -214,6 +215,7 @@ public:
   std::optional<int> getVerticalIndirectionAccessID() const;
   // unfortunately we need this to be compatible with the visitor infrastructure
   std::shared_ptr<Expr>& getVerticalIndirectionFieldAsExpr();
+  const std::shared_ptr<Expr>& getVerticalIndirectionFieldAsExpr() const;
   void setVerticalIndirection(const std::string& fieldName);
 
   HorizontalOffset const& horizontalOffset() const;

@@ -25,7 +25,7 @@
 namespace dawn {
 class GridTypeChecker {
 private:
-  class TypeCheckerImpl : public ast::ASTVisitorForwarding {
+  class TypeCheckerImpl : public ast::ASTVisitorForwardingNonConst {
     ast::GridType prescribedType_;
     bool typesConsistent_ = true;
 

@@ -34,8 +34,8 @@ import argparse
 import os
 
 import dawn4py
-from dawn4py.serialization import SIR
-from dawn4py.serialization import utils as sir_utils
+from dawn4py.serialization import SIR, AST
+from dawn4py.serialization import utils as serial_utils
 from google.protobuf.json_format import MessageToJson, Parse
 
 OUTPUT_NAME = "tridiagonal_solve_stencil"
@@ -46,115 +46,115 @@ OUTPUT_PATH = f"{OUTPUT_NAME}.cpp"
 def main(args: argparse.Namespace):
 
     # ---- First vertical region statement ----
-    interval_1 = sir_utils.make_interval(SIR.Interval.Start, SIR.Interval.End, 0, 0)
-    body_ast_1 = sir_utils.make_ast(
+    interval_1 = serial_utils.make_interval(AST.Interval.Start, AST.Interval.End, 0, 0)
+    body_ast_1 = serial_utils.make_ast(
         [
-            sir_utils.make_assignment_stmt(
-                sir_utils.make_field_access_expr("c"),
-                sir_utils.make_binary_operator(
-                    sir_utils.make_field_access_expr("c"),
+            serial_utils.make_assignment_stmt(
+                serial_utils.make_field_access_expr("c"),
+                serial_utils.make_binary_operator(
+                    serial_utils.make_field_access_expr("c"),
                     "/",
-                    sir_utils.make_field_access_expr("b"),
+                    serial_utils.make_field_access_expr("b"),
                 ),
                 "=",
             )
         ]
     )
 
-    vertical_region_stmt_1 = sir_utils.make_vertical_region_decl_stmt(
-        body_ast_1, interval_1, SIR.VerticalRegion.Forward
+    vertical_region_stmt_1 = serial_utils.make_vertical_region_decl_stmt(
+        body_ast_1, interval_1, AST.VerticalRegion.Forward
     )
 
     # ---- Second vertical region statement ----
-    interval_2 = sir_utils.make_interval(SIR.Interval.Start, SIR.Interval.End, 1, 0)
+    interval_2 = serial_utils.make_interval(AST.Interval.Start, AST.Interval.End, 1, 0)
 
-    body_ast_2 = sir_utils.make_ast(
+    body_ast_2 = serial_utils.make_ast(
         [
-            sir_utils.make_var_decl_stmt(
-                sir_utils.make_type(SIR.BuiltinType.Integer),
+            serial_utils.make_var_decl_stmt(
+                serial_utils.make_type(AST.BuiltinType.Integer),
                 "m",
                 0,
                 "=",
-                sir_utils.make_expr(
-                    sir_utils.make_binary_operator(
-                        sir_utils.make_literal_access_expr("1.0", SIR.BuiltinType.Float),
+                serial_utils.make_expr(
+                    serial_utils.make_binary_operator(
+                        serial_utils.make_literal_access_expr("1.0", AST.BuiltinType.Float),
                         "/",
-                        sir_utils.make_binary_operator(
-                            sir_utils.make_field_access_expr("b"),
+                        serial_utils.make_binary_operator(
+                            serial_utils.make_field_access_expr("b"),
                             "-",
-                            sir_utils.make_binary_operator(
-                                sir_utils.make_field_access_expr("a"),
+                            serial_utils.make_binary_operator(
+                                serial_utils.make_field_access_expr("a"),
                                 "*",
-                                sir_utils.make_field_access_expr("c", [0, 0, -1]),
+                                serial_utils.make_field_access_expr("c", [0, 0, -1]),
                             ),
                         ),
                     )
                 ),
             ),
-            sir_utils.make_assignment_stmt(
-                sir_utils.make_field_access_expr("c"),
-                sir_utils.make_binary_operator(
-                    sir_utils.make_field_access_expr("c"), "*", sir_utils.make_var_access_expr("m")
+            serial_utils.make_assignment_stmt(
+                serial_utils.make_field_access_expr("c"),
+                serial_utils.make_binary_operator(
+                    serial_utils.make_field_access_expr("c"), "*", serial_utils.make_var_access_expr("m")
                 ),
                 "=",
             ),
-            sir_utils.make_assignment_stmt(
-                sir_utils.make_field_access_expr("d"),
-                sir_utils.make_binary_operator(
-                    sir_utils.make_binary_operator(
-                        sir_utils.make_field_access_expr("d"),
+            serial_utils.make_assignment_stmt(
+                serial_utils.make_field_access_expr("d"),
+                serial_utils.make_binary_operator(
+                    serial_utils.make_binary_operator(
+                        serial_utils.make_field_access_expr("d"),
                         "-",
-                        sir_utils.make_binary_operator(
-                            sir_utils.make_field_access_expr("a"),
+                        serial_utils.make_binary_operator(
+                            serial_utils.make_field_access_expr("a"),
                             "*",
-                            sir_utils.make_field_access_expr("d", [0, 0, -1]),
+                            serial_utils.make_field_access_expr("d", [0, 0, -1]),
                         ),
                     ),
                     "*",
-                    sir_utils.make_var_access_expr("m"),
+                    serial_utils.make_var_access_expr("m"),
                 ),
                 "=",
             ),
         ]
     )
-    vertical_region_stmt_2 = sir_utils.make_vertical_region_decl_stmt(
-        body_ast_2, interval_2, SIR.VerticalRegion.Forward
+    vertical_region_stmt_2 = serial_utils.make_vertical_region_decl_stmt(
+        body_ast_2, interval_2, AST.VerticalRegion.Forward
     )
 
     # ---- Third vertical region statement ----
-    interval_3 = sir_utils.make_interval(SIR.Interval.Start, SIR.Interval.End, 0, -1)
-    body_ast_3 = sir_utils.make_ast(
+    interval_3 = serial_utils.make_interval(AST.Interval.Start, AST.Interval.End, 0, -1)
+    body_ast_3 = serial_utils.make_ast(
         [
-            sir_utils.make_assignment_stmt(
-                sir_utils.make_field_access_expr("d"),
-                sir_utils.make_binary_operator(
-                    sir_utils.make_field_access_expr("c"),
+            serial_utils.make_assignment_stmt(
+                serial_utils.make_field_access_expr("d"),
+                serial_utils.make_binary_operator(
+                    serial_utils.make_field_access_expr("c"),
                     "*",
-                    sir_utils.make_field_access_expr("d", [0, 0, 1]),
+                    serial_utils.make_field_access_expr("d", [0, 0, 1]),
                 ),
                 "-=",
             )
         ]
     )
 
-    vertical_region_stmt_3 = sir_utils.make_vertical_region_decl_stmt(
-        body_ast_3, interval_3, SIR.VerticalRegion.Backward
+    vertical_region_stmt_3 = serial_utils.make_vertical_region_decl_stmt(
+        body_ast_3, interval_3, AST.VerticalRegion.Backward
     )
 
-    sir = sir_utils.make_sir(
+    sir = serial_utils.make_sir(
         OUTPUT_FILE,
-        SIR.GridType.Value("Cartesian"),
+        AST.GridType.Value("Cartesian"),
         [
-            sir_utils.make_stencil(
+            serial_utils.make_stencil(
                 OUTPUT_NAME,
-                sir_utils.make_ast(
+                serial_utils.make_ast(
                     [vertical_region_stmt_1, vertical_region_stmt_2, vertical_region_stmt_3]
                 ),
                 [
-                    sir_utils.make_field("a", sir_utils.make_field_dimensions_cartesian()),
-                    sir_utils.make_field("b", sir_utils.make_field_dimensions_cartesian()),
-                    sir_utils.make_field("c", sir_utils.make_field_dimensions_cartesian()),
-                    sir_utils.make_field("d", sir_utils.make_field_dimensions_cartesian()),
+                    serial_utils.make_field("a", serial_utils.make_field_dimensions_cartesian()),
+                    serial_utils.make_field("b", serial_utils.make_field_dimensions_cartesian()),
+                    serial_utils.make_field("c", serial_utils.make_field_dimensions_cartesian()),
+                    serial_utils.make_field("d", serial_utils.make_field_dimensions_cartesian()),
                 ],
             )
         ],

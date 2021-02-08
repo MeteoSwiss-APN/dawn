@@ -24,7 +24,7 @@ namespace iir {
 
 void AccessToNameMapper::visit(const std::shared_ptr<ast::VarDeclStmt>& stmt) {
   insertAccessInfo(stmt);
-  ast::ASTVisitorForwarding::visit(stmt);
+  ast::ASTVisitorForwardingNonConst::visit(stmt);
 }
 
 void AccessToNameMapper::visit(const std::shared_ptr<ast::StencilFunCallExpr>& expr) {
@@ -39,7 +39,7 @@ void AccessToNameMapper::visit(const std::shared_ptr<ast::StencilFunCallExpr>& e
   curFunctionInstantiation_.top()->getAST()->accept(*this);
 
   curFunctionInstantiation_.pop();
-  ast::ASTVisitorForwarding::visit(expr);
+  ast::ASTVisitorForwardingNonConst::visit(expr);
 }
 
 void AccessToNameMapper::insertAccessInfo(const std::shared_ptr<ast::Expr>& expr) {
@@ -65,7 +65,7 @@ void AccessToNameMapper::visit(const std::shared_ptr<ast::VarAccessExpr>& expr) 
 
 void AccessToNameMapper::visit(const std::shared_ptr<ast::FieldAccessExpr>& expr) {
   insertAccessInfo(expr);
-  ASTVisitorForwarding::visit(expr);
+  ASTVisitorForwardingNonConst::visit(expr);
 }
 
 } // namespace iir

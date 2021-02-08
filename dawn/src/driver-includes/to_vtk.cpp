@@ -2,6 +2,7 @@
 
 #include "cuda_utils.hpp"
 
+#include <algorithm>
 #include <cmath>
 #include <fstream>
 #include <iostream>
@@ -35,6 +36,10 @@ public:
     const double* vlat = mesh_info_vtk.mesh_vlat;
     const double* vlon = mesh_info_vtk.mesh_vlon;
 
+    const double lat_range = *std::max_element(vlat, vlat + num_verts) - *std::min_element(vlat, vlat + num_verts);
+    const double lon_range = *std::max_element(vlon, vlon + num_verts) - *std::min_element(vlon, vlon + num_verts);
+    const double range = std::max(lat_range, lon_range);    
+
     fs.open(fname_pre + stencil_name + "_" + std::to_string(iteration) + ".vtk", std::fstream::out);
 
     fs << "# vtk DataFile Version 3.0\n2D scalar data\nASCII\nDATASET "
@@ -46,7 +51,7 @@ public:
       for(int nodeIter = 0; nodeIter < num_verts; nodeIter++) {
         double x = vlat[nodeIter];
         double y = vlon[nodeIter];
-        double z = k;
+        double z = k/((double) num_k)*range;
         fs << x << " " << y << " " << z << "\n";
       }
     }

@@ -52,5 +52,5 @@ struct Interval {
   /// @}
 };
 
-} // namespace sir
+} // namespace ast
 } // namespace dawn

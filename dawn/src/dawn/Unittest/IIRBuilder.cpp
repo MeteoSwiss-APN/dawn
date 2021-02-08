@@ -245,8 +245,8 @@ std::shared_ptr<ast::Stmt> IIRBuilder::declareVar(IIRBuilder::LocalVar& var) {
 IIRBuilder::Field CartesianIIRBuilder::field(const std::string& name, FieldType ft) {
   DAWN_ASSERT(si_);
   auto fieldMaskArray = asArray(ft);
-  sir::FieldDimensions dimensions(
-      sir::HorizontalFieldDimension{ast::cartesian,
+  ast::FieldDimensions dimensions(
+      ast::HorizontalFieldDimension{ast::cartesian,
                                     {fieldMaskArray[0] == 1, fieldMaskArray[1] == 1}},
       fieldMaskArray[2] == 1);
   int id = si_->getMetaData().addField(iir::FieldAccessType::APIField, name, std::move(dimensions));
@@ -256,8 +256,8 @@ IIRBuilder::Field CartesianIIRBuilder::field(const std::string& name, FieldType 
 IIRBuilder::Field CartesianIIRBuilder::tmpField(const std::string& name, FieldType ft) {
   DAWN_ASSERT(si_);
   auto fieldMaskArray = asArray(ft);
-  sir::FieldDimensions dimensions(
-      sir::HorizontalFieldDimension{ast::cartesian,
+  ast::FieldDimensions dimensions(
+      ast::HorizontalFieldDimension{ast::cartesian,
                                     {fieldMaskArray[0] == 1, fieldMaskArray[1] == 1}},
       fieldMaskArray[2] == 1);
   int id = si_->getMetaData().addTmpField(iir::FieldAccessType::StencilTemporary, name,
@@ -283,8 +283,8 @@ IIRBuilder::Field UnstructuredIIRBuilder::field(std::string const& name, ast::Lo
   DAWN_ASSERT(si_);
   int id = si_->getMetaData().addField(
       iir::FieldAccessType::APIField, name,
-      sir::FieldDimensions(
-          sir::HorizontalFieldDimension{ast::unstructured, location, includeCenter}, maskK));
+      ast::FieldDimensions(
+          ast::HorizontalFieldDimension{ast::unstructured, location, includeCenter}, maskK));
   return {id, name};
 }
 
@@ -294,8 +294,8 @@ IIRBuilder::Field UnstructuredIIRBuilder::field(std::string const& name,
   DAWN_ASSERT(si_);
   int id = si_->getMetaData().addField(
       iir::FieldAccessType::APIField, name,
-      sir::FieldDimensions(
-          sir::HorizontalFieldDimension{ast::unstructured, sparseChain, includeCenter}, maskK));
+      ast::FieldDimensions(
+          ast::HorizontalFieldDimension{ast::unstructured, sparseChain, includeCenter}, maskK));
   return {id, name};
 }
 
@@ -305,8 +305,8 @@ IIRBuilder::Field UnstructuredIIRBuilder::tmpField(std::string const& name,
   DAWN_ASSERT(si_);
   int id = si_->getMetaData().addField(
       iir::FieldAccessType::StencilTemporary, name,
-      sir::FieldDimensions(
-          sir::HorizontalFieldDimension{ast::unstructured, location, includeCenter}, maskK));
+      ast::FieldDimensions(
+          ast::HorizontalFieldDimension{ast::unstructured, location, includeCenter}, maskK));
   return {id, name};
 }
 
@@ -316,15 +316,15 @@ IIRBuilder::Field UnstructuredIIRBuilder::tmpField(std::string const& name,
   DAWN_ASSERT(si_);
   int id = si_->getMetaData().addField(
       iir::FieldAccessType::StencilTemporary, name,
-      sir::FieldDimensions(
-          sir::HorizontalFieldDimension{ast::unstructured, sparseChain, includeCenter}, maskK));
+      ast::FieldDimensions(
+          ast::HorizontalFieldDimension{ast::unstructured, sparseChain, includeCenter}, maskK));
   return {id, name};
 }
 
 IIRBuilder::Field UnstructuredIIRBuilder::vertical_field(std::string const& name) {
   DAWN_ASSERT(si_);
   int id =
-      si_->getMetaData().addField(iir::FieldAccessType::APIField, name, sir::FieldDimensions(true));
+      si_->getMetaData().addField(iir::FieldAccessType::APIField, name, ast::FieldDimensions(true));
   return {id, name};
 }
 

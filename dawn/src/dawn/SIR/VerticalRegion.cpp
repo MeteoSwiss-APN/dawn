@@ -7,7 +7,7 @@ namespace dawn {
 
 namespace {
 /// @brief Allow direct comparison of the Stmts of an AST
-class DiffWriter final : public ast::ASTVisitorForwarding {
+class DiffWriter final : public ast::ASTVisitorForwardingNonConst {
 public:
   virtual void visit(const std::shared_ptr<ast::VerticalRegionDeclStmt>& stmt) override {
     statements_.push_back(stmt);
@@ -16,27 +16,27 @@ public:
 
   virtual void visit(const std::shared_ptr<ast::ReturnStmt>& stmt) override {
     statements_.push_back(stmt);
-    ast::ASTVisitorForwarding::visit(stmt);
+    ast::ASTVisitorForwardingNonConst::visit(stmt);
   }
 
   virtual void visit(const std::shared_ptr<ast::ExprStmt>& stmt) override {
     statements_.push_back(stmt);
-    ast::ASTVisitorForwarding::visit(stmt);
+    ast::ASTVisitorForwardingNonConst::visit(stmt);
   }
 
   virtual void visit(const std::shared_ptr<ast::BlockStmt>& stmt) override {
     statements_.push_back(stmt);
-    ast::ASTVisitorForwarding::visit(stmt);
+    ast::ASTVisitorForwardingNonConst::visit(stmt);
   }
 
   virtual void visit(const std::shared_ptr<ast::VarDeclStmt>& stmt) override {
     statements_.push_back(stmt);
-    ast::ASTVisitorForwarding::visit(stmt);
+    ast::ASTVisitorForwardingNonConst::visit(stmt);
   }
 
   virtual void visit(const std::shared_ptr<ast::IfStmt>& stmt) override {
     statements_.push_back(stmt);
-    ast::ASTVisitorForwarding::visit(stmt);
+    ast::ASTVisitorForwardingNonConst::visit(stmt);
   }
 
   std::vector<std::shared_ptr<ast::Stmt>> getStatements() const { return statements_; }

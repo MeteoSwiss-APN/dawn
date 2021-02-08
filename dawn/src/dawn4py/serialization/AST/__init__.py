@@ -13,11 +13,9 @@
 ##
 ##===------------------------------------------------------------------------------------------===##
 
-"""
-Python serialization tools for SIR and IIR.
-"""
+import sys
 
-from . import AST, SIR, IIR
+sys.modules[__name__.split(".")[-1]] = sys.modules[__name__]
 
-from .utils import *
-from .error import *
+from .statements_pb2 import *
+from .enums_pb2 import *

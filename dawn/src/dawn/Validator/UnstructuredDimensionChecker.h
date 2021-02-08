@@ -28,7 +28,7 @@ namespace dawn {
 class UnstructuredDimensionChecker {
 
 private:
-  class UnstructuredDimensionCheckerImpl : public ast::ASTVisitorForwarding {
+  class UnstructuredDimensionCheckerImpl : public ast::ASTVisitorForwardingNonConst {
   public:
     enum class checkType { runOnIIR, runOnSIR };
     struct UnstructuredDimensionCheckerConfig {
@@ -38,8 +38,8 @@ private:
     };
 
   private:
-    std::optional<sir::FieldDimensions> curDimensions_;
-    const std::unordered_map<std::string, sir::FieldDimensions> nameToDimensions_;
+    std::optional<ast::FieldDimensions> curDimensions_;
+    const std::unordered_map<std::string, ast::FieldDimensions> nameToDimensions_;
     const std::unordered_map<int, std::string> idToNameMap_;
     const std::unordered_map<int, iir::LocalVariableData> idToLocalVariableData_;
     bool dimensionsConsistent_ = true;
@@ -47,8 +47,8 @@ private:
     UnstructuredDimensionCheckerConfig config_;
     checkType checkType_ = checkType::runOnIIR;
 
-    void checkBinaryOpUnstructured(const sir::FieldDimensions& left,
-                                   const sir::FieldDimensions& right);
+    void checkBinaryOpUnstructured(const ast::FieldDimensions& left,
+                                   const ast::FieldDimensions& right);
 
   public:
     void visit(const std::shared_ptr<ast::FieldAccessExpr>& stmt) override;
@@ -68,18 +68,18 @@ private:
     bool hasHorizontalDimensions() const {
       return hasDimensions() && !curDimensions_->isVertical();
     };
-    const sir::FieldDimensions& getDimensions() const;
+    const ast::FieldDimensions& getDimensions() const;
 
     // This constructor is used when the check is performed on the SIR. In this case, each
     // Field is uniquely identified by its name
     UnstructuredDimensionCheckerImpl(
-        const std::unordered_map<std::string, sir::FieldDimensions> nameToDimensionsMap,
+        const std::unordered_map<std::string, ast::FieldDimensions> nameToDimensionsMap,
         UnstructuredDimensionCheckerConfig = UnstructuredDimensionCheckerConfig());
     // This constructor is used when the check is performed from IIR. In this case, the fields may
     // have been renamed if stencils had to be merged. Hence, an additional map with key AccessID is
     // needed
     UnstructuredDimensionCheckerImpl(
-        const std::unordered_map<std::string, sir::FieldDimensions> nameToDimensionsMap,
+        const std::unordered_map<std::string, ast::FieldDimensions> nameToDimensionsMap,
         const std::unordered_map<int, std::string> idToNameMap,
         const std::unordered_map<int, iir::LocalVariableData> idToLocalVariableData,
         UnstructuredDimensionCheckerConfig = UnstructuredDimensionCheckerConfig());

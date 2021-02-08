@@ -61,6 +61,7 @@ public:
   };
 
   using StmtRangeType = MutableArrayRef<std::shared_ptr<Stmt>>;
+  using StmtRangeTypeConst = ArrayRef<std::shared_ptr<Stmt>>;
 
   /// @name Constructor & Destructor
   /// @{
@@ -75,7 +76,7 @@ public:
   /// @}
 
   /// @brief Hook for Visitors
-  virtual void accept(ASTVisitor& visitor) = 0;
+  virtual void accept(ASTVisitor& visitor) const = 0;
   virtual void accept(ASTVisitorNonConst& visitor) = 0;
   virtual std::shared_ptr<Stmt> acceptAndReplace(ASTVisitorPostOrder& visitor) = 0;
 
@@ -111,6 +112,7 @@ public:
 
   /// @brief Iterate children (if any)
   virtual StmtRangeType getChildren() { return StmtRangeType(); }
+  virtual StmtRangeTypeConst getChildren() const { return StmtRangeTypeConst(); }
 
   virtual void replaceChildren(std::shared_ptr<Stmt> const& oldStmt,
                                std::shared_ptr<Stmt> const& newStmt) {}
@@ -227,6 +229,7 @@ public:
   virtual bool equals(const Stmt* other, bool compareData = true) const override;
   static bool classof(const Stmt* stmt) { return stmt->getKind() == Kind::BlockStmt; }
   virtual StmtRangeType getChildren() override { return StmtRangeType(statements_); }
+  virtual StmtRangeTypeConst getChildren() const override { return StmtRangeTypeConst(statements_); }
   virtual void replaceChildren(const std::shared_ptr<Stmt>& oldStmt,
                                const std::shared_ptr<Stmt>& newStmt) override;
 
@@ -505,6 +508,9 @@ public:
   virtual StmtRangeType getChildren() override {
     return hasElse() ? StmtRangeType(subStmts_) : StmtRangeType(&subStmts_[0], End - 1);
   }
+  virtual StmtRangeTypeConst getChildren() const override {
+    return hasElse() ? StmtRangeTypeConst(subStmts_) : StmtRangeTypeConst(&subStmts_[0], End - 1);
+  }
   virtual void replaceChildren(const std::shared_ptr<Stmt>& oldStmt,
                                const std::shared_ptr<Stmt>& newStmt) override;
   ACCEPTVISITOR(Stmt, IfStmt)
@@ -555,6 +561,7 @@ public:
   bool equals(const Stmt* other, bool compareData = true) const override;
   static bool classof(const Stmt* stmt) { return stmt->getKind() == Kind::LoopStmt; }
   virtual StmtRangeType getChildren() override;
+  virtual StmtRangeTypeConst getChildren() const override;
   virtual void replaceChildren(const std::shared_ptr<Stmt>& oldStmt,
                                const std::shared_ptr<Stmt>& newStmt) override;
 

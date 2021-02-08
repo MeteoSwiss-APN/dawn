@@ -13,10 +13,10 @@
 //===------------------------------------------------------------------------------------------===//
 #include "dawn/IIR/StencilInstantiation.h"
 #include "dawn/AST/ASTStringifier.h"
+#include "dawn/AST/ASTVisitor.h"
 #include "dawn/AST/LocationType.h"
 #include "dawn/IIR/AST.h"
 #include "dawn/IIR/ASTExpr.h"
-#include "dawn/AST/ASTVisitor.h"
 #include "dawn/IIR/Extents.h"
 #include "dawn/IIR/IIRNodeIterator.h"
 #include "dawn/SIR/SIR.h"
@@ -125,7 +125,7 @@ namespace {
 
 /// @brief Get the orignal name of the field (or variable) given by AccessID and a list of
 /// SourceLocations where this field (or variable) was accessed.
-class OriginalNameGetter : public ast::ASTVisitorForwarding {
+class OriginalNameGetter : public ast::ASTVisitorForwardingNonConst {
   const int AccessID_;
   const bool captureLocation_;
 

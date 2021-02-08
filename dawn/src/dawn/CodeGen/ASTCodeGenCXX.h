@@ -24,7 +24,7 @@ namespace codegen {
 
 /// @brief Abstract base class of all C++ code generation visitor
 /// @ingroup codegen
-class ASTCodeGenCXX : public ast::ASTVisitor, public NonCopyable {
+class ASTCodeGenCXX : public ast::ASTVisitorNonConst, public NonCopyable {
 protected:
   /// Indent of each statement
   int indent_;

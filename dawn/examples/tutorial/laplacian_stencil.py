@@ -34,7 +34,7 @@ import os
 
 import dawn4py
 from dawn4py.serialization import SIR
-from dawn4py.serialization import utils as sir_utils
+from dawn4py.serialization import utils as serial_utils
 
 OUTPUT_NAME = "laplacian_stencil"
 OUTPUT_FILE = f"{OUTPUT_NAME}_from_python.cpp"
@@ -42,42 +42,42 @@ OUTPUT_PATH = os.path.join(os.path.dirname(__file__), OUTPUT_FILE)
 
 
 def main(args: argparse.Namespace):
-    interval = sir_utils.make_interval(SIR.Interval.Start, SIR.Interval.End, 0, 0)
+    interval = serial_utils.make_interval(SIR.Interval.Start, SIR.Interval.End, 0, 0)
 
     # create the laplace statement
-    body_ast = sir_utils.make_ast(
+    body_ast = serial_utils.make_ast(
         [
-            sir_utils.make_assignment_stmt(
-                sir_utils.make_field_access_expr("out", [0, 0, 0]),
-                sir_utils.make_binary_operator(
-                    sir_utils.make_binary_operator(
-                        sir_utils.make_binary_operator(
-                            sir_utils.make_field_access_expr("in", [0, 0, 0]),
+            serial_utils.make_assignment_stmt(
+                serial_utils.make_field_access_expr("out", [0, 0, 0]),
+                serial_utils.make_binary_operator(
+                    serial_utils.make_binary_operator(
+                        serial_utils.make_binary_operator(
+                            serial_utils.make_field_access_expr("in", [0, 0, 0]),
                             "*",
-                            sir_utils.make_literal_access_expr(
-                                "-4.0", sir_utils.BuiltinType.Float
+                            serial_utils.make_literal_access_expr(
+                                "-4.0", serial_utils.BuiltinType.Float
                             ),
                         ),
                         "+",
-                        sir_utils.make_binary_operator(
-                            sir_utils.make_field_access_expr("in", [1, 0, 0]),
+                        serial_utils.make_binary_operator(
+                            serial_utils.make_field_access_expr("in", [1, 0, 0]),
                             "+",
-                            sir_utils.make_binary_operator(
-                                sir_utils.make_field_access_expr("in", [-1, 0, 0]),
+                            serial_utils.make_binary_operator(
+                                serial_utils.make_field_access_expr("in", [-1, 0, 0]),
                                 "+",
-                                sir_utils.make_binary_operator(
-                                    sir_utils.make_field_access_expr("in", [0, 1, 0]),
+                                serial_utils.make_binary_operator(
+                                    serial_utils.make_field_access_expr("in", [0, 1, 0]),
                                     "+",
-                                    sir_utils.make_field_access_expr("in", [0, -1, 0]),
+                                    serial_utils.make_field_access_expr("in", [0, -1, 0]),
                                 ),
                             ),
                         ),
                     ),
                     "/",
-                    sir_utils.make_binary_operator(
-                        sir_utils.make_var_access_expr("dx", is_external=True),
+                    serial_utils.make_binary_operator(
+                        serial_utils.make_var_access_expr("dx", is_external=True),
                         "*",
-                        sir_utils.make_var_access_expr("dx", is_external=True),
+                        serial_utils.make_var_access_expr("dx", is_external=True),
                     ),
                 ),
                 "=",
@@ -85,23 +85,23 @@ def main(args: argparse.Namespace):
         ]
     )
 
-    vertical_region_stmt = sir_utils.make_vertical_region_decl_stmt(
+    vertical_region_stmt = serial_utils.make_vertical_region_decl_stmt(
         body_ast, interval, SIR.VerticalRegion.Forward
     )
 
-    stencils_globals = sir_utils.GlobalVariableMap()
+    stencils_globals = serial_utils.GlobalVariableMap()
     stencils_globals.map["dx"].double_value = 0.0
 
-    sir = sir_utils.make_sir(
+    sir = serial_utils.make_sir(
         OUTPUT_FILE,
         SIR.GridType.Value("Cartesian"),
         [
-            sir_utils.make_stencil(
+            serial_utils.make_stencil(
                 OUTPUT_NAME,
-                sir_utils.make_ast([vertical_region_stmt]),
+                serial_utils.make_ast([vertical_region_stmt]),
                 [
-                    sir_utils.make_field("out", sir_utils.make_field_dimensions_cartesian()),
-                    sir_utils.make_field("in", sir_utils.make_field_dimensions_cartesian()),
+                    serial_utils.make_field("out", serial_utils.make_field_dimensions_cartesian()),
+                    serial_utils.make_field("in", serial_utils.make_field_dimensions_cartesian()),
                 ],
             )
         ],
@@ -110,11 +110,11 @@ def main(args: argparse.Namespace):
 
     # print the SIR
     if args.verbose:
-        sir_utils.pprint(sir)
+        serial_utils.pprint(sir)
 
     # serialize the SIR to file
     sir_file = open("./laplacian_stencil_from_python.sir", "wb")
-    sir_file.write(sir_utils.to_json(sir))
+    sir_file.write(serial_utils.to_json(sir))
     sir_file.close()
 
     # compile

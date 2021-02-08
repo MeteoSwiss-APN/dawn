@@ -108,7 +108,7 @@ public:
   /// @brief Get a map from field name to its dimensions for each field referenced in the DoMethod
   ///
   /// The fields are computed during `DoMethod::update`.
-  const std::unordered_map<std::string, sir::FieldDimensions> getFieldDimensionsByName() const;
+  const std::unordered_map<std::string, ast::FieldDimensions> getFieldDimensionsByName() const;
 
   bool hasField(int accessID) const { return derivedInfo_.fields_.count(accessID); }
 

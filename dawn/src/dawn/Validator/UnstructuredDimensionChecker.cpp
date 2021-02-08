@@ -12,8 +12,8 @@
 
 namespace dawn {
 
-static const sir::UnstructuredFieldDimension& getUnstructuredDim(const sir::FieldDimensions& dims) {
-  return sir::dimension_cast<const sir::UnstructuredFieldDimension&>(
+static const ast::UnstructuredFieldDimension& getUnstructuredDim(const ast::FieldDimensions& dims) {
+  return ast::dimension_cast<const ast::UnstructuredFieldDimension&>(
       dims.getHorizontalFieldDimension());
 }
 
@@ -38,7 +38,7 @@ UnstructuredDimensionChecker::ConsistencyResult
 UnstructuredDimensionChecker::checkDimensionsConsistency(const dawn::SIR& SIR) {
   // check type consistency of stencil functions
   for(auto const& stenFunIt : SIR.StencilFunctions) {
-    std::unordered_map<std::string, sir::FieldDimensions> argumentFieldDimensions;
+    std::unordered_map<std::string, ast::FieldDimensions> argumentFieldDimensions;
     for(const auto& arg : stenFunIt->Args) {
       if(arg->Kind == sir::StencilFunctionArg::ArgumentKind::Field) {
         const auto* argField = static_cast<sir::Field*>(arg.get());
@@ -60,7 +60,7 @@ UnstructuredDimensionChecker::checkDimensionsConsistency(const dawn::SIR& SIR) {
   // check type consistency of stencils
   for(const auto& stencil : SIR.Stencils) {
     DAWN_ASSERT(stencil);
-    std::unordered_map<std::string, sir::FieldDimensions> stencilFieldDims;
+    std::unordered_map<std::string, ast::FieldDimensions> stencilFieldDims;
     for(const auto& field : stencil->Fields) {
       stencilFieldDims.insert({field->Name, field->Dimensions});
     }
@@ -103,14 +103,14 @@ UnstructuredDimensionChecker::checkStageLocTypeConsistency(
 }
 
 UnstructuredDimensionChecker::UnstructuredDimensionCheckerImpl::UnstructuredDimensionCheckerImpl(
-    const std::unordered_map<std::string, sir::FieldDimensions> nameToDimensionsMap,
+    const std::unordered_map<std::string, ast::FieldDimensions> nameToDimensionsMap,
     UnstructuredDimensionCheckerConfig config)
     : nameToDimensions_(nameToDimensionsMap), config_(config) {
   checkType_ = checkType::runOnSIR;
 }
 
 UnstructuredDimensionChecker::UnstructuredDimensionCheckerImpl::UnstructuredDimensionCheckerImpl(
-    const std::unordered_map<std::string, sir::FieldDimensions> nameToDimensionsMap,
+    const std::unordered_map<std::string, ast::FieldDimensions> nameToDimensionsMap,
     const std::unordered_map<int, std::string> idToNameMap,
     const std::unordered_map<int, iir::LocalVariableData> idToLocalVariableData,
     UnstructuredDimensionCheckerConfig config)
@@ -119,7 +119,7 @@ UnstructuredDimensionChecker::UnstructuredDimensionCheckerImpl::UnstructuredDime
   checkType_ = checkType::runOnIIR;
 }
 
-const sir::FieldDimensions&
+const ast::FieldDimensions&
 UnstructuredDimensionChecker::UnstructuredDimensionCheckerImpl::getDimensions() const {
   DAWN_ASSERT(hasDimensions());
   return curDimensions_.value();
@@ -183,16 +183,16 @@ void UnstructuredDimensionChecker::UnstructuredDimensionCheckerImpl::setCurDimen
     return;
     break;
   case iir::LocalVariableType::OnCells:
-    curDimensions_ = sir::FieldDimensions(
-        sir::HorizontalFieldDimension{ast::unstructured, ast::LocationType::Cells}, true);
+    curDimensions_ = ast::FieldDimensions(
+        ast::HorizontalFieldDimension{ast::unstructured, ast::LocationType::Cells}, true);
     break;
   case iir::LocalVariableType::OnEdges:
-    curDimensions_ = sir::FieldDimensions(
-        sir::HorizontalFieldDimension{ast::unstructured, ast::LocationType::Edges}, true);
+    curDimensions_ = ast::FieldDimensions(
+        ast::HorizontalFieldDimension{ast::unstructured, ast::LocationType::Edges}, true);
     break;
   case iir::LocalVariableType::OnVertices:
-    curDimensions_ = sir::FieldDimensions(
-        sir::HorizontalFieldDimension{ast::unstructured, ast::LocationType::Vertices}, true);
+    curDimensions_ = ast::FieldDimensions(
+        ast::HorizontalFieldDimension{ast::unstructured, ast::LocationType::Vertices}, true);
     break;
   default:
     break;
@@ -234,7 +234,7 @@ void UnstructuredDimensionChecker::UnstructuredDimensionCheckerImpl::visit(
 
 void UnstructuredDimensionChecker::UnstructuredDimensionCheckerImpl::visit(
     const std::shared_ptr<ast::Stmt>& stmt) {
-  std::optional<sir::FieldDimensions> prevDims = curDimensions_;
+  std::optional<ast::FieldDimensions> prevDims = curDimensions_;
   for(auto& s : stmt->getChildren()) {
     s->accept(*this);
     if(isConsistent() && hasHorizontalDimensions()) {
@@ -249,7 +249,7 @@ void UnstructuredDimensionChecker::UnstructuredDimensionCheckerImpl::visit(
     return;
 }
 
-static bool checkAgainstChain(const sir::UnstructuredFieldDimension& dim,
+static bool checkAgainstChain(const ast::UnstructuredFieldDimension& dim,
                               const ast::UnstructuredIterationSpace& space) {
   if(dim.isDense()) {
     return dim.getDenseLocationType() == space.Chain.back() ||
@@ -260,7 +260,7 @@ static bool checkAgainstChain(const sir::UnstructuredFieldDimension& dim,
 }
 
 void UnstructuredDimensionChecker::UnstructuredDimensionCheckerImpl::checkBinaryOpUnstructured(
-    const sir::FieldDimensions& left, const sir::FieldDimensions& right) {
+    const ast::FieldDimensions& left, const ast::FieldDimensions& right) {
   const auto& unstructuredDimLeft = getUnstructuredDim(left);
   const auto& unstructuredDimRight = getUnstructuredDim(right);
 
@@ -527,8 +527,8 @@ void UnstructuredDimensionChecker::UnstructuredDimensionCheckerImpl::visit(
   }
 
   // the reduce over neighbors concept imposes a type on the left hand side
-  curDimensions_ = sir::FieldDimensions(
-      sir::HorizontalFieldDimension(ast::unstructured, reductionExpr->getLhsLocation()),
+  curDimensions_ = ast::FieldDimensions(
+      ast::HorizontalFieldDimension(ast::unstructured, reductionExpr->getLhsLocation()),
       ops.hasHorizontalDimensions() ? ops.getDimensions().K() : false);
 }
 

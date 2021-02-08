@@ -157,7 +157,7 @@ void IntegrityChecker::visit(const std::shared_ptr<ast::FieldAccessExpr>& expr) 
     throw SemanticError("Attempting to read with vertical offset from horizontal field!");
   }
 
-  ast::ASTVisitorForwarding::visit(expr);
+  ast::ASTVisitorForwardingNonConst::visit(expr);
 
   curDimensions_ = metadata_.getFieldDimensions(accessID).numSpatialDimensions();
 }
