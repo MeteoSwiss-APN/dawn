@@ -519,8 +519,8 @@ bool ReductionOverNeighborExpr::equals(const Expr* other, bool compareData) cons
          otherPtr->iterSpace_ == iterSpace_;
 }
 
-bool ReductionOverNeighborExpr::is_arithmetic() const {
-  return any_of(ast::ReductionOverNeighborExpr::arithmetic_ops,
+bool ReductionOverNeighborExpr::isArithmetic() const {
+  return any_of(ast::ReductionOverNeighborExpr::arithmeticOps,
                  [&](std::string op) { return op_ == op; });
 }
 
