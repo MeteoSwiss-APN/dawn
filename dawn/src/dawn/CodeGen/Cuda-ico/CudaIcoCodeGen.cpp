@@ -955,18 +955,6 @@ void CudaIcoCodeGen::generateAllAPIVerifyFunctions(
       dawn_unreachable("invalid location type");
     }
   };
-  auto getStride = [&](const ast::UnstructuredFieldDimension& unstrDims) -> std::string {
-    auto lt = unstrDims.getDenseLocationType();
-    std::string denseSize =
-        locToDenseSizeStringGpuMesh(lt, codeGenOptions.UnstrPadding, /*addParens*/ false);
-    std::string stride = "mesh." + denseSize;
-    if(unstrDims.isSparse()) {
-      std::string sparseSize = chainToSparseSizeString(unstrDims.getIterSpace());
-      stride = "(mesh." + denseSize + ") * " + "dawn_generated::cuda_ico::" + wrapperName +
-               "::" + sparseSize;
-    }
-    return stride;
-  };
 
   std::stringstream verifySS, runAndVerifySS;
 
