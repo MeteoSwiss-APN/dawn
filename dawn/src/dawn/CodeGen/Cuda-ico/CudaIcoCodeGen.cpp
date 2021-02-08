@@ -1482,10 +1482,8 @@ generateF90InterfaceSI(FortranInterfaceModuleGen& fimGen,
           ,
           stencilInstantiation->getMetaData().getFieldDimensions(fieldID).rank());
     }
-    for(auto fieldID : stencilInstantiation->getMetaData().getAPIFields()) {
-      if(includeOuts && (stencils[0]->getFields().at(fieldID).field.getIntend() ==
-                              dawn::iir::Field::IntendKind::InputOutput || stencils[0]->getFields().at(fieldID).field.getIntend() ==
-                              dawn::iir::Field::IntendKind::Output)) {
+    if(includeOuts) {
+       for(auto fieldID : getUsedFields(stencil, {dawn::iir::Field::IntendKind::Output, dawn::iir::Field::IntendKind::InputOutput}) {
         api.addArg(
             stencilInstantiation->getMetaData().getNameFromAccessID(fieldID) + "_before",
             FortranAPI::InterfaceType::DOUBLE /* Unfortunately we need to know at codegen
