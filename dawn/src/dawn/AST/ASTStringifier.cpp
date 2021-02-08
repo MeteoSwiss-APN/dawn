@@ -37,7 +37,7 @@ public:
   StringVisitor(int initialIndent, bool newLines)
       : curIndent_(initialIndent), scopeDepth_(0), newLines_(newLines) {}
 
-  void visit(const std::shared_ptr<BlockStmt>& stmt) override {
+  void visit(const std::shared_ptr<const BlockStmt>& stmt) override {
     scopeDepth_++;
     ss_ << std::string(curIndent_, ' ') << "{" << (newLines_ ? "\n" : "");
 
@@ -55,14 +55,14 @@ public:
     scopeDepth_--;
   }
 
-  void visit(const std::shared_ptr<LoopStmt>& stmt) override {
+  void visit(const std::shared_ptr<const LoopStmt>& stmt) override {
     scopeDepth_++;
     ss_ << "for (" << stmt->getIterationDescr().toString() << ")\n";
     stmt->getBlockStmt()->accept(*this);
     scopeDepth_--;
   }
 
-  void visit(const std::shared_ptr<ExprStmt>& stmt) override {
+  void visit(const std::shared_ptr<const ExprStmt>& stmt) override {
     if(scopeDepth_ == 0)
       ss_ << std::string(curIndent_, ' ');
 
@@ -70,7 +70,7 @@ public:
     ss_ << ";" << (newLines_ ? "\n" : "");
   }
 
-  void visit(const std::shared_ptr<ReturnStmt>& stmt) override {
+  void visit(const std::shared_ptr<const ReturnStmt>& stmt) override {
     if(scopeDepth_ == 0)
       ss_ << std::string(curIndent_, ' ');
 
@@ -79,7 +79,7 @@ public:
     ss_ << ";" << (newLines_ ? "\n" : "");
   }
 
-  void visit(const std::shared_ptr<VarDeclStmt>& stmt) override {
+  void visit(const std::shared_ptr<const VarDeclStmt>& stmt) override {
     if(scopeDepth_ == 0)
       ss_ << std::string(curIndent_, ' ');
 
@@ -104,7 +104,7 @@ public:
     ss_ << ";" << (newLines_ ? "\n" : "");
   }
 
-  virtual void visit(const std::shared_ptr<VerticalRegionDeclStmt>& stmt) override {
+  virtual void visit(const std::shared_ptr<const VerticalRegionDeclStmt>& stmt) override {
     if(scopeDepth_ == 0)
       ss_ << std::string(curIndent_, ' ');
 
@@ -129,7 +129,7 @@ public:
     ss_ << ASTStringifier::toString(*stmt->getVerticalRegion()->Ast, curIndent_);
   }
 
-  virtual void visit(const std::shared_ptr<StencilCallDeclStmt>& stmt) override {
+  virtual void visit(const std::shared_ptr<const StencilCallDeclStmt>& stmt) override {
     if(scopeDepth_ == 0)
       ss_ << std::string(curIndent_, ' ');
     ss_ << "stencil-call:";
@@ -139,7 +139,7 @@ public:
     ss_ << ";" << (newLines_ ? "\n" : "");
   }
 
-  virtual void visit(const std::shared_ptr<BoundaryConditionDeclStmt>& stmt) override {
+  virtual void visit(const std::shared_ptr<const BoundaryConditionDeclStmt>& stmt) override {
     if(scopeDepth_ == 0)
       ss_ << std::string(curIndent_, ' ');
     ss_ << "boundary-condition:";
@@ -148,7 +148,7 @@ public:
     ss_ << ";" << (newLines_ ? "\n" : "");
   }
 
-  void visit(const std::shared_ptr<IfStmt>& stmt) override {
+  void visit(const std::shared_ptr<const IfStmt>& stmt) override {
     if(scopeDepth_ == 0)
       ss_ << std::string(curIndent_, ' ');
     ss_ << "if(";
@@ -161,7 +161,7 @@ public:
       stmt->getElseStmt()->accept(*this);
     }
   }
-  void visit(const std::shared_ptr<ReductionOverNeighborExpr>& expr) override {
+  void visit(const std::shared_ptr<const ReductionOverNeighborExpr>& expr) override {
     auto getLocationTypeString = [](ast::LocationType type) {
       switch(type) {
       case ast::LocationType::Cells:
@@ -192,14 +192,14 @@ public:
     expr->getRhs()->accept(*this);
   }
 
-  void visit(const std::shared_ptr<UnaryOperator>& expr) override {
+  void visit(const std::shared_ptr<const UnaryOperator>& expr) override {
     ss_ << "(";
     ss_ << expr->getOp();
     expr->getOperand()->accept(*this);
     ss_ << ")";
   }
 
-  void visit(const std::shared_ptr<BinaryOperator>& expr) override {
+  void visit(const std::shared_ptr<const BinaryOperator>& expr) override {
     ss_ << "(";
     expr->getLeft()->accept(*this);
     ss_ << " " << expr->getOp() << " ";
@@ -207,13 +207,13 @@ public:
     ss_ << ")";
   }
 
-  void visit(const std::shared_ptr<AssignmentExpr>& expr) override {
+  void visit(const std::shared_ptr<const AssignmentExpr>& expr) override {
     expr->getLeft()->accept(*this);
     ss_ << " " << expr->getOp() << " ";
     expr->getRight()->accept(*this);
   }
 
-  void visit(const std::shared_ptr<TernaryOperator>& expr) override {
+  void visit(const std::shared_ptr<const TernaryOperator>& expr) override {
     ss_ << "(";
     expr->getCondition()->accept(*this);
     ss_ << " " << expr->getOp() << " ";
@@ -223,7 +223,7 @@ public:
     ss_ << ")";
   }
 
-  void visit(const std::shared_ptr<FunCallExpr>& expr) override {
+  void visit(const std::shared_ptr<const FunCallExpr>& expr) override {
     ss_ << "fun-call:" << expr->getCallee() << "(";
     for(std::size_t i = 0; i < expr->getArguments().size(); ++i) {
       expr->getArguments()[i]->accept(*this);
@@ -231,7 +231,7 @@ public:
     }
   }
 
-  void visit(const std::shared_ptr<StencilFunCallExpr>& expr) override {
+  void visit(const std::shared_ptr<const StencilFunCallExpr>& expr) override {
     ss_ << "stencil-fun-call:" << expr->getCallee() << "(";
     for(std::size_t i = 0; i < expr->getArguments().size(); ++i) {
       expr->getArguments()[i]->accept(*this);
@@ -239,7 +239,7 @@ public:
     }
   }
 
-  void visit(const std::shared_ptr<StencilFunArgExpr>& expr) override {
+  void visit(const std::shared_ptr<const StencilFunArgExpr>& expr) override {
     if(!expr->needsLazyEval()) {
       switch(expr->getDimension()) {
       case 0:
@@ -261,7 +261,7 @@ public:
       ss_ << (expr->getOffset() > 0 ? "+" : "") << expr->getOffset();
   }
 
-  void visit(const std::shared_ptr<VarAccessExpr>& expr) override {
+  void visit(const std::shared_ptr<const VarAccessExpr>& expr) override {
     ss_ << expr->getName();
     if(expr->isArrayAccess()) {
       ss_ << "[";
@@ -270,7 +270,7 @@ public:
     }
   }
 
-  void visit(const std::shared_ptr<FieldAccessExpr>& expr) override {
+  void visit(const std::shared_ptr<const FieldAccessExpr>& expr) override {
     auto offset = expr->getOffset();
 
     if(!expr->hasArguments()) {
@@ -298,7 +298,7 @@ public:
     }
   }
 
-  void visit(const std::shared_ptr<LiteralAccessExpr>& expr) override {
+  void visit(const std::shared_ptr<const LiteralAccessExpr>& expr) override {
     ss_ << expr->getBuiltinType() << " " << expr->getValue();
   }
 

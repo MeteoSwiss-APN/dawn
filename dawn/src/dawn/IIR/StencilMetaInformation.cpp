@@ -331,7 +331,7 @@ bool StencilMetaInformation::isFieldType(FieldAccessType accessType) const {
          accessType == FieldAccessType::InterStencilTemporary;
 }
 
-sir::FieldDimensions StencilMetaInformation::getFieldDimensions(int fieldID) const {
+ast::FieldDimensions StencilMetaInformation::getFieldDimensions(int fieldID) const {
   if(isAccessIDAVersion(fieldID)) {
     fieldID = getOriginalVersionOfAccessID(fieldID);
   }
@@ -341,7 +341,7 @@ sir::FieldDimensions StencilMetaInformation::getFieldDimensions(int fieldID) con
 }
 
 void StencilMetaInformation::setFieldDimensions(int fieldID,
-                                                sir::FieldDimensions&& fieldDimensions) {
+                                                ast::FieldDimensions&& fieldDimensions) {
   fieldIDToInitializedDimensionsMap_.emplace(fieldID, std::move(fieldDimensions));
 }
 
@@ -367,7 +367,7 @@ void StencilMetaInformation::addAccessIDNamePair(int accessID, const std::string
 }
 
 int StencilMetaInformation::addField(FieldAccessType type, const std::string& name,
-                                     sir::FieldDimensions&& fieldDimensions,
+                                     ast::FieldDimensions&& fieldDimensions,
                                      std::optional<int> accessID) {
   if(!accessID.has_value()) {
     accessID = UIDGenerator::getInstance()->get();
@@ -382,7 +382,7 @@ int StencilMetaInformation::addField(FieldAccessType type, const std::string& na
 }
 
 int StencilMetaInformation::addTmpField(FieldAccessType type, const std::string& basename,
-                                        sir::FieldDimensions&& fieldDimensions,
+                                        ast::FieldDimensions&& fieldDimensions,
                                         std::optional<int> accessID) {
   if(!accessID.has_value()) {
     accessID = UIDGenerator::getInstance()->get();
@@ -405,10 +405,10 @@ ast::LocationType StencilMetaInformation::getDenseLocationTypeFromAccessID(int A
     AccessID = fieldAccessMetadata_.variableVersions_.getOriginalVersionOfAccessID(AccessID);
   }
   DAWN_ASSERT_MSG(
-      sir::dimension_isa<sir::UnstructuredFieldDimension>(
+      ast::dimension_isa<ast::UnstructuredFieldDimension>(
           fieldIDToInitializedDimensionsMap_.at(AccessID).getHorizontalFieldDimension()),
       "Location type requested for Cartesian dimension");
-  const auto& dim = sir::dimension_cast<sir::UnstructuredFieldDimension const&>(
+  const auto& dim = ast::dimension_cast<ast::UnstructuredFieldDimension const&>(
       fieldIDToInitializedDimensionsMap_.at(AccessID).getHorizontalFieldDimension());
   return dim.getDenseLocationType();
 }

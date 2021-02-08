@@ -397,7 +397,7 @@ void FieldAccessExpr::setPureOffset(const Offsets& offset) {
   argumentOffset_ = Array3i{{0, 0, 0}};
 }
 
-ArrayRef<std::shared_ptr<Expr>> FieldAccessExpr::getChildren() {
+ArrayRef<std::shared_ptr<Expr>> FieldAccessExpr::getChildren() const {
   if(offset_.hasVerticalIndirection()) {
     return ExprRangeType(offset_.getVerticalIndirectionFieldAsExpr());
   }
@@ -493,7 +493,7 @@ std::shared_ptr<Expr> ReductionOverNeighborExpr::clone() const {
   return std::make_shared<ReductionOverNeighborExpr>(*this);
 }
 
-ArrayRef<std::shared_ptr<Expr>> ReductionOverNeighborExpr::getChildren() {
+ArrayRef<std::shared_ptr<Expr>> ReductionOverNeighborExpr::getChildren() const {
   return ExprRangeType(operands_);
 } // namespace ast
 
@@ -517,6 +517,11 @@ bool ReductionOverNeighborExpr::equals(const Expr* other, bool compareData) cons
   return otherPtr && otherPtr->getInit()->equals(getInit().get(), compareData) &&
          otherPtr->getOp() == getOp() && otherPtr->getRhs()->equals(getRhs().get(), compareData) &&
          otherPtr->iterSpace_ == iterSpace_;
+}
+
+bool ReductionOverNeighborExpr::isArithmetic() const {
+  return any_of(ast::ReductionOverNeighborExpr::arithmeticOps,
+                 [&](std::string op) { return op_ == op; });
 }
 
 } // namespace ast

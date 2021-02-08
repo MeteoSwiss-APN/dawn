@@ -27,7 +27,7 @@ namespace ast {
 namespace {
 
 /// @brief Replace `oldExpr` with `newExpr`
-class ExprReplacer : public ASTVisitor {
+class ExprReplacer : public ASTVisitorNonConst {
   std::shared_ptr<Expr> oldExpr_;
   std::shared_ptr<Expr> newExpr_;
 
@@ -177,7 +177,7 @@ void replaceOldExprWithNewExprInStmt(const std::shared_ptr<Stmt>& stmt,
 namespace {
 
 /// @brief Replace `oldStmt` with `newStmt`
-class StmtReplacer : public ASTVisitorForwarding {
+class StmtReplacer : public ASTVisitorForwardingNonConst {
   std::shared_ptr<Stmt> oldStmt_;
   std::shared_ptr<Stmt> newStmt_;
 
@@ -325,7 +325,7 @@ bool evalBinary(const std::string& opStr, double& result, double op1, double op2
 /// @brief Evaluate `expr` treating everything as `double`s
 ///
 /// Given that we only have 32-bit integers it should be safe to treat them as double.
-class ExprEvaluator : public ASTVisitor {
+class ExprEvaluator : public ASTVisitorNonConst {
   const std::unordered_map<std::string, double>& variableMap_;
 
   bool valid_;

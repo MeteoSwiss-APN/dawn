@@ -15,13 +15,24 @@
 # Generate python proto files
 include(DawnProtobufGenerate)
 
-# Defines dawn_sir_proto_files and dawn_iir_proto_files
+# Defines dawn_ast_proto_files, dawn_sir_proto_files and dawn_iir_proto_files
+include(${PROJECT_SOURCE_DIR}/src/dawn/AST/proto/DawnAST.cmake)
 include(${PROJECT_SOURCE_DIR}/src/dawn/SIR/proto/DawnSIR.cmake)
 include(${PROJECT_SOURCE_DIR}/src/dawn/IIR/proto/DawnIIR.cmake)
 
 dawn_protobuf_generate(
+  OUT_FILES ast_proto_python_files
+  PROTOS ${dawn_ast_proto_files}
+  WDIR ${PROJECT_SOURCE_DIR}/src/dawn/AST/proto
+  OUTDIR ${DAWN4PY_MODULE_DIR}/dawn4py/serialization
+  PACKG AST
+  LANGUAGE python
+)
+
+dawn_protobuf_generate(
   OUT_FILES sir_proto_python_files
   PROTOS ${dawn_sir_proto_files}
+  INC_DIR ${PROJECT_SOURCE_DIR}/src/dawn/AST/proto
   WDIR ${PROJECT_SOURCE_DIR}/src/dawn/SIR/proto
   OUTDIR ${DAWN4PY_MODULE_DIR}/dawn4py/serialization
   PACKG SIR
@@ -31,14 +42,14 @@ dawn_protobuf_generate(
 dawn_protobuf_generate(
   OUT_FILES iir_proto_python_files
   PROTOS ${dawn_iir_proto_files}
-  INC_DIR ${PROJECT_SOURCE_DIR}/src/dawn/SIR/proto
+  INC_DIR ${PROJECT_SOURCE_DIR}/src/dawn/AST/proto
   WDIR ${PROJECT_SOURCE_DIR}/src/dawn/IIR/proto
   OUTDIR ${DAWN4PY_MODULE_DIR}/dawn4py/serialization
   PACKG IIR
   LANGUAGE python
 )
 
-add_custom_target(generate_python_proto DEPENDS ${sir_proto_python_files} ${iir_proto_python_files})
+add_custom_target(generate_python_proto DEPENDS ${ast_proto_python_files} ${sir_proto_python_files} ${iir_proto_python_files})
 
 # Build python module
 include(FetchContent)

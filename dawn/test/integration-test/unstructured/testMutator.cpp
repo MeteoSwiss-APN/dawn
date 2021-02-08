@@ -11,7 +11,7 @@
 #include <map>
 #include <optional>
 
-class accessMutator : public dawn::ast::ASTVisitorForwarding {
+class accessMutator : public dawn::ast::ASTVisitorForwardingNonConst {
   void visit(const std::shared_ptr<dawn::ast::FieldAccessExpr>& expr) override {
     if(mutatedFields_.count(expr->getName())) {
       expr->getOffset().setVerticalIndirection(expr->getName() + "_indirection");
@@ -32,7 +32,7 @@ void injectRedirectedReads(std::shared_ptr<dawn::iir::StencilInstantiation> sten
       if(field.second.field.getReadExtents().has_value()) {
         int accessID = stencilInstantiation->getMetaData().addField(
             dawn::iir::FieldAccessType::APIField, field.second.Name + "_indirection",
-            dawn::sir::FieldDimensions(field.second.field.getFieldDimensions()), std::nullopt);
+            dawn::ast::FieldDimensions(field.second.field.getFieldDimensions()), std::nullopt);
         mutatedFields.insert({field.second.Name, accessID});
       }
     }

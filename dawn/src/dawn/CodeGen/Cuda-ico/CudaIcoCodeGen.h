@@ -78,6 +78,11 @@ private:
                              CodeGenProperties& codeGenProperties, bool fromHost,
                              bool onlyDecl = false) const;
 
+  void generateAllAPIVerifyFunctions(
+      std::stringstream& ssSW,
+      const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation,
+      CodeGenProperties& codeGenProperties, bool onlyDecl = false) const;
+
   void
   generateMemMgmtFunctions(std::stringstream& ssSW,
                            const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation,

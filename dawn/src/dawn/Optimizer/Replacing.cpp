@@ -26,7 +26,7 @@ namespace dawn {
 namespace {
 
 /// @brief Get all field and variable accesses identifier by `AccessID`
-class GetFieldAndVarAccesses : public ast::ASTVisitorForwarding {
+class GetFieldAndVarAccesses : public ast::ASTVisitorForwardingNonConst {
   int AccessID_;
 
   std::vector<std::shared_ptr<ast::FieldAccessExpr>> fieldAccessExprToReplace_;
@@ -103,7 +103,7 @@ void replaceVarWithFieldAccessInStmts(iir::Stencil* stencil, int AccessID,
 namespace {
 
 /// @brief Get all field and variable accesses identifier by `AccessID`
-class GetStencilCalls : public ast::ASTVisitorForwarding {
+class GetStencilCalls : public ast::ASTVisitorForwardingNonConst {
   const std::shared_ptr<iir::StencilInstantiation>& instantiation_;
   int StencilID_;
 

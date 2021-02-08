@@ -23,7 +23,7 @@ namespace dawn {
 //===------------------------------------------------------------------------------------------===//
 /// @brief Map the statements of the AST to a flat list of statements and assign AccessIDs to all
 /// field, variable and literal accesses. In addition, stencil functions are instantiated.
-class StatementMapper : public ast::ASTVisitor {
+class StatementMapper : public ast::ASTVisitorNonConst {
 
   /// @brief Representation of the current scope which keeps track of the binding of field and
   /// variable names

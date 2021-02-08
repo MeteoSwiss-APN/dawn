@@ -141,7 +141,9 @@ CompareResult SIR::comparison(const SIR& rhs) const {
   return CompareResult{"", true};
 }
 
-CompareResult sir::Stencil::comparison(const sir::Stencil& rhs) const {
+namespace sir {
+
+CompareResult Stencil::comparison(const Stencil& rhs) const {
   // Fields
   if(Fields.size() != rhs.Fields.size())
     return CompareResult{dawn::format("[Stencil mismatch] number of Fields does not match\n"
@@ -185,7 +187,7 @@ CompareResult sir::Stencil::comparison(const sir::Stencil& rhs) const {
   return CompareResult{"", true};
 }
 
-CompareResult sir::StencilFunction::comparison(const sir::StencilFunction& rhs) const {
+CompareResult StencilFunction::comparison(const StencilFunction& rhs) const {
 
   // Name
   if(Name != rhs.Name) {
@@ -212,7 +214,7 @@ CompareResult sir::StencilFunction::comparison(const sir::StencilFunction& rhs) 
   }
 
   if(!std::equal(Args.begin(), Args.end(), rhs.Args.begin(),
-                 pointeeComparison<sir::StencilFunctionArg>)) {
+                 pointeeComparison<StencilFunctionArg>)) {
     std::string output = "[StencilFunction mismatch] Stencil Functions Arguments do not match\n";
     for(int i = 0; i < Args.size(); ++i) {
       auto comp = pointeeComparisonWithOutput(Args[i], rhs.Args[i]);
@@ -280,14 +282,14 @@ CompareResult sir::StencilFunction::comparison(const sir::StencilFunction& rhs) 
   return CompareResult{"", true};
 }
 
-CompareResult sir::StencilFunctionArg::comparison(const sir::StencilFunctionArg& rhs) const {
+CompareResult StencilFunctionArg::comparison(const StencilFunctionArg& rhs) const {
   auto kindToString = [](ArgumentKind kind) -> const char* {
     switch(kind) {
-    case dawn::sir::StencilFunctionArg::ArgumentKind::Field:
+    case StencilFunctionArg::ArgumentKind::Field:
       return "Field";
-    case dawn::sir::StencilFunctionArg::ArgumentKind::Direction:
+    case StencilFunctionArg::ArgumentKind::Direction:
       return "Direction";
-    case dawn::sir::StencilFunctionArg::ArgumentKind::Offset:
+    case StencilFunctionArg::ArgumentKind::Offset:
       return "Offset";
     }
     dawn_unreachable("invalid argument type");
@@ -316,8 +318,6 @@ CompareResult sir::StencilFunctionArg::comparison(const sir::StencilFunctionArg&
   return CompareResult{"", true};
 }
 
-namespace sir {
-
 std::shared_ptr<ast::AST> StencilFunction::getASTOfInterval(const ast::Interval& interval) const {
   for(int i = 0; i < Intervals.size(); ++i)
     if(*Intervals[i] == interval)
@@ -327,7 +327,7 @@ std::shared_ptr<ast::AST> StencilFunction::getASTOfInterval(const ast::Interval&
 
 bool StencilFunction::isSpecialized() const { return !Intervals.empty(); }
 
-Stencil::Stencil() : StencilDescAst(sir::makeAST()) {}
+Stencil::Stencil() : StencilDescAst(makeAST()) {}
 
 CompareResult Field::comparison(const Field& rhs) const {
   if(rhs.IsTemporary != IsTemporary) {
@@ -343,110 +343,13 @@ CompareResult Field::comparison(const Field& rhs) const {
   return StencilFunctionArg::comparison(rhs);
 }
 
-UnstructuredFieldDimension::UnstructuredFieldDimension(ast::NeighborChain neighborChain,
-                                                       bool includeCenter)
-    : iterSpace_(std::move(neighborChain), includeCenter) {}
+bool Stencil::operator==(const Stencil& rhs) const { return bool(comparison(rhs)); }
 
-const ast::NeighborChain& UnstructuredFieldDimension::getNeighborChain() const {
-  DAWN_ASSERT(isSparse());
-  return iterSpace_.Chain;
-}
-
-std::string UnstructuredFieldDimension::toString() const {
-  auto getLocationTypeString = [](const ast::LocationType type) {
-    switch(type) {
-    case ast::LocationType::Cells:
-      return std::string("cell");
-      break;
-    case ast::LocationType::Vertices:
-      return std::string("vertex");
-      break;
-    case ast::LocationType::Edges:
-      return std::string("edge");
-      break;
-    default:
-      dawn_unreachable("unexpected type");
-    }
-  };
-
-  std::string output = "", separator = "";
-  for(const auto elem : iterSpace_.Chain) {
-    if(iterSpace_.IncludeCenter && separator == "") {
-      output += separator + "[" + getLocationTypeString(elem) + "]";
-    } else {
-      output += separator + getLocationTypeString(elem);
-    }
-    separator = "->";
-  }
-  return output;
-}
-
-ast::GridType HorizontalFieldDimension::getType() const {
-  if(sir::dimension_isa<sir::CartesianFieldDimension>(*this)) {
-    return ast::GridType::Cartesian;
-  } else {
-    return ast::GridType::Unstructured;
-  }
-}
-
-std::string FieldDimensions::toString() const {
-  if(sir::dimension_isa<sir::CartesianFieldDimension>(getHorizontalFieldDimension())) {
-    const auto& cartesianDimensions =
-        sir::dimension_cast<sir::CartesianFieldDimension const&>(getHorizontalFieldDimension());
-    return format("[%i,%i,%i]", cartesianDimensions.I(), cartesianDimensions.J(), K());
-
-  } else if(sir::dimension_isa<sir::UnstructuredFieldDimension>(getHorizontalFieldDimension())) {
-    const auto& unstructuredDimension =
-        sir::dimension_cast<sir::UnstructuredFieldDimension const&>(getHorizontalFieldDimension());
-    return format("[%s,%i]", unstructuredDimension.toString(), K());
-
-  } else {
-    dawn_unreachable("Invalid horizontal field dimension");
-  }
-}
-
-int FieldDimensions::numSpatialDimensions() const {
-  if(!horizontalFieldDimension_) {
-    return 1;
-  }
-  if(sir::dimension_isa<sir::CartesianFieldDimension>(getHorizontalFieldDimension())) {
-    const auto& cartesianDimensions =
-        sir::dimension_cast<sir::CartesianFieldDimension const&>(getHorizontalFieldDimension());
-    return int(cartesianDimensions.I()) + int(cartesianDimensions.J()) + int(K());
-  } else if(sir::dimension_isa<sir::UnstructuredFieldDimension>(getHorizontalFieldDimension())) {
-    return 2 + int(K());
-  } else {
-    dawn_unreachable("Invalid horizontal field dimension");
-  }
-}
-
-int FieldDimensions::rank() const {
-  const int spatialDims = numSpatialDimensions();
-  if(isVertical()) {
-    return 1;
-  }
-  int rank;
-  if(sir::dimension_isa<sir::UnstructuredFieldDimension>(getHorizontalFieldDimension())) {
-    rank = spatialDims > 1 ? spatialDims - 1 // The horizontal counts as 1 dimension (dense)
-                           : spatialDims;
-    // Need to account for sparse dimension, if present
-    if(sir::dimension_cast<sir::UnstructuredFieldDimension const&>(getHorizontalFieldDimension())
-           .isSparse()) {
-      ++rank;
-    }
-  } else { // Cartesian
-    rank = spatialDims;
-  }
-  return rank;
-}
-
-bool Stencil::operator==(const sir::Stencil& rhs) const { return bool(comparison(rhs)); }
-
-bool StencilFunction::operator==(const sir::StencilFunction& rhs) const {
+bool StencilFunction::operator==(const StencilFunction& rhs) const {
   return bool(comparison(rhs));
 }
 
-bool StencilFunctionArg::operator==(const sir::StencilFunctionArg& rhs) const {
+bool StencilFunctionArg::operator==(const StencilFunctionArg& rhs) const {
   return bool(comparison(rhs));
 }
 

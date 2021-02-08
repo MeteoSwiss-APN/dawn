@@ -464,8 +464,8 @@ TEST_F(IIRSerializerTest, IIRTests) {
 
     referenceInstantiation->getMetaData().addField(
         iir::FieldAccessType::Field, fieldname,
-        sir::FieldDimensions(
-            sir::HorizontalFieldDimension(ast::cartesian, std::array<bool, 2>{true, true}), true),
+        ast::FieldDimensions(
+            ast::HorizontalFieldDimension(ast::cartesian, std::array<bool, 2>{true, true}), true),
         id);
   }
 

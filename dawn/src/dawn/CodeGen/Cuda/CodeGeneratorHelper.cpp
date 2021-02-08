@@ -67,11 +67,11 @@ std::vector<std::string> CodeGeneratorHelper::generateStrideArguments(
     for(const auto& fieldInfo : ms->getParent()->getFields()) {
       if(fieldInfo.second.field.getAccessID() == fieldPair.second.getAccessID()) {
         DAWN_ASSERT_MSG(
-            dawn::sir::dimension_isa<dawn::sir::CartesianFieldDimension>(
+            dawn::ast::dimension_isa<dawn::ast::CartesianFieldDimension>(
                 fieldInfo.second.field.getFieldDimensions().getHorizontalFieldDimension()),
             "Field has non cartesian horizontal dimension");
         auto const& dimCartesian =
-            dawn::sir::dimension_cast<dawn::sir::CartesianFieldDimension const&>(
+            dawn::ast::dimension_cast<dawn::ast::CartesianFieldDimension const&>(
                 fieldInfo.second.field.getFieldDimensions().getHorizontalFieldDimension());
         dims[0] = dimCartesian.I() == 1;
         dims[1] = dimCartesian.J() == 1;

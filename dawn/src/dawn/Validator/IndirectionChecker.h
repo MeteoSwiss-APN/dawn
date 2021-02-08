@@ -24,14 +24,14 @@ namespace dawn {
 
 class IndirectionChecker {
 
-  class IndirectionCheckerImpl : public ast::ASTVisitorForwarding {
+  class IndirectionCheckerImpl : public ast::ASTVisitorForwardingNonConst {
   private:
     bool indirectionsValid_ = true;
     bool lhs_ = false;
 
   public:
-    void visit(const std::shared_ptr<ast::FieldAccessExpr>& expr);
-    void visit(const std::shared_ptr<ast::AssignmentExpr>& expr);
+    void visit(const std::shared_ptr<ast::FieldAccessExpr>& expr) override;
+    void visit(const std::shared_ptr<ast::AssignmentExpr>& expr) override;
     bool indirectionsAreValid() const { return indirectionsValid_; }
   };
 

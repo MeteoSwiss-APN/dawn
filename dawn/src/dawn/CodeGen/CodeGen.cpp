@@ -298,12 +298,12 @@ void CodeGen::generateStencilWrapperSyncMethod(Class& stencilWrapperClass) const
   syncStoragesMethod.commit();
 }
 
-std::string CodeGen::getStorageType(const sir::FieldDimensions& dimensions) {
+std::string CodeGen::getStorageType(const ast::FieldDimensions& dimensions) {
   DAWN_ASSERT_MSG(
-      sir::dimension_isa<sir::CartesianFieldDimension>(dimensions.getHorizontalFieldDimension()),
+      ast::dimension_isa<ast::CartesianFieldDimension>(dimensions.getHorizontalFieldDimension()),
       "Storage type requested for a non cartesian horizontal dimension");
   auto const& cartesianDimensions =
-      dawn::sir::dimension_cast<dawn::sir::CartesianFieldDimension const&>(
+      dawn::ast::dimension_cast<dawn::ast::CartesianFieldDimension const&>(
           dimensions.getHorizontalFieldDimension());
 
   std::string storageType = "storage_";

@@ -26,7 +26,7 @@ class StencilFunctionInstantiation;
 class StencilMetaInformation;
 
 /// @brief Dump AST to string
-class AccessToNameMapper : public ast::ASTVisitorForwarding {
+class AccessToNameMapper : public ast::ASTVisitorForwardingNonConst {
   const StencilMetaInformation& metaData_;
   std::stack<StencilFunctionInstantiation*> curFunctionInstantiation_;
 
