@@ -1060,28 +1060,7 @@ void CudaIcoCodeGen::generateAllAPIVerifyFunctions(
 
       // TODO runAndVerifyAPI body
       runAndVerifyAPI.addStatement("static int iteration = 0");
-      // runAndVerifyAPI.addStatement(
-      //     "std::cout << \"[DSL] Allocating output fields on the device\\n\" << std::flush");
-      // for(auto fieldID : getUsedFields(stencil, {dawn::iir::Field::IntendKind::Output})) {
-      //   const auto& fieldInfo = fieldInfos.at(fieldID);
-      //   auto unstrDims = sir::dimension_cast<sir::UnstructuredFieldDimension const&>(
-      //       fieldInfo.field.getFieldDimensions().getHorizontalFieldDimension());
-      //   std::string num_lev = (!fieldInfo.field.getFieldDimensions().K()) ? "1" : "k_size";
-      //   runAndVerifyAPI.addStatement("double * dsl_" + fieldInfo.Name);
-      //   if(unstrDims.isDense()) {
-      //     runAndVerifyAPI.addStatement("::dawn::allocField(&dsl_" + fieldInfo.Name + ", mesh->" +
-      //                                  locToDenseSizeStringGpuMesh(unstrDims.getDenseLocationType(),
-      //                                                              codeGenOptions.UnstrPadding) +
-      //                                  ", " + num_lev + ")");
-      //   } else {
-      //     runAndVerifyAPI.addStatement(
-      //         "::dawn::allocField(&dsl_" + fieldInfo.Name + ", " + "mesh->" +
-      //         locToDenseSizeStringGpuMesh(unstrDims.getDenseLocationType(),
-      //                                     codeGenOptions.UnstrPadding) +
-      //         ", " + "dawn_generated::cuda_ico::" + wrapperName +
-      //         "::" + chainToSparseSizeString(unstrDims.getIterSpace()) + ", " + num_lev + ")");
-      //   }
-      // }
+   
       runAndVerifyAPI.addStatement("std::cout << \"[DSL] Running stencil " + wrapperName +
                                    "...\\n\" << std::flush");
 
