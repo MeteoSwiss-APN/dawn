@@ -21,8 +21,8 @@ import unittest
 from dawn4py.serialization.error import SIRError
 from dawn4py.serialization.utils import *
 from dawn4py.serialization.SIR.SIR_pb2 import *
-from dawn4py.serialization.SIR.statements_pb2 import *
-from dawn4py.serialization.SIR.enums_pb2 import *
+from dawn4py.serialization.AST.statements_pb2 import *
+from dawn4py.serialization.AST.enums_pb2 import *
 
 
 class ExprTestBase(unittest.TestCase):
