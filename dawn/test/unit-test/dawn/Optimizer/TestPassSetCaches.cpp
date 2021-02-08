@@ -36,7 +36,6 @@ protected:
                const std::vector<std::vector<Cache::CacheType>>& cacheTypes,
                const std::vector<std::vector<Cache::IOPolicy>>& ioPolicies) {
     auto instantiation = IIRSerializer::deserialize(filename);
-    instantiation->computeDerivedInfo();
 
     // Run stage splitter pass
     PassStageSplitter stageSplitPass;
