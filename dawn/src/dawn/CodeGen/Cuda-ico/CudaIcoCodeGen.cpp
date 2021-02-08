@@ -1016,6 +1016,8 @@ void CudaIcoCodeGen::generateAllAPIVerifyFunctions(
                                    locToDenseSizeStringGpuMesh(unstrDims.getDenseLocationType(),
                                                                codeGenOptions.UnstrPadding) +
                                    ")";
+        std::string indexOfLastHorElement = "(mesh." +
+                                   locToDenseSizeStringGpuMesh(unstrDims.getDenseLocationType(), std::nullopt) + " -1";                                                                       
         std::string num_el = dense_stride + " * " + num_lev;
         if(unstrDims.isSparse()) {
           num_el += " * dawn_generated::cuda_ico::" + wrapperName +
@@ -1033,11 +1035,11 @@ void CudaIcoCodeGen::generateAllAPIVerifyFunctions(
             // serialize actual field
             auto lt = unstrDims.getDenseLocationType();
             auto serializeCall = getSerializeCall(lt);
-            verifyAPI.addStatement(serializeCall + "(0" + ", " + num_el + ", " + num_lev + ", " +
+            verifyAPI.addStatement(serializeCall + "(0" + ", " + indexOfLastHorElement + ", " + num_lev + ", " +
                                    dense_stride + ", " + fieldInfo.Name + ", \"" + wrapperName +
                                    "\", \"" + fieldInfo.Name + "\", iteration)");
             // serialize dsl field
-            verifyAPI.addStatement(serializeCall + "(0" + ", " + num_el + ", " + num_lev + ", " +
+            verifyAPI.addStatement(serializeCall + "(0" + ", " + indexOfLastHorElement + ", " + num_lev + ", " +
                                    dense_stride + ", " + fieldInfo.Name + "_dsl" + ", \"" +
                                    wrapperName + "\", \"" + fieldInfo.Name + "_dsl" +
                                    "\", iteration)");
@@ -1452,6 +1454,7 @@ generateF90InterfaceSI(FortranInterfaceModuleGen& fimGen,
   // however the interface would not be very useful if the name is generated.
   DAWN_ASSERT_MSG(stencils.size() <= 1,
                   "Unable to generate interface. More than one stencil in stencil instantiation.");
+  const auto &stencil = *stencils[0];
 
   std::vector<FortranInterfaceAPI> interfaces = {
       FortranInterfaceAPI("run_" + stencilInstantiation->getName(),
@@ -1470,7 +1473,7 @@ generateF90InterfaceSI(FortranInterfaceModuleGen& fimGen,
   
   const int runAndVerifyIdx = 2;  
 
-  auto addArgsToAPI = [&](FortranAPI& api, bool includeOuts) {
+  auto addArgsToAPI = [&](FortranAPI& api, bool includeSavedState) {
     for(const auto& global : globalsMap) {
       api.addArg(global.first, globalTypeToFortType(global.second));
     }
@@ -1482,8 +1485,8 @@ generateF90InterfaceSI(FortranInterfaceModuleGen& fimGen,
           ,
           stencilInstantiation->getMetaData().getFieldDimensions(fieldID).rank());
     }
-    if(includeOuts) {
-       for(auto fieldID : getUsedFields(stencil, {dawn::iir::Field::IntendKind::Output, dawn::iir::Field::IntendKind::InputOutput}) {
+    if(includeSavedState) {
+       for(auto fieldID : getUsedFields(stencil, {dawn::iir::Field::IntendKind::Output, dawn::iir::Field::IntendKind::InputOutput})) {
         api.addArg(
             stencilInstantiation->getMetaData().getNameFromAccessID(fieldID) + "_before",
             FortranAPI::InterfaceType::DOUBLE /* Unfortunately we need to know at codegen
@@ -1494,22 +1497,22 @@ generateF90InterfaceSI(FortranInterfaceModuleGen& fimGen,
     }
   };
 
-  addArgsToAPI(interfaces[fromDeviceAPIIdx], /*includeOuts*/ false);
+  addArgsToAPI(interfaces[fromDeviceAPIIdx], /*includeSavedState*/ false);
   fimGen.addInterfaceAPI(std::move(interfaces[fromDeviceAPIIdx]));
-  addArgsToAPI(interfaces[fromHostAPIIdx], /*includeOuts*/ false);
+  addArgsToAPI(interfaces[fromHostAPIIdx], /*includeSavedState*/ false);
   fimGen.addInterfaceAPI(std::move(interfaces[fromHostAPIIdx]));
-  addArgsToAPI(interfaces[runAndVerifyIdx], /*includeOuts*/ true);
+  addArgsToAPI(interfaces[runAndVerifyIdx], /*includeSavedState*/ true);
   fimGen.addInterfaceAPI(std::move(interfaces[runAndVerifyIdx]));
 
-  addArgsToAPI(runWrapper, /*includeOuts*/ true);
+  addArgsToAPI(runWrapper, /*includeSavedState*/ true);
 
-  auto getFieldArgs = [&](bool includeOuts) -> std::vector<std::string> {
+  auto getFieldArgs = [&](bool includeSavedState) -> std::vector<std::string> {
     std::vector<std::string> args;
     for(auto fieldID : stencilInstantiation->getMetaData().getAPIFields()) {
       args.push_back(stencilInstantiation->getMetaData().getNameFromAccessID(fieldID));
     }
-    if(includeOuts) {
-       for(auto fieldID : getUsedFields(stencil, {dawn::iir::Field::IntendKind::Output, dawn::iir::Field::IntendKind::InputOutput}) {
+    if(includeSavedState) {
+       for(auto fieldID : getUsedFields(stencil, {dawn::iir::Field::IntendKind::Output, dawn::iir::Field::IntendKind::InputOutput})) {
         args.push_back(stencilInstantiation->getMetaData().getNameFromAccessID(fieldID) +
                        "_before");
       }
@@ -1518,7 +1521,7 @@ generateF90InterfaceSI(FortranInterfaceModuleGen& fimGen,
   };
 
   auto genCallArgs = [&](FortranWrapperAPI& wrapper, std::string first = "",
-                         bool includeInouts = false) {
+                         bool includeSavedState = false) {
     wrapper.addBodyLine("( &");
 
     if(first != "") {
@@ -1526,7 +1529,7 @@ generateF90InterfaceSI(FortranInterfaceModuleGen& fimGen,
     }
 
     auto args =
-        concatenateVectors<std::string>({getGlobalsNames(globalsMap), getFieldArgs(includeInouts)});
+        concatenateVectors<std::string>({getGlobalsNames(globalsMap), getFieldArgs(includeSavedState)});
 
     for(int i = 0; i < args.size(); ++i) {
       wrapper.addBodyLine("   " + args[i] + (i == (args.size() - 1) ? " &" : ", &"));
@@ -1535,17 +1538,17 @@ generateF90InterfaceSI(FortranInterfaceModuleGen& fimGen,
   };
   runWrapper.addBodyLine("real(c_double) :: timing");
   runWrapper.addACCLine("host_data use_device( &");
-  auto fieldArgs = getFieldArgs(/*includeInouts*/ true);
+  auto fieldArgs = getFieldArgs(/*includeSavedState*/ true);
   for(int i = 0; i < fieldArgs.size(); ++i) {
     runWrapper.addACCLine("   " + fieldArgs[i] + (i == (fieldArgs.size() - 1) ? " &" : ", &"));
   }
   runWrapper.addACCLine(")");
   runWrapper.addBodyLine("#ifdef __DSL_VERIFY", /*withIndentation*/ false);
   runWrapper.addBodyLine("CALL run_and_verify_" + stencilInstantiation->getName() + " &");
-  genCallArgs(runWrapper, "", /*includeInouts*/ true); 
+  genCallArgs(runWrapper, "", /*includeSavedState*/ true); 
   runWrapper.addBodyLine("#else", /*withIndentation*/ false);
   runWrapper.addBodyLine("timing = run_" + stencilInstantiation->getName() + " &");
-  genCallArgs(runWrapper);
+  genCallArgs(runWrapper, "", /*includeSavedState*/ false); 
   runWrapper.addBodyLine("#endif", /*withIndentation*/ false);
   runWrapper.addACCLine("end host_data");
 
