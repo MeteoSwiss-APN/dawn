@@ -536,13 +536,13 @@ void CXXNaiveIcoCodeGen::generateStencilClasses(
         switch(magicNum) {
         case 0:
           return "::dawn::UnstructuredSubdomain::LateralBoundary";
-        case 1:
+        case 1000:
           return "::dawn::UnstructuredSubdomain::Nudging";
-        case 2:
+        case 2000:
           return "::dawn::UnstructuredSubdomain::Interior";
-        case 3:
+        case 3000:
           return "::dawn::UnstructuredSubdomain::Halo";
-        case 4:
+        case 4000:
           return "::dawn::UnstructuredSubdomain::End";
         default:
           throw std::runtime_error("Invalid magic number");

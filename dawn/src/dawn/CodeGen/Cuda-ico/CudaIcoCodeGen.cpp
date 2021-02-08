@@ -55,12 +55,12 @@ static bool intervalsConsistent(const dawn::iir::Stage& stage) {
 
   bool consistentLo =
       std::all_of(intervals.begin(), intervals.end(), [&](const dawn::iir::Interval& interval) {
-        return intervals.begin()->lowerBound() == interval.lowerBound();
+        return intervals.begin()->lowerLevel() == interval.lowerLevel();
       });
 
   bool consistentHi =
       std::all_of(intervals.begin(), intervals.end(), [&](const dawn::iir::Interval& interval) {
-        return intervals.begin()->upperBound() == interval.upperBound();
+        return intervals.begin()->upperLevel() == interval.upperLevel();
       });
 
   return consistentHi && consistentLo;
@@ -280,7 +280,7 @@ void CudaIcoCodeGen::generateRunFun(
       // lets figure out how many k levels we need to consider
       std::stringstream k_size;
       DAWN_ASSERT_MSG(intervalsConsistent(*stage),
-                      "intervals in a stage must have same bounds for now!\n");
+                      "intervals in a stage must have same Levels for now!\n");
       auto interval = stage->getChild(0)->getInterval();
       if(interval.levelIsEnd(iir::Interval::Bound::upper)) {
         k_size << "kSize_ + " << interval.upperOffset() << " - "
@@ -297,13 +297,13 @@ void CudaIcoCodeGen::generateRunFun(
         switch(magicNum) {
         case 0:
           return "dawn::UnstructuredSubdomain::LateralBoundary";
-        case 1:
+        case 1000:
           return "dawn::UnstructuredSubdomain::Nudging";
-        case 2:
+        case 2000:
           return "dawn::UnstructuredSubdomain::Interior";
-        case 3:
+        case 3000:
           return "dawn::UnstructuredSubdomain::Halo";
-        case 4:
+        case 4000:
           return "dawn::UnstructuredSubdomain::End";
         default:
           throw std::runtime_error("Invalid magic number");
@@ -315,7 +315,7 @@ void CudaIcoCodeGen::generateRunFun(
         switch(loc) {
         case ast::LocationType::Cells:
           return (iterSpace.has_value() ? "mesh_.Domain({::dawn::LocationType::Cells," +
-                                              spaceMagicNumToEnum(iterSpace->upperBound()) + "," +
+                                              spaceMagicNumToEnum(iterSpace->upperLevel()) + "," +
                                               std::to_string(iterSpace->upperOffset()) + "})" +
                                               "- mesh_.Domain({::dawn::LocationType::Cells," +
                                               spaceMagicNumToEnum(iterSpace->lowerLevel()) + "," +
@@ -324,7 +324,7 @@ void CudaIcoCodeGen::generateRunFun(
           break;
         case ast::LocationType::Edges:
           return (iterSpace.has_value() ? "mesh_.Domain({::dawn::LocationType::Edges," +
-                                              spaceMagicNumToEnum(iterSpace->upperBound()) + "," +
+                                              spaceMagicNumToEnum(iterSpace->upperLevel()) + "," +
                                               std::to_string(iterSpace->upperOffset()) + "})" +
                                               "- mesh_.Domain({::dawn::LocationType::Edges," +
                                               spaceMagicNumToEnum(iterSpace->lowerLevel()) + "," +
@@ -332,7 +332,7 @@ void CudaIcoCodeGen::generateRunFun(
                                         : "mesh_.NumEdges");
         case ast::LocationType::Vertices:
           return (iterSpace.has_value() ? "mesh_.Domain({::dawn::LocationType::Vertices," +
-                                              spaceMagicNumToEnum(iterSpace->upperBound()) + "," +
+                                              spaceMagicNumToEnum(iterSpace->upperLevel()) + "," +
                                               std::to_string(iterSpace->upperOffset()) + "})" +
                                               "- mesh_.Domain({::dawn::LocationType::Vertices," +
                                               spaceMagicNumToEnum(iterSpace->lowerLevel()) + "," +
@@ -347,16 +347,16 @@ void CudaIcoCodeGen::generateRunFun(
         switch(loc) {
         case ast::LocationType::Cells:
           return "mesh_.Domain({::dawn::LocationType::Cells," +
-                 spaceMagicNumToEnum(iterSpace.lowerBound()) + "," +
+                 spaceMagicNumToEnum(iterSpace.lowerLevel()) + "," +
                  std::to_string(iterSpace.lowerOffset()) + "})";
           break;
         case ast::LocationType::Edges:
           return "mesh_.Domain({::dawn::LocationType::Edges," +
-                 spaceMagicNumToEnum(iterSpace.lowerBound()) + "," +
+                 spaceMagicNumToEnum(iterSpace.lowerLevel()) + "," +
                  std::to_string(iterSpace.lowerOffset()) + "})";
         case ast::LocationType::Vertices:
           return "mesh_.Domain({::dawn::LocationType::Vertices," +
-                 spaceMagicNumToEnum(iterSpace.lowerBound()) + "," +
+                 spaceMagicNumToEnum(iterSpace.lowerLevel()) + "," +
                  std::to_string(iterSpace.lowerOffset()) + "})";
         default:
           throw std::runtime_error("Invalid location type");
@@ -1216,7 +1216,7 @@ void CudaIcoCodeGen::generateAllCudaKernels(
         cudaKernel.addArg("globals globals");
       }
       auto loc = *stage->getLocationType();
-      cudaKernel.addArg("int " + locToDenseSizeStringGpuMesh(loc, {}));
+      cudaKernel.addArg("int " + locToStrideString(loc));
 
       // which additional loc size args ( int NumCells, int NumEdges, int NumVertices) need to
       // be passed?
@@ -1263,7 +1263,7 @@ void CudaIcoCodeGen::generateAllCudaKernels(
       //--------------------------------------
 
       DAWN_ASSERT_MSG(intervalsConsistent(*stage),
-                      "intervals in a stage must have same bounds for now!\n");
+                      "intervals in a stage must have same Levels for now!\n");
       auto interval = stage->getChild(0)->getInterval();
 
       // pidx
