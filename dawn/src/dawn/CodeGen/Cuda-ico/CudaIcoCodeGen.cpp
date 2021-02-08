@@ -1017,7 +1017,7 @@ void CudaIcoCodeGen::generateAllAPIVerifyFunctions(
                                                                codeGenOptions.UnstrPadding) +
                                    ")";
         std::string indexOfLastHorElement = "(mesh." +
-                                   locToDenseSizeStringGpuMesh(unstrDims.getDenseLocationType(), std::nullopt) + " -1";                                                                       
+                                   locToDenseSizeStringGpuMesh(unstrDims.getDenseLocationType(), std::nullopt) + " -1)";                                                                       
         std::string num_el = dense_stride + " * " + num_lev;
         if(unstrDims.isSparse()) {
           num_el += " * dawn_generated::cuda_ico::" + wrapperName +
