@@ -14,6 +14,7 @@
 
 #include "dawn/IIR/Stage.h"
 #include "dawn/AST/ASTStmt.h"
+#include "dawn/AST/ASTVisitor.h"
 #include "dawn/AST/GridType.h"
 #include "dawn/AST/LocationType.h"
 #include "dawn/IIR/DependencyGraphAccesses.h"
@@ -23,7 +24,6 @@
 #include "dawn/IIR/Interval.h"
 #include "dawn/IIR/StencilFunctionInstantiation.h"
 #include "dawn/IIR/StencilMetaInformation.h"
-#include "dawn/AST/ASTVisitor.h"
 #include "dawn/Support/Logger.h"
 #include <algorithm>
 #include <set>

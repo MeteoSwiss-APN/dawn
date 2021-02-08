@@ -366,6 +366,13 @@ struct MemberFunction : public NewLine {
     return *this;
   }
 
+  MemberFunction& addPreprocessorDirective(const std::string& arg) {
+    startBody();
+    NewLine directive(ss(), 0);
+    directive << "#" + arg;
+    return *this;
+  }
+
   /// @brief Add a statement block to the function body (a statement block is sourrounded by
   /// '{ ... }'
   ///
@@ -421,6 +428,8 @@ struct MemberFunction : public NewLine {
         ss() << "{}";
       } else
         indentImpl(IndentLevel) << "}";
+    } else {
+      ss() << ";";
     }
   }
   DAWN_DECL_COMMIT(MemberFunction, NewLine)
@@ -637,7 +646,7 @@ protected:
       return ctor;
     case ConstructorDefaultKind::Deleted:
       ctor.CanHaveBody = false;
-      ctor << ") = delete;";
+      ctor << ") = delete";
       return ctor;
     default:
       return ctor;

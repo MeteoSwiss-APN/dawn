@@ -179,6 +179,19 @@ struct is_callable<
     T, typename std::enable_if<std::is_same<decltype(void(&T::operator())), void>::value>::type>
     : std::true_type {};
 
+//===------------------------------------------------------------------------------------------===//
+//     Extra additions to <vector>
+//===------------------------------------------------------------------------------------------===//
+
+template <typename T>
+std::vector<T> concatenateVectors(std::initializer_list<std::vector<T>> vecs) {
+  std::vector<T> res;
+  for(const auto& vec : vecs) {
+    res.insert(res.end(), vec.begin(), vec.end());
+  }
+  return res;
+}
+
 /// @}
 
 } // namespace dawn
