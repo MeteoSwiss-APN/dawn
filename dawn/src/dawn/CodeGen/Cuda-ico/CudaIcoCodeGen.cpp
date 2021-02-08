@@ -1508,10 +1508,8 @@ generateF90InterfaceSI(FortranInterfaceModuleGen& fimGen,
     for(auto fieldID : stencilInstantiation->getMetaData().getAPIFields()) {
       args.push_back(stencilInstantiation->getMetaData().getNameFromAccessID(fieldID));
     }
-    for(auto fieldID : stencilInstantiation->getMetaData().getAPIFields()) {
-      if(includeOuts && (stencils[0]->getFields().at(fieldID).field.getIntend() ==
-                              dawn::iir::Field::IntendKind::InputOutput || stencils[0]->getFields().at(fieldID).field.getIntend() ==
-                              dawn::iir::Field::IntendKind::Output)) {
+    if(includeOuts) {
+       for(auto fieldID : getUsedFields(stencil, {dawn::iir::Field::IntendKind::Output, dawn::iir::Field::IntendKind::InputOutput}) {
         args.push_back(stencilInstantiation->getMetaData().getNameFromAccessID(fieldID) +
                        "_before");
       }
