@@ -48,7 +48,7 @@ namespace dawn {
 template <typename error_type>
 __global__ void compare_kernel(const int num_el, const double* __restrict__ dsl,
                                const double* __restrict__ fortran, double* __restrict__ error) {
-  unsigned int eidx = blockIdx.x * blockDim.x + threadIdx.x;
+  unsigned int pidx = blockIdx.x * blockDim.x + threadIdx.x;
   if(eidx >= num_el) {
     return;
   }
