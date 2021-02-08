@@ -3,6 +3,7 @@
 #include "cuda_utils.hpp"
 
 #include <iostream>
+
 #include <thrust/device_ptr.h>
 #include <thrust/functional.h>
 #include <thrust/reduce.h>
@@ -49,11 +50,11 @@ template <typename error_type>
 __global__ void compare_kernel(const int num_el, const double* __restrict__ dsl,
                                const double* __restrict__ fortran, double* __restrict__ error) {
   unsigned int pidx = blockIdx.x * blockDim.x + threadIdx.x;
-  if(eidx >= num_el) {
+  if(pidx >= num_el) {
     return;
   }
 
-  error[eidx] = compute_error<error_type>::impl(fortran[eidx], dsl[eidx]);
+  error[pidx] = compute_error<error_type>::impl(fortran[pidx], dsl[pidx]);
 }
 
 // Returns relative error. Prints relative and absolute error.
