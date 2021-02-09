@@ -58,7 +58,7 @@ if(EXISTS "${LOC_PATH}")
 endif()
 
 # Path for external CMake files
-list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
+list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake ${CMAKE_CURRENT_SOURCE_DIR}/../cmake)
 
 include(HasUnstructuredDeps)
 include(CTest)
@@ -142,6 +142,8 @@ if(NOT Protobuf_FOUND)
   include(FetchProtobuf)
 endif()
 
+find_package(Clang 10.0.0 EXACT REQUIRED)
+
 # Only test if BUILD_TESTING and main project, or DAWN_BUILD_TESTING is on
 if((CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME OR DAWN_BUILD_TESTING) AND BUILD_TESTING)
   set(${PROJECT_NAME}_TESTING ON)
@@ -204,6 +206,11 @@ configure_package_config_file(
 write_basic_package_version_file(
   "${PROJECT_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/${PROJECT_NAME}ConfigVersion.cmake"
   COMPATIBILITY SameMajorVersion
+)
+
+install(
+        FILES cmake/FindLLVM.cmake cmake/FindClang.cmake
+        DESTINATION ${CMAKE_INSTALL_PREFIX}/lib/cmake/${PROJECT_NAME}
 )
 
 install(

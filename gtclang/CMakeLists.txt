@@ -112,9 +112,6 @@ function(target_add_gtclang_standard_props target)
   set_target_properties(${target} PROPERTIES ${GTCLANG_TARGET_PROPERTIES})
 endfunction()
 
-# Project dependencies
-find_package(Clang 6.0.0 REQUIRED)
-
 # Only test if BUILD_TESTING and main project, or GTCLANG_BUILD_TESTING is on
 if((CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME OR GTCLANG_BUILD_TESTING) AND BUILD_TESTING)
   set(${PROJECT_NAME}_TESTING ON)
