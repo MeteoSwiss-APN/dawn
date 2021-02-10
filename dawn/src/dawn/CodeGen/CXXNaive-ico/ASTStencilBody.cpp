@@ -427,7 +427,7 @@ void ASTStencilBody::visit(const std::shared_ptr<ast::ReductionOverNeighborExpr>
   ss_ << "return lhs;\n";
   ss_ << "}";
   if(!expr->getOffsets().empty()) {
-    offsets_ = std::deque<int>(std::begin(expr->getOffsets()), std::end(expr->getOffsets()));
+    offsets_ = std::deque<int>(expr->getOffsets().begin(), expr->getOffsets().end());
   }
   if(hasWeights) {
     auto weights = expr->getWeights().value();

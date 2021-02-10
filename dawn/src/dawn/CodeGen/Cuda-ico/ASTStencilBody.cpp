@@ -230,8 +230,9 @@ void ASTStencilBody::visit(const std::shared_ptr<ast::ReductionOverNeighborExpr>
   expr->getInit()->accept(*this);
   ss_ << ";\n";
   auto weights = expr->getWeights();
+
   if(!expr->getOffsets().empty()) {
-    offsets_ = std::deque<int>(std::begin(expr->getOffsets()), std::end(expr->getOffsets()));
+    offsets_ = std::deque<int>(expr->getOffsets().begin(), expr->getOffsets().end());
   }
   if(weights.has_value()) {
     ss_ << "::dawn::float_type " << weights_name << "[" << weights->size() << "] = {";

@@ -517,7 +517,7 @@ bool ReductionOverNeighborExpr::equals(const Expr* other, bool compareData) cons
 
   return otherPtr && otherPtr->getInit()->equals(getInit().get(), compareData) &&
          otherPtr->getOp() == getOp() && otherPtr->getRhs()->equals(getRhs().get(), compareData) &&
-         otherPtr->iterSpace_ == iterSpace_;
+         otherPtr->iterSpace_ == iterSpace_ && offsets_ == otherPtr->offsets_;
 }
 
 } // namespace ast

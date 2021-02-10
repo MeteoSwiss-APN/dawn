@@ -647,7 +647,7 @@ private:
   // hold a copy of the (shared pointer to) the weights
   std::vector<std::shared_ptr<Expr>> operands_ = std::vector<std::shared_ptr<Expr>>(2);
   bool chainIsValid() const;
-  std::vector<int> offsets_;
+  std::vector<int> offsets_ = {};
 
 public:
   /// @name Constructor & Destructor
@@ -673,7 +673,7 @@ public:
   std::vector<ast::LocationType> getNbhChain() const { return iterSpace_; };
   ast::LocationType getLhsLocation() const { return iterSpace_.Chain.front(); };
   const std::optional<std::vector<std::shared_ptr<Expr>>>& getWeights() const { return weights_; };
-  const std::vector<int> getOffsets() const { return offsets_; };
+  const std::vector<int>& getOffsets() const { return offsets_; };
   bool getIncludeCenter() const { return iterSpace_.IncludeCenter; };
   ast::UnstructuredIterationSpace getIterSpace() const { return iterSpace_; }
 
