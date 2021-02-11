@@ -318,13 +318,8 @@ void CudaIcoCodeGen::generateRunFun(
                                               spaceMagicNumToEnum(iterSpace->upperBound()) + "," +
                                               std::to_string(iterSpace->upperOffset()) + "})" +
                                               "- mesh_.Domain({::dawn::LocationType::Cells," +
-<<<<<<< Updated upstream
-                                              spaceMagicNumToEnum(iterSpace->lowerBound()) + "," +
-                                              std::to_string(iterSpace->lowerOffset()) + "})"
-=======
                                               spaceMagicNumToEnum(iterSpace->lowerLevel()) + "," +
                                               std::to_string(iterSpace->lowerOffset()) + "}) + 1"
->>>>>>> Stashed changes
                                         : "mesh_.NumCells");
           break;
         case ast::LocationType::Edges:
@@ -332,26 +327,16 @@ void CudaIcoCodeGen::generateRunFun(
                                               spaceMagicNumToEnum(iterSpace->upperBound()) + "," +
                                               std::to_string(iterSpace->upperOffset()) + "})" +
                                               "- mesh_.Domain({::dawn::LocationType::Edges," +
-<<<<<<< Updated upstream
-                                              spaceMagicNumToEnum(iterSpace->lowerBound()) + "," +
-                                              std::to_string(iterSpace->lowerOffset()) + "})"
-=======
                                               spaceMagicNumToEnum(iterSpace->lowerLevel()) + "," +
                                               std::to_string(iterSpace->lowerOffset()) + "}) + 1"
->>>>>>> Stashed changes
                                         : "mesh_.NumEdges");
         case ast::LocationType::Vertices:
           return (iterSpace.has_value() ? "mesh_.Domain({::dawn::LocationType::Vertices," +
                                               spaceMagicNumToEnum(iterSpace->upperBound()) + "," +
                                               std::to_string(iterSpace->upperOffset()) + "})" +
                                               "- mesh_.Domain({::dawn::LocationType::Vertices," +
-<<<<<<< Updated upstream
-                                              spaceMagicNumToEnum(iterSpace->lowerBound()) + "," +
-                                              std::to_string(iterSpace->lowerOffset()) + "})"
-=======
                                               spaceMagicNumToEnum(iterSpace->lowerLevel()) + "," +
                                               std::to_string(iterSpace->lowerOffset()) + "}) + 1"
->>>>>>> Stashed changes
                                         : "mesh_.NumVertices");
         default:
           throw std::runtime_error("Invalid location type");
@@ -1245,7 +1230,7 @@ void CudaIcoCodeGen::generateAllCudaKernels(
         if(dims.getDenseLocationType() == loc) {
           continue;
         }
-        locArgs.insert(locToDenseSizeStringGpuMesh(dims.getDenseLocationType(), {}));
+        locArgs.insert(locToStrideString(dims.getDenseLocationType()));
       }
       for(auto arg : locArgs) {
         cudaKernel.addArg("int " + arg);
