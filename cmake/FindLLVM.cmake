@@ -21,7 +21,7 @@ list(APPEND config_names "llvm-config")
 # if the user specified LLVM_ROOT, use that and fail otherwise
 if (LLVM_ROOT)
   find_program(LLVM_CONFIG_EXECUTABLE
-    NAMES ${_config_names}
+    NAMES ${config_names}
     HINTS ${LLVM_ROOT}/bin
     DOC "llvm-config executable"
     NO_DEFAULT_PATH
