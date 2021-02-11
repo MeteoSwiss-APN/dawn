@@ -113,7 +113,7 @@ std::string ASTStencilBody::makeIndexString(const std::shared_ptr<ast::FieldAcce
   bool isSparse = unstrDims.isSparse();
 
   std::string denseSize =
-      locToDenseSizeStringGpuMesh(unstrDims.getDenseLocationType(), padding_, /*addParens*/ true);
+      locToDenseSizeStringGpuMesh(unstrDims.getDenseLocationType(), {}, /*addParens*/ true);
 
   if(isFullField && isDense) {
     if((parentIsReduction_ || parentIsForLoop_) &&
