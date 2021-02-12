@@ -43,6 +43,8 @@ std::string locToDenseTypeString(dawn::ast::LocationType loc);
 
 std::string locToSparseTypeString(dawn::ast::LocationType loc);
 
+std::string locToStringPlural(dawn::ast::LocationType loc);
+
 } // namespace cudaico
 } // namespace codegen
 } // namespace dawn

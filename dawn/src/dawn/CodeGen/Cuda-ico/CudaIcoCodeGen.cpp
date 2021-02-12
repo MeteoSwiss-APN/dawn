@@ -312,62 +312,25 @@ void CudaIcoCodeGen::generateRunFun(
 
       auto numElementsString = [&](ast::LocationType loc,
                                    std::optional<iir::Interval> iterSpace) -> std::string {
-        switch(loc) {
-        case ast::LocationType::Cells:
-          return (iterSpace.has_value() ? "mesh_.Domain({::dawn::LocationType::Cells," +
-                                              spaceMagicNumToEnum(iterSpace->upperLevel()) + "," +
-                                              std::to_string(iterSpace->upperOffset()) + "})" +
-                                              "- mesh_.Domain({::dawn::LocationType::Cells," +
-                                              spaceMagicNumToEnum(iterSpace->lowerLevel()) + "," +
-                                              std::to_string(iterSpace->lowerOffset()) + "}) + 1"
-                                        : "mesh_.NumCells");
-          break;
-        case ast::LocationType::Edges:
-          return (iterSpace.has_value() ? "mesh_.Domain({::dawn::LocationType::Edges," +
-                                              spaceMagicNumToEnum(iterSpace->upperLevel()) + "," +
-                                              std::to_string(iterSpace->upperOffset()) + "})" +
-                                              "- mesh_.Domain({::dawn::LocationType::Edges," +
-                                              spaceMagicNumToEnum(iterSpace->lowerLevel()) + "," +
-                                              std::to_string(iterSpace->lowerOffset()) + "}) + 1"
-                                        : "mesh_.NumEdges");
-        case ast::LocationType::Vertices:
-          return (iterSpace.has_value() ? "mesh_.Domain({::dawn::LocationType::Vertices," +
-                                              spaceMagicNumToEnum(iterSpace->upperLevel()) + "," +
-                                              std::to_string(iterSpace->upperOffset()) + "})" +
-                                              "- mesh_.Domain({::dawn::LocationType::Vertices," +
-                                              spaceMagicNumToEnum(iterSpace->lowerLevel()) + "," +
-                                              std::to_string(iterSpace->lowerOffset()) + "}) + 1"
-                                        : "mesh_.NumVertices");
-        default:
-          throw std::runtime_error("Invalid location type");
-        }
+          return iterSpace.has_value() ? "mesh_.Domain({::dawn::LocationType::" + locToStringPlural(loc) + "," +
+                                      spaceMagicNumToEnum(iterSpace->upperLevel()) + "," +
+                                      std::to_string(iterSpace->upperOffset()) + "})" +
+                                      "- mesh_.Domain({::dawn::LocationType::" + locToStringPlural(loc) + "," +
+                                      spaceMagicNumToEnum(iterSpace->lowerLevel()) + "," +
+                                      std::to_string(iterSpace->lowerOffset()) + "}) + 1"
+                                : "mesh_.Num" + locToStringPlural(loc);
       };
-
-      auto hOffsetSizeString = [&](ast::LocationType loc, iir::Interval iterSpace) -> std::string {
-        switch(loc) {
-        case ast::LocationType::Cells:
-          return "mesh_.Domain({::dawn::LocationType::Cells," +
+      auto hOffsetSizeString = [&](ast::LocationType loc, iir::Interval iterSpace) -> std::string {        
+        return "mesh_.Domain({::dawn::LocationType::" + locToStringPlural(loc) + "," +
                  spaceMagicNumToEnum(iterSpace.lowerLevel()) + "," +
                  std::to_string(iterSpace.lowerOffset()) + "})";
-          break;
-        case ast::LocationType::Edges:
-          return "mesh_.Domain({::dawn::LocationType::Edges," +
-                 spaceMagicNumToEnum(iterSpace.lowerLevel()) + "," +
-                 std::to_string(iterSpace.lowerOffset()) + "})";
-        case ast::LocationType::Vertices:
-          return "mesh_.Domain({::dawn::LocationType::Vertices," +
-                 spaceMagicNumToEnum(iterSpace.lowerLevel()) + "," +
-                 std::to_string(iterSpace.lowerOffset()) + "})";
-        default:
-          throw std::runtime_error("Invalid location type");
-        }
       };
 
       auto domain = stage->getUnstructuredIterationSpace();
       std::string hSizeString = "hsize" + std::to_string(stage->getStageID());
       std::string numElString = "mesh_." + locToDenseSizeStringGpuMesh(*stage->getLocationType(), codeGenOptions.UnstrPadding);
       std::string hOffsetString = "hoffset" + std::to_string(stage->getStageID());
-      runFun.addStatement("int " + hSizeString + " = " +
+      runFun.addStatement("int " + hSizeString + " = " g
                           numElementsString(*stage->getLocationType(), domain));
       if(domain.has_value()) {
         runFun.addStatement("int " + hOffsetString + " = " +
