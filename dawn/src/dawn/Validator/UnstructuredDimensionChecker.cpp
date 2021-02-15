@@ -1,5 +1,6 @@
 #include "UnstructuredDimensionChecker.h"
 #include "dawn/AST/ASTStmt.h"
+#include "dawn/AST/FieldDimension.h"
 #include "dawn/AST/IterationSpace.h"
 #include "dawn/AST/LocationType.h"
 #include "dawn/AST/Offsets.h"
@@ -15,6 +16,16 @@ namespace dawn {
 static const ast::UnstructuredFieldDimension& getUnstructuredDim(const ast::FieldDimensions& dims) {
   return ast::dimension_cast<const ast::UnstructuredFieldDimension&>(
       dims.getHorizontalFieldDimension());
+}
+
+static bool checkAgainstChain(const ast::UnstructuredFieldDimension& dim,
+                              const ast::UnstructuredIterationSpace& space) {
+  if(dim.isDense()) {
+    return dim.getDenseLocationType() == space.Chain.back() ||
+           dim.getDenseLocationType() == space.Chain.front();
+  } else {
+    return dim.getIterSpace() == space;
+  }
 }
 
 UnstructuredDimensionChecker::ConsistencyResult
@@ -148,30 +159,40 @@ void UnstructuredDimensionChecker::UnstructuredDimensionCheckerImpl::visit(
     return;
   }
 
+  auto fieldCompatible = [&](bool hasOffset, const ast::FieldDimensions& dims) {
+    if(!dims.isVertical()) {
+      if(hasOffset && getUnstructuredDim(dims).isDense()) {
+        return getUnstructuredDim(dims).getDenseLocationType() ==
+               config_.currentIterSpace_->Chain.back();
+      }
+      if(getUnstructuredDim(dims).isSparse()) {
+        return getUnstructuredDim(dims).getIterSpace() == *config_.currentIterSpace_;
+      }
+    }
+    return true;
+  };
+
   bool hasOffset = ast::offset_cast<const ast::UnstructuredOffset&>(
                        fieldAccessExpr->getOffset().horizontalOffset())
                        .hasOffset();
-
   auto fieldName = fieldAccessExpr->getName();
   DAWN_ASSERT(nameToDimensions_.count(fieldName));
-
   curDimensions_ = nameToDimensions_.at(fieldName);
-  if(!nameToDimensions_.at(fieldName).isVertical()) {
-    if(hasOffset && getUnstructuredDim(*curDimensions_).isDense()) {
-      dimensionsConsistent_ &= getUnstructuredDim(*curDimensions_).getDenseLocationType() ==
-                               config_.currentIterSpace_->Chain.back();
-    }
-    if(getUnstructuredDim(*curDimensions_).isSparse()) {
-      dimensionsConsistent_ &=
-          getUnstructuredDim(*curDimensions_).getIterSpace() == *config_.currentIterSpace_;
-    }
-  }
+  dimensionsConsistent_ &= fieldCompatible(hasOffset, *curDimensions_);
 
   if(fieldAccessExpr->getOffset().hasVerticalIndirection()) {
     auto indirectionName = fieldAccessExpr->getOffset().getVerticalIndirectionFieldName();
     DAWN_ASSERT(nameToDimensions_.count(indirectionName));
-    dimensionsConsistent_ &=
-        nameToDimensions_.at(fieldName) == nameToDimensions_.at(indirectionName);
+    const auto& indirDims = nameToDimensions_.at(indirectionName);
+
+    // if we aren't in an iteration (loop or reduction) the indirection needs to
+    // match the field type...
+    if(!config_.currentIterSpace_.has_value()) {
+      dimensionsConsistent_ &= *curDimensions_ == indirDims;
+    } else {
+      //...otherwise we need to check against the chain
+      checkAgainstChain(getUnstructuredDim(indirDims), *config_.currentIterSpace_);
+    }
   }
 }
 
@@ -247,16 +268,6 @@ void UnstructuredDimensionChecker::UnstructuredDimensionCheckerImpl::visit(
   }
   if(!isConsistent())
     return;
-}
-
-static bool checkAgainstChain(const ast::UnstructuredFieldDimension& dim,
-                              const ast::UnstructuredIterationSpace& space) {
-  if(dim.isDense()) {
-    return dim.getDenseLocationType() == space.Chain.back() ||
-           dim.getDenseLocationType() == space.Chain.front();
-  } else {
-    return dim.getIterSpace() == space;
-  }
 }
 
 void UnstructuredDimensionChecker::UnstructuredDimensionCheckerImpl::checkBinaryOpUnstructured(
