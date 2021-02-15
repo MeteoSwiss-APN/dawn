@@ -114,6 +114,9 @@ static std::string formatNaNs(const double value) {
 
 namespace {
 StencilFieldsVtkOutput& getStencilFieldsVtkOutput(int num_k, std::string stencil_name, int iter) {
+  if(stencil_to_output_map.count(std::make_pair(stencil_name, iter-1))) {
+    stencil_to_output_map.erase(std::make_pair(stencil_name, iter-1));
+  }
   if(stencil_to_output_map.count(std::make_pair(stencil_name, iter)) == 0) {
     stencil_to_output_map.emplace(std::make_pair(stencil_name, iter),
                                   StencilFieldsVtkOutput(num_k, stencil_name, iter));
