@@ -330,7 +330,7 @@ void CudaIcoCodeGen::generateRunFun(
       std::string hSizeString = "hsize" + std::to_string(stage->getStageID());
       std::string numElString = "mesh_." + locToDenseSizeStringGpuMesh(*stage->getLocationType(), codeGenOptions.UnstrPadding);
       std::string hOffsetString = "hoffset" + std::to_string(stage->getStageID());
-      runFun.addStatement("int " + hSizeString + " = " g
+      runFun.addStatement("int " + hSizeString + " = " +
                           numElementsString(*stage->getLocationType(), domain));
       if(domain.has_value()) {
         runFun.addStatement("int " + hOffsetString + " = " +
