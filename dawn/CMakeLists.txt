@@ -58,7 +58,7 @@ if(EXISTS "${LOC_PATH}")
 endif()
 
 # Path for external CMake files
-list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake ${CMAKE_CURRENT_SOURCE_DIR}/../cmake)
+list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
 
 include(HasUnstructuredDeps)
 include(CTest)
@@ -206,11 +206,6 @@ configure_package_config_file(
 write_basic_package_version_file(
   "${PROJECT_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/${PROJECT_NAME}ConfigVersion.cmake"
   COMPATIBILITY SameMajorVersion
-)
-
-install(
-        FILES cmake/FindLLVM.cmake cmake/FindClang.cmake
-        DESTINATION ${CMAKE_INSTALL_PREFIX}/lib/cmake/${PROJECT_NAME}
 )
 
 install(
