@@ -16,9 +16,9 @@
 
 if(NOT TARGET LLVM::LLVM)
   if(${Clang_FIND_REQUIRED})
-    find_package(LLVM ${Clang_FIND_VERSION} EXACT REQUIRED)
+    find_package(LLVM ${Clang_FIND_VERSION} REQUIRED)
   else()
-    find_package(LLVM ${Clang_FIND_VERSION} EXACT)
+    find_package(LLVM ${Clang_FIND_VERSION})
   endif()
 endif()
 
