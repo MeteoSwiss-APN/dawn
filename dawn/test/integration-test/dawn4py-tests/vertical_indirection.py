@@ -43,7 +43,7 @@ def main(args: argparse.Namespace):
     body_ast_1 = serial_utils.make_ast(
         [
             serial_utils.make_assignment_stmt(
-                serial_utils.make_field_access_expr("out"),
+                serial_utils.make_unstructured_field_access_expr("out"),
                 serial_utils.make_unstructured_field_access_expr(
                     "in", vertical_shift=0, vertical_indirection="vert_nbh"),
 
@@ -56,7 +56,7 @@ def main(args: argparse.Namespace):
     body_ast_2 = serial_utils.make_ast(
         [
             serial_utils.make_assignment_stmt(
-                serial_utils.make_field_access_expr("out"),
+                serial_utils.make_unstructured_field_access_expr("out"),
                 serial_utils.make_unstructured_field_access_expr(
                     "in", vertical_shift=1, vertical_indirection="vert_nbh"),
 
@@ -69,7 +69,7 @@ def main(args: argparse.Namespace):
     body_ast_3 = serial_utils.make_ast(
         [
             serial_utils.make_assignment_stmt(
-                serial_utils.make_field_access_expr("in_out"),
+                serial_utils.make_unstructured_field_access_expr("in_out"),
                 serial_utils.make_unstructured_field_access_expr(
                     "in_out", vertical_shift=1, vertical_indirection="vert_nbh"),
 
@@ -83,13 +83,13 @@ def main(args: argparse.Namespace):
     body_ast_4 = serial_utils.make_ast(
         [
             serial_utils.make_assignment_stmt(
-                serial_utils.make_field_access_expr("vert_nbh"),
+                serial_utils.make_unstructured_field_access_expr("vert_nbh"),
                 serial_utils.make_unstructured_field_access_expr(
                     "vert_nbh", vertical_shift=1),
 
                 "="),
             serial_utils.make_assignment_stmt(
-                serial_utils.make_field_access_expr("out"),
+                serial_utils.make_unstructured_field_access_expr("out"),
                 serial_utils.make_unstructured_field_access_expr(
                     "in", vertical_shift=0, vertical_indirection="vert_nbh"),
 
@@ -103,13 +103,13 @@ def main(args: argparse.Namespace):
     body_ast_5 = serial_utils.make_ast(
         [
             serial_utils.make_assignment_stmt(
-                serial_utils.make_field_access_expr("vert_nbh"),
+                serial_utils.make_unstructured_field_access_expr("vert_nbh"),
                 serial_utils.make_unstructured_field_access_expr(
                     "vert_nbh", vertical_shift=1),
 
                 "="),
             serial_utils.make_assignment_stmt(
-                serial_utils.make_field_access_expr("in_out"),
+                serial_utils.make_unstructured_field_access_expr("in_out"),
                 serial_utils.make_unstructured_field_access_expr(
                     "in_out", vertical_shift=1, vertical_indirection="vert_nbh"),
 
@@ -124,10 +124,28 @@ def main(args: argparse.Namespace):
     body_ast_6 = serial_utils.make_ast(
         [
             serial_utils.make_assignment_stmt(
-                serial_utils.make_field_access_expr("in"),
+                serial_utils.make_unstructured_field_access_expr("in"),
                 serial_utils.make_unstructured_field_access_expr(
                     "in", vertical_shift=-1, vertical_indirection="vert_nbh"),
 
+                "="),
+
+        ]
+    )
+
+    # testing a sparse index field
+    body_ast_7 = serial_utils.make_ast(
+        [
+            serial_utils.make_assignment_stmt(
+                serial_utils.make_unstructured_field_access_expr("out"),
+                serial_utils.make_reduction_over_neighbor_expr(
+                    "+",                    
+                    serial_utils.make_unstructured_field_access_expr(
+                        "in_edge", vertical_shift=-1, vertical_indirection="vert_nbh_sparse"),                    
+                    serial_utils.make_literal_access_expr("0.0", AST.BuiltinType.Float),
+                    chain=[AST.LocationType.Value(
+                        "Cell"), AST.LocationType.Value("Edge")],
+                ),
                 "="),
 
         ]
@@ -157,6 +175,10 @@ def main(args: argparse.Namespace):
         body_ast_6, interval, AST.VerticalRegion.Forward
     )
 
+    vertical_region_stmt_7 = serial_utils.make_vertical_region_decl_stmt(
+        body_ast_7, interval, AST.VerticalRegion.Forward
+    )
+
     sir = serial_utils.make_sir(
         OUTPUT_FILE,
         AST.GridType.Value("Unstructured"),
@@ -169,7 +191,8 @@ def main(args: argparse.Namespace):
                      vertical_region_stmt_3,
                      vertical_region_stmt_4,
                      vertical_region_stmt_5,
-                     vertical_region_stmt_6]),
+                     vertical_region_stmt_6,
+                     vertical_region_stmt_7]),
                 [
                     serial_utils.make_field(
                         "in",
@@ -195,6 +218,18 @@ def main(args: argparse.Namespace):
                             [AST.LocationType.Value("Cell")], 1
                         ),
                     ),
+                    serial_utils.make_field(
+                        "vert_nbh_sparse",
+                        serial_utils.make_field_dimensions_unstructured(
+                            [AST.LocationType.Value("Cell"), AST.LocationType.Value("Edge")], 1
+                        ),
+                    ),
+                    serial_utils.make_field(
+                        "in_edge",
+                        serial_utils.make_field_dimensions_unstructured(
+                            [AST.LocationType.Value("Edge")], 1
+                        ),
+                    ),
                 ],
             ),
         ],
@@ -215,8 +250,8 @@ def main(args: argparse.Namespace):
     code = dawn4py.compile(sir, groups=pass_groups,
                            backend=dawn4py.CodeGenBackend.CUDAIco)
 
-    # with open("out.json", "w+") as f:
-    #     f.write(sir_to_json(sir))
+    with open("sparse_index_field.json", "w+") as f:
+        f.write(sir_to_json(sir))
 
     # write to file
     print(f"Writing generated code to '{OUTPUT_PATH}'")

@@ -538,7 +538,7 @@ TEST(UnstructuredDimensionCheckerTest, VarAccessType) {
                                                                            stencil->getMetaData());
   EXPECT_EQ(result, UnstructuredDimensionChecker::ConsistencyResult(true, dawn::SourceLocation()));
 }
-TEST(UnstructuredDimensionCheckerTest, VerticalIndirection) {
+TEST(UnstructuredDimensionCheckerTest, VerticalIndirectionFail) {
   using namespace dawn::iir;
   using LocType = dawn::ast::LocationType;
 
@@ -557,6 +557,58 @@ TEST(UnstructuredDimensionCheckerTest, VerticalIndirection) {
                                                               ast::Offsets{ast::unstructured, false,
                                                                            1, "kidx"})))))))),
       ".*Dimensions consistency check failed.*");
+}
+TEST(UnstructuredDimensionCheckerTest, VerticalIndirectionPass1) {
+  using namespace dawn::iir;
+  using LocType = dawn::ast::LocationType;
+
+  UnstructuredIIRBuilder b;
+  auto edge_field = b.field("edge_field", LocType::Edges);
+  auto cell_field = b.field("cell_field", LocType::Cells);
+  auto kidx_edge = b.field("kidx_edge", LocType::Edges);
+
+  auto stencil = b.build(
+      "pass",
+      b.stencil(b.multistage(
+          LoopOrderKind::Parallel,
+          b.stage(b.doMethod(
+              dawn::ast::Interval::Start, dawn::ast::Interval::End,
+              b.stmt(b.assignExpr(b.at(cell_field),
+                                  b.reduceOverNeighborExpr(
+                                      Op::plus,
+                                      b.at(edge_field, AccessType::r,
+                                           ast::Offsets{ast::unstructured, false, 1, "kidx_edge"}),
+                                      b.lit(0.), {LocType::Cells, LocType::Edges}))))))));
+
+  auto result = UnstructuredDimensionChecker::checkDimensionsConsistency(*stencil->getIIR(),
+                                                                         stencil->getMetaData());
+  EXPECT_EQ(result, UnstructuredDimensionChecker::ConsistencyResult(true, dawn::SourceLocation()));
+}
+TEST(UnstructuredDimensionCheckerTest, VerticalIndirectionPass2) {
+  using namespace dawn::iir;
+  using LocType = dawn::ast::LocationType;
+
+  UnstructuredIIRBuilder b;
+  auto edge_field = b.field("edge_field", LocType::Edges);
+  auto cell_field = b.field("cell_field", LocType::Cells);
+  auto kidx_edge = b.field("kidx_sparse", {LocType::Edges, LocType::Cells});
+
+  auto stencil = b.build(
+      "pass",
+      b.stencil(b.multistage(
+          LoopOrderKind::Parallel,
+          b.stage(b.doMethod(dawn::ast::Interval::Start, dawn::ast::Interval::End,
+                             b.stmt(b.assignExpr(
+                                 b.at(cell_field),
+                                 b.reduceOverNeighborExpr(
+                                     Op::plus,
+                                     b.at(edge_field, AccessType::r,
+                                          ast::Offsets{ast::unstructured, false, 1, "kidx_sparse"}),
+                                     b.lit(0.), {LocType::Cells, LocType::Edges}))))))));
+
+  auto result = UnstructuredDimensionChecker::checkDimensionsConsistency(*stencil->getIIR(),
+                                                                         stencil->getMetaData());
+  EXPECT_EQ(result, UnstructuredDimensionChecker::ConsistencyResult(true, dawn::SourceLocation()));
 }
 TEST(UnstructuredDimensionCheckerTest, IfStmt) {
   using namespace dawn::iir;

@@ -142,6 +142,8 @@ if(NOT Protobuf_FOUND)
   include(FetchProtobuf)
 endif()
 
+find_package(Clang 9.0.0 REQUIRED)
+
 # Only test if BUILD_TESTING and main project, or DAWN_BUILD_TESTING is on
 if((CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME OR DAWN_BUILD_TESTING) AND BUILD_TESTING)
   set(${PROJECT_NAME}_TESTING ON)

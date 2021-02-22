@@ -55,12 +55,12 @@ static bool intervalsConsistent(const dawn::iir::Stage& stage) {
 
   bool consistentLo =
       std::all_of(intervals.begin(), intervals.end(), [&](const dawn::iir::Interval& interval) {
-        return intervals.begin()->lowerBound() == interval.lowerBound();
+        return intervals.begin()->lowerLevel() == interval.lowerLevel();
       });
 
   bool consistentHi =
       std::all_of(intervals.begin(), intervals.end(), [&](const dawn::iir::Interval& interval) {
-        return intervals.begin()->upperBound() == interval.upperBound();
+        return intervals.begin()->upperLevel() == interval.upperLevel();
       });
 
   return consistentHi && consistentLo;
@@ -280,7 +280,7 @@ void CudaIcoCodeGen::generateRunFun(
       // lets figure out how many k levels we need to consider
       std::stringstream k_size;
       DAWN_ASSERT_MSG(intervalsConsistent(*stage),
-                      "intervals in a stage must have same bounds for now!\n");
+                      "intervals in a stage must have same Levels for now!\n");
       auto interval = stage->getChild(0)->getInterval();
       if(interval.levelIsEnd(iir::Interval::Bound::upper)) {
         k_size << "kSize_ + " << interval.upperOffset() << " - "
@@ -297,13 +297,13 @@ void CudaIcoCodeGen::generateRunFun(
         switch(magicNum) {
         case 0:
           return "dawn::UnstructuredSubdomain::LateralBoundary";
-        case 1:
+        case 1000:
           return "dawn::UnstructuredSubdomain::Nudging";
-        case 2:
+        case 2000:
           return "dawn::UnstructuredSubdomain::Interior";
-        case 3:
+        case 3000:
           return "dawn::UnstructuredSubdomain::Halo";
-        case 4:
+        case 4000:
           return "dawn::UnstructuredSubdomain::End";
         default:
           throw std::runtime_error("Invalid magic number");
@@ -312,68 +312,32 @@ void CudaIcoCodeGen::generateRunFun(
 
       auto numElementsString = [&](ast::LocationType loc,
                                    std::optional<iir::Interval> iterSpace) -> std::string {
-        switch(loc) {
-        case ast::LocationType::Cells:
-          return (iterSpace.has_value() ? "mesh_.Domain({::dawn::LocationType::Cells," +
-                                              spaceMagicNumToEnum(iterSpace->upperBound()) + "," +
-                                              std::to_string(iterSpace->upperOffset()) + "})" +
-                                              "- mesh_.Domain({::dawn::LocationType::Cells," +
-                                              spaceMagicNumToEnum(iterSpace->lowerBound()) + "," +
-                                              std::to_string(iterSpace->lowerOffset()) + "})"
-                                        : "mesh_.NumCells");
-          break;
-        case ast::LocationType::Edges:
-          return (iterSpace.has_value() ? "mesh_.Domain({::dawn::LocationType::Edges," +
-                                              spaceMagicNumToEnum(iterSpace->upperBound()) + "," +
-                                              std::to_string(iterSpace->upperOffset()) + "})" +
-                                              "- mesh_.Domain({::dawn::LocationType::Edges," +
-                                              spaceMagicNumToEnum(iterSpace->lowerBound()) + "," +
-                                              std::to_string(iterSpace->lowerOffset()) + "})"
-                                        : "mesh_.NumEdges");
-        case ast::LocationType::Vertices:
-          return (iterSpace.has_value() ? "mesh_.Domain({::dawn::LocationType::Vertices," +
-                                              spaceMagicNumToEnum(iterSpace->upperBound()) + "," +
-                                              std::to_string(iterSpace->upperOffset()) + "})" +
-                                              "- mesh_.Domain({::dawn::LocationType::Vertices," +
-                                              spaceMagicNumToEnum(iterSpace->lowerBound()) + "," +
-                                              std::to_string(iterSpace->lowerOffset()) + "})"
-                                        : "mesh_.NumVertices");
-        default:
-          throw std::runtime_error("Invalid location type");
-        }
+          return iterSpace.has_value() ? "mesh_.Domain({::dawn::LocationType::" + locToStringPlural(loc) + "," +
+                                      spaceMagicNumToEnum(iterSpace->upperLevel()) + "," +
+                                      std::to_string(iterSpace->upperOffset()) + "})" +
+                                      "- mesh_.Domain({::dawn::LocationType::" + locToStringPlural(loc) + "," +
+                                      spaceMagicNumToEnum(iterSpace->lowerLevel()) + "," +
+                                      std::to_string(iterSpace->lowerOffset()) + "}) + 1"
+                                : "mesh_.Num" + locToStringPlural(loc);
       };
-
-      auto hOffsetSizeString = [&](ast::LocationType loc, iir::Interval iterSpace) -> std::string {
-        switch(loc) {
-        case ast::LocationType::Cells:
-          return "mesh_.Domain({::dawn::LocationType::Cells," +
-                 spaceMagicNumToEnum(iterSpace.lowerBound()) + "," +
+      auto hOffsetSizeString = [&](ast::LocationType loc, iir::Interval iterSpace) -> std::string {        
+        return "mesh_.Domain({::dawn::LocationType::" + locToStringPlural(loc) + "," +
+                 spaceMagicNumToEnum(iterSpace.lowerLevel()) + "," +
                  std::to_string(iterSpace.lowerOffset()) + "})";
-          break;
-        case ast::LocationType::Edges:
-          return "mesh_.Domain({::dawn::LocationType::Edges," +
-                 spaceMagicNumToEnum(iterSpace.lowerBound()) + "," +
-                 std::to_string(iterSpace.lowerOffset()) + "})";
-        case ast::LocationType::Vertices:
-          return "mesh_.Domain({::dawn::LocationType::Vertices," +
-                 spaceMagicNumToEnum(iterSpace.lowerBound()) + "," +
-                 std::to_string(iterSpace.lowerOffset()) + "})";
-        default:
-          throw std::runtime_error("Invalid location type");
-        }
       };
 
       auto domain = stage->getUnstructuredIterationSpace();
-      std::string numElString = "hsize" + std::to_string(stage->getStageID());
+      std::string hSizeString = "hsize" + std::to_string(stage->getStageID());
+      std::string numElString = "mesh_." + locToDenseSizeStringGpuMesh(*stage->getLocationType(), codeGenOptions.UnstrPadding);
       std::string hOffsetString = "hoffset" + std::to_string(stage->getStageID());
-      runFun.addStatement("int " + numElString + " = " +
+      runFun.addStatement("int " + hSizeString + " = " +
                           numElementsString(*stage->getLocationType(), domain));
       if(domain.has_value()) {
         runFun.addStatement("int " + hOffsetString + " = " +
                             hOffsetSizeString(*stage->getLocationType(), *domain));
       }
       runFun.addStatement("dim3 dG" + std::to_string(stage->getStageID()) + " = grid(" +
-                          k_size.str() + ", " + numElString + ")");
+                          k_size.str() + ", " + hSizeString + ")");
 
       //--------------------------------------
       // signature of kernel
@@ -424,7 +388,7 @@ void CudaIcoCodeGen::generateRunFun(
         if(dims.getDenseLocationType() == *stage->getLocationType()) {
           continue;
         }
-        locArgs.insert(locToDenseSizeStringGpuMesh(dims.getDenseLocationType(), {}));
+        locArgs.insert(locToDenseSizeStringGpuMesh(dims.getDenseLocationType(), codeGenOptions.UnstrPadding));
       }
       for(auto arg : locArgs) {
         kernelCall << "mesh_." + arg + ", ";
@@ -437,6 +401,7 @@ void CudaIcoCodeGen::generateRunFun(
       if(domain.has_value()) {
         kernelCall << hOffsetString << ", ";
       }
+      kernelCall << hSizeString << ", ";
 
       for(auto chain : chains) {
         kernelCall << "mesh_." + chainToTableString(chain) + ", ";
@@ -1214,7 +1179,7 @@ void CudaIcoCodeGen::generateAllCudaKernels(
         cudaKernel.addArg("globals globals");
       }
       auto loc = *stage->getLocationType();
-      cudaKernel.addArg("int " + locToDenseSizeStringGpuMesh(loc, {}));
+      cudaKernel.addArg("int " + locToStrideString(loc));
 
       // which additional loc size args ( int NumCells, int NumEdges, int NumVertices) need to
       // be passed?
@@ -1228,7 +1193,7 @@ void CudaIcoCodeGen::generateAllCudaKernels(
         if(dims.getDenseLocationType() == loc) {
           continue;
         }
-        locArgs.insert(locToDenseSizeStringGpuMesh(dims.getDenseLocationType(), {}));
+        locArgs.insert(locToStrideString(dims.getDenseLocationType()));
       }
       for(auto arg : locArgs) {
         cudaKernel.addArg("int " + arg);
@@ -1239,8 +1204,9 @@ void CudaIcoCodeGen::generateAllCudaKernels(
 
       // for horizontal iteration spaces we also need the offset
       if(stage->getUnstructuredIterationSpace().has_value()) {
-        cudaKernel.addArg("int hOffset");
+        cudaKernel.addArg("int hOffset");        
       }
+      cudaKernel.addArg("int hSize");
 
       for(auto chain : chains) {
         cudaKernel.addArg("const int *" + chainToTableString(chain));
@@ -1260,7 +1226,7 @@ void CudaIcoCodeGen::generateAllCudaKernels(
       //--------------------------------------
 
       DAWN_ASSERT_MSG(intervalsConsistent(*stage),
-                      "intervals in a stage must have same bounds for now!\n");
+                      "intervals in a stage must have same Levels for now!\n");
       auto interval = stage->getChild(0)->getInterval();
 
       // pidx
@@ -1282,15 +1248,15 @@ void CudaIcoCodeGen::generateAllCudaKernels(
 
       switch(loc) {
       case ast::LocationType::Cells:
-        cudaKernel.addBlockStatement("if (pidx >= NumCells)",
+        cudaKernel.addBlockStatement("if (pidx >= hSize)",
                                      [&]() { cudaKernel.addStatement("return"); });
         break;
       case ast::LocationType::Edges:
-        cudaKernel.addBlockStatement("if (pidx >= NumEdges)",
+        cudaKernel.addBlockStatement("if (pidx >= hSize)",
                                      [&]() { cudaKernel.addStatement("return"); });
         break;
       case ast::LocationType::Vertices:
-        cudaKernel.addBlockStatement("if (pidx >= NumVertices)",
+        cudaKernel.addBlockStatement("if (pidx >= hSize)",
                                      [&]() { cudaKernel.addStatement("return"); });
         break;
       }
