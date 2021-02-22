@@ -282,7 +282,10 @@ void CudaIcoCodeGen::generateRunFun(
       DAWN_ASSERT_MSG(intervalsConsistent(*stage),
                       "intervals in a stage must have same Levels for now!\n");
       auto interval = stage->getChild(0)->getInterval();
-      if(interval.levelIsEnd(iir::Interval::Bound::upper)) {
+      printf("%d %d %d %d\n", interval.lowerLevel(), interval.lowerOffset(), interval.upperLevel(), interval.upperOffset());
+      if(interval.levelIsEnd(iir::Interval::Bound::upper) && interval.levelIsEnd(iir::Interval::Bound::lower)) {
+        k_size << (interval.upperOffset() - interval.lowerOffset());
+      } else if(interval.levelIsEnd(iir::Interval::Bound::upper)) {
         k_size << "kSize_ + " << interval.upperOffset() << " - "
                << (interval.lowerOffset() + interval.lowerLevel());
       } else {
