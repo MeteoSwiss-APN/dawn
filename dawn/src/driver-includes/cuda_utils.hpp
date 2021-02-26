@@ -253,8 +253,8 @@ void generateNbhTable(dawn::mesh_t<LibTag> const& mesh, std::vector<dawn::Locati
 
 extern "C" {
 // For exporting API to Fortran
-static inline void set_splitter_index(dawn::GlobalGpuTriMesh* globalTriMesh, int loc, int space,
-                                      int offset, int index) {
+static void set_splitter_index(dawn::GlobalGpuTriMesh* globalTriMesh, int loc, int space,
+                               int offset, int index) {
   globalTriMesh->set_splitter_index(dawn::LocationType(loc), dawn::UnstructuredSubdomain(space),
                                     offset, index);
 }
