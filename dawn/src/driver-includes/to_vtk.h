@@ -31,13 +31,13 @@ extern MeshInfoVtk mesh_info_vtk;
 
 extern "C" {
 
-void dense_cells_to_vtk(int start_idx, int end_idx, int num_k, int dense_stride,
-                        const double* field, const char stencil_name[50], const char field_name[50],
-                        int iter);
-void dense_verts_to_vtk(int start_idx, int end_idx, int num_k, int dense_stride,
-                        const double* field, const char stencil_name[50], const char field_name[50],
-                        int iter);
-void dense_edges_to_vtk(int start_idx, int end_idx, int num_k, int dense_stride,
-                        const double* field, const char stencil_name[50], const char field_name[50],
-                        int iter);
+void serialize_dense_cells(int start_idx, int end_idx, int num_k, int dense_stride,
+                           const double* field, const char stencil_name[50],
+                           const char field_name[50], int iter);
+void serialize_dense_verts(int start_idx, int end_idx, int num_k, int dense_stride,
+                           const double* field, const char stencil_name[50],
+                           const char field_name[50], int iter);
+void serialize_dense_edges(int start_idx, int end_idx, int num_k, int dense_stride,
+                           const double* field, const char stencil_name[50],
+                           const char field_name[50], int iter);
 }
