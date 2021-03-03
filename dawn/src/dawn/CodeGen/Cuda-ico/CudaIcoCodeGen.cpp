@@ -911,13 +911,13 @@ void CudaIcoCodeGen::generateAllAPIVerifyFunctions(
     using dawn::ast::LocationType;
     switch(locType) {
     case LocationType::Edges:
-      return "dense_edges_to_vtk";
+      return "serialize_dense_edges";
       break;
     case LocationType::Cells:
-      return "dense_cells_to_vtk";
+      return "serialize_dense_cells";
       break;
     case LocationType::Vertices:
-      return "dense_vertices_to_vtk";
+      return "serialize_dense_verts";
       break;
     default:
       dawn_unreachable("invalid location type");
