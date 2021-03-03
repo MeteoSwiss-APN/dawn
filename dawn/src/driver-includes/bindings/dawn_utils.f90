@@ -3,9 +3,9 @@ use iso_c_binding
 
 implicit none
   interface
-    subroutine dense_cells_to_vtk(start_idx, end_idx, num_k, &
+    subroutine serialize_dense_cells(start_idx, end_idx, num_k, &
                                   dense_stride, field, stencil_name, &
-                                  field_name, iteration) bind(c, name="dense_cells_to_vtk")
+                                  field_name, iteration) bind(c)
       use iso_c_binding
       integer(c_int), value :: start_idx
       integer(c_int), value :: end_idx
@@ -16,9 +16,9 @@ implicit none
       character(kind=c_char), dimension(*) :: field_name
       integer(c_int), value :: iteration
     end subroutine
-    subroutine dense_edges_to_vtk(start_idx, end_idx, num_k, &
+    subroutine serialize_dense_edges(start_idx, end_idx, num_k, &
                                   dense_stride, field, stencil_name, &
-                                  field_name, iteration) bind(c, name="dense_edges_to_vtk")
+                                  field_name, iteration) bind(c)
       use iso_c_binding
       integer(c_int), value :: start_idx
       integer(c_int), value :: end_idx
@@ -29,9 +29,9 @@ implicit none
       character(kind=c_char), dimension(*) :: field_name
       integer(c_int), value :: iteration
     end subroutine
-    subroutine dense_verts_to_vtk(start_idx, end_idx, num_k, &
+    subroutine serialize_dense_verts(start_idx, end_idx, num_k, &
                                   dense_stride, field, stencil_name, &
-                                  field_name, iteration) bind(c, name="dense_verts_to_vtk")
+                                  field_name, iteration) bind(c)
       use iso_c_binding
       integer(c_int), value :: start_idx
       integer(c_int), value :: end_idx

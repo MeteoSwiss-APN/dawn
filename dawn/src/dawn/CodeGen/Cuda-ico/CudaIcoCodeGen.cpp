@@ -312,23 +312,25 @@ void CudaIcoCodeGen::generateRunFun(
 
       auto numElementsString = [&](ast::LocationType loc,
                                    std::optional<iir::Interval> iterSpace) -> std::string {
-          return iterSpace.has_value() ? "mesh_.Domain({::dawn::LocationType::" + locToStringPlural(loc) + "," +
-                                      spaceMagicNumToEnum(iterSpace->upperLevel()) + "," +
-                                      std::to_string(iterSpace->upperOffset()) + "})" +
-                                      "- mesh_.Domain({::dawn::LocationType::" + locToStringPlural(loc) + "," +
-                                      spaceMagicNumToEnum(iterSpace->lowerLevel()) + "," +
-                                      std::to_string(iterSpace->lowerOffset()) + "}) + 1"
-                                : "mesh_.Num" + locToStringPlural(loc);
+        return iterSpace.has_value()
+                   ? "mesh_.Domain({::dawn::LocationType::" + locToStringPlural(loc) + "," +
+                         spaceMagicNumToEnum(iterSpace->upperLevel()) + "," +
+                         std::to_string(iterSpace->upperOffset()) + "})" +
+                         "- mesh_.Domain({::dawn::LocationType::" + locToStringPlural(loc) + "," +
+                         spaceMagicNumToEnum(iterSpace->lowerLevel()) + "," +
+                         std::to_string(iterSpace->lowerOffset()) + "}) + 1"
+                   : "mesh_.Num" + locToStringPlural(loc);
       };
-      auto hOffsetSizeString = [&](ast::LocationType loc, iir::Interval iterSpace) -> std::string {        
+      auto hOffsetSizeString = [&](ast::LocationType loc, iir::Interval iterSpace) -> std::string {
         return "mesh_.Domain({::dawn::LocationType::" + locToStringPlural(loc) + "," +
-                 spaceMagicNumToEnum(iterSpace.lowerLevel()) + "," +
-                 std::to_string(iterSpace.lowerOffset()) + "})";
+               spaceMagicNumToEnum(iterSpace.lowerLevel()) + "," +
+               std::to_string(iterSpace.lowerOffset()) + "})";
       };
 
       auto domain = stage->getUnstructuredIterationSpace();
       std::string hSizeString = "hsize" + std::to_string(stage->getStageID());
-      std::string numElString = "mesh_." + locToDenseSizeStringGpuMesh(*stage->getLocationType(), codeGenOptions.UnstrPadding);
+      std::string numElString = "mesh_." + locToDenseSizeStringGpuMesh(*stage->getLocationType(),
+                                                                       codeGenOptions.UnstrPadding);
       std::string hOffsetString = "hoffset" + std::to_string(stage->getStageID());
       runFun.addStatement("int " + hSizeString + " = " +
                           numElementsString(*stage->getLocationType(), domain));
@@ -388,7 +390,8 @@ void CudaIcoCodeGen::generateRunFun(
         if(dims.getDenseLocationType() == *stage->getLocationType()) {
           continue;
         }
-        locArgs.insert(locToDenseSizeStringGpuMesh(dims.getDenseLocationType(), codeGenOptions.UnstrPadding));
+        locArgs.insert(
+            locToDenseSizeStringGpuMesh(dims.getDenseLocationType(), codeGenOptions.UnstrPadding));
       }
       for(auto arg : locArgs) {
         kernelCall << "mesh_." + arg + ", ";
@@ -908,13 +911,13 @@ void CudaIcoCodeGen::generateAllAPIVerifyFunctions(
     using dawn::ast::LocationType;
     switch(locType) {
     case LocationType::Edges:
-      return "dense_edges_to_vtk";
+      return "serialize_dense_edges";
       break;
     case LocationType::Cells:
-      return "dense_cells_to_vtk";
+      return "serialize_dense_cells";
       break;
     case LocationType::Vertices:
-      return "dense_vertices_to_vtk";
+      return "serialize_dense_verts";
       break;
     default:
       dawn_unreachable("invalid location type");
@@ -981,8 +984,9 @@ void CudaIcoCodeGen::generateAllAPIVerifyFunctions(
                                    locToDenseSizeStringGpuMesh(unstrDims.getDenseLocationType(),
                                                                codeGenOptions.UnstrPadding) +
                                    ")";
-        std::string indexOfLastHorElement = "(mesh." +
-                                   locToDenseSizeStringGpuMesh(unstrDims.getDenseLocationType(), std::nullopt) + " -1)";                                                                       
+        std::string indexOfLastHorElement =
+            "(mesh." + locToDenseSizeStringGpuMesh(unstrDims.getDenseLocationType(), std::nullopt) +
+            " -1)";
         std::string num_el = dense_stride + " * " + num_lev;
         if(unstrDims.isSparse()) {
           num_el += " * dawn_generated::cuda_ico::" + wrapperName +
@@ -1000,13 +1004,13 @@ void CudaIcoCodeGen::generateAllAPIVerifyFunctions(
             // serialize actual field
             auto lt = unstrDims.getDenseLocationType();
             auto serializeCall = getSerializeCall(lt);
-            verifyAPI.addStatement(serializeCall + "(0" + ", " + indexOfLastHorElement + ", " + num_lev + ", " +
-                                   dense_stride + ", " + fieldInfo.Name + ", \"" + wrapperName +
-                                   "\", \"" + fieldInfo.Name + "\", iteration)");
+            verifyAPI.addStatement(serializeCall + "(0" + ", " + indexOfLastHorElement + ", " +
+                                   num_lev + ", " + dense_stride + ", " + fieldInfo.Name + ", \"" +
+                                   wrapperName + "\", \"" + fieldInfo.Name + "\", iteration)");
             // serialize dsl field
-            verifyAPI.addStatement(serializeCall + "(0" + ", " + indexOfLastHorElement + ", " + num_lev + ", " +
-                                   dense_stride + ", " + fieldInfo.Name + "_dsl" + ", \"" +
-                                   wrapperName + "\", \"" + fieldInfo.Name + "_dsl" +
+            verifyAPI.addStatement(serializeCall + "(0" + ", " + indexOfLastHorElement + ", " +
+                                   num_lev + ", " + dense_stride + ", " + fieldInfo.Name + "_dsl" +
+                                   ", \"" + wrapperName + "\", \"" + fieldInfo.Name + "_dsl" +
                                    "\", iteration)");
             verifyAPI.addStatement("std::cout << \"[DSL] serializing " + fieldInfo.Name +
                                    " as error is high.\\n\" << std::flush");
@@ -1027,7 +1031,7 @@ void CudaIcoCodeGen::generateAllAPIVerifyFunctions(
 
       // TODO runAndVerifyAPI body
       runAndVerifyAPI.addStatement("static int iteration = 0");
-   
+
       runAndVerifyAPI.addStatement("std::cout << \"[DSL] Running stencil " + wrapperName +
                                    "...\\n\" << std::flush");
 
@@ -1204,7 +1208,7 @@ void CudaIcoCodeGen::generateAllCudaKernels(
 
       // for horizontal iteration spaces we also need the offset
       if(stage->getUnstructuredIterationSpace().has_value()) {
-        cudaKernel.addArg("int hOffset");        
+        cudaKernel.addArg("int hOffset");
       }
       cudaKernel.addArg("int hSize");
 
@@ -1429,7 +1433,7 @@ generateF90InterfaceSI(FortranInterfaceModuleGen& fimGen,
   // however the interface would not be very useful if the name is generated.
   DAWN_ASSERT_MSG(stencils.size() <= 1,
                   "Unable to generate interface. More than one stencil in stencil instantiation.");
-  const auto &stencil = *stencils[0];
+  const auto& stencil = *stencils[0];
 
   std::vector<FortranInterfaceAPI> interfaces = {
       FortranInterfaceAPI("run_" + stencilInstantiation->getName(),
@@ -1445,8 +1449,8 @@ generateF90InterfaceSI(FortranInterfaceModuleGen& fimGen,
   const int fromHostAPIIdx = 1;
   interfaces[fromHostAPIIdx].addArg("mesh", FortranAPI::InterfaceType::OBJ);
   interfaces[fromHostAPIIdx].addArg("k_size", FortranAPI::InterfaceType::INTEGER);
-  
-  const int runAndVerifyIdx = 2;  
+
+  const int runAndVerifyIdx = 2;
 
   auto addArgsToAPI = [&](FortranAPI& api, bool includeSavedState) {
     for(const auto& global : globalsMap) {
@@ -1461,7 +1465,8 @@ generateF90InterfaceSI(FortranInterfaceModuleGen& fimGen,
           stencilInstantiation->getMetaData().getFieldDimensions(fieldID).rank());
     }
     if(includeSavedState) {
-       for(auto fieldID : getUsedFields(stencil, {dawn::iir::Field::IntendKind::Output, dawn::iir::Field::IntendKind::InputOutput})) {
+      for(auto fieldID : getUsedFields(stencil, {dawn::iir::Field::IntendKind::Output,
+                                                 dawn::iir::Field::IntendKind::InputOutput})) {
         api.addArg(
             stencilInstantiation->getMetaData().getNameFromAccessID(fieldID) + "_before",
             FortranAPI::InterfaceType::DOUBLE /* Unfortunately we need to know at codegen
@@ -1487,7 +1492,8 @@ generateF90InterfaceSI(FortranInterfaceModuleGen& fimGen,
       args.push_back(stencilInstantiation->getMetaData().getNameFromAccessID(fieldID));
     }
     if(includeSavedState) {
-       for(auto fieldID : getUsedFields(stencil, {dawn::iir::Field::IntendKind::Output, dawn::iir::Field::IntendKind::InputOutput})) {
+      for(auto fieldID : getUsedFields(stencil, {dawn::iir::Field::IntendKind::Output,
+                                                 dawn::iir::Field::IntendKind::InputOutput})) {
         args.push_back(stencilInstantiation->getMetaData().getNameFromAccessID(fieldID) +
                        "_before");
       }
@@ -1503,8 +1509,8 @@ generateF90InterfaceSI(FortranInterfaceModuleGen& fimGen,
       wrapper.addBodyLine("   " + first + ", &"); // TODO remove
     }
 
-    auto args =
-        concatenateVectors<std::string>({getGlobalsNames(globalsMap), getFieldArgs(includeSavedState)});
+    auto args = concatenateVectors<std::string>(
+        {getGlobalsNames(globalsMap), getFieldArgs(includeSavedState)});
 
     for(int i = 0; i < args.size(); ++i) {
       wrapper.addBodyLine("   " + args[i] + (i == (args.size() - 1) ? " &" : ", &"));
@@ -1520,10 +1526,10 @@ generateF90InterfaceSI(FortranInterfaceModuleGen& fimGen,
   runWrapper.addACCLine(")");
   runWrapper.addBodyLine("#ifdef __DSL_VERIFY", /*withIndentation*/ false);
   runWrapper.addBodyLine("CALL run_and_verify_" + stencilInstantiation->getName() + " &");
-  genCallArgs(runWrapper, "", /*includeSavedState*/ true); 
+  genCallArgs(runWrapper, "", /*includeSavedState*/ true);
   runWrapper.addBodyLine("#else", /*withIndentation*/ false);
   runWrapper.addBodyLine("timing = run_" + stencilInstantiation->getName() + " &");
-  genCallArgs(runWrapper, "", /*includeSavedState*/ false); 
+  genCallArgs(runWrapper, "", /*includeSavedState*/ false);
   runWrapper.addBodyLine("#endif", /*withIndentation*/ false);
   runWrapper.addACCLine("end host_data");
 
