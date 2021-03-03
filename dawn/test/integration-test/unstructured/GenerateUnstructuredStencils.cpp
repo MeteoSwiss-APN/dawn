@@ -858,10 +858,10 @@ int main() {
     auto stencilInstantiation = b.build(
         stencilName, b.stencil(b.multistage(
                          LoopOrderKind::Parallel,
-                         b.stage(LocType::Cells, Interval(3, 4, 0, 0),
+                         b.stage(LocType::Cells, Interval(3000, 4000, 0, 0),
                                  b.doMethod(dawn::ast::Interval::Start, dawn::ast::Interval::End, 0,
                                             0, b.stmt(b.assignExpr(b.at(out), b.at(in_1))))),
-                         b.stage(LocType::Cells, Interval(2, 3, 0, 0),
+                         b.stage(LocType::Cells, Interval(2000, 3000, 0, 0),
                                  b.doMethod(dawn::ast::Interval::Start, dawn::ast::Interval::End, 0,
                                             0, b.stmt(b.assignExpr(b.at(out), b.at(in_2))))))));
 

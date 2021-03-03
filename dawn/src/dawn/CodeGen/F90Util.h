@@ -82,7 +82,10 @@ public:
     }
   }
   void addArg(std::string name, InterfaceType type, int dimensions = 0) {
-    args_.push_back(std::make_tuple(name, TypeToString(type), dimensions));
+    args_.push_back(std::make_tuple(name, TypeToString(type), dimensions, false));
+  }
+  void addOptArg(std::string name, InterfaceType type, int dimensions = 0) {
+    args_.push_back(std::make_tuple(name, TypeToString(type), dimensions, true));
   }
 
 protected:
@@ -144,7 +147,8 @@ protected:
 
   std::string name_;
   std::string returnType_ = "";
-  std::vector<std::tuple<std::string, std::string, int>> args_; // (name, type, dimensions)
+  std::vector<std::tuple<std::string, std::string, int, bool>>
+      args_; // (name, type, dimensions, optional)
   friend class FortranInterfaceModuleGen;
 };
 
@@ -178,7 +182,8 @@ protected:
         }
         ss << ")";
       }
-      ss << ", target :: " << std::get<0>(arg) << endline;
+      ss << ", target" << std::string(std::get<3>(arg) ? ", optional" : "")
+         << " :: " << std::get<0>(arg) << endline;
     });
   }
 
@@ -214,7 +219,8 @@ protected:
       } else {
         ss << "dimension(*)";
       }
-      ss << ", target :: " << std::get<0>(arg) << endline;
+      ss << ", target" << std::string(std::get<3>(arg) ? ", optional" : "")
+         << " :: " << std::get<0>(arg) << endline;
     });
   }
 };
