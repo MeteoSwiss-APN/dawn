@@ -942,6 +942,7 @@ void CudaIcoCodeGen::generateAllAPIVerifyFunctions(
                        stencilInstantiation->getMetaData().getNameFromAccessID(fieldID));
     }
     verifyAPI.addArg("const int iteration");
+    verifyAPI.addArg("const double rel_err_threshold");
     verifyAPI.finishArgs();
 
     addGlobalsArgs(globalsMap, runAndVerifyAPI);
@@ -955,6 +956,7 @@ void CudaIcoCodeGen::generateAllAPIVerifyFunctions(
                              stencilInstantiation->getMetaData().getNameFromAccessID(fieldID) +
                              "_before");
     }
+    runAndVerifyAPI.addArg("const double rel_err_threshold");
     runAndVerifyAPI.finishArgs();
 
     if(!onlyDecl) {
@@ -997,7 +999,7 @@ void CudaIcoCodeGen::generateAllAPIVerifyFunctions(
                                "_dsl" + "," + fieldInfo.Name + ", \"" + fieldInfo.Name + "\"" +
                                ")");
 
-        verifyAPI.addBlockStatement("if (relErr > RELATIVE_ERROR_THRESHOLD)", [&]() {
+        verifyAPI.addBlockStatement("if (relErr > rel_err_threshold)", [&]() {
           verifyAPI.addStatement("isValid = false");
           verifyAPI.addPreprocessorDirective("ifdef __SERIALIZE_ON_ERROR");
           if(!unstrDims.isSparse()) {
@@ -1071,9 +1073,10 @@ void CudaIcoCodeGen::generateAllAPIVerifyFunctions(
         outputVerifyFields.push_back(fieldName);
       }
 
-      runAndVerifyAPI.addStatement(
-          "verify_" + wrapperName + "(" +
-          explodeToStr(concatenateVectors({outputVerifyFields, {"iteration"}})) + ")");
+      runAndVerifyAPI.addStatement("verify_" + wrapperName + "(" +
+                                   explodeToStr(concatenateVectors(
+                                       {outputVerifyFields, {"iteration", "rel_err_threshold"}})) +
+                                   ")");
 
       runAndVerifyAPI.addStatement("iteration++");
     }
@@ -1482,9 +1485,11 @@ generateF90InterfaceSI(FortranInterfaceModuleGen& fimGen,
   addArgsToAPI(interfaces[fromHostAPIIdx], /*includeSavedState*/ false);
   fimGen.addInterfaceAPI(std::move(interfaces[fromHostAPIIdx]));
   addArgsToAPI(interfaces[runAndVerifyIdx], /*includeSavedState*/ true);
+  interfaces[runAndVerifyIdx].addArg("rel_err_threshold", FortranAPI::InterfaceType::DOUBLE);
   fimGen.addInterfaceAPI(std::move(interfaces[runAndVerifyIdx]));
 
   addArgsToAPI(runWrapper, /*includeSavedState*/ true);
+  runWrapper.addOptArg("rel_err_threshold", FortranAPI::InterfaceType::DOUBLE);
 
   auto getFieldArgs = [&](bool includeSavedState) -> std::vector<std::string> {
     std::vector<std::string> args;
@@ -1501,8 +1506,8 @@ generateF90InterfaceSI(FortranInterfaceModuleGen& fimGen,
     return args;
   };
 
-  auto genCallArgs = [&](FortranWrapperAPI& wrapper, std::string first = "",
-                         bool includeSavedState = false) {
+  auto genCallArgs = [&](FortranWrapperAPI& wrapper, std::string first = "", bool includeSavedState,
+                         bool includeErrorThreshold) {
     wrapper.addBodyLine("( &");
 
     if(first != "") {
@@ -1513,7 +1518,13 @@ generateF90InterfaceSI(FortranInterfaceModuleGen& fimGen,
         {getGlobalsNames(globalsMap), getFieldArgs(includeSavedState)});
 
     for(int i = 0; i < args.size(); ++i) {
-      wrapper.addBodyLine("   " + args[i] + (i == (args.size() - 1) ? " &" : ", &"));
+      wrapper.addBodyLine("   " + args[i] +
+                          ((i == (args.size() - 1)) && !includeErrorThreshold ? " &" : ", &"));
+    }
+    if(includeErrorThreshold) {
+      wrapper.addBodyLine(
+          "   MERGE(rel_err_threshold,DEFAULT_RELATIVE_ERROR_THRESHOLD,present(rel_err_threshold)) "
+          "&");
     }
     wrapper.addBodyLine(")");
   };
@@ -1526,10 +1537,10 @@ generateF90InterfaceSI(FortranInterfaceModuleGen& fimGen,
   runWrapper.addACCLine(")");
   runWrapper.addBodyLine("#ifdef __DSL_VERIFY", /*withIndentation*/ false);
   runWrapper.addBodyLine("CALL run_and_verify_" + stencilInstantiation->getName() + " &");
-  genCallArgs(runWrapper, "", /*includeSavedState*/ true);
+  genCallArgs(runWrapper, "", /*includeSavedState*/ true, /*includeErrorThreshold*/ true);
   runWrapper.addBodyLine("#else", /*withIndentation*/ false);
   runWrapper.addBodyLine("timing = run_" + stencilInstantiation->getName() + " &");
-  genCallArgs(runWrapper, "", /*includeSavedState*/ false);
+  genCallArgs(runWrapper, "", /*includeSavedState*/ false, /*includeErrorThreshold*/ false);
   runWrapper.addBodyLine("#endif", /*withIndentation*/ false);
   runWrapper.addACCLine("end host_data");
 
@@ -1547,6 +1558,7 @@ generateF90InterfaceSI(FortranInterfaceModuleGen& fimGen,
 
 std::string CudaIcoCodeGen::generateF90Interface(std::string moduleName) const {
   std::stringstream ss;
+  ss << "#define DEFAULT_RELATIVE_ERROR_THRESHOLD 1.0d-12" << std::endl;
   IndentedStringStream iss(ss);
 
   FortranInterfaceModuleGen fimGen(iss, moduleName);
@@ -1612,9 +1624,6 @@ std::unique_ptr<TranslationUnit> CudaIcoCodeGen::generateCode() {
       "#include <chrono>",
       "#define BLOCK_SIZE 16",
       "#define LEVELS_PER_THREAD 1",
-      "#ifndef RELATIVE_ERROR_THRESHOLD",
-      "#define RELATIVE_ERROR_THRESHOLD 1.0e-12",
-      "#endif",
       "using namespace gridtools::dawn;",
   };
 
