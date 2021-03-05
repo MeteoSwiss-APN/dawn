@@ -281,8 +281,9 @@ void CudaIcoCodeGen::generateRunFun(
       std::stringstream k_size;
       DAWN_ASSERT_MSG(intervalsConsistent(*stage),
                       "intervals in a stage must have same Levels for now!\n");
-      auto interval = stage->getChild(0)->getInterval();      
-      if(interval.levelIsEnd(iir::Interval::Bound::upper) && interval.levelIsEnd(iir::Interval::Bound::lower)) {
+      auto interval = stage->getChild(0)->getInterval();
+      if(interval.levelIsEnd(iir::Interval::Bound::upper) &&
+         interval.levelIsEnd(iir::Interval::Bound::lower)) {
         k_size << (interval.upperOffset() - interval.lowerOffset());
       } else if(interval.levelIsEnd(iir::Interval::Bound::upper)) {
         k_size << "kSize_ + " << interval.upperOffset() << " - "
@@ -1510,8 +1511,8 @@ generateF90InterfaceSI(FortranInterfaceModuleGen& fimGen,
     return args;
   };
 
-  auto genCallArgs = [&](FortranWrapperAPI& wrapper, std::string first = "", bool includeSavedState = false,
-                         bool includeErrorThreshold = false) {
+  auto genCallArgs = [&](FortranWrapperAPI& wrapper, std::string first = "",
+                         bool includeSavedState = false, bool includeErrorThreshold = false) {
     wrapper.addBodyLine("( &");
 
     if(first != "") {

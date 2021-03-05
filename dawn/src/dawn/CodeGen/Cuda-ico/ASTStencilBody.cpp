@@ -108,38 +108,18 @@ void ASTStencilBody::visit(const std::shared_ptr<ast::UnaryOperator>& expr) {
 }
 void ASTStencilBody::visit(const std::shared_ptr<ast::BinaryOperator>& expr) {
   std::stringstream& localSS = parentIsReduction_ ? reductionMap_[parentReductionID_] : ss_;
-  // bool needsBrackets = !(expr->getLeft()->getKind() == ast::Expr::Kind::ReductionOverNeighborExpr) && 
-  //                      !(expr->getRight()->getKind() == ast::Expr::Kind::ReductionOverNeighborExpr);
-  // if (needsBrackets) {
-    localSS << "(";
-  // }                       
+  localSS << "(";
   expr->getLeft()->accept(*this);
   localSS << " " << expr->getOp() << " ";
   expr->getRight()->accept(*this);
-  // if (needsBrackets) {
-    localSS << ")";
-  // }
+  localSS << ")";
 }
 
 void ASTStencilBody::visit(const std::shared_ptr<ast::AssignmentExpr>& expr) {
   std::stringstream& localSS = parentIsReduction_ ? reductionMap_[parentReductionID_] : ss_;
-
-  FindReduceOverNeighborExpr findReduceOverNeighborExpr;
-  expr->getRight()->accept(findReduceOverNeighborExpr);  
-
-  // if(findReduceOverNeighborExpr.hasReduceOverNeighborExpr()) {
-  //   expr->getRight()->accept(*this);
-  //   expr->getLeft()->accept(*this);
-  //   localSS << " " << expr->getOp() << " ";
-  //   const auto& reductions =  findReduceOverNeighborExpr.reduceOverNeighborExprs();
-  //   DAWN_ASSERT(reductions.size() == 1);
-  //   std::string lhs_name = "lhs_" + std::to_string(reductions[0]->getID());
-  //   localSS << lhs_name;
-  // } else {
-    expr->getLeft()->accept(*this);
-    localSS << " " << expr->getOp() << " ";
-    expr->getRight()->accept(*this);
-  // }
+  expr->getLeft()->accept(*this);
+  localSS << " " << expr->getOp() << " ";
+  expr->getRight()->accept(*this);
 }
 
 std::string ASTStencilBody::makeIndexString(const std::shared_ptr<ast::FieldAccessExpr>& expr,
@@ -170,7 +150,7 @@ std::string ASTStencilBody::makeIndexString(const std::shared_ptr<ast::FieldAcce
 
   if(isFullField && isSparse) {
     DAWN_ASSERT_MSG(parentIsForLoop_ || parentIsReduction_,
-                    "Sparse Field Access not allowed in this context");    
+                    "Sparse Field Access not allowed in this context");
     return "nbhIter * kSize * " + denseSize + " + " + kiterStr + "*" + denseSize + " + pidx";
   }
 
@@ -251,29 +231,29 @@ void ASTStencilBody::visit(const std::shared_ptr<ast::IfStmt>& stmt) {
 
 void ASTStencilBody::visit(const std::shared_ptr<ast::ExprStmt>& stmt) {
   FindReduceOverNeighborExpr findReduceOverNeighborExpr;
-  stmt->getExpr()->accept(findReduceOverNeighborExpr);  
+  stmt->getExpr()->accept(findReduceOverNeighborExpr);
 
-   if(findReduceOverNeighborExpr.hasReduceOverNeighborExpr()) {  
-     const auto& reductions =  findReduceOverNeighborExpr.reduceOverNeighborExprs();
-     DAWN_ASSERT(reductions.size() == 1);
-     ss_ << reductionMap_.at(reductions[0]->getID()).str();
-   }
+  if(findReduceOverNeighborExpr.hasReduceOverNeighborExpr()) {
+    const auto& reductions = findReduceOverNeighborExpr.reduceOverNeighborExprs();
+    DAWN_ASSERT(reductions.size() == 1);
+    ss_ << reductionMap_.at(reductions[0]->getID()).str();
+  }
 
-   stmt->getExpr()->accept(*this);
-   ss_ << ";\n";
+  stmt->getExpr()->accept(*this);
+  ss_ << ";\n";
 }
 
 void ASTStencilBody::visit(const std::shared_ptr<ast::VarDeclStmt>& stmt) {
   FindReduceOverNeighborExpr findReduceOverNeighborExpr;
-  stmt->accept(findReduceOverNeighborExpr);  
+  stmt->accept(findReduceOverNeighborExpr);
 
-   if(findReduceOverNeighborExpr.hasReduceOverNeighborExpr()) {  
-     const auto& reductions =  findReduceOverNeighborExpr.reduceOverNeighborExprs();
-     DAWN_ASSERT(reductions.size() == 1);
-     ss_ << reductionMap_.at(reductions[0]->getID()).str();
-   }
+  if(findReduceOverNeighborExpr.hasReduceOverNeighborExpr()) {
+    const auto& reductions = findReduceOverNeighborExpr.reduceOverNeighborExprs();
+    DAWN_ASSERT(reductions.size() == 1);
+    ss_ << reductionMap_.at(reductions[0]->getID()).str();
+  }
 
-   ASTCodeGenCXX::visit(stmt);
+  ASTCodeGenCXX::visit(stmt);
 }
 
 void ASTStencilBody::visit(const std::shared_ptr<ast::ReductionOverNeighborExpr>& expr) {
