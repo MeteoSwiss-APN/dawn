@@ -13,6 +13,7 @@
 //===------------------------------------------------------------------------------------------===//
 
 #include "ASTStencilBody.h"
+#include "dawn/AST/ASTExpr.h"
 #include "dawn/AST/LocationType.h"
 #include "dawn/IIR/AST.h"
 #include "dawn/IIR/ASTExpr.h"
@@ -76,26 +77,55 @@ void ASTStencilBody::visit(const std::shared_ptr<ast::ReturnStmt>& stmt) {
 }
 
 void ASTStencilBody::visit(const std::shared_ptr<ast::VarAccessExpr>& expr) {
+  std::stringstream& localSS = parentIsReduction_ ? reductionMap_[parentReductionID_] : ss_;
   std::string name = getName(expr);
   int AccessID = iir::getAccessID(expr);
 
   if(metadata_.isAccessType(iir::FieldAccessType::GlobalVariable, AccessID)) {
-    ss_ << "globals." << name;
+    localSS << "globals." << name;
   } else {
-    ss_ << name;
+    localSS << name;
 
     if(expr->isArrayAccess()) {
-      ss_ << "[";
+      localSS << "[";
       expr->getIndex()->accept(*this);
-      ss_ << "]";
+      localSS << "]";
     }
   }
 }
 
-void ASTStencilBody::visit(const std::shared_ptr<ast::AssignmentExpr>& expr) {
+void ASTStencilBody::visit(const std::shared_ptr<ast::LiteralAccessExpr>& expr) {
+  std::stringstream& localSS = parentIsReduction_ ? reductionMap_[parentReductionID_] : ss_;
+  std::string type(ASTCodeGenCXX::builtinTypeIDToCXXType(expr->getBuiltinType(), false));
+  localSS << (type.empty() ? "" : "(" + type + ") ") << expr->getValue();
+}
+
+void ASTStencilBody::visit(const std::shared_ptr<ast::UnaryOperator>& expr) {
+  std::stringstream& localSS = parentIsReduction_ ? reductionMap_[parentReductionID_] : ss_;
+  localSS << "(" << expr->getOp();
+  expr->getOperand()->accept(*this);
+  localSS << ")";
+}
+void ASTStencilBody::visit(const std::shared_ptr<ast::BinaryOperator>& expr) {
+  std::stringstream& localSS = parentIsReduction_ ? reductionMap_[parentReductionID_] : ss_;
+  localSS << "(";
   expr->getLeft()->accept(*this);
-  ss_ << " " << expr->getOp() << " ";
+  localSS << " " << expr->getOp() << " ";
   expr->getRight()->accept(*this);
+  localSS << ")";
+}
+
+void ASTStencilBody::visit(const std::shared_ptr<ast::AssignmentExpr>& expr) {
+  std::stringstream& localSS = parentIsReduction_ ? reductionMap_[parentReductionID_] : ss_;
+  if(expr->getRight()->getKind() == ast::Expr::Kind::ReductionOverNeighborExpr) {
+    expr->getRight()->accept(*this);
+    localSS << " " << expr->getOp() << " ";
+    expr->getLeft()->accept(*this);
+  } else {
+    expr->getLeft()->accept(*this);
+    localSS << " " << expr->getOp() << " ";
+    expr->getRight()->accept(*this);
+  }
 }
 
 std::string ASTStencilBody::makeIndexString(const std::shared_ptr<ast::FieldAccessExpr>& expr,
@@ -154,36 +184,42 @@ std::string ASTStencilBody::makeIndexString(const std::shared_ptr<ast::FieldAcce
 }
 
 void ASTStencilBody::visit(const std::shared_ptr<ast::FieldAccessExpr>& expr) {
+  std::stringstream& localSS = parentIsReduction_ ? reductionMap_[parentReductionID_] : ss_;
+
   if(!expr->getOffset().hasVerticalIndirection()) {
-    ss_ << expr->getName() + "[" +
-               makeIndexString(expr, "(kIter + " +
-                                         std::to_string(expr->getOffset().verticalShift()) + ")") +
-               "]";
+    localSS << expr->getName() + "[" +
+                   makeIndexString(expr, "(kIter + " +
+                                             std::to_string(expr->getOffset().verticalShift()) +
+                                             ")") +
+                   "]";
   } else {
     auto vertOffset = makeIndexString(std::static_pointer_cast<ast::FieldAccessExpr>(
                                           expr->getOffset().getVerticalIndirectionFieldAsExpr()),
                                       "kIter");
-    ss_ << expr->getName() + "[" +
-               makeIndexString(expr, "(int)(" +
-                                         expr->getOffset().getVerticalIndirectionFieldName() + "[" +
-                                         vertOffset + "] " + " + " +
-                                         std::to_string(expr->getOffset().verticalShift()) + ")") +
-               "]";
+    localSS << expr->getName() + "[" +
+                   makeIndexString(expr,
+                                   "(int)(" + expr->getOffset().getVerticalIndirectionFieldName() +
+                                       "[" + vertOffset + "] " + " + " +
+                                       std::to_string(expr->getOffset().verticalShift()) + ")") +
+                   "]";
   }
 }
 
 void ASTStencilBody::visit(const std::shared_ptr<ast::FunCallExpr>& expr) {
+  std::stringstream& localSS = parentIsReduction_ ? reductionMap_[parentReductionID_] : ss_;
+
   std::string callee = expr->getCallee();
   // TODO: temporary hack to remove namespace prefixes
   std::size_t lastcolon = callee.find_last_of(":");
-  ss_ << callee.substr(lastcolon + 1) << "(";
+
+  localSS << callee.substr(lastcolon + 1) << "(";
 
   std::size_t numArgs = expr->getArguments().size();
   for(std::size_t i = 0; i < numArgs; ++i) {
     expr->getArguments()[i]->accept(*this);
-    ss_ << (i == numArgs - 1 ? "" : ", ");
+    localSS << (i == numArgs - 1 ? "" : ", ");
   }
-  ss_ << ")";
+  localSS << ")";
 }
 
 void ASTStencilBody::visit(const std::shared_ptr<ast::IfStmt>& stmt) {
@@ -208,51 +244,56 @@ void ASTStencilBody::visit(const std::shared_ptr<ast::ReductionOverNeighborExpr>
   std::string lhs_name = "lhs_" + std::to_string(expr->getID());
 
   if(!firstPass_) {
+    ss_ << reductionMap_.at(expr->getID()).str();
     ss_ << " " << lhs_name << " ";
     return;
   }
 
   parentIsReduction_ = true;
+  parentReductionID_ = expr->getID();
+
+  std::stringstream& localSS_ = reductionMap_[expr->getID()];
 
   std::string weights_name = "weights_" + std::to_string(expr->getID());
-  ss_ << "::dawn::float_type " << lhs_name << " = ";
+  localSS_ << "::dawn::float_type " << lhs_name << " = ";
   expr->getInit()->accept(*this);
-  ss_ << ";\n";
+  localSS_ << ";\n";
   auto weights = expr->getWeights();
   if(weights.has_value()) {
-    ss_ << "::dawn::float_type " << weights_name << "[" << weights->size() << "] = {";
+    localSS_ << "::dawn::float_type " << weights_name << "[" << weights->size() << "] = {";
     bool first = true;
     for(auto weight : *weights) {
       if(!first) {
-        ss_ << ", ";
+        localSS_ << ", ";
       }
       weight->accept(*this);
       first = false;
     }
-    ss_ << "};\n";
+    localSS_ << "};\n";
   }
-  ss_ << "for (int nbhIter = 0; nbhIter < " << chainToSparseSizeString(expr->getIterSpace())
-      << "; nbhIter++)";
+  localSS_ << "for (int nbhIter = 0; nbhIter < " << chainToSparseSizeString(expr->getIterSpace())
+           << "; nbhIter++)";
 
-  ss_ << "{\n";
-  ss_ << "int nbhIdx = " << chainToTableString(expr->getIterSpace()) << "["
-      << "pidx * " << chainToSparseSizeString(expr->getIterSpace()) << " + nbhIter"
-      << "];\n";
-  ss_ << "if (nbhIdx == DEVICE_MISSING_VALUE) { continue; }";
+  localSS_ << "{\n";
+  localSS_ << "int nbhIdx = " << chainToTableString(expr->getIterSpace()) << "["
+           << "pidx * " << chainToSparseSizeString(expr->getIterSpace()) << " + nbhIter"
+           << "];\n";
+  localSS_ << "if (nbhIdx == DEVICE_MISSING_VALUE) { continue; }";
   if(!expr->isArithmetic()) {
-    ss_ << lhs_name << " = " << expr->getOp() << "(" << lhs_name << ", ";
+    localSS_ << lhs_name << " = " << expr->getOp() << "(" << lhs_name << ", ";
   } else {
-    ss_ << lhs_name << " " << expr->getOp() << "= ";
+    localSS_ << lhs_name << " " << expr->getOp() << "= ";
   }
   if(weights.has_value()) {
-    ss_ << weights_name << "[nbhIter] * ";
+    localSS_ << weights_name << "[nbhIter] * ";
   }
   expr->getRhs()->accept(*this);
   if(!expr->isArithmetic()) {
-    ss_ << ")";
+    localSS_ << ")";
   }
-  ss_ << ";}\n";
+  localSS_ << ";}\n";
   parentIsReduction_ = false;
+  parentReductionID_ = -1;
 }
 
 std::string ASTStencilBody::getName(const std::shared_ptr<ast::VarDeclStmt>& stmt) const {

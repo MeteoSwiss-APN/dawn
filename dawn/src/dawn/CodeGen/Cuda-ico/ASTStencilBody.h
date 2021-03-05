@@ -14,12 +14,15 @@
 
 #pragma once
 
+#include "dawn/AST/ASTExpr.h"
 #include "dawn/CodeGen/ASTCodeGenCXX.h"
 #include "dawn/CodeGen/CodeGenProperties.h"
 #include "dawn/IIR/Interval.h"
 #include "dawn/Support/StringUtil.h"
 
+#include <sstream>
 #include <stack>
+#include <string>
 #include <unordered_map>
 
 #include "LocToStringUtils.h"
@@ -61,9 +64,12 @@ protected:
   std::string sparseArgName_ = "loc";
 
   bool parentIsReduction_ = false;
+  int parentReductionID_ = -1;
   bool parentIsForLoop_ = false;
 
   bool firstPass_ = true;
+
+  std::map<int, std::stringstream> reductionMap_;
 
   /// Nesting level of argument lists of stencil function *calls*
   int nestingOfStencilFunArgLists_;
@@ -99,6 +105,9 @@ public:
   void visit(const std::shared_ptr<ast::StencilFunCallExpr>& expr) override;
   void visit(const std::shared_ptr<ast::StencilFunArgExpr>& expr) override;
   void visit(const std::shared_ptr<ast::VarAccessExpr>& expr) override;
+  void visit(const std::shared_ptr<ast::LiteralAccessExpr>& expr) override;
+  void visit(const std::shared_ptr<ast::UnaryOperator>& expr) override;
+  void visit(const std::shared_ptr<ast::BinaryOperator>& expr) override;
   void visit(const std::shared_ptr<ast::FieldAccessExpr>& expr) override;
   void visit(const std::shared_ptr<ast::ReductionOverNeighborExpr>& expr) override;
   void visit(const std::shared_ptr<ast::AssignmentExpr>& expr) override;
