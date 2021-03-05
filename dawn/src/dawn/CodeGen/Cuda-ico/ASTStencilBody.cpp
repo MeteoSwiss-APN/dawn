@@ -156,10 +156,8 @@ std::string ASTStencilBody::makeIndexString(const std::shared_ptr<ast::FieldAcce
 
   if(isFullField && isSparse) {
     DAWN_ASSERT_MSG(parentIsForLoop_ || parentIsReduction_,
-                    "Sparse Field Access not allowed in this context");
-    std::string sparseSize = chainToSparseSizeString(unstrDims.getIterSpace());
-    return kiterStr + "*" + denseSize + " * " + sparseSize + " + " + "nbhIter * " + denseSize +
-           " + pidx";
+                    "Sparse Field Access not allowed in this context");    
+    return "nbhIter * kSize * " + denseSize + " + " + kiterStr + "*" + denseSize + " + pidx";
   }
 
   if(isHorizontal && isDense) {
