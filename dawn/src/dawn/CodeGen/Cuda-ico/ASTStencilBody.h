@@ -17,6 +17,7 @@
 #include "dawn/AST/ASTExpr.h"
 #include "dawn/CodeGen/ASTCodeGenCXX.h"
 #include "dawn/CodeGen/CodeGenProperties.h"
+#include "dawn/CodeGen/CXXNaive-ico/ASTStencilBody.h"
 #include "dawn/IIR/Interval.h"
 #include "dawn/Support/StringUtil.h"
 
@@ -97,6 +98,8 @@ public:
   void visit(const std::shared_ptr<ast::StencilCallDeclStmt>& stmt) override;
   void visit(const std::shared_ptr<ast::BoundaryConditionDeclStmt>& stmt) override;
   void visit(const std::shared_ptr<ast::IfStmt>& stmt) override;
+  void visit(const std::shared_ptr<ast::ExprStmt>& stmt) override;
+  void visit(const std::shared_ptr<ast::VarDeclStmt>& stmt) override;
   /// @}
 
   /// @name Expression implementation
@@ -111,6 +114,7 @@ public:
   void visit(const std::shared_ptr<ast::FieldAccessExpr>& expr) override;
   void visit(const std::shared_ptr<ast::ReductionOverNeighborExpr>& expr) override;
   void visit(const std::shared_ptr<ast::AssignmentExpr>& expr) override;
+
   /// @}
 
   /// @brief Mapping of VarDeclStmt and Var/FieldAccessExpr to their name

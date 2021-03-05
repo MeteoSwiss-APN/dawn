@@ -108,24 +108,38 @@ void ASTStencilBody::visit(const std::shared_ptr<ast::UnaryOperator>& expr) {
 }
 void ASTStencilBody::visit(const std::shared_ptr<ast::BinaryOperator>& expr) {
   std::stringstream& localSS = parentIsReduction_ ? reductionMap_[parentReductionID_] : ss_;
-  localSS << "(";
+  // bool needsBrackets = !(expr->getLeft()->getKind() == ast::Expr::Kind::ReductionOverNeighborExpr) && 
+  //                      !(expr->getRight()->getKind() == ast::Expr::Kind::ReductionOverNeighborExpr);
+  // if (needsBrackets) {
+    localSS << "(";
+  // }                       
   expr->getLeft()->accept(*this);
   localSS << " " << expr->getOp() << " ";
   expr->getRight()->accept(*this);
-  localSS << ")";
+  // if (needsBrackets) {
+    localSS << ")";
+  // }
 }
 
 void ASTStencilBody::visit(const std::shared_ptr<ast::AssignmentExpr>& expr) {
   std::stringstream& localSS = parentIsReduction_ ? reductionMap_[parentReductionID_] : ss_;
-  if(expr->getRight()->getKind() == ast::Expr::Kind::ReductionOverNeighborExpr) {
-    expr->getRight()->accept(*this);
-    localSS << " " << expr->getOp() << " ";
+
+  FindReduceOverNeighborExpr findReduceOverNeighborExpr;
+  expr->getRight()->accept(findReduceOverNeighborExpr);  
+
+  // if(findReduceOverNeighborExpr.hasReduceOverNeighborExpr()) {
+  //   expr->getRight()->accept(*this);
+  //   expr->getLeft()->accept(*this);
+  //   localSS << " " << expr->getOp() << " ";
+  //   const auto& reductions =  findReduceOverNeighborExpr.reduceOverNeighborExprs();
+  //   DAWN_ASSERT(reductions.size() == 1);
+  //   std::string lhs_name = "lhs_" + std::to_string(reductions[0]->getID());
+  //   localSS << lhs_name;
+  // } else {
     expr->getLeft()->accept(*this);
-  } else {
-    expr->getLeft()->accept(*this);
     localSS << " " << expr->getOp() << " ";
     expr->getRight()->accept(*this);
-  }
+  // }
 }
 
 std::string ASTStencilBody::makeIndexString(const std::shared_ptr<ast::FieldAccessExpr>& expr,
@@ -235,6 +249,33 @@ void ASTStencilBody::visit(const std::shared_ptr<ast::IfStmt>& stmt) {
   }
 }
 
+void ASTStencilBody::visit(const std::shared_ptr<ast::ExprStmt>& stmt) {
+  FindReduceOverNeighborExpr findReduceOverNeighborExpr;
+  stmt->getExpr()->accept(findReduceOverNeighborExpr);  
+
+   if(findReduceOverNeighborExpr.hasReduceOverNeighborExpr()) {  
+     const auto& reductions =  findReduceOverNeighborExpr.reduceOverNeighborExprs();
+     DAWN_ASSERT(reductions.size() == 1);
+     ss_ << reductionMap_.at(reductions[0]->getID()).str();
+   }
+
+   stmt->getExpr()->accept(*this);
+   ss_ << ";\n";
+}
+
+void ASTStencilBody::visit(const std::shared_ptr<ast::VarDeclStmt>& stmt) {
+  FindReduceOverNeighborExpr findReduceOverNeighborExpr;
+  stmt->accept(findReduceOverNeighborExpr);  
+
+   if(findReduceOverNeighborExpr.hasReduceOverNeighborExpr()) {  
+     const auto& reductions =  findReduceOverNeighborExpr.reduceOverNeighborExprs();
+     DAWN_ASSERT(reductions.size() == 1);
+     ss_ << reductionMap_.at(reductions[0]->getID()).str();
+   }
+
+   ASTCodeGenCXX::visit(stmt);
+}
+
 void ASTStencilBody::visit(const std::shared_ptr<ast::ReductionOverNeighborExpr>& expr) {
   DAWN_ASSERT_MSG(!parentIsReduction_,
                   "Nested Reductions not yet supported for CUDA code generation");
@@ -242,8 +283,7 @@ void ASTStencilBody::visit(const std::shared_ptr<ast::ReductionOverNeighborExpr>
   std::string lhs_name = "lhs_" + std::to_string(expr->getID());
 
   if(!firstPass_) {
-    ss_ << reductionMap_.at(expr->getID()).str();
-    ss_ << " " << lhs_name << " ";
+    ss_ << lhs_name;
     return;
   }
 

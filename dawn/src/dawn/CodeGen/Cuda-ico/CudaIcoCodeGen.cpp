@@ -1510,8 +1510,8 @@ generateF90InterfaceSI(FortranInterfaceModuleGen& fimGen,
     return args;
   };
 
-  auto genCallArgs = [&](FortranWrapperAPI& wrapper, std::string first = "", bool includeSavedState,
-                         bool includeErrorThreshold) {
+  auto genCallArgs = [&](FortranWrapperAPI& wrapper, std::string first = "", bool includeSavedState = false,
+                         bool includeErrorThreshold = false) {
     wrapper.addBodyLine("( &");
 
     if(first != "") {
