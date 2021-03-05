@@ -422,8 +422,10 @@ void CudaIcoCodeGen::generateRunFun(
       }
       kernelCall << ")";
       runFun.addStatement(kernelCall.str());
+      runFun.addPreprocessorDirective("ifndef NDEBUG\n");
       runFun.addStatement("gpuErrchk(cudaPeekAtLastError())");
       runFun.addStatement("gpuErrchk(cudaDeviceSynchronize())");
+      runFun.addPreprocessorDirective("endif\n");
     }
   }
 
