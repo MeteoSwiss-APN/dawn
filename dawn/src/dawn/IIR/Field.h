@@ -46,7 +46,7 @@ private:
   /// redundant computation of a block
   Interval interval_;                    ///< Enclosing Interval from the iteration space
                                          ///  from where the Field has been accessed
-  sir::FieldDimensions fieldDimensions_; ///< Field dimensions: horizontal (either Cartesian or
+  ast::FieldDimensions fieldDimensions_; ///< Field dimensions: horizontal (either Cartesian or
                                          ///  Unstructured) + vertical
 
 public:
@@ -57,7 +57,7 @@ public:
 
   Field(int accessID, IntendKind intend, std::optional<Extents> const& readExtents,
         std::optional<Extents> const& writeExtents, Interval const& interval,
-        sir::FieldDimensions&& fieldDimensions)
+        ast::FieldDimensions&& fieldDimensions)
       : accessID_(accessID), intend_(intend), extents_(readExtents, writeExtents),
         extentsRB_(readExtents, writeExtents), interval_(interval),
         fieldDimensions_(fieldDimensions) {}
@@ -129,10 +129,10 @@ public:
   ///
   void extendInterval(Interval const& interval) { interval_.merge(interval); }
 
-  const sir::FieldDimensions& getFieldDimensions() const { return fieldDimensions_; }
+  const ast::FieldDimensions& getFieldDimensions() const { return fieldDimensions_; }
 
   bool isUnstructured() {
-    return !sir::dimension_isa<sir::CartesianFieldDimension>(
+    return !ast::dimension_isa<ast::CartesianFieldDimension>(
         fieldDimensions_.getHorizontalFieldDimension());
   }
 };

@@ -31,13 +31,16 @@
 #include "dawn/IIR/Stage.h"
 #include "dawn/IIR/Stencil.h"
 #include "dawn/IIR/StencilMetaInformation.h"
+#include "dawn/SIR/SIR.h"
 #include "dawn/Support/Assert.h"
 #include "dawn/Support/Exception.h"
 #include "dawn/Support/FileSystem.h"
 #include "dawn/Support/Logger.h"
+#include "dawn/Support/STLExtras.h"
 #include "driver-includes/unstructured_interface.hpp"
 
 #include <algorithm>
+#include <csignal>
 #include <memory>
 #include <numeric>
 #include <optional>
@@ -54,16 +57,91 @@ static bool intervalsConsistent(const dawn::iir::Stage& stage) {
 
   bool consistentLo =
       std::all_of(intervals.begin(), intervals.end(), [&](const dawn::iir::Interval& interval) {
-        return intervals.begin()->lowerBound() == interval.lowerBound();
+        return intervals.begin()->lowerLevel() == interval.lowerLevel();
       });
 
   bool consistentHi =
       std::all_of(intervals.begin(), intervals.end(), [&](const dawn::iir::Interval& interval) {
-        return intervals.begin()->upperBound() == interval.upperBound();
+        return intervals.begin()->upperLevel() == interval.upperLevel();
       });
 
   return consistentHi && consistentLo;
 }
+
+namespace {
+std::vector<int> getUsedFields(const dawn::iir::Stencil& stencil,
+                               std::unordered_set<dawn::iir::Field::IntendKind> intend = {
+                                   dawn::iir::Field::IntendKind::Output,
+                                   dawn::iir::Field::IntendKind::InputOutput,
+                                   dawn::iir::Field::IntendKind::Input}) {
+  const auto& APIFields = stencil.getMetadata().getAPIFields();
+  const auto& stenFields = stencil.getOrderedFields();
+  auto usedAPIFields =
+      dawn::makeRange(APIFields, [&stenFields](int f) { return stenFields.count(f); });
+
+  std::vector<int> res;
+  for(auto fieldID : usedAPIFields) {
+    auto field = stenFields.at(fieldID);
+    if(intend.count(field.field.getIntend())) {
+      res.push_back(fieldID);
+    }
+  }
+
+  return res;
+}
+std::vector<std::string> getUsedFieldsNames(
+    const dawn::iir::Stencil& stencil,
+    std::unordered_set<dawn::iir::Field::IntendKind> intend = {
+        dawn::iir::Field::IntendKind::Output, dawn::iir::Field::IntendKind::InputOutput,
+        dawn::iir::Field::IntendKind::Input}) {
+  auto usedFields = getUsedFields(stencil, intend);
+  std::vector<std::string> fieldsVec;
+  for(auto fieldID : usedFields) {
+    fieldsVec.push_back(stencil.getMetadata().getFieldNameFromAccessID(fieldID));
+  }
+  return fieldsVec;
+}
+
+std::vector<std::string> getGlobalsNames(const dawn::ast::GlobalVariableMap& globalsMap) {
+  std::vector<std::string> globalsNames;
+  for(const auto& global : globalsMap) {
+    globalsNames.push_back(global.first);
+  }
+  return globalsNames;
+}
+
+void addGlobalsArgs(const dawn::ast::GlobalVariableMap& globalsMap,
+                    dawn::codegen::MemberFunction& fun) {
+  for(const auto& global : globalsMap) {
+    std::string Name = global.first;
+    std::string Type = dawn::ast::Value::typeToString(global.second.getType());
+    fun.addArg(Type + " " + Name);
+  }
+}
+
+std::string explodeToStr(const std::vector<std::string>& vec, const std::string sep = ", ") {
+  std::string ret = "";
+  bool first = true;
+  for(const auto& el : vec) {
+    if(!first) {
+      ret += sep;
+    }
+    ret += el;
+    first = false;
+  }
+
+  return ret;
+}
+
+std::string explodeUsedFields(const dawn::iir::Stencil& stencil,
+                              std::unordered_set<dawn::iir::Field::IntendKind> intend = {
+                                  dawn::iir::Field::IntendKind::Output,
+                                  dawn::iir::Field::IntendKind::InputOutput,
+                                  dawn::iir::Field::IntendKind::Input}) {
+  return explodeToStr(getUsedFieldsNames(stencil, intend));
+}
+
+} // namespace
 
 namespace dawn {
 namespace codegen {
@@ -90,7 +168,7 @@ CudaIcoCodeGen::CudaIcoCodeGen(const StencilInstantiationContext& ctx, int maxHa
 
 CudaIcoCodeGen::~CudaIcoCodeGen() {}
 
-class CollectIterationSpaces : public ast::ASTVisitorForwarding {
+class CollectIterationSpaces : public ast::ASTVisitorForwardingNonConst {
 
 public:
   struct IterSpaceHash {
@@ -122,7 +200,7 @@ public:
   }
 
   void visit(const std::shared_ptr<ast::FieldAccessExpr>& expr) override {
-    auto unstrDim = sir::dimension_cast<const sir::UnstructuredFieldDimension&>(
+    auto unstrDim = ast::dimension_cast<const ast::UnstructuredFieldDimension&>(
         metadata_.getFieldDimensions(iir::getAccessID(expr)).getHorizontalFieldDimension());
     if(unstrDim.isSparse()) {
       spaces_.insert(unstrDim.getIterSpace());
@@ -195,7 +273,7 @@ void CudaIcoCodeGen::generateRunFun(
   runFun.addBlockStatement("if (!is_setup_)", [&]() {
     std::string stencilName = stencilInstantiation->getName();
     runFun.addStatement("printf(\"" + stencilName +
-                        "has not been set up! make sure setup() is called before run!\\n\")");
+                        " has not been set up! make sure setup() is called before run!\\n\")");
     runFun.addStatement("return");
   });
 
@@ -220,7 +298,7 @@ void CudaIcoCodeGen::generateRunFun(
       // lets figure out how many k levels we need to consider
       std::stringstream k_size;
       DAWN_ASSERT_MSG(intervalsConsistent(*stage),
-                      "intervals in a stage must have same bounds for now!\n");
+                      "intervals in a stage must have same Levels for now!\n");
       auto interval = stage->getChild(0)->getInterval();
       if(interval.levelIsEnd(iir::Interval::Bound::upper)) {
         k_size << "kSize_ + " << interval.upperOffset() << " - "
@@ -237,13 +315,13 @@ void CudaIcoCodeGen::generateRunFun(
         switch(magicNum) {
         case 0:
           return "dawn::UnstructuredSubdomain::LateralBoundary";
-        case 1:
+        case 1000:
           return "dawn::UnstructuredSubdomain::Nudging";
-        case 2:
+        case 2000:
           return "dawn::UnstructuredSubdomain::Interior";
-        case 3:
+        case 3000:
           return "dawn::UnstructuredSubdomain::Halo";
-        case 4:
+        case 4000:
           return "dawn::UnstructuredSubdomain::End";
         default:
           throw std::runtime_error("Invalid magic number");
@@ -252,68 +330,34 @@ void CudaIcoCodeGen::generateRunFun(
 
       auto numElementsString = [&](ast::LocationType loc,
                                    std::optional<iir::Interval> iterSpace) -> std::string {
-        switch(loc) {
-        case ast::LocationType::Cells:
-          return (iterSpace.has_value() ? "mesh_.Domain({::dawn::LocationType::Cells," +
-                                              spaceMagicNumToEnum(iterSpace->upperBound()) + "," +
-                                              std::to_string(iterSpace->upperOffset()) + "})" +
-                                              "- mesh_.Domain({::dawn::LocationType::Cells," +
-                                              spaceMagicNumToEnum(iterSpace->lowerBound()) + "," +
-                                              std::to_string(iterSpace->lowerOffset()) + "})"
-                                        : "mesh_.NumCells");
-          break;
-        case ast::LocationType::Edges:
-          return (iterSpace.has_value() ? "mesh_.Domain({::dawn::LocationType::Edges," +
-                                              spaceMagicNumToEnum(iterSpace->upperBound()) + "," +
-                                              std::to_string(iterSpace->upperOffset()) + "})" +
-                                              "- mesh_.Domain({::dawn::LocationType::Edges," +
-                                              spaceMagicNumToEnum(iterSpace->lowerBound()) + "," +
-                                              std::to_string(iterSpace->lowerOffset()) + "})"
-                                        : "mesh_.NumEdges");
-        case ast::LocationType::Vertices:
-          return (iterSpace.has_value() ? "mesh_.Domain({::dawn::LocationType::Vertices," +
-                                              spaceMagicNumToEnum(iterSpace->upperBound()) + "," +
-                                              std::to_string(iterSpace->upperOffset()) + "})" +
-                                              "- mesh_.Domain({::dawn::LocationType::Vertices," +
-                                              spaceMagicNumToEnum(iterSpace->lowerBound()) + "," +
-                                              std::to_string(iterSpace->lowerOffset()) + "})"
-                                        : "mesh_.NumVertices");
-        default:
-          throw std::runtime_error("Invalid location type");
-        }
+        return iterSpace.has_value()
+                   ? "mesh_.Domain({::dawn::LocationType::" + locToStringPlural(loc) + "," +
+                         spaceMagicNumToEnum(iterSpace->upperLevel()) + "," +
+                         std::to_string(iterSpace->upperOffset()) + "})" +
+                         "- mesh_.Domain({::dawn::LocationType::" + locToStringPlural(loc) + "," +
+                         spaceMagicNumToEnum(iterSpace->lowerLevel()) + "," +
+                         std::to_string(iterSpace->lowerOffset()) + "}) + 1"
+                   : "mesh_.Num" + locToStringPlural(loc);
       };
-
       auto hOffsetSizeString = [&](ast::LocationType loc, iir::Interval iterSpace) -> std::string {
-        switch(loc) {
-        case ast::LocationType::Cells:
-          return "mesh_.Domain({::dawn::LocationType::Cells," +
-                 spaceMagicNumToEnum(iterSpace.lowerBound()) + "," +
-                 std::to_string(iterSpace.lowerOffset()) + "})";
-          break;
-        case ast::LocationType::Edges:
-          return "mesh_.Domain({::dawn::LocationType::Edges," +
-                 spaceMagicNumToEnum(iterSpace.lowerBound()) + "," +
-                 std::to_string(iterSpace.lowerOffset()) + "})";
-        case ast::LocationType::Vertices:
-          return "mesh_.Domain({::dawn::LocationType::Vertices," +
-                 spaceMagicNumToEnum(iterSpace.lowerBound()) + "," +
-                 std::to_string(iterSpace.lowerOffset()) + "})";
-        default:
-          throw std::runtime_error("Invalid location type");
-        }
+        return "mesh_.Domain({::dawn::LocationType::" + locToStringPlural(loc) + "," +
+               spaceMagicNumToEnum(iterSpace.lowerLevel()) + "," +
+               std::to_string(iterSpace.lowerOffset()) + "})";
       };
 
       auto domain = stage->getUnstructuredIterationSpace();
-      std::string numElString = "hsize" + std::to_string(stage->getStageID());
+      std::string hSizeString = "hsize" + std::to_string(stage->getStageID());
+      std::string numElString = "mesh_." + locToDenseSizeStringGpuMesh(*stage->getLocationType(),
+                                                                       codeGenOptions.UnstrPadding);
       std::string hOffsetString = "hoffset" + std::to_string(stage->getStageID());
-      runFun.addStatement("int " + numElString + " = " +
+      runFun.addStatement("int " + hSizeString + " = " +
                           numElementsString(*stage->getLocationType(), domain));
       if(domain.has_value()) {
         runFun.addStatement("int " + hOffsetString + " = " +
                             hOffsetSizeString(*stage->getLocationType(), *domain));
       }
       runFun.addStatement("dim3 dG" + std::to_string(stage->getStageID()) + " = grid(" +
-                          k_size.str() + ", " + numElString + ")");
+                          k_size.str() + ", " + hSizeString + ")");
 
       //--------------------------------------
       // signature of kernel
@@ -358,13 +402,14 @@ void CudaIcoCodeGen::generateRunFun(
         if(field.second.getFieldDimensions().isVertical()) {
           continue;
         }
-        auto dims = sir::dimension_cast<sir::UnstructuredFieldDimension const&>(
+        auto dims = ast::dimension_cast<ast::UnstructuredFieldDimension const&>(
             field.second.getFieldDimensions().getHorizontalFieldDimension());
         // dont add sizes twice
         if(dims.getDenseLocationType() == *stage->getLocationType()) {
           continue;
         }
-        locArgs.insert(locToDenseSizeStringGpuMesh(dims.getDenseLocationType(), {}));
+        locArgs.insert(
+            locToDenseSizeStringGpuMesh(dims.getDenseLocationType(), codeGenOptions.UnstrPadding));
       }
       for(auto arg : locArgs) {
         kernelCall << "mesh_." + arg + ", ";
@@ -377,6 +422,7 @@ void CudaIcoCodeGen::generateRunFun(
       if(domain.has_value()) {
         kernelCall << hOffsetString << ", ";
       }
+      kernelCall << hSizeString << ", ";
 
       for(auto chain : chains) {
         kernelCall << "mesh_." + chainToTableString(chain) + ", ";
@@ -423,7 +469,7 @@ static void allocTempFields(MemberFunction& ctor, const iir::Stencil& stencil, P
       bool isHorizontal = !dims.K();
       std::string kSizeStr = (isHorizontal) ? "1" : "kSize_";
 
-      auto hdims = sir::dimension_cast<sir::UnstructuredFieldDimension const&>(
+      auto hdims = ast::dimension_cast<ast::UnstructuredFieldDimension const&>(
           dims.getHorizontalFieldDimension());
       if(hdims.isDense()) {
         ctor.addStatement("::dawn::allocField(&" + fname + "_, mesh_." +
@@ -459,9 +505,7 @@ void CudaIcoCodeGen::generateStencilSetup(MemberFunction& stencilSetup,
 
 void CudaIcoCodeGen::generateCopyMemoryFun(MemberFunction& copyFun,
                                            const iir::Stencil& stencil) const {
-  const auto& APIFields = stencil.getMetadata().getAPIFields();
-  const auto& stenFields = stencil.getOrderedFields();
-  auto usedAPIFields = makeRange(APIFields, [&stenFields](int f) { return stenFields.count(f); });
+  auto usedAPIFields = getUsedFields(stencil);
 
   for(auto fieldID : usedAPIFields) {
     auto fname = stencil.getMetadata().getFieldNameFromAccessID(fieldID);
@@ -481,7 +525,7 @@ void CudaIcoCodeGen::generateCopyMemoryFun(MemberFunction& copyFun,
     bool isHorizontal = !dims.K();
     std::string kSizeStr = (isHorizontal) ? "1" : "kSize_";
 
-    auto hdims = sir::dimension_cast<sir::UnstructuredFieldDimension const&>(
+    auto hdims = ast::dimension_cast<ast::UnstructuredFieldDimension const&>(
         dims.getHorizontalFieldDimension());
     if(hdims.isDense()) {
       copyFun.addStatement(
@@ -499,9 +543,7 @@ void CudaIcoCodeGen::generateCopyMemoryFun(MemberFunction& copyFun,
 
 void CudaIcoCodeGen::generateCopyPtrFun(MemberFunction& copyFun,
                                         const iir::Stencil& stencil) const {
-  const auto& APIFields = stencil.getMetadata().getAPIFields();
-  const auto& stenFields = stencil.getOrderedFields();
-  auto usedAPIFields = makeRange(APIFields, [&stenFields](int f) { return stenFields.count(f); });
+  auto usedAPIFields = getUsedFields(stencil);
 
   for(auto fieldID : usedAPIFields) {
     auto fname = stencil.getMetadata().getFieldNameFromAccessID(fieldID);
@@ -517,36 +559,32 @@ void CudaIcoCodeGen::generateCopyPtrFun(MemberFunction& copyFun,
 
 void CudaIcoCodeGen::generateCopyBackFun(MemberFunction& copyBackFun, const iir::Stencil& stencil,
                                          bool rawPtrs) const {
-  const auto& APIFields = stencil.getMetadata().getAPIFields();
-  const auto& stenFields = stencil.getOrderedFields();
-  auto usedAPIFields = makeRange(APIFields, [&stenFields](int f) { return stenFields.count(f); });
+  const auto& fieldInfos = stencil.getOrderedFields();
+  auto usedAPIFields = getUsedFields(
+      stencil, {dawn::iir::Field::IntendKind::Output, dawn::iir::Field::IntendKind::InputOutput});
 
   // signature
   for(auto fieldID : usedAPIFields) {
-    auto field = stenFields.at(fieldID);
-    if(field.field.getIntend() == dawn::iir::Field::IntendKind::Output ||
-       field.field.getIntend() == dawn::iir::Field::IntendKind::InputOutput) {
+    const auto& field = fieldInfos.at(fieldID);
 
-      if(field.field.getFieldDimensions().isVertical()) {
-        if(rawPtrs) {
-          copyBackFun.addArg("::dawn::float_type* " + field.Name);
-        } else {
-          copyBackFun.addArg("dawn::vertical_field_t<LibTag, ::dawn::float_type>& " + field.Name);
-        }
-        continue;
-      }
-
-      auto dims = sir::dimension_cast<sir::UnstructuredFieldDimension const&>(
-          field.field.getFieldDimensions().getHorizontalFieldDimension());
+    if(field.field.getFieldDimensions().isVertical()) {
       if(rawPtrs) {
         copyBackFun.addArg("::dawn::float_type* " + field.Name);
       } else {
-        if(dims.isDense()) {
-          copyBackFun.addArg(locToDenseTypeString(dims.getDenseLocationType()) + "& " + field.Name);
-        } else {
-          copyBackFun.addArg(locToSparseTypeString(dims.getDenseLocationType()) + "& " +
-                             field.Name);
-        }
+        copyBackFun.addArg("dawn::vertical_field_t<LibTag, ::dawn::float_type>& " + field.Name);
+      }
+      continue;
+    }
+
+    auto dims = ast::dimension_cast<ast::UnstructuredFieldDimension const&>(
+        field.field.getFieldDimensions().getHorizontalFieldDimension());
+    if(rawPtrs) {
+      copyBackFun.addArg("::dawn::float_type* " + field.Name);
+    } else {
+      if(dims.isDense()) {
+        copyBackFun.addArg(locToDenseTypeString(dims.getDenseLocationType()) + "& " + field.Name);
+      } else {
+        copyBackFun.addArg(locToSparseTypeString(dims.getDenseLocationType()) + "& " + field.Name);
       }
     }
   }
@@ -559,7 +597,7 @@ void CudaIcoCodeGen::generateCopyBackFun(MemberFunction& copyBackFun, const iir:
         return "kSize_";
       }
 
-      auto hdims = sir::dimension_cast<sir::UnstructuredFieldDimension const&>(
+      auto hdims = ast::dimension_cast<ast::UnstructuredFieldDimension const&>(
           field.field.getFieldDimensions().getHorizontalFieldDimension());
 
       std::string sizestr = "(mesh_.";
@@ -583,47 +621,43 @@ void CudaIcoCodeGen::generateCopyBackFun(MemberFunction& copyBackFun, const iir:
 
   // function body
   for(auto fieldID : usedAPIFields) {
-    auto field = stenFields.at(fieldID);
-    if(field.field.getIntend() == dawn::iir::Field::IntendKind::Output ||
-       field.field.getIntend() == dawn::iir::Field::IntendKind::InputOutput) {
+    const auto& field = fieldInfos.at(fieldID);
 
-      copyBackFun.addBlockStatement("if (do_reshape)", [&]() {
-        copyBackFun.addStatement("::dawn::float_type* host_buf = new ::dawn::float_type[" +
-                                 getNumElements(field) + "]");
-        copyBackFun.addStatement("gpuErrchk(cudaMemcpy((::dawn::float_type*) host_buf, " +
-                                 field.Name + "_, " + getNumElements(field) +
-                                 "*sizeof(::dawn::float_type), cudaMemcpyDeviceToHost))");
+    copyBackFun.addBlockStatement("if (do_reshape)", [&]() {
+      copyBackFun.addStatement("::dawn::float_type* host_buf = new ::dawn::float_type[" +
+                               getNumElements(field) + "]");
+      copyBackFun.addStatement("gpuErrchk(cudaMemcpy((::dawn::float_type*) host_buf, " +
+                               field.Name + "_, " + getNumElements(field) +
+                               "*sizeof(::dawn::float_type), cudaMemcpyDeviceToHost))");
 
-        if(!field.field.getFieldDimensions().isVertical()) {
-          auto dims = sir::dimension_cast<sir::UnstructuredFieldDimension const&>(
-              field.field.getFieldDimensions().getHorizontalFieldDimension());
+      if(!field.field.getFieldDimensions().isVertical()) {
+        auto dims = ast::dimension_cast<ast::UnstructuredFieldDimension const&>(
+            field.field.getFieldDimensions().getHorizontalFieldDimension());
 
-          bool isHorizontal = !field.field.getFieldDimensions().K();
-          std::string kSizeStr = (isHorizontal) ? "1" : "kSize_";
+        bool isHorizontal = !field.field.getFieldDimensions().K();
+        std::string kSizeStr = (isHorizontal) ? "1" : "kSize_";
 
-          if(dims.isDense()) {
-            copyBackFun.addStatement("dawn::reshape_back(host_buf, " + field.Name +
-                                     ((!rawPtrs) ? ".data()" : "") + " , " + kSizeStr + ", mesh_." +
-                                     locToDenseSizeStringGpuMesh(dims.getDenseLocationType(),
-                                                                 codeGenOptions.UnstrPadding) +
-                                     ")");
-          } else {
-            copyBackFun.addStatement("dawn::reshape_back(host_buf, " + field.Name +
-                                     ((!rawPtrs) ? ".data()" : "") + ", " + kSizeStr + ", mesh_." +
-                                     locToDenseSizeStringGpuMesh(dims.getDenseLocationType(),
-                                                                 codeGenOptions.UnstrPadding) +
-                                     ", " + chainToSparseSizeString(dims.getIterSpace()) + ")");
-          }
+        if(dims.isDense()) {
+          copyBackFun.addStatement("dawn::reshape_back(host_buf, " + field.Name +
+                                   ((!rawPtrs) ? ".data()" : "") + " , " + kSizeStr + ", mesh_." +
+                                   locToDenseSizeStringGpuMesh(dims.getDenseLocationType(),
+                                                               codeGenOptions.UnstrPadding) +
+                                   ")");
+        } else {
+          copyBackFun.addStatement("dawn::reshape_back(host_buf, " + field.Name +
+                                   ((!rawPtrs) ? ".data()" : "") + ", " + kSizeStr + ", mesh_." +
+                                   locToDenseSizeStringGpuMesh(dims.getDenseLocationType(),
+                                                               codeGenOptions.UnstrPadding) +
+                                   ", " + chainToSparseSizeString(dims.getIterSpace()) + ")");
         }
-        copyBackFun.addStatement("delete[] host_buf");
-      });
-      copyBackFun.addBlockStatement("else", [&]() {
-        copyBackFun.addStatement("gpuErrchk(cudaMemcpy(" + field.Name +
-                                 ((!rawPtrs) ? ".data()" : "") + ", " + field.Name + "_," +
-                                 getNumElements(field) +
-                                 "*sizeof(::dawn::float_type), cudaMemcpyDeviceToHost))");
-      });
-    }
+      }
+      copyBackFun.addStatement("delete[] host_buf");
+    });
+    copyBackFun.addBlockStatement("else", [&]() {
+      copyBackFun.addStatement(
+          "gpuErrchk(cudaMemcpy(" + field.Name + ((!rawPtrs) ? ".data()" : "") + ", " + field.Name +
+          "_," + getNumElements(field) + "*sizeof(::dawn::float_type), cudaMemcpyDeviceToHost))");
+    });
   }
 }
 
@@ -662,6 +696,17 @@ void CudaIcoCodeGen::generateStencilClasses(
     stencilClass.addMember("static bool", "is_setup_");
 
     stencilClass.changeAccessibility("public");
+    auto meshGetter = stencilClass.addMemberFunction("static const GpuTriMesh &", "getMesh");
+    meshGetter.finishArgs();
+    meshGetter.startBody();
+    meshGetter.addStatement("return mesh_");
+    meshGetter.commit();
+
+    auto kSizeGetter = stencilClass.addMemberFunction("static int", "getKSize");
+    kSizeGetter.finishArgs();
+    kSizeGetter.startBody();
+    kSizeGetter.addStatement("return kSize_");
+    kSizeGetter.commit();
 
     if(!globalsMap.empty()) {
       stencilClass.addMember("globals", "m_globals");
@@ -747,22 +792,15 @@ void CudaIcoCodeGen::generateAllAPIRunFunctions(
     }
 
     const auto& globalsMap = stencilInstantiation->getIIR()->getGlobalVariableMap();
-    auto addExplodedGlobals = [](const ast::GlobalVariableMap& globalsMap, MemberFunction& fun) {
-      for(const auto& global : globalsMap) {
-        std::string Name = global.first;
-        std::string Type = ast::Value::typeToString(global.second.getType());
-        fun.addArg(Type + " " + Name);
-      }
-    };
 
     if(fromHost) {
       for(auto& apiRunFun : apiRunFuns) {
         apiRunFun->addArg("dawn::GlobalGpuTriMesh *mesh");
         apiRunFun->addArg("int k_size");
-        addExplodedGlobals(globalsMap, *apiRunFun);
+        addGlobalsArgs(globalsMap, *apiRunFun);
       }
     } else {
-      addExplodedGlobals(globalsMap, *apiRunFuns[0]);
+      addGlobalsArgs(globalsMap, *apiRunFuns[0]);
     }
     for(auto& apiRunFun : apiRunFuns) {
       for(auto accessID : stencilInstantiation->getMetaData().getAPIFields()) {
@@ -786,38 +824,13 @@ void CudaIcoCodeGen::generateAllAPIRunFunctions(
         // we now know that there is exactly one stencil
         const auto& stencil = *stencils[0];
 
-        auto stenFields = stencil.getOrderedFields();
-        const auto& APIFields = stencilInstantiation->getMetaData().getAPIFields();
-        auto usedAPIFields =
-            makeRange(APIFields, [&stenFields](int f) { return stenFields.count(f); });
-
-        // listing all used API fields
-        std::stringstream fieldsStr;
-        {
-          bool first = true;
-          for(auto fieldID : usedAPIFields) {
-            if(!first) {
-              fieldsStr << ", ";
-            }
-            fieldsStr << stencil.getMetadata().getFieldNameFromAccessID(fieldID);
-            first = false;
-          }
-        }
+        // listing all API fields
+        std::string fieldsStr = explodeUsedFields(stencil);
 
         // listing all input & output fields
-        std::stringstream ioFieldStr;
-        bool first = true;
-        for(auto fieldID : usedAPIFields) {
-          auto field = stenFields.at(fieldID);
-          if(field.field.getIntend() == dawn::iir::Field::IntendKind::Output ||
-             field.field.getIntend() == dawn::iir::Field::IntendKind::InputOutput) {
-            if(!first) {
-              ioFieldStr << ", ";
-            }
-            ioFieldStr << field.Name;
-            first = false;
-          }
-        }
+        std::string ioFieldStr =
+            explodeUsedFields(stencil, {dawn::iir::Field::IntendKind::Output,
+                                        dawn::iir::Field::IntendKind::InputOutput});
 
         const std::string stencilName =
             codeGenProperties.getStencilName(StencilContext::SC_Stencil, stencil.getStencilID());
@@ -841,13 +854,13 @@ void CudaIcoCodeGen::generateAllAPIRunFunctions(
           }
           // depending if we are calling from c or from fortran, we need to transpose the data or
           // not
-          apiRunFuns[0]->addStatement("s.copy_memory(" + fieldsStr.str() + ", true)");
-          apiRunFuns[1]->addStatement("s.copy_memory(" + fieldsStr.str() + ", false)");
+          apiRunFuns[0]->addStatement("s.copy_memory(" + fieldsStr + ", true)");
+          apiRunFuns[1]->addStatement("s.copy_memory(" + fieldsStr + ", false)");
           for(auto& apiRunFun : apiRunFuns) {
             copyGlobals(globalsMap, *apiRunFun);
           }
         } else {
-          apiRunFuns[0]->addStatement("s.copy_pointers(" + fieldsStr.str() + ")");
+          apiRunFuns[0]->addStatement("s.copy_pointers(" + fieldsStr + ")");
           copyGlobals(globalsMap, *apiRunFuns[0]);
         }
         for(auto& apiRunFun : apiRunFuns) {
@@ -856,8 +869,8 @@ void CudaIcoCodeGen::generateAllAPIRunFunctions(
           apiRunFun->addStatement("s.reset()");
         }
         if(fromHost) {
-          apiRunFuns[0]->addStatement("s.CopyResultToHost(" + ioFieldStr.str() + ", true)");
-          apiRunFuns[1]->addStatement("s.CopyResultToHost(" + ioFieldStr.str() + ", false)");
+          apiRunFuns[0]->addStatement("s.CopyResultToHost(" + ioFieldStr + ", true)");
+          apiRunFuns[1]->addStatement("s.CopyResultToHost(" + ioFieldStr + ", false)");
           for(auto& apiRunFun : apiRunFuns) {
             apiRunFun->addStatement(fullStencilName + "::free()");
           }
@@ -873,15 +886,225 @@ void CudaIcoCodeGen::generateAllAPIRunFunctions(
       }
 
     } else {
-      for(const auto& stream : apiRunFunStreams) {
-        ssSW << stream.str() << ";\n";
-      }
       for(auto& apiRunFun : apiRunFuns) {
         apiRunFun->commit();
+      }
+      for(const auto& stream : apiRunFunStreams) {
+        ssSW << stream.str();
       }
     }
   }
 }
+
+void CudaIcoCodeGen::generateAllAPIVerifyFunctions(
+    std::stringstream& ssSW, const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation,
+    CodeGenProperties& codeGenProperties, bool onlyDecl) const {
+  const auto& stencils = stencilInstantiation->getStencils();
+  DAWN_ASSERT_MSG(stencils.size() <= 1, "code generation only for at most one stencil!\n");
+  const auto& stencil = *stencils[0];
+
+  const std::string wrapperName = stencilInstantiation->getName();
+  std::string stencilName =
+      codeGenProperties.getStencilName(StencilContext::SC_Stencil, stencil.getStencilID());
+  const std::string fullStencilName =
+      "dawn_generated::cuda_ico::" + wrapperName + "::" + stencilName;
+
+  auto getDenseSizeName = [](dawn::ast::LocationType locType) -> std::string {
+    using dawn::ast::LocationType;
+    switch(locType) {
+    case LocationType::Edges:
+      return "dense_size_edges";
+      break;
+    case LocationType::Cells:
+      return "dense_size_cells";
+      break;
+    case LocationType::Vertices:
+      return "dense_size_vertices";
+      break;
+    default:
+      dawn_unreachable("invalid location type");
+    }
+  };
+  auto getSerializeCall = [](dawn::ast::LocationType locType) -> std::string {
+    using dawn::ast::LocationType;
+    switch(locType) {
+    case LocationType::Edges:
+      return "serialize_dense_edges";
+      break;
+    case LocationType::Cells:
+      return "serialize_dense_cells";
+      break;
+    case LocationType::Vertices:
+      return "serialize_dense_verts";
+      break;
+    default:
+      dawn_unreachable("invalid location type");
+    }
+  };
+
+  std::stringstream verifySS, runAndVerifySS;
+
+  { // stringstreams need to outlive the correspondind MemberFunctions
+    const auto& globalsMap = stencilInstantiation->getIIR()->getGlobalVariableMap();
+
+    MemberFunction verifyAPI("bool", "verify_" + wrapperName, verifySS, /*indent level*/ 0,
+                             onlyDecl);
+    MemberFunction runAndVerifyAPI("void", "run_and_verify_" + wrapperName, runAndVerifySS,
+                                   /*indent level*/ 0, onlyDecl);
+
+    for(auto fieldID : getUsedFields(stencil, {dawn::iir::Field::IntendKind::Output,
+                                               dawn::iir::Field::IntendKind::InputOutput})) {
+      verifyAPI.addArg("const ::dawn::float_type *" +
+                       stencilInstantiation->getMetaData().getNameFromAccessID(fieldID) + "_dsl");
+      verifyAPI.addArg("const ::dawn::float_type *" +
+                       stencilInstantiation->getMetaData().getNameFromAccessID(fieldID));
+    }
+    verifyAPI.addArg("const int iteration");
+    verifyAPI.addArg("const double rel_err_threshold");
+    verifyAPI.finishArgs();
+
+    addGlobalsArgs(globalsMap, runAndVerifyAPI);
+    for(auto accessID : stencilInstantiation->getMetaData().getAPIFields()) {
+      runAndVerifyAPI.addArg("::dawn::float_type *" +
+                             stencilInstantiation->getMetaData().getNameFromAccessID(accessID));
+    }
+    for(auto fieldID : getUsedFields(stencil, {dawn::iir::Field::IntendKind::InputOutput,
+                                               dawn::iir::Field::IntendKind::Output})) {
+      runAndVerifyAPI.addArg("::dawn::float_type *" +
+                             stencilInstantiation->getMetaData().getNameFromAccessID(fieldID) +
+                             "_before");
+    }
+    runAndVerifyAPI.addArg("const double rel_err_threshold");
+    runAndVerifyAPI.finishArgs();
+
+    if(!onlyDecl) {
+      const auto& fieldInfos = stencil.getOrderedFields();
+
+      verifyAPI.startBody();
+      verifyAPI.addStatement("using namespace std::chrono");
+      verifyAPI.addStatement("const auto &mesh = " + fullStencilName + "::" + "getMesh()");
+      verifyAPI.addStatement("int kSize = " + fullStencilName + "::" + "getKSize()");
+      verifyAPI.addStatement(
+          "high_resolution_clock::time_point t_start = high_resolution_clock::now()");
+      verifyAPI.addStatement("bool isValid = true");
+      verifyAPI.addStatement("double relErr");
+
+      for(auto fieldID : getUsedFields(stencil, {dawn::iir::Field::IntendKind::Output,
+                                                 dawn::iir::Field::IntendKind::InputOutput})) {
+        const auto& fieldInfo = fieldInfos.at(fieldID);
+
+        DAWN_ASSERT_MSG(!fieldInfo.field.getFieldDimensions().isVertical(),
+                        "vertical fields can not be output fields");
+
+        auto unstrDims = ast::dimension_cast<const ast::UnstructuredFieldDimension&>(
+            fieldInfo.field.getFieldDimensions().getHorizontalFieldDimension());
+
+        std::string num_lev = (!fieldInfo.field.getFieldDimensions().K()) ? "1" : "kSize";
+        std::string dense_stride = "(mesh." +
+                                   locToDenseSizeStringGpuMesh(unstrDims.getDenseLocationType(),
+                                                               codeGenOptions.UnstrPadding) +
+                                   ")";
+        std::string indexOfLastHorElement =
+            "(mesh." + locToDenseSizeStringGpuMesh(unstrDims.getDenseLocationType(), std::nullopt) +
+            " -1)";
+        std::string num_el = dense_stride + " * " + num_lev;
+        if(unstrDims.isSparse()) {
+          num_el += " * dawn_generated::cuda_ico::" + wrapperName +
+                    "::" + chainToSparseSizeString(unstrDims.getIterSpace());
+        }
+
+        verifyAPI.addStatement("relErr = ::dawn::verify_field(" + num_el + ", " + fieldInfo.Name +
+                               "_dsl" + "," + fieldInfo.Name + ", \"" + fieldInfo.Name + "\"" +
+                               ")");
+
+        verifyAPI.addBlockStatement("if (relErr > rel_err_threshold)", [&]() {
+          verifyAPI.addStatement("isValid = false");
+          verifyAPI.addPreprocessorDirective("ifdef __SERIALIZE_ON_ERROR");
+          if(!unstrDims.isSparse()) {
+            // serialize actual field
+            auto lt = unstrDims.getDenseLocationType();
+            auto serializeCall = getSerializeCall(lt);
+            verifyAPI.addStatement(serializeCall + "(0" + ", " + indexOfLastHorElement + ", " +
+                                   num_lev + ", " + dense_stride + ", " + fieldInfo.Name + ", \"" +
+                                   wrapperName + "\", \"" + fieldInfo.Name + "\", iteration)");
+            // serialize dsl field
+            verifyAPI.addStatement(serializeCall + "(0" + ", " + indexOfLastHorElement + ", " +
+                                   num_lev + ", " + dense_stride + ", " + fieldInfo.Name + "_dsl" +
+                                   ", \"" + wrapperName + "\", \"" + fieldInfo.Name + "_dsl" +
+                                   "\", iteration)");
+            verifyAPI.addStatement("std::cout << \"[DSL] serializing " + fieldInfo.Name +
+                                   " as error is high.\\n\" << std::flush");
+          } else {
+            verifyAPI.addStatement("std::cout << \"[DSL] can not serialize sparse field " +
+                                   fieldInfo.Name + ", error is high.\\n\" << std::flush");
+          }
+          verifyAPI.addPreprocessorDirective("endif");
+        });
+      }
+      verifyAPI.addStatement(
+          "high_resolution_clock::time_point t_end = high_resolution_clock::now()");
+      verifyAPI.addStatement(
+          "duration<double> timing = duration_cast<duration<double>>(t_end - t_start)");
+      verifyAPI.addStatement("std::cout << \"[DSL] Verification took \" << timing.count() << \" "
+                             "seconds.\\n\" << std::flush");
+      verifyAPI.addStatement("return isValid");
+
+      // TODO runAndVerifyAPI body
+      runAndVerifyAPI.addStatement("static int iteration = 0");
+
+      runAndVerifyAPI.addStatement("std::cout << \"[DSL] Running stencil " + wrapperName +
+                                   "...\\n\" << std::flush");
+
+      auto getDSLFieldsNames =
+          [&fieldInfos](const iir::Stencil& stencil) -> std::vector<std::string> {
+        auto usedFields = getUsedFields(stencil);
+
+        std::vector<std::string> fieldNames;
+        for(auto fieldID : usedFields) {
+          auto fieldInfo = fieldInfos.at(fieldID);
+          if(fieldInfo.field.getIntend() == dawn::iir::Field::IntendKind::InputOutput ||
+             fieldInfo.field.getIntend() == dawn::iir::Field::IntendKind::Output) {
+            fieldNames.push_back(fieldInfo.Name + "_before");
+          } else {
+            fieldNames.push_back(fieldInfo.Name);
+          }
+        }
+        return fieldNames;
+      };
+
+      runAndVerifyAPI.addStatement("double time = run_" + wrapperName + "(" +
+                                   explodeToStr(concatenateVectors(
+                                       {getGlobalsNames(globalsMap), getDSLFieldsNames(stencil)})) +
+                                   ")");
+
+      runAndVerifyAPI.addStatement("std::cout << \"[DSL] " + wrapperName +
+                                   " run time: \" << "
+                                   "time << \"s\\n\" << std::flush");
+      runAndVerifyAPI.addStatement("std::cout << \"[DSL] Verifying stencil " + wrapperName +
+                                   "...\\n\" << std::flush");
+
+      std::vector<std::string> outputVerifyFields;
+      for(const auto& fieldName :
+          getUsedFieldsNames(stencil, {dawn::iir::Field::IntendKind::Output,
+                                       dawn::iir::Field::IntendKind::InputOutput})) {
+        outputVerifyFields.push_back(fieldName + "_before");
+        outputVerifyFields.push_back(fieldName);
+      }
+
+      runAndVerifyAPI.addStatement("verify_" + wrapperName + "(" +
+                                   explodeToStr(concatenateVectors(
+                                       {outputVerifyFields, {"iteration", "rel_err_threshold"}})) +
+                                   ")");
+
+      runAndVerifyAPI.addStatement("iteration++");
+    }
+
+    verifyAPI.commit();
+    runAndVerifyAPI.commit();
+    ssSW << verifySS.str();
+    ssSW << runAndVerifySS.str();
+  }
+} // namespace cudaico
 
 void CudaIcoCodeGen::generateMemMgmtFunctions(
     std::stringstream& ssSW, const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation,
@@ -899,9 +1122,6 @@ void CudaIcoCodeGen::generateMemMgmtFunctions(
   if(!onlyDecl) {
     setupFun.addStatement(fullStencilName + "::setup(mesh, k_size)");
   }
-  if(onlyDecl) {
-    ssSW << ";";
-  }
   setupFun.commit();
 
   MemberFunction freeFun("void", "free_" + wrapperName, ssSW, 0, onlyDecl);
@@ -909,9 +1129,6 @@ void CudaIcoCodeGen::generateMemMgmtFunctions(
   if(!onlyDecl) {
     freeFun.startBody();
     freeFun.addStatement(fullStencilName + "::free()");
-  }
-  if(onlyDecl) {
-    ssSW << ";";
   }
   freeFun.commit();
 }
@@ -987,7 +1204,7 @@ void CudaIcoCodeGen::generateAllCudaKernels(
         cudaKernel.addArg("globals globals");
       }
       auto loc = *stage->getLocationType();
-      cudaKernel.addArg("int " + locToDenseSizeStringGpuMesh(loc, {}));
+      cudaKernel.addArg("int " + locToStrideString(loc));
 
       // which additional loc size args ( int NumCells, int NumEdges, int NumVertices) need to
       // be passed?
@@ -996,12 +1213,12 @@ void CudaIcoCodeGen::generateAllCudaKernels(
         if(field.second.getFieldDimensions().isVertical()) {
           continue;
         }
-        auto dims = sir::dimension_cast<sir::UnstructuredFieldDimension const&>(
+        auto dims = ast::dimension_cast<ast::UnstructuredFieldDimension const&>(
             field.second.getFieldDimensions().getHorizontalFieldDimension());
         if(dims.getDenseLocationType() == loc) {
           continue;
         }
-        locArgs.insert(locToDenseSizeStringGpuMesh(dims.getDenseLocationType(), {}));
+        locArgs.insert(locToStrideString(dims.getDenseLocationType()));
       }
       for(auto arg : locArgs) {
         cudaKernel.addArg("int " + arg);
@@ -1014,6 +1231,7 @@ void CudaIcoCodeGen::generateAllCudaKernels(
       if(stage->getUnstructuredIterationSpace().has_value()) {
         cudaKernel.addArg("int hOffset");
       }
+      cudaKernel.addArg("int hSize");
 
       for(auto chain : chains) {
         cudaKernel.addArg("const int *" + chainToTableString(chain));
@@ -1033,28 +1251,37 @@ void CudaIcoCodeGen::generateAllCudaKernels(
       //--------------------------------------
 
       DAWN_ASSERT_MSG(intervalsConsistent(*stage),
-                      "intervals in a stage must have same bounds for now!\n");
+                      "intervals in a stage must have same Levels for now!\n");
       auto interval = stage->getChild(0)->getInterval();
-      int kStart = interval.lowerLevel() + interval.lowerOffset();
 
       // pidx
       cudaKernel.addStatement("unsigned int pidx = blockIdx.x * blockDim.x + threadIdx.x");
       cudaKernel.addStatement("unsigned int kidx = blockIdx.y * blockDim.y + threadIdx.y");
-      cudaKernel.addStatement("int klo = kidx * LEVELS_PER_THREAD + " + std::to_string(kStart));
-      cudaKernel.addStatement("int khi = (kidx + 1) * LEVELS_PER_THREAD + " +
-                              std::to_string(kStart));
+
+      if(interval.lowerLevelIsEnd() && interval.upperLevelIsEnd()) {
+        cudaKernel.addStatement("int klo = kidx * LEVELS_PER_THREAD + (kSize + " +
+                                std::to_string(interval.lowerOffset()) + ")");
+        cudaKernel.addStatement("int khi = (kidx + 1) * LEVELS_PER_THREAD + (kSize + " +
+                                std::to_string(interval.lowerOffset()) + ")");
+
+      } else {
+        cudaKernel.addStatement("int klo = kidx * LEVELS_PER_THREAD + " +
+                                std::to_string(interval.lowerOffset()));
+        cudaKernel.addStatement("int khi = (kidx + 1) * LEVELS_PER_THREAD + " +
+                                std::to_string(interval.lowerOffset()));
+      }
 
       switch(loc) {
       case ast::LocationType::Cells:
-        cudaKernel.addBlockStatement("if (pidx >= NumCells)",
+        cudaKernel.addBlockStatement("if (pidx >= hSize)",
                                      [&]() { cudaKernel.addStatement("return"); });
         break;
       case ast::LocationType::Edges:
-        cudaKernel.addBlockStatement("if (pidx >= NumEdges)",
+        cudaKernel.addBlockStatement("if (pidx >= hSize)",
                                      [&]() { cudaKernel.addStatement("return"); });
         break;
       case ast::LocationType::Vertices:
-        cudaKernel.addBlockStatement("if (pidx >= NumVertices)",
+        cudaKernel.addBlockStatement("if (pidx >= hSize)",
                                      [&]() { cudaKernel.addStatement("return"); });
         break;
       }
@@ -1123,6 +1350,7 @@ std::string CudaIcoCodeGen::generateStencilInstantiation(
     first = false;
   }
   Class stencilWrapperClass(stencilInstantiation->getName(), ssSW);
+  stencilWrapperClass.changeAccessibility("public");
   for(auto space : spaces) {
     std::string spaceStr = std::to_string(ICOChainSize(space));
     if(space.IncludeCenter) {
@@ -1131,8 +1359,6 @@ std::string CudaIcoCodeGen::generateStencilInstantiation(
     stencilWrapperClass.addMember("static const int",
                                   chainToSparseSizeString(space) + " = " + spaceStr);
   }
-
-  stencilWrapperClass.changeAccessibility("public");
 
   CodeGenProperties codeGenProperties = computeCodeGenProperties(stencilInstantiation.get());
 
@@ -1160,6 +1386,7 @@ std::string CudaIcoCodeGen::generateStencilInstantiation(
   bool fromHost = true;
   generateAllAPIRunFunctions(ssSW, stencilInstantiation, codeGenProperties, fromHost);
   generateAllAPIRunFunctions(ssSW, stencilInstantiation, codeGenProperties, !fromHost);
+  generateAllAPIVerifyFunctions(ssSW, stencilInstantiation, codeGenProperties);
   generateMemMgmtFunctions(ssSW, stencilInstantiation, codeGenProperties);
   ssSW << "}\n";
   generateStaticMembersTrailer(ssSW, stencilInstantiation, codeGenProperties);
@@ -1180,6 +1407,8 @@ void CudaIcoCodeGen::generateCHeaderSI(
                              /*onlyDecl=*/true);
   generateAllAPIRunFunctions(ssSW, stencilInstantiation, codeGenProperties, !fromHost,
                              /*onlyDecl=*/true);
+  generateAllAPIVerifyFunctions(ssSW, stencilInstantiation, codeGenProperties,
+                                /*onlyDecl=*/true);
   generateMemMgmtFunctions(ssSW, stencilInstantiation, codeGenProperties, /*onlyDecl=*/true);
   ssSW << "}\n";
 }
@@ -1206,13 +1435,13 @@ generateF90InterfaceSI(FortranInterfaceModuleGen& fimGen,
   auto globalTypeToFortType = [](const ast::Global& global) {
     switch(global.getType()) {
     case ast::Value::Kind::Boolean:
-      return FortranInterfaceAPI::InterfaceType::BOOLEAN;
+      return FortranAPI::InterfaceType::BOOLEAN;
     case ast::Value::Kind::Double:
-      return FortranInterfaceAPI::InterfaceType::DOUBLE;
+      return FortranAPI::InterfaceType::DOUBLE;
     case ast::Value::Kind::Float:
-      return FortranInterfaceAPI::InterfaceType::FLOAT;
+      return FortranAPI::InterfaceType::FLOAT;
     case ast::Value::Kind::Integer:
-      return FortranInterfaceAPI::InterfaceType::INTEGER;
+      return FortranAPI::InterfaceType::INTEGER;
     case ast::Value::Kind::String:
     default:
       throw std::runtime_error("string globals not supported in cuda ico backend");
@@ -1225,44 +1454,129 @@ generateF90InterfaceSI(FortranInterfaceModuleGen& fimGen,
   // however the interface would not be very useful if the name is generated.
   DAWN_ASSERT_MSG(stencils.size() <= 1,
                   "Unable to generate interface. More than one stencil in stencil instantiation.");
+  const auto& stencil = *stencils[0];
 
-  std::vector<FortranInterfaceAPI> apis = {
+  std::vector<FortranInterfaceAPI> interfaces = {
       FortranInterfaceAPI("run_" + stencilInstantiation->getName(),
-                          FortranInterfaceAPI::InterfaceType::DOUBLE),
+                          FortranAPI::InterfaceType::DOUBLE),
       FortranInterfaceAPI("run_" + stencilInstantiation->getName() + "_from_fort_host",
-                          FortranInterfaceAPI::InterfaceType::DOUBLE)};
+                          FortranAPI::InterfaceType::DOUBLE),
+      FortranInterfaceAPI("run_and_verify_" + stencilInstantiation->getName())};
+
+  FortranWrapperAPI runWrapper = FortranWrapperAPI("wrap_run_" + stencilInstantiation->getName());
 
   // only from host convenience wrapper takes mesh and k_size
-  apis[1].addArg("mesh", FortranInterfaceAPI::InterfaceType::OBJ);
-  apis[1].addArg("k_size", FortranInterfaceAPI::InterfaceType::INTEGER);
-  for(auto&& api : apis) {
+  const int fromDeviceAPIIdx = 0;
+  const int fromHostAPIIdx = 1;
+  interfaces[fromHostAPIIdx].addArg("mesh", FortranAPI::InterfaceType::OBJ);
+  interfaces[fromHostAPIIdx].addArg("k_size", FortranAPI::InterfaceType::INTEGER);
+
+  const int runAndVerifyIdx = 2;
+
+  auto addArgsToAPI = [&](FortranAPI& api, bool includeSavedState) {
     for(const auto& global : globalsMap) {
       api.addArg(global.first, globalTypeToFortType(global.second));
     }
     for(auto fieldID : stencilInstantiation->getMetaData().getAPIFields()) {
       api.addArg(
           stencilInstantiation->getMetaData().getNameFromAccessID(fieldID),
-          FortranInterfaceAPI::InterfaceType::DOUBLE /* Unfortunately we need to know at codegen
+          FortranAPI::InterfaceType::DOUBLE /* Unfortunately we need to know at codegen
                                                         time whether we have fields in SP/DP */
           ,
           stencilInstantiation->getMetaData().getFieldDimensions(fieldID).rank());
     }
+    if(includeSavedState) {
+      for(auto fieldID : getUsedFields(stencil, {dawn::iir::Field::IntendKind::Output,
+                                                 dawn::iir::Field::IntendKind::InputOutput})) {
+        api.addArg(
+            stencilInstantiation->getMetaData().getNameFromAccessID(fieldID) + "_before",
+            FortranAPI::InterfaceType::DOUBLE /* Unfortunately we need to know at codegen
+                                                          time whether we have fields in SP/DP */
+            ,
+            stencilInstantiation->getMetaData().getFieldDimensions(fieldID).rank());
+      }
+    }
+  };
 
-    fimGen.addAPI(std::move(api));
+  addArgsToAPI(interfaces[fromDeviceAPIIdx], /*includeSavedState*/ false);
+  fimGen.addInterfaceAPI(std::move(interfaces[fromDeviceAPIIdx]));
+  addArgsToAPI(interfaces[fromHostAPIIdx], /*includeSavedState*/ false);
+  fimGen.addInterfaceAPI(std::move(interfaces[fromHostAPIIdx]));
+  addArgsToAPI(interfaces[runAndVerifyIdx], /*includeSavedState*/ true);
+  interfaces[runAndVerifyIdx].addArg("rel_err_threshold", FortranAPI::InterfaceType::DOUBLE);
+  fimGen.addInterfaceAPI(std::move(interfaces[runAndVerifyIdx]));
+
+  addArgsToAPI(runWrapper, /*includeSavedState*/ true);
+  runWrapper.addOptArg("rel_err_threshold", FortranAPI::InterfaceType::DOUBLE);
+
+  auto getFieldArgs = [&](bool includeSavedState) -> std::vector<std::string> {
+    std::vector<std::string> args;
+    for(auto fieldID : stencilInstantiation->getMetaData().getAPIFields()) {
+      args.push_back(stencilInstantiation->getMetaData().getNameFromAccessID(fieldID));
+    }
+    if(includeSavedState) {
+      for(auto fieldID : getUsedFields(stencil, {dawn::iir::Field::IntendKind::Output,
+                                                 dawn::iir::Field::IntendKind::InputOutput})) {
+        args.push_back(stencilInstantiation->getMetaData().getNameFromAccessID(fieldID) +
+                       "_before");
+      }
+    }
+    return args;
+  };
+
+  auto genCallArgs = [&](FortranWrapperAPI& wrapper, std::string first = "", bool includeSavedState,
+                         bool includeErrorThreshold) {
+    wrapper.addBodyLine("( &");
+
+    if(first != "") {
+      wrapper.addBodyLine("   " + first + ", &"); // TODO remove
+    }
+
+    auto args = concatenateVectors<std::string>(
+        {getGlobalsNames(globalsMap), getFieldArgs(includeSavedState)});
+
+    for(int i = 0; i < args.size(); ++i) {
+      wrapper.addBodyLine("   " + args[i] +
+                          ((i == (args.size() - 1)) && !includeErrorThreshold ? " &" : ", &"));
+    }
+    if(includeErrorThreshold) {
+      wrapper.addBodyLine(
+          "   MERGE(rel_err_threshold,DEFAULT_RELATIVE_ERROR_THRESHOLD,present(rel_err_threshold)) "
+          "&");
+    }
+    wrapper.addBodyLine(")");
+  };
+  runWrapper.addBodyLine("real(c_double) :: timing");
+  runWrapper.addACCLine("host_data use_device( &");
+  auto fieldArgs = getFieldArgs(/*includeSavedState*/ true);
+  for(int i = 0; i < fieldArgs.size(); ++i) {
+    runWrapper.addACCLine("   " + fieldArgs[i] + (i == (fieldArgs.size() - 1) ? " &" : ", &"));
   }
+  runWrapper.addACCLine(")");
+  runWrapper.addBodyLine("#ifdef __DSL_VERIFY", /*withIndentation*/ false);
+  runWrapper.addBodyLine("CALL run_and_verify_" + stencilInstantiation->getName() + " &");
+  genCallArgs(runWrapper, "", /*includeSavedState*/ true, /*includeErrorThreshold*/ true);
+  runWrapper.addBodyLine("#else", /*withIndentation*/ false);
+  runWrapper.addBodyLine("timing = run_" + stencilInstantiation->getName() + " &");
+  genCallArgs(runWrapper, "", /*includeSavedState*/ false, /*includeErrorThreshold*/ false);
+  runWrapper.addBodyLine("#endif", /*withIndentation*/ false);
+  runWrapper.addACCLine("end host_data");
+
+  fimGen.addWrapperAPI(std::move(runWrapper));
 
   // memory management functions for production interface
   FortranInterfaceAPI setup("setup_" + stencilInstantiation->getName());
   FortranInterfaceAPI free("free_" + stencilInstantiation->getName());
-  setup.addArg("mesh", FortranInterfaceAPI::InterfaceType::OBJ);
-  setup.addArg("k_size", FortranInterfaceAPI::InterfaceType::INTEGER);
+  setup.addArg("mesh", FortranAPI::InterfaceType::OBJ);
+  setup.addArg("k_size", FortranAPI::InterfaceType::INTEGER);
 
-  fimGen.addAPI(std::move(setup));
-  fimGen.addAPI(std::move(free));
+  fimGen.addInterfaceAPI(std::move(setup));
+  fimGen.addInterfaceAPI(std::move(free));
 }
 
 std::string CudaIcoCodeGen::generateF90Interface(std::string moduleName) const {
   std::stringstream ss;
+  ss << "#define DEFAULT_RELATIVE_ERROR_THRESHOLD 1.0d-12" << std::endl;
   IndentedStringStream iss(ss);
 
   FortranInterfaceModuleGen fimGen(iss, moduleName);
@@ -1320,9 +1634,12 @@ std::unique_ptr<TranslationUnit> CudaIcoCodeGen::generateCode() {
       "#include \"driver-includes/unstructured_domain.hpp\"",
       "#include \"driver-includes/defs.hpp\"",
       "#include \"driver-includes/cuda_utils.hpp\"",
+      "#include \"driver-includes/cuda_verify.hpp\"",
+      "#include \"driver-includes/to_vtk.h\"",
       "#define GRIDTOOLS_DAWN_NO_INCLUDE", // Required to not include gridtools from math.hpp
       "#include \"driver-includes/math.hpp\"",
       "#include \"driver-includes/timer_cuda.hpp\"",
+      "#include <chrono>",
       "#define BLOCK_SIZE 16",
       "#define LEVELS_PER_THREAD 1",
       "using namespace gridtools::dawn;",

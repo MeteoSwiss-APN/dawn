@@ -20,8 +20,26 @@
 #include "dawn/CodeGen/Cuda/CudaCodeGen.h"
 #include "dawn/CodeGen/GridTools/GTCodeGen.h"
 #include "dawn/Serialization/IIRSerializer.h"
+#include "dawn/Support/Logger.h"
 
 #include <stdexcept>
+
+#include "dawn/Support/ClangCompat/FileUtil.h"
+#include "dawn/Support/ClangCompat/VirtualFileSystem.h"
+
+#include "clang/Basic/DiagnosticOptions.h"
+#include "clang/Driver/Compilation.h"
+#include "clang/Driver/Driver.h"
+#include "clang/Frontend/CompilerInstance.h"
+#include "clang/Frontend/CompilerInvocation.h"
+#include "clang/Frontend/FrontendAction.h"
+#include "clang/Frontend/TextDiagnosticPrinter.h"
+#include "clang/Basic/FileManager.h"
+#include "clang/Format/Format.h"
+#include "clang/Rewrite/Core/Rewriter.h"
+#include "clang/Basic/SourceManager.h"
+#include "llvm/Support/FileSystem.h"
+#include "llvm/Support/MemoryBuffer.h"
 
 namespace dawn {
 namespace codegen {
@@ -93,7 +111,51 @@ std::string generate(const std::unique_ptr<TranslationUnit>& translationUnit) {
   for(const auto& p : translationUnit->getStencils())
     code += p.second;
 
-  return code;
+  // Setup diagnostics engine
+  clang::IntrusiveRefCntPtr<clang::DiagnosticOptions> diagnosticOptions = new clang::DiagnosticOptions;
+  auto* diagnosticClient = new clang::TextDiagnosticPrinter(llvm::errs(), &*diagnosticOptions);
+
+  clang::IntrusiveRefCntPtr<clang::DiagnosticIDs> diagnosticID(new clang::DiagnosticIDs());
+  clang::DiagnosticsEngine diagnostics(diagnosticID, &*diagnosticOptions, diagnosticClient);
+
+  // Create memory buffer of the code
+  std::unique_ptr<llvm::MemoryBuffer> codeBuffer = llvm::MemoryBuffer::getMemBuffer(code);
+
+  // Create in-memory filesystem
+  clang::IntrusiveRefCntPtr<clang_compat::llvm::vfs::InMemoryFileSystem> memFS(
+      new clang_compat::llvm::vfs::InMemoryFileSystem);
+  clang::FileManager files(clang::FileSystemOptions(), memFS);
+  memFS->addFileNoOwn("<irrelevant>", 0, codeBuffer.get());
+
+  // Create in-memory file
+  clang::SourceManager sources(diagnostics, files);
+  clang::FileID ID = sources.createFileID(clang_compat::FileUtil::getFile(files, "<irrelevant>"),
+                                          clang::SourceLocation(), clang::SrcMgr::C_User);
+
+  clang::SourceLocation start = sources.getLocForStartOfFile(ID);
+  clang::SourceLocation end = sources.getLocForEndOfFile(ID);
+
+  unsigned offset = sources.getFileOffset(start);
+  unsigned length = sources.getFileOffset(end) - offset;
+  std::vector<clang::tooling::Range> ranges{clang::tooling::Range{offset, length}};
+
+  // Define same style as in .clang-format dawn file
+  bool incompleteFormat = false;
+  clang::format::FormatStyle style =
+      clang::format::getLLVMStyle(clang::format::FormatStyle::LanguageKind::LK_Cpp);
+  style.PointerAlignment = clang::format::FormatStyle::PAS_Left;
+  style.ColumnLimit = 100;
+  style.SpaceBeforeParens = clang::format::FormatStyle::SBPO_Never;
+  style.AlwaysBreakTemplateDeclarations = clang::format::FormatStyle::BTDS_Yes;
+
+  // Run reformat on the entire file (i.e our code snippet)
+  clang::tooling::Replacements replacements =
+      clang::format::reformat(style, codeBuffer->getBuffer(), ranges, "X.cpp", &incompleteFormat);
+
+  auto result_formatted = clang::tooling::applyAllReplacements(codeBuffer->getBuffer(), replacements);
+  DAWN_LOG(INFO) << "Done reformatting stencil code: " << (result_formatted.takeError() ? "FAIL" : "Success");
+
+  return result_formatted.get();
 }
 
 } // namespace codegen

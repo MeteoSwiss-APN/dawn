@@ -73,8 +73,8 @@ TEST_F(SIRStencilTest, Location) {
 }
 
 TEST_F(SIRStencilTest, Fields) {
-  auto makeFieldDimensions = []() -> sir::FieldDimensions {
-    return sir::FieldDimensions(sir::HorizontalFieldDimension(ast::cartesian, {true, true}), true);
+  auto makeFieldDimensions = []() -> ast::FieldDimensions {
+    return ast::FieldDimensions(ast::HorizontalFieldDimension(ast::cartesian, {true, true}), true);
   };
 
   sir1->Stencils[0]->Fields.emplace_back(
@@ -139,8 +139,8 @@ TEST_F(SIRStencilFunctionTest, Location) {
 }
 
 TEST_F(SIRStencilFunctionTest, Arguments) {
-  auto makeFieldDimensions = []() -> sir::FieldDimensions {
-    return sir::FieldDimensions(sir::HorizontalFieldDimension(ast::cartesian, {true, true}), true);
+  auto makeFieldDimensions = []() -> ast::FieldDimensions {
+    return ast::FieldDimensions(ast::HorizontalFieldDimension(ast::cartesian, {true, true}), true);
   };
 
   sir1->StencilFunctions[0]->Args.emplace_back(

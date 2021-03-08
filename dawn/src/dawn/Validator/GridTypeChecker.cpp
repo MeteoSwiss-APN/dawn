@@ -121,7 +121,7 @@ void GridTypeChecker::TypeCheckerImpl::visit(const std::shared_ptr<ast::FieldAcc
   }
   typesConsistent_ &= hOffset.getGridType() == prescribedType_;
 
-  ast::ASTVisitorForwarding::visit(expr);
+  ast::ASTVisitorForwardingNonConst::visit(expr);
 }
 
 } // namespace dawn

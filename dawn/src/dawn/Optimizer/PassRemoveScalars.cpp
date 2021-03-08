@@ -28,7 +28,7 @@
 namespace dawn {
 namespace {
 
-class ExprScalarChecker : public ast::ASTVisitorForwarding {
+class ExprScalarChecker : public ast::ASTVisitorForwardingNonConst {
   const iir::StencilMetaInformation& metadata_;
   bool isScalar_ = true;
 

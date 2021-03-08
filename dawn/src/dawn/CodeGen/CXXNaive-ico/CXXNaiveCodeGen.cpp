@@ -204,7 +204,7 @@ void CXXNaiveIcoCodeGen::generateStencilWrapperCtr(
                                        metadata.getNameFromAccessID(APIfieldID));
       continue;
     }
-    if(sir::dimension_cast<const sir::UnstructuredFieldDimension&>(
+    if(ast::dimension_cast<const ast::UnstructuredFieldDimension&>(
            metadata.getFieldDimensions(APIfieldID).getHorizontalFieldDimension())
            .isDense()) {
       std::string typeString =
@@ -260,11 +260,11 @@ void CXXNaiveIcoCodeGen::generateStencilWrapperCtr(
         if(field.getFieldDimensions().isVertical()) {
           allocString = "allocateField(LibTag{}, k_size)";
         } else {
-          auto hdims = sir::dimension_cast<sir::UnstructuredFieldDimension const&>(
+          auto hdims = ast::dimension_cast<ast::UnstructuredFieldDimension const&>(
               field.getFieldDimensions().getHorizontalFieldDimension());
 
           auto getPaddedNumElCall =
-              [&](const sir::UnstructuredFieldDimension& hdims) -> std::string {
+              [&](const ast::UnstructuredFieldDimension& hdims) -> std::string {
             switch(hdims.getDenseLocationType()) {
             case ast::LocationType::Cells:
               return "numCells(LibTag{}, mesh) + " +
@@ -336,7 +336,7 @@ void CXXNaiveIcoCodeGen::generateStencilWrapperMembers(
       if(dims.isVertical()) {
         fieldType = "vertical_field_t<LibTag, ::dawn::float_type>";
       } else {
-        auto hdims = sir::dimension_cast<sir::UnstructuredFieldDimension const&>(
+        auto hdims = ast::dimension_cast<ast::UnstructuredFieldDimension const&>(
             dims.getHorizontalFieldDimension());
         fieldType = hdims.isSparse() ? "::dawn::sparse_" : "::dawn::";
         switch(hdims.getDenseLocationType()) {
@@ -408,7 +408,7 @@ void CXXNaiveIcoCodeGen::generateStencilClasses(
         return std::string("::dawn::vertical_field_t<LibTag, ::dawn::float_type>");
       }
 
-      const auto& unstructuredDims = sir::dimension_cast<sir::UnstructuredFieldDimension const&>(
+      const auto& unstructuredDims = ast::dimension_cast<ast::UnstructuredFieldDimension const&>(
           info.field.getFieldDimensions().getHorizontalFieldDimension());
       if(unstructuredDims.isDense()) {
         switch(unstructuredDims.getDenseLocationType()) {
@@ -536,13 +536,13 @@ void CXXNaiveIcoCodeGen::generateStencilClasses(
         switch(magicNum) {
         case 0:
           return "::dawn::UnstructuredSubdomain::LateralBoundary";
-        case 1:
+        case 1000:
           return "::dawn::UnstructuredSubdomain::Nudging";
-        case 2:
+        case 2000:
           return "::dawn::UnstructuredSubdomain::Interior";
-        case 3:
+        case 3000:
           return "::dawn::UnstructuredSubdomain::Halo";
-        case 4:
+        case 4000:
           return "::dawn::UnstructuredSubdomain::End";
         default:
           throw std::runtime_error("Invalid magic number");

@@ -62,7 +62,7 @@ enum FieldType { NotOriginal = -1 };
 /// @brief The VisitStencilCalls class traverses the StencilDescAST to determine an order of the
 /// stencil calls. This is required to properly evaluate boundary conditions
 ///
-class VisitStencilCalls : public ast::ASTVisitorForwarding {
+class VisitStencilCalls : public ast::ASTVisitorForwardingNonConst {
   std::vector<std::shared_ptr<ast::StencilCallDeclStmt>> stencilCallsInOrder_;
 
 public:
@@ -81,7 +81,7 @@ public:
 /// @brief The AddBoundaryConditions class traverses the StencilDescAST to extract all the
 /// StencilCallStmts for a stencili with a given ID. This is required to properly insert boundary
 /// conditions.
-class AddBoundaryConditions : public ast::ASTVisitorForwarding {
+class AddBoundaryConditions : public ast::ASTVisitorForwardingNonConst {
   std::shared_ptr<iir::StencilInstantiation> instantiation_;
   iir::StencilMetaInformation& metadata_;
   int StencilID_;

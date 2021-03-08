@@ -140,7 +140,7 @@ public:
 // Using ordered map to guarantee the same backend code will be generated
 using GlobalVariableMap = std::map<std::string, Global>;
 
-} // namespace sir
+} // namespace ast
 
 namespace {
 

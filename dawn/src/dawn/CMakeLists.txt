@@ -56,14 +56,11 @@ endfunction()
 add_subdirectory(Support)
 add_dawn_library(DawnSupport)
 
-# AST and SIR have a circular dependency, only building one library -- DawnSIR
-# {
 add_subdirectory(AST)
-add_dawn_library(DawnAST)
+add_dawn_library(DawnASTProto DawnAST)
 
 add_subdirectory(SIR)
 add_dawn_library(DawnSIRProto DawnSIR)
-# }
 
 add_subdirectory(IIR)
 add_dawn_library(DawnIIRProto DawnIIR)

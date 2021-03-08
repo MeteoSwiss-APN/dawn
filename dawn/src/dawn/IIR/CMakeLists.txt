@@ -19,7 +19,7 @@ include(DawnProtobufGenerate)
 dawn_protobuf_generate(
   OUT_FILES iir_proto_cpp_files
   PROTOS ${dawn_iir_proto_files}
-  INC_DIR ${CMAKE_CURRENT_SOURCE_DIR}/../SIR/proto/
+  INC_DIR ${CMAKE_CURRENT_SOURCE_DIR}/../AST/proto/
   WDIR ${CMAKE_CURRENT_SOURCE_DIR}/proto
   PACKG IIR
   LANGUAGE cpp
@@ -39,7 +39,7 @@ target_include_directories(DawnIIRProto
 )
 
 # ... and linked to protobuf
-target_link_libraries(DawnIIRProto PUBLIC DawnSIRProto protobuf::libprotobuf)
+target_link_libraries(DawnIIRProto PUBLIC DawnASTProto protobuf::libprotobuf)
 
 add_library(DawnIIR
   AccessComputation.h
@@ -112,7 +112,7 @@ add_library(DawnIIR
   )
 
 target_add_dawn_standard_props(DawnIIR)
-target_link_libraries(DawnIIR PUBLIC DawnSupport DawnSIR DawnIIRProto)
+target_link_libraries(DawnIIR PUBLIC DawnSupport DawnASTProto DawnAST DawnSIR DawnIIRProto)
 # The include path below is necessary for the C++ proto headers
 target_include_directories(DawnIIR
   PUBLIC $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}/dawn/IIR>

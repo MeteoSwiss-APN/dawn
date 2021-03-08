@@ -33,7 +33,7 @@ namespace codegen {
 namespace cxxnaiveico {
 
 // quick visitor to check whether a statement contains a reduceOverNeighborExpr
-class FindReduceOverNeighborExpr : public ast::ASTVisitorForwarding {
+class FindReduceOverNeighborExpr : public ast::ASTVisitorForwardingNonConst {
   std::optional<std::shared_ptr<ast::ReductionOverNeighborExpr>> foundReduction_ = std::nullopt;
 
 public:

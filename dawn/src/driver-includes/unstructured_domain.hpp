@@ -20,7 +20,7 @@
 
 namespace dawn {
 
-enum class UnstructuredSubdomain { LateralBoundary = 0, Nudging, Interior, Halo, End };
+enum class UnstructuredSubdomain { LateralBoundary = 0, Nudging=1000, Interior=2000, Halo=3000, End=4000};
 
 class unstructured_domain {
   using KeyType = std::tuple<::dawn::LocationType, UnstructuredSubdomain, int>;
@@ -28,7 +28,9 @@ class unstructured_domain {
 
 public:
   int operator()(KeyType&& key) const { return subdomainToIndex_.at(key); }
-  void set_splitter_index(KeyType&& key, int index) { subdomainToIndex_[key] = index; }
+  void set_splitter_index(KeyType&& key, int index) {     
+    subdomainToIndex_[key] = index; 
+  }
 };
 
 } // namespace dawn

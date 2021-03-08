@@ -22,8 +22,8 @@ using namespace iir;
 
 namespace {
 
-auto fieldDimensions = []() -> sir::FieldDimensions {
-  return sir::FieldDimensions(sir::HorizontalFieldDimension(ast::cartesian, {true, true}), true);
+auto fieldDimensions = []() -> ast::FieldDimensions {
+  return ast::FieldDimensions(ast::HorizontalFieldDimension(ast::cartesian, {true, true}), true);
 };
 
 TEST(TestField, Construction) {
@@ -80,19 +80,19 @@ TEST(TestField, Equal) {
 
 TEST(TestField, CartesianDimensions) {
   auto c001 =
-      sir::FieldDimensions(sir::HorizontalFieldDimension(ast::cartesian, {false, false}), true);
+      ast::FieldDimensions(ast::HorizontalFieldDimension(ast::cartesian, {false, false}), true);
   auto c010 =
-      sir::FieldDimensions(sir::HorizontalFieldDimension(ast::cartesian, {false, true}), false);
+      ast::FieldDimensions(ast::HorizontalFieldDimension(ast::cartesian, {false, true}), false);
   auto c100 =
-      sir::FieldDimensions(sir::HorizontalFieldDimension(ast::cartesian, {true, false}), false);
+      ast::FieldDimensions(ast::HorizontalFieldDimension(ast::cartesian, {true, false}), false);
   auto c110 =
-      sir::FieldDimensions(sir::HorizontalFieldDimension(ast::cartesian, {true, true}), false);
+      ast::FieldDimensions(ast::HorizontalFieldDimension(ast::cartesian, {true, true}), false);
   auto c101 =
-      sir::FieldDimensions(sir::HorizontalFieldDimension(ast::cartesian, {true, false}), true);
+      ast::FieldDimensions(ast::HorizontalFieldDimension(ast::cartesian, {true, false}), true);
   auto c011 =
-      sir::FieldDimensions(sir::HorizontalFieldDimension(ast::cartesian, {false, true}), true);
+      ast::FieldDimensions(ast::HorizontalFieldDimension(ast::cartesian, {false, true}), true);
   auto c111 =
-      sir::FieldDimensions(sir::HorizontalFieldDimension(ast::cartesian, {true, true}), true);
+      ast::FieldDimensions(ast::HorizontalFieldDimension(ast::cartesian, {true, true}), true);
   EXPECT_EQ(c001.numSpatialDimensions(), 1);
   EXPECT_EQ(c010.numSpatialDimensions(), 1);
   EXPECT_EQ(c100.numSpatialDimensions(), 1);
@@ -103,11 +103,11 @@ TEST(TestField, CartesianDimensions) {
 }
 
 TEST(TestField, UnstructuredDimension) {
-  auto f1d = sir::FieldDimensions(true);
-  auto f2d = sir::FieldDimensions(
-      sir::HorizontalFieldDimension(ast::unstructured, ast::LocationType::Cells), false);
-  auto f3d = sir::FieldDimensions(
-      sir::HorizontalFieldDimension(ast::unstructured, ast::LocationType::Cells), true);
+  auto f1d = ast::FieldDimensions(true);
+  auto f2d = ast::FieldDimensions(
+      ast::HorizontalFieldDimension(ast::unstructured, ast::LocationType::Cells), false);
+  auto f3d = ast::FieldDimensions(
+      ast::HorizontalFieldDimension(ast::unstructured, ast::LocationType::Cells), true);
   EXPECT_EQ(f1d.numSpatialDimensions(), 1);
   EXPECT_EQ(f2d.numSpatialDimensions(), 2);
   EXPECT_EQ(f3d.numSpatialDimensions(), 3);

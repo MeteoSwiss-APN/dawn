@@ -13,20 +13,20 @@
  *
 \*===------------------------------------------------------------------------------------------===*/
 
-// @defgroup sir_proto SIR protobuf
-// @brief This is a SIR description using Google's protocol buffers library
+// @defgroup ast_proto AST protobuf
+// @brief This is a AST description using Google's protocol buffers library
 // <a href="https://developers.google.com/protocol-buffers/">Protobuf</a>.
 
 syntax = "proto3";
-package dawn.proto.statements;
-import "SIR/enums.proto";
+package dawn.proto.ast;
+import "AST/enums.proto";
 
 import "google/protobuf/wrappers.proto";
 
 // @brief Source information
 //
 // `(-1,-1)` indicates an invalid location.
-// @ingroup sir_proto
+// @ingroup ast_proto
 message SourceLocation {
   int32 Line = 1;   // Source line
   int32 Column = 2; // Column in the `Line`
@@ -36,7 +36,7 @@ message SourceLocation {
 //
 // For a cartesian grid we enable/disable the I and J components through their
 // respective masks.
-// @ingroup sir_proto
+// @ingroup ast_proto
 message CartesianDimension {
   int32 mask_cart_i = 1; // mask for cartesian component i
   int32 mask_cart_j = 2; // mask for cartesian component j
@@ -47,7 +47,7 @@ message CartesianDimension {
 // For a unstructured grid we need to specify the dense location type.
 // It could also have a sparse dimension. In such case the sparse part is
 // non-empty.
-// @ingroup sir_proto
+// @ingroup ast_proto
 message UnstructuredDimension { UnstructuredIterationSpace iter_space = 1; }
 
 // @brief Dimensions spanned by a field
@@ -55,7 +55,7 @@ message UnstructuredDimension { UnstructuredIterationSpace iter_space = 1; }
 // This is a condensed representation of the dimensions of a field.
 // A field has a vertical component iff maskK=1.
 // On the horizontal we distinguish between cartesian and unstructured grids.
-// @ingroup sir_proto
+// @ingroup ast_proto
 message FieldDimensions {
   oneof horizontal_dimension {
     CartesianDimension cartesian_horizontal_dimension = 1;
@@ -66,7 +66,7 @@ message FieldDimensions {
 }
 
 // @brief Description of a field argument of a Stencil or StencilFunction
-// @ingroup sir_proto
+// @ingroup ast_proto
 message Field {
   string name = 1;                      // Name of the field
   SourceLocation loc = 2;               // Source location
@@ -78,7 +78,7 @@ message Field {
 //
 // Note that this message is merely a placeholder as the actual arguments is
 // encoded as an AST node.
-// @ingroup sir_proto
+// @ingroup ast_proto
 message Direction {
   string name = 1;        // Name of the directional argument
   SourceLocation loc = 2; // Source location
@@ -88,14 +88,14 @@ message Direction {
 //
 // Note that this message is merely a placeholder as the actual arguments is
 // encoded as an AST node.
-// @ingroup sir_proto
+// @ingroup ast_proto
 message Offset {
   string name = 1;        // Name of the offset argument
   SourceLocation loc = 2; // Source location
 }
 
 // @brief Directional argument of a StencilFunction
-// @ingroup sir_proto
+// @ingroup ast_proto
 message StencilFunctionArg {
   // One of Field, Direction or Offset
   oneof Arg {
@@ -114,7 +114,7 @@ message StencilFunctionArg {
 //  - `upper_level <= Interval::End`
 //  - `(lower_level + lower_offset) <= (upper_level + upper_offset)`
 //
-// @ingroup sir_proto
+// @ingroup ast_proto
 message Interval {
   // Indication of a special level
   enum SpecialLevel {
@@ -145,7 +145,7 @@ message Interval {
 }
 
 // @brief Supported builtin types
-// @ingroup sir_proto
+// @ingroup ast_proto
 message BuiltinType {
   enum TypeID {
     Invalid = 0;
@@ -160,7 +160,7 @@ message BuiltinType {
 }
 
 // @brief Supported builtin types
-// @ingroup sir_proto
+// @ingroup ast_proto
 message Dimension {
   enum Direction {
     I = 0;
@@ -173,7 +173,7 @@ message Dimension {
 }
 
 // @brief Supported builtin types
-// @ingroup sir_proto
+// @ingroup ast_proto
 message Type {
   // Underlying type (either a custom type given by `name` or a `BuiltinType`)
   oneof type {
@@ -186,7 +186,7 @@ message Type {
 }
 
 // @brief Declaration of a vertical region
-// @ingroup sir_proto
+// @ingroup ast_proto
 message VerticalRegion {
   enum LoopOrder {
     Forward = 0;
@@ -202,7 +202,7 @@ message VerticalRegion {
 }
 
 // @brief Stencil call declaration
-// @ingroup sir_proto
+// @ingroup ast_proto
 message StencilCall {
   SourceLocation loc = 1; // Source location of the stencil call
   string callee = 2;      // Name of the called stencil (i.e callee)
@@ -249,7 +249,7 @@ message Accesses {
 }
 
 message UnstructuredIterationSpace {
-  repeated dawn.proto.enums.LocationType chain = 1;
+  repeated dawn.proto.ast.LocationType chain = 1;
   bool include_center = 2;
 }
 
@@ -259,13 +259,13 @@ message UnstructuredIterationSpace {
 
 // @brief Data of Stmts
 //
-// @ingroup sir_proto
+// @ingroup ast_proto
 message StmtData {
   Accesses accesses = 1; // All the accesses of the statement
 }
 
 // @brief This is a union of all the statements
-// @ingroup sir_proto
+// @ingroup ast_proto
 message Stmt {
   oneof stmt {
     BlockStmt block_stmt = 1;
@@ -281,7 +281,7 @@ message Stmt {
 }
 
 // @brief This is a union of all the expressions
-// @ingroup sir_proto
+// @ingroup ast_proto
 message Expr {
   oneof expr {
     UnaryOperator unary_operator = 1;
@@ -309,7 +309,7 @@ message Expr {
 //  statement_N
 // }
 // @endcode
-// @ingroup sir_proto
+// @ingroup ast_proto
 message BlockStmt {
   repeated Stmt statements = 1; // List of statements
   SourceLocation loc = 2;       // Source location
@@ -340,7 +340,7 @@ message LoopStmt {
 
 // @brief A statement wrapping an expression
 //
-// @ingroup sir_proto
+// @ingroup ast_proto
 message ExprStmt {
   Expr expr = 1;          // Expression
   SourceLocation loc = 2; // Source location
@@ -350,7 +350,7 @@ message ExprStmt {
 
 // @brief Return statement
 //
-// @ingroup sir_proto
+// @ingroup ast_proto
 message ReturnStmt {
   Expr expr = 1;          // Expression to return
   SourceLocation loc = 2; // Source location
@@ -360,7 +360,7 @@ message ReturnStmt {
 
 // @brief Data of a VarDeclStmt
 //
-// @ingroup sir_proto
+// @ingroup ast_proto
 message VarDeclStmtData {
   google.protobuf.Int32Value accessID = 1; // ID of the variable declared in the statement
 }
@@ -389,7 +389,7 @@ message VarDeclStmtData {
 //  - init_list: {LiteralAccessExpr{"2.3"}, LiteralAccessExpr{"5.3"}}
 // @endcode
 //
-// @ingroup sir_proto
+// @ingroup ast_proto
 message VarDeclStmt {
   Type type = 1;       // Type of the variable
   string name = 2;     // Name of the variable
@@ -408,7 +408,7 @@ message VarDeclStmt {
 
 // @brief Declaration of a vertical region
 //
-// @ingroup sir_proto
+// @ingroup ast_proto
 message VerticalRegionDeclStmt {
   VerticalRegion vertical_region = 1;
   SourceLocation loc = 2; // Source location
@@ -418,7 +418,7 @@ message VerticalRegionDeclStmt {
 
 // @brief Declaration of a stencil call
 //
-// @ingroup sir_proto
+// @ingroup ast_proto
 message StencilCallDeclStmt {
   StencilCall stencil_call = 1;
   SourceLocation loc = 2; // Source location
@@ -428,7 +428,7 @@ message StencilCallDeclStmt {
 
 // @brief Declaration of a boundary condition
 //
-// @ingroup sir_proto
+// @ingroup ast_proto
 message BoundaryConditionDeclStmt {
   string functor = 1;         // Identifier of the boundary condition functor
   repeated string fields = 2; // List of field arguments to apply the functor to
@@ -447,7 +447,7 @@ message BoundaryConditionDeclStmt {
 //    else_part
 // @endcode
 //
-// @ingroup sir_proto
+// @ingroup ast_proto
 message IfStmt {
   Stmt cond_part = 1;     // Condition (needs to be an `ExprStmt`)
   Stmt then_part = 2;     // Then part
@@ -463,7 +463,7 @@ message IfStmt {
 // @code{.cpp}
 //  op operand
 // @endcode
-// @ingroup sir_proto
+// @ingroup ast_proto
 message UnaryOperator {
   string op = 1;          // Operation (e.g "+" or "-")
   Expr operand = 2;       // Expression to apply the operation
@@ -477,7 +477,7 @@ message UnaryOperator {
 // @code{.cpp}
 //  left op right
 // @endcode
-// @ingroup sir_proto
+// @ingroup ast_proto
 message BinaryOperator {
   Expr left = 1;          // Left-hand side
   string op = 2;          // Operation (e.g "+" or "-")
@@ -492,7 +492,7 @@ message BinaryOperator {
 // @code{.cpp}
 //  left = right
 // @endcode
-// @ingroup sir_proto
+// @ingroup ast_proto
 message AssignmentExpr {
   Expr left = 1;          // Left-hand side
   string op = 2;          // Operation (e.g "=" or "+=")
@@ -507,7 +507,7 @@ message AssignmentExpr {
 // @code{.cpp}
 //  cond ? left : right
 // @endcode
-// @ingroup sir_proto
+// @ingroup ast_proto
 message TernaryOperator {
   Expr cond = 1;          // Condition
   Expr left = 2;          // Left-hand side
@@ -522,7 +522,7 @@ message TernaryOperator {
 // @code{.cpp}
 //  callee(arg0, ..., argN)
 // @endcode
-// @ingroup sir_proto
+// @ingroup ast_proto
 message FunCallExpr {
   string callee = 1;           // Identifier of the function (i.e callee)
   repeated Expr arguments = 2; // List of arguments
@@ -536,7 +536,7 @@ message FunCallExpr {
 // @code{.cpp}
 //  callee(arg0, ..., argN)
 // @endcode
-// @ingroup sir_proto
+// @ingroup ast_proto
 message StencilFunCallExpr {
   string callee = 1;           // Identifier of the stencil function (i.e callee)
   repeated Expr arguments = 2; // List of arguments
@@ -551,7 +551,7 @@ message StencilFunCallExpr {
 // stencil function is called within the scope of another stencil function
 // (nested calls).
 //
-// @ingroup sir_proto
+// @ingroup ast_proto
 message StencilFunArgExpr {
   // Dimension of the argument
   Dimension dimension = 1;
@@ -594,14 +594,14 @@ message StencilFunArgExpr {
 
 // @brief Data of an access expression
 //
-// @ingroup sir_proto
+// @ingroup ast_proto
 message AccessExprData {
   google.protobuf.Int32Value accessID = 1; // Access ID of variable/literal/field accessed
 }
 
 // @brief Access to a variable
 //
-// @ingroup sir_proto
+// @ingroup ast_proto
 message VarAccessExpr {
   string name = 1;         // Name of the variable
   Expr index = 2;          // Is it an array access (i.e var[2])?
@@ -620,7 +620,7 @@ message ZeroOffset {}
 
 // @brief Access to a field
 //
-// @ingroup sir_proto
+// @ingroup ast_proto
 message FieldAccessExpr {
   // Name of the field
   string name = 1;
@@ -689,7 +689,7 @@ message FieldAccessExpr {
 
 // @brief Access of a literal
 //
-// @ingroup sir_proto
+// @ingroup ast_proto
 message LiteralAccessExpr {
   string value = 1;        // Value of the literal (e.g "1.24324")
   BuiltinType type = 2;    // Type of the literal
@@ -700,7 +700,7 @@ message LiteralAccessExpr {
 
 // @brief Reduction operation over neighbors
 //
-// @ingroup sir_proto
+// @ingroup ast_proto
 message ReductionOverNeighborExpr {
   string op = 1;             // Reduction operation
   Expr rhs = 2;              // Operation to be applied for each neighbor
@@ -713,9 +713,43 @@ message ReductionOverNeighborExpr {
   repeated int32 offsets = 7;
 }
 
-// @brief Abstract syntax tree of the SIR
+// @brief Abstract syntax tree of the AST
 //
-// @ingroup sir_proto
+// @ingroup ast_proto
 message AST {
   Stmt root = 1; // Root node
+}
+
+/*===------------------------------------------------------------------------------------------===*\
+ *     GlobalVariableMap
+\*===------------------------------------------------------------------------------------------===*/
+
+// TODO this needs to be changed to accept a type independent of a value if we
+// want it to be 1-to-1 with the SIR structures.
+// @brief Value of a global variable
+message GlobalVariableValue {
+  // Type and value of the variable
+  oneof Value {
+    bool boolean_value = 1;
+    int32 integer_value = 2;
+    double double_value = 3;
+    string string_value = 4;
+    float float_value = 5;
+  }
+
+  // Is the value a a compile time constant?
+  bool is_constexpr = 6;
+}
+
+// @brief Map of global variables
+//
+// The support of global variables is essential for scientific models to store switches to
+// control the flow of the execution, like the order of the horizontal advection, or simulation
+// parameters such as the time step of the model. A global variable is identified by a unique
+// name and a value which can either be set statically at compile time or dynamically at run
+// time.
+//
+// @ingroup sir_proto
+message GlobalVariableMap {
+  map<string, GlobalVariableValue> map = 1; // Mape of global variables (name to value)
 }

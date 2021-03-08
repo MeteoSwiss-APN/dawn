@@ -57,5 +57,5 @@ std::ostream& operator<<(std::ostream& os, const Interval& interval) {
   return os;
 }
 
-} // namespace sir
+} // namespace ast
 } // namespace dawn

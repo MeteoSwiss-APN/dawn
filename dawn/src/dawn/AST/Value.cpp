@@ -89,5 +89,5 @@ std::string Value::toString() const {
 
 bool Value::operator==(const Value& rhs) const { return bool(comparison(rhs)); }
 
-} // namespace sir
+} // namespace ast
 } // namespace dawn

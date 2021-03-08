@@ -31,7 +31,7 @@ namespace dawn {
 
 namespace {
 
-class StencilFunArgumentDetector : public ast::ASTVisitorForwarding {
+class StencilFunArgumentDetector : public ast::ASTVisitorForwardingNonConst {
   int AccessID_;
 
   int argListNesting_;
@@ -43,7 +43,7 @@ public:
 
   virtual void visit(const std::shared_ptr<ast::StencilFunCallExpr>& expr) override {
     argListNesting_++;
-    ast::ASTVisitorForwarding::visit(expr);
+    ast::ASTVisitorForwardingNonConst::visit(expr);
     argListNesting_--;
   }
 
@@ -182,7 +182,7 @@ bool PassTemporaryType::run(const std::shared_ptr<iir::StencilInstantiation>& in
           auto hDims =
               metadata.getFieldIDToDimsMap().at(temporary.accessID_).getHorizontalFieldDimension();
           if(hDims.getType() == ast::GridType::Unstructured) {
-            sparse = sir::dimension_cast<sir::UnstructuredFieldDimension const&>(hDims).isSparse();
+            sparse = ast::dimension_cast<ast::UnstructuredFieldDimension const&>(hDims).isSparse();
           }
         }
         if(temporary.lifetime_.Begin.inSameDoMethod(temporary.lifetime_.End) &&

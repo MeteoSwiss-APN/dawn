@@ -40,7 +40,7 @@ void WeightChecker::WeightCheckerImpl::visit(
     }
 
     DAWN_ASSERT(nameToDimensions_.count(fieldName));
-    weightsValid_ = sir::dimension_cast<const sir::UnstructuredFieldDimension&>(
+    weightsValid_ = ast::dimension_cast<const ast::UnstructuredFieldDimension&>(
                         nameToDimensions_.at(fieldName).getHorizontalFieldDimension())
                         .isDense() ||
                     parentAllowsSparse_;
@@ -94,11 +94,11 @@ void WeightChecker::WeightCheckerImpl::visit(
 bool WeightChecker::WeightCheckerImpl::isValid() const { return weightsValid_; }
 
 WeightChecker::WeightCheckerImpl::WeightCheckerImpl(
-    const std::unordered_map<std::string, sir::FieldDimensions> nameToDimensionsMap)
+    const std::unordered_map<std::string, ast::FieldDimensions> nameToDimensionsMap)
     : nameToDimensions_(nameToDimensionsMap) {}
 
 WeightChecker::WeightCheckerImpl::WeightCheckerImpl(
-    const std::unordered_map<std::string, sir::FieldDimensions> nameToDimensionsMap,
+    const std::unordered_map<std::string, ast::FieldDimensions> nameToDimensionsMap,
     const std::unordered_map<int, std::string> idToNameMap,
     const std::unordered_map<std::shared_ptr<ast::StencilFunCallExpr>,
                              std::shared_ptr<iir::StencilFunctionInstantiation>>& exprToFunMap)
@@ -124,7 +124,7 @@ WeightChecker::CheckWeights(const iir::IIR& iir, const iir::StencilMetaInformati
 WeightChecker::ConsistencyResult WeightChecker::CheckWeights(const SIR& sir) {
   for(const auto& stencil : sir.Stencils) {
     DAWN_ASSERT(stencil);
-    std::unordered_map<std::string, sir::FieldDimensions> stencilFieldDims;
+    std::unordered_map<std::string, ast::FieldDimensions> stencilFieldDims;
     for(const auto& field : stencil->Fields) {
       stencilFieldDims.insert({field->Name, field->Dimensions});
     }

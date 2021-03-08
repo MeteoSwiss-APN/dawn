@@ -21,6 +21,7 @@ _local_/*
 .vscode/
 **/compile_commands.json
 .clangd/
+venv/
 
 # Ignore python editable installs
 *.egg-info/

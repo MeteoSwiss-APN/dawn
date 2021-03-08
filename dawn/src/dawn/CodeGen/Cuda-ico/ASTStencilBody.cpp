@@ -108,13 +108,12 @@ std::string ASTStencilBody::makeIndexString(const std::shared_ptr<ast::FieldAcce
 
   bool isHorizontal = !metadata_.getFieldDimensions(iir::getAccessID(expr)).K();
   bool isFullField = !isHorizontal && !isVertical;
-  auto unstrDims = sir::dimension_cast<const sir::UnstructuredFieldDimension&>(
+  auto unstrDims = ast::dimension_cast<const ast::UnstructuredFieldDimension&>(
       metadata_.getFieldDimensions(iir::getAccessID(expr)).getHorizontalFieldDimension());
   bool isDense = unstrDims.isDense();
   bool isSparse = unstrDims.isSparse();
 
-  std::string denseSize =
-      locToDenseSizeStringGpuMesh(unstrDims.getDenseLocationType(), padding_, /*addParens*/ true);
+  std::string denseSize = locToStrideString(unstrDims.getDenseLocationType());
 
   std::string nbhIdx = "nbhIdx";
   std::string nbhIter = "nbhIdx";
@@ -255,11 +254,18 @@ void ASTStencilBody::visit(const std::shared_ptr<ast::ReductionOverNeighborExpr>
       << "pidx * " << chainToSparseSizeString(expr->getIterSpace()) << " + nbhIter"
       << "];\n";
   ss_ << "if (nbhIdx == DEVICE_MISSING_VALUE) { continue; }";
-  ss_ << lhs_name << " " << expr->getOp() << "=";
+  if(!expr->isArithmetic()) {
+    ss_ << lhs_name << " = " << expr->getOp() << "(" << lhs_name << ", ";
+  } else {
+    ss_ << lhs_name << " " << expr->getOp() << "= ";
+  }
   if(weights.has_value()) {
-    ss_ << " " << weights_name << "[nbhIter] * ";
+    ss_ << weights_name << "[nbhIter] * ";
   }
   expr->getRhs()->accept(*this);
+  if(!expr->isArithmetic()) {
+    ss_ << ")";
+  }
   ss_ << ";}\n";
   parentIsReduction_ = false;
 }

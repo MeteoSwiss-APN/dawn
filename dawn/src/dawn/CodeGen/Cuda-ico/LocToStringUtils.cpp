@@ -131,6 +131,21 @@ std::string locToDenseSizeStringGpuMesh(dawn::ast::LocationType loc, std::option
     return ret;
   }
 }
+std::string locToStrideString(dawn::ast::LocationType loc) {
+  switch(loc) {
+  case dawn::ast::LocationType::Cells:
+    return "CellStride";
+    break;
+  case dawn::ast::LocationType::Edges:
+    return "EdgeStride";
+    break;
+  case dawn::ast::LocationType::Vertices:
+    return "VertexStride";
+    break;
+  default:
+    dawn_unreachable("");
+  }  
+}
 std::string locToDenseTypeString(dawn::ast::LocationType loc) {
   switch(loc) {
   case dawn::ast::LocationType::Cells:
@@ -161,6 +176,23 @@ std::string locToSparseTypeString(dawn::ast::LocationType loc) {
     dawn_unreachable("");
   }
 }
+
+std::string locToStringPlural(dawn::ast::LocationType loc) {
+  switch(loc) {
+  case dawn::ast::LocationType::Cells:
+    return "Cells";
+    break;
+  case dawn::ast::LocationType::Edges:
+    return "Edges";
+    break;
+  case dawn::ast::LocationType::Vertices:
+    return "Vertices";
+    break;
+  default:
+    dawn_unreachable("");
+  }
+}
+
 } // namespace cudaico
 } // namespace codegen
 } // namespace dawn

@@ -17,7 +17,7 @@
 Python serialization tools for SIR and IIR.
 """
 
-from . import SIR, IIR
+from . import AST, SIR, IIR
 
 from .utils import *
 from .error import *

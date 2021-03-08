@@ -34,7 +34,7 @@ class StencilMetaInformation;
 namespace codegen {
 namespace cudaico {
 
-class FindReduceOverNeighborExpr : public ast::ASTVisitorForwarding {
+class FindReduceOverNeighborExpr : public ast::ASTVisitorForwardingNonConst {
   std::vector<std::shared_ptr<ast::ReductionOverNeighborExpr>> foundReductions_;
 
 public:
