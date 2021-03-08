@@ -299,8 +299,10 @@ void CudaIcoCodeGen::generateRunFun(
       std::stringstream k_size;
       DAWN_ASSERT_MSG(intervalsConsistent(*stage),
                       "intervals in a stage must have same Levels for now!\n");
-      auto interval = stage->getChild(0)->getInterval();
-      if(interval.levelIsEnd(iir::Interval::Bound::upper)) {
+      auto interval = stage->getChild(0)->getInterval();      
+      if(interval.levelIsEnd(iir::Interval::Bound::upper) && interval.levelIsEnd(iir::Interval::Bound::lower)) {
+        k_size << (interval.upperOffset() - interval.lowerOffset());
+      } else if(interval.levelIsEnd(iir::Interval::Bound::upper)) {
         k_size << "kSize_ + " << interval.upperOffset() << " - "
                << (interval.lowerOffset() + interval.lowerLevel());
       } else {
@@ -441,8 +443,10 @@ void CudaIcoCodeGen::generateRunFun(
       }
       kernelCall << ")";
       runFun.addStatement(kernelCall.str());
+      runFun.addPreprocessorDirective("ifndef NDEBUG\n");
       runFun.addStatement("gpuErrchk(cudaPeekAtLastError())");
       runFun.addStatement("gpuErrchk(cudaDeviceSynchronize())");
+      runFun.addPreprocessorDirective("endif\n");
     }
   }
 
