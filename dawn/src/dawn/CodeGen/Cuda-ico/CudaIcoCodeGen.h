@@ -23,6 +23,7 @@
 #include <unordered_map>
 
 #include "LocToStringUtils.h"
+#include "ReductionMerger.h"
 
 namespace dawn {
 namespace iir {

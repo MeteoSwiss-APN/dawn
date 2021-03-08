@@ -21,6 +21,7 @@
 #include "dawn/AST/LocationType.h"
 #include "dawn/CodeGen/CXXUtil.h"
 #include "dawn/CodeGen/Cuda-ico/LocToStringUtils.h"
+#include "dawn/CodeGen/Cuda-ico/ReductionMerger.h"
 #include "dawn/CodeGen/Cuda/CodeGeneratorHelper.h"
 #include "dawn/CodeGen/F90Util.h"
 #include "dawn/CodeGen/IcoChainSizes.h"
@@ -1318,6 +1319,8 @@ std::string CudaIcoCodeGen::generateStencilInstantiation(
 
   Namespace dawnNamespace("dawn_generated", ssSW);
   Namespace cudaNamespace("cuda_ico", ssSW);
+
+  ReductionMergeGroupsComputer::ComputeReductionMergeGroups(stencilInstantiation);
 
   generateAllCudaKernels(ssSW, stencilInstantiation);
 

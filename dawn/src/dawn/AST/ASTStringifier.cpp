@@ -15,6 +15,7 @@
 #include "dawn/AST/ASTStringifier.h"
 #include "dawn/AST/AST.h"
 #include "dawn/AST/ASTVisitor.h"
+#include "dawn/AST/Offsets.h"
 #include "dawn/SIR/VerticalRegion.h"
 #include "dawn/Support/Printing.h"
 #include "dawn/Support/StringUtil.h"
@@ -188,6 +189,16 @@ public:
       first = false;
     }
     ss_ << "}";
+    if(expr->getWeights().has_value()) {
+      ss_ << ", weights = {";
+      std::string delim = "";
+      for(auto w : *expr->getWeights()) {
+        ss_ << delim;
+        w->accept(*this);
+        delim = ", ";
+      }
+      ss_ << "}";
+    }
     ss_ << "): ";
     expr->getRhs()->accept(*this);
   }

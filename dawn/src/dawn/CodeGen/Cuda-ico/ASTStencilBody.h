@@ -16,8 +16,8 @@
 
 #include "dawn/AST/ASTExpr.h"
 #include "dawn/CodeGen/ASTCodeGenCXX.h"
-#include "dawn/CodeGen/CodeGenProperties.h"
 #include "dawn/CodeGen/CXXNaive-ico/ASTStencilBody.h"
+#include "dawn/CodeGen/CodeGenProperties.h"
 #include "dawn/IIR/Interval.h"
 #include "dawn/Support/StringUtil.h"
 
