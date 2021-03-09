@@ -31,6 +31,7 @@
 #include "dawn/IIR/ASTExpr.h"
 
 #include "ASTStencilBody.h"
+#include "dawn/Support/Assert.h"
 
 namespace dawn {
 namespace codegen {
@@ -39,7 +40,80 @@ namespace cudaico {
 using MergeGroupMap =
     std::map<int, std::vector<std::vector<std::shared_ptr<ast::ReductionOverNeighborExpr>>>>;
 
+template <class Set1, class Set2>
+bool static is_disjoint(const Set1& set1, const Set2& set2) {
+  if(set1.empty() || set2.empty())
+    return true;
+
+  typename Set1::const_iterator it1 = set1.begin(), it1End = set1.end();
+  typename Set2::const_iterator it2 = set2.begin(), it2End = set2.end();
+
+  if(*it1 > *set2.rbegin() || *it2 > *set1.rbegin())
+    return true;
+
+  while(it1 != it1End && it2 != it2End) {
+    if(*it1 == *it2)
+      return false;
+    if(*it1 < *it2) {
+      it1++;
+    } else {
+      it2++;
+    }
+  }
+
+  return true;
+}
+
 class ReductionMergeGroupsComputer {
+
+  class FindReadSet : public ast::ASTVisitorForwardingNonConst {
+    std::set<int> readSet_;
+
+    void visit(const std::shared_ptr<ast::FieldAccessExpr>& expr) override {
+      readSet_.insert(*expr->getData<iir::IIRAccessExprData>().AccessID);
+      for(auto& s : expr->getChildren()) {
+        s->accept(*this);
+      }
+    }
+    void visit(const std::shared_ptr<ast::VarAccessExpr>& expr) override {
+      readSet_.insert(*expr->getData<iir::IIRAccessExprData>().AccessID);
+    }
+
+  public:
+    std::set<int> getReadSet() const { return readSet_; }
+  };
+
+  static std::set<int> GetReadSet(const std::shared_ptr<ast::Stmt>& stmt) {
+    FindReadSet readSetFinder;
+    stmt->accept(readSetFinder);
+    return readSetFinder.getReadSet();
+  }
+
+  static int GetWriteID(const std::shared_ptr<ast::Stmt>& stmt) {
+    DAWN_ASSERT(stmt->getKind() == ast::Stmt::Kind::ExprStmt ||
+                stmt->getKind() == ast::Stmt::Kind::VarDeclStmt);
+    if(stmt->getKind() == ast::Stmt::Kind::ExprStmt) {
+      auto exprStmt = std::static_pointer_cast<ast::ExprStmt>(stmt);
+      auto assignmentExpr = std::static_pointer_cast<ast::AssignmentExpr>(exprStmt->getExpr());
+
+      if(assignmentExpr->getLeft()->getKind() == ast::Expr::Kind::VarAccessExpr) {
+        auto varAccess = std::static_pointer_cast<ast::VarAccessExpr>(assignmentExpr->getLeft());
+        return *varAccess->getData<iir::IIRAccessExprData>().AccessID;
+      } else if(assignmentExpr->getLeft()->getKind() == ast::Expr::Kind::FieldAccessExpr) {
+        auto fieldAccess =
+            std::static_pointer_cast<ast::FieldAccessExpr>(assignmentExpr->getLeft());
+        return *fieldAccess->getData<iir::IIRAccessExprData>().AccessID;
+      } else {
+        DAWN_ASSERT(false);
+      }
+    }
+    if(stmt->getKind() == ast::Stmt::Kind::VarDeclStmt) {
+      return *stmt->getData<iir::VarDeclStmtData>().AccessID;
+    }
+    DAWN_ASSERT(false);
+    return -1;
+  }
+
   class FindMergeGroupsVisitor : public ast::ASTVisitorForwarding {
 
     MergeGroupMap blockMergeGroups;
@@ -47,8 +121,8 @@ class ReductionMergeGroupsComputer {
     void visit(const std::shared_ptr<const ast::BlockStmt>& stmt) override {
       std::vector<std::vector<std::shared_ptr<ast::ReductionOverNeighborExpr>>> mergeGroups;
 
-      int outer_iterator = 0;
-      int inner_iterator = 0;
+      int outerIterator = 0;
+      int innerIterator = 0;
 
       auto mayContainReduction = [](const ast::Stmt& stmt) -> bool {
         return stmt.getKind() == ast::Stmt::Kind::ExprStmt ||
@@ -68,35 +142,46 @@ class ReductionMergeGroupsComputer {
         return redFinder.reduceOverNeighborExprs()[0];
       };
 
-      while(outer_iterator < stmt->getStatements().size()) {
-        const auto& curRedcution = getReduction(*stmt->getStatements()[outer_iterator]);
+      std::set<int> writeSet;
+      std::set<int> readSet;
+
+      while(outerIterator < stmt->getStatements().size()) {
+        const auto& curRedcution = getReduction(*stmt->getStatements()[outerIterator]);
         if(curRedcution) {
+          writeSet.insert(GetWriteID(stmt->getStatements()[outerIterator]));
           std::vector<std::shared_ptr<ast::ReductionOverNeighborExpr>> mergeGroup;
           mergeGroup.push_back(curRedcution);
-          inner_iterator = outer_iterator + 1;
+          innerIterator = outerIterator + 1;
           bool compatible = true;
-          while(compatible && inner_iterator < stmt->getStatements().size()) {
-            const auto& nextRedcution = getReduction(*stmt->getStatements()[inner_iterator]);
+          while(compatible && innerIterator < stmt->getStatements().size()) {
+            const auto& nextRedcution = getReduction(*stmt->getStatements()[innerIterator]);
             if(!nextRedcution) {
               compatible = false;
               break;
             } else {
+              auto nextReadSet = GetReadSet(stmt->getStatements()[innerIterator]);
+              readSet.insert(nextReadSet.begin(), nextReadSet.end());
               compatible &= curRedcution->getIterSpace() == nextRedcution->getIterSpace();
+              compatible &= is_disjoint(writeSet, readSet);
               if(compatible) {
                 mergeGroup.push_back(nextRedcution);
-                inner_iterator++;
+                innerIterator++;
               } else {
                 break;
               }
             }
           }
           mergeGroups.push_back(mergeGroup);
-          outer_iterator = inner_iterator + 1;
+          outerIterator = innerIterator;
         } else {
-          outer_iterator++;
+          outerIterator++;
         }
       }
       blockMergeGroups[stmt->getID()] = mergeGroups;
+
+      for(auto& s : stmt->getChildren()) {
+        s->accept(*this);
+      }
     }
 
   public:

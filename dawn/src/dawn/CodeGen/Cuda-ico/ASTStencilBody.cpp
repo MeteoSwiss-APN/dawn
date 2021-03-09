@@ -345,12 +345,12 @@ void ASTStencilBody::visit(const std::shared_ptr<ast::ReductionOverNeighborExpr>
     for(auto expr : exprs) {
       if(!expr->isArithmetic()) {
         localSS_ << lhs_names[lhs_iter] << " = " << expr->getOp() << "(" << lhs_names[lhs_iter]
-                << ", ";
+                 << ", ";
       } else {
         localSS_ << lhs_names[lhs_iter] << " " << expr->getOp() << "= ";
       }
       lhs_iter++;
-      if (expr->getWeights().has_value()) {
+      if(expr->getWeights().has_value()) {
         std::string weights_name = "weights_" + std::to_string(expr->getID());
         localSS_ << weights_name << "[nbhIter] * ";
       }

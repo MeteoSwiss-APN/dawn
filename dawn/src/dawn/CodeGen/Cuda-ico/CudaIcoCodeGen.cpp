@@ -1137,6 +1137,12 @@ void CudaIcoCodeGen::generateAllCudaKernels(
   ASTStencilBody stencilBodyCXXVisitor(stencilInstantiation->getMetaData(),
                                        codeGenOptions.UnstrPadding);
   const auto& globalsMap = stencilInstantiation->getIIR()->getGlobalVariableMap();
+  std::optional<MergeGroupMap> blockToMergeGroups = std::nullopt;
+  if(codeGenOptions_.MergeReductions) {
+    blockToMergeGroups =
+        ReductionMergeGroupsComputer::ComputeReductionMergeGroups(stencilInstantiation);
+  }
+  stencilBodyCXXVisitor.setBlockToMergeGroupMap(blockToMergeGroups);
 
   for(const auto& ms : iterateIIROver<iir::MultiStage>(*(stencilInstantiation->getIIR()))) {
     for(const auto& stage : ms->getChildren()) {
@@ -1271,12 +1277,6 @@ void CudaIcoCodeGen::generateAllCudaKernels(
         k_size << interval.upperLevel() << " + " << interval.upperOffset();
       }
 
-      std::optional<MergeGroupMap> blockToMergeGroups = std::nullopt;
-      if(codeGenOptions_.MergeReductions) {
-        blockToMergeGroups =
-            ReductionMergeGroupsComputer::ComputeReductionMergeGroups(stencilInstantiation);
-      }
-
       // k loop (we ensured that all k intervals for all do methods in a stage are equal for
       // now)
       cudaKernel.addBlockStatement("for(int kIter = klo; kIter < khi; kIter++)", [&]() {
@@ -1287,12 +1287,12 @@ void CudaIcoCodeGen::generateAllCudaKernels(
           const iir::DoMethod& doMethod = *doMethodPtr;
 
           for(const auto& stmt : doMethod.getAST().getStatements()) {
-            FindReduceOverNeighborExpr findReduceOverNeighborExpr;
+            FindReduceOverNeighborExpr findReduceOverNeighborExpr(doMethod.getAST().getID());
             stmt->accept(findReduceOverNeighborExpr);
             stencilBodyCXXVisitor.setFirstPass();
-            stencilBodyCXXVisitor.setBlockToMergeGroupMap(blockToMergeGroups);
-            stencilBodyCXXVisitor.setBlockID(doMethod.getAST().getID());
             for(auto redExpr : findReduceOverNeighborExpr.reduceOverNeighborExprs()) {
+              stencilBodyCXXVisitor.setBlockID(
+                  findReduceOverNeighborExpr.getBlockIDofReduction(redExpr));
               redExpr->accept(stencilBodyCXXVisitor);
             }
             stencilBodyCXXVisitor.setSecondPass();

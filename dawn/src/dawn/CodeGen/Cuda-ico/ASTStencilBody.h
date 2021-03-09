@@ -44,17 +44,31 @@ using MergeGroupMap =
 
 class FindReduceOverNeighborExpr : public ast::ASTVisitorForwardingNonConst {
   std::vector<std::shared_ptr<ast::ReductionOverNeighborExpr>> foundReductions_;
+  std::map<int, int> reductionToBlock_;
+  int currentBlock_ = -1;
 
 public:
   void visit(const std::shared_ptr<ast::ReductionOverNeighborExpr>& expr) override {
     foundReductions_.push_back(expr);
+    reductionToBlock_.insert({expr->getID(), currentBlock_});
     return;
+  }
+  void visit(const std::shared_ptr<ast::BlockStmt>& stmt) override {
+    currentBlock_ = stmt->getID();
+    for(const auto& s : stmt->getStatements()) {
+      s->accept(*this);
+    }
   }
   bool hasReduceOverNeighborExpr() const { return !foundReductions_.empty(); }
   const std::vector<std::shared_ptr<ast::ReductionOverNeighborExpr>>&
   reduceOverNeighborExprs() const {
     return foundReductions_;
   }
+  int getBlockIDofReduction(const std::shared_ptr<ast::ReductionOverNeighborExpr>& expr) const {
+    return reductionToBlock_.at(expr->getID());
+  }
+  FindReduceOverNeighborExpr() = default;
+  FindReduceOverNeighborExpr(int currentBlock) : currentBlock_(currentBlock){};
 };
 
 /// @brief ASTVisitor to generate C++ naive code for the stencil and stencil function bodies
