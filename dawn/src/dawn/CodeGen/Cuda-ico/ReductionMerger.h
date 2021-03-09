@@ -40,6 +40,7 @@ namespace cudaico {
 using MergeGroupMap =
     std::map<int, std::vector<std::vector<std::shared_ptr<ast::ReductionOverNeighborExpr>>>>;
 
+// https://stackoverflow.com/questions/1964150/c-test-if-2-sets-are-disjoint
 template <class Set1, class Set2>
 bool static is_disjoint(const Set1& set1, const Set2& set2) {
   if(set1.empty() || set2.empty())
@@ -207,7 +208,6 @@ public:
     for(const auto& doMethod : iterateIIROver<iir::DoMethod>(*(stencilInstantiation->getIIR()))) {
       doMethod->getAST().accept(mergeGroupVtor);
     }
-    mergeGroupVtor.dumpMergeGroups();
     return mergeGroupVtor.getMergGroupsByBlock();
   }
 };
