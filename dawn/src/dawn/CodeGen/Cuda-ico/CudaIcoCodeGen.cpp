@@ -154,16 +154,18 @@ run(const std::map<std::string, std::shared_ptr<iir::StencilInstantiation>>&
       options.OutputCHeader == "" ? std::nullopt : std::make_optional(options.OutputCHeader),
       options.OutputFortranInterface == "" ? std::nullopt
                                            : std::make_optional(options.OutputFortranInterface),
-      Padding{options.paddingCells, options.paddingEdges, options.paddingVertices});
+      Padding{options.paddingCells, options.paddingEdges, options.paddingVertices},
+      options.MergeReductions);
 
   return CG.generateCode();
 }
 
 CudaIcoCodeGen::CudaIcoCodeGen(const StencilInstantiationContext& ctx, int maxHaloPoints,
                                std::optional<std::string> outputCHeader,
-                               std::optional<std::string> outputFortranInterface, Padding padding)
-    : CodeGen(ctx, maxHaloPoints, padding), codeGenOptions_{outputCHeader, outputFortranInterface} {
-}
+                               std::optional<std::string> outputFortranInterface, Padding padding,
+                               bool mergeReductions)
+    : CodeGen(ctx, maxHaloPoints, padding), codeGenOptions_{outputCHeader, outputFortranInterface,
+                                                            mergeReductions} {}
 
 CudaIcoCodeGen::~CudaIcoCodeGen() {}
 
@@ -897,22 +899,6 @@ void CudaIcoCodeGen::generateAllAPIVerifyFunctions(
   const std::string fullStencilName =
       "dawn_generated::cuda_ico::" + wrapperName + "::" + stencilName;
 
-  auto getDenseSizeName = [](dawn::ast::LocationType locType) -> std::string {
-    using dawn::ast::LocationType;
-    switch(locType) {
-    case LocationType::Edges:
-      return "dense_size_edges";
-      break;
-    case LocationType::Cells:
-      return "dense_size_cells";
-      break;
-    case LocationType::Vertices:
-      return "dense_size_vertices";
-      break;
-    default:
-      dawn_unreachable("invalid location type");
-    }
-  };
   auto getSerializeCall = [](dawn::ast::LocationType locType) -> std::string {
     using dawn::ast::LocationType;
     switch(locType) {
@@ -1285,6 +1271,13 @@ void CudaIcoCodeGen::generateAllCudaKernels(
         k_size << interval.upperLevel() << " + " << interval.upperOffset();
       }
 
+      std::optional<std::map<int, std::vector<std::vector<ast::ReductionOverNeighborExpr>>>>
+          blockToMergeGroups = std::nullopt;
+      if(codeGenOptions_.MergeReductions) {
+        blockToMergeGroups =
+            ReductionMergeGroupsComputer::ComputeReductionMergeGroups(stencilInstantiation);
+      }
+
       // k loop (we ensured that all k intervals for all do methods in a stage are equal for
       // now)
       cudaKernel.addBlockStatement("for(int kIter = klo; kIter < khi; kIter++)", [&]() {
@@ -1298,6 +1291,8 @@ void CudaIcoCodeGen::generateAllCudaKernels(
             FindReduceOverNeighborExpr findReduceOverNeighborExpr;
             stmt->accept(findReduceOverNeighborExpr);
             stencilBodyCXXVisitor.setFirstPass();
+            stencilBodyCXXVisitor.setBlockToMergeGroupMap(blockToMergeGroups);
+            stencilBodyCXXVisitor.setBlockID(doMethod.getAST().getID());
             for(auto redExpr : findReduceOverNeighborExpr.reduceOverNeighborExprs()) {
               redExpr->accept(stencilBodyCXXVisitor);
             }
@@ -1319,8 +1314,6 @@ std::string CudaIcoCodeGen::generateStencilInstantiation(
 
   Namespace dawnNamespace("dawn_generated", ssSW);
   Namespace cudaNamespace("cuda_ico", ssSW);
-
-  ReductionMergeGroupsComputer::ComputeReductionMergeGroups(stencilInstantiation);
 
   generateAllCudaKernels(ssSW, stencilInstantiation);
 

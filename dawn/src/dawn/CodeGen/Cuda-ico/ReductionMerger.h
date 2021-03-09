@@ -97,8 +97,7 @@ class ReductionMergeGroupsComputer {
     }
 
   public:
-    const std::map<int, std::vector<std::vector<ast::ReductionOverNeighborExpr>>>&
-    getMergGroupsByBlock() {
+    std::map<int, std::vector<std::vector<ast::ReductionOverNeighborExpr>>> getMergGroupsByBlock() {
       return blockMergeGroups;
     }
 
@@ -119,7 +118,7 @@ class ReductionMergeGroupsComputer {
   };
 
 public:
-  static const std::map<int, std::vector<std::vector<ast::ReductionOverNeighborExpr>>>&
+  static std::map<int, std::vector<std::vector<ast::ReductionOverNeighborExpr>>>
   ComputeReductionMergeGroups(
       const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation) {
     FindMergeGroupsVisitor mergeGroupVtor;

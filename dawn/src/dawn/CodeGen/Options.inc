@@ -50,5 +50,6 @@ OPT(int, paddingEdges, 0, "padding-edges", "", "padding for edge dimension", "",
 OPT(int, paddingVertices, 0, "padding-vertices", "", "padding for vertex dimension", "", true, false)
 OPT(std::string, OutputCHeader, "", "output-c-header", "", "Write C header to <File>", "<File>", true, false)
 OPT(std::string, OutputFortranInterface, "", "output-f90-interface", "", "Write Fortran90 interface to <File>", "<File>", true, false)
+OPT(bool, MergeReductions, false, "merge-reductions", "", "Attempt to merge reductions on same iteration spaces (experimental)", "", false, true)
 
 // clang-format on

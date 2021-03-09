@@ -15,11 +15,14 @@
 #include "ASTStencilBody.h"
 #include "dawn/AST/ASTExpr.h"
 #include "dawn/AST/LocationType.h"
+#include "dawn/CodeGen/Cuda-ico/ReductionMerger.h"
 #include "dawn/IIR/AST.h"
 #include "dawn/IIR/ASTExpr.h"
+#include <algorithm>
 #include <memory>
 #include <sstream>
 #include <string>
+#include <vector>
 
 namespace dawn {
 namespace codegen {
@@ -28,6 +31,7 @@ namespace cudaico {
 void ASTStencilBody::visit(const std::shared_ptr<ast::BlockStmt>& stmt) {
   indent_ += DAWN_PRINT_INDENT;
   auto indent = std::string(indent_, ' ');
+  currentBlock_ = stmt->getID();
   for(const auto& s : stmt->getStatements()) {
     ss_ << indent;
     s->accept(*this);
@@ -270,25 +274,47 @@ void ASTStencilBody::visit(const std::shared_ptr<ast::ReductionOverNeighborExpr>
   parentIsReduction_ = true;
   parentReductionID_ = expr->getID();
 
+  std::vector<ast::ReductionOverNeighborExpr> exprs{*expr};
+
+  if(blockToMergeGroupMap_.has_value()) {
+    // find "our" group
+    for(auto group : blockToMergeGroupMap_->at(currentBlock_)) {
+      if(std::any_of(group.begin(), group.end(),
+                     [expr](const ast::ReductionOverNeighborExpr& red) { return red == *expr; })) {
+        if(group.size() > 1) {
+          // we are in a group
+          if(group[0].getID() != expr->getID()) {
+            // but not the first element, lets bail out
+            return;
+          }
+          exprs = group;
+        }
+      }
+    }
+  }
+
   std::stringstream& localSS_ = reductionMap_[expr->getID()];
 
-  std::string weights_name = "weights_" + std::to_string(expr->getID());
-  localSS_ << "::dawn::float_type " << lhs_name << " = ";
-  expr->getInit()->accept(*this);
-  localSS_ << ";\n";
-  auto weights = expr->getWeights();
-  if(weights.has_value()) {
-    localSS_ << "::dawn::float_type " << weights_name << "[" << weights->size() << "] = {";
-    bool first = true;
-    for(auto weight : *weights) {
-      if(!first) {
-        localSS_ << ", ";
+  for(auto expr : exprs) {
+    std::string weights_name = "weights_" + std::to_string(expr.getID());
+    localSS_ << "::dawn::float_type " << lhs_name << " = ";
+    expr.getInit()->accept(*this);
+    localSS_ << ";\n";
+    auto weights = expr.getWeights();
+    if(weights.has_value()) {
+      localSS_ << "::dawn::float_type " << weights_name << "[" << weights->size() << "] = {";
+      bool first = true;
+      for(auto weight : *weights) {
+        if(!first) {
+          localSS_ << ", ";
+        }
+        weight->accept(*this);
+        first = false;
       }
-      weight->accept(*this);
-      first = false;
+      localSS_ << "};\n";
     }
-    localSS_ << "};\n";
   }
+
   localSS_ << "for (int nbhIter = 0; nbhIter < " << chainToSparseSizeString(expr->getIterSpace())
            << "; nbhIter++)";
 
@@ -302,10 +328,12 @@ void ASTStencilBody::visit(const std::shared_ptr<ast::ReductionOverNeighborExpr>
   } else {
     localSS_ << lhs_name << " " << expr->getOp() << "= ";
   }
-  if(weights.has_value()) {
-    localSS_ << weights_name << "[nbhIter] * ";
+  // if(weights.has_value()) {
+  //   localSS_ << weights_name << "[nbhIter] * ";
+  // }
+  for(auto expr : exprs) {
+    expr.getRhs()->accept(*this);
   }
-  expr->getRhs()->accept(*this);
   if(!expr->isArithmetic()) {
     localSS_ << ")";
   }

@@ -47,7 +47,8 @@ public:
   ///@brief constructor
   CudaIcoCodeGen(const StencilInstantiationContext& ctx, int maxHaloPoints,
                  std::optional<std::string> outputCHeader,
-                 std::optional<std::string> outputFortranInterface, Padding = {});
+                 std::optional<std::string> outputFortranInterface, Padding = {},
+                 bool mergeStages = false);
   virtual ~CudaIcoCodeGen();
   virtual std::unique_ptr<TranslationUnit> generateCode() override;
 
@@ -55,6 +56,7 @@ public:
     // TODO: consider adding options for hard-coded values (e.g. BLOCK_SIZE)
     std::optional<std::string> OutputCHeader;
     std::optional<std::string> OutputFortranInterface;
+    bool MergeReductions;
   };
 
 private:

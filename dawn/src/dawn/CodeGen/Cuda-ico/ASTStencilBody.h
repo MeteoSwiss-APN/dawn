@@ -21,6 +21,7 @@
 #include "dawn/IIR/Interval.h"
 #include "dawn/Support/StringUtil.h"
 
+#include <optional>
 #include <sstream>
 #include <stack>
 #include <string>
@@ -67,10 +68,13 @@ protected:
   bool parentIsReduction_ = false;
   int parentReductionID_ = -1;
   bool parentIsForLoop_ = false;
-
   bool firstPass_ = true;
 
+  int currentBlock_ = -1;
+
   std::map<int, std::stringstream> reductionMap_;
+  std::optional<std::map<int, std::vector<std::vector<ast::ReductionOverNeighborExpr>>>>
+      blockToMergeGroupMap_ = std::nullopt;
 
   /// Nesting level of argument lists of stencil function *calls*
   int nestingOfStencilFunArgLists_;
@@ -88,6 +92,12 @@ public:
 
   void setFirstPass() { firstPass_ = true; };
   void setSecondPass() { firstPass_ = false; };
+  void setBlockID(int currentBlock) { currentBlock_ = currentBlock; }
+  void setBlockToMergeGroupMap(
+      std::optional<std::map<int, std::vector<std::vector<ast::ReductionOverNeighborExpr>>>>
+          blockToMergeGroupMap) {
+    blockToMergeGroupMap_ = blockToMergeGroupMap;
+  }
 
   /// @name Statement implementation
   /// @{
