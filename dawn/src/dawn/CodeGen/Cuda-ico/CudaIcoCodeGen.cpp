@@ -1271,8 +1271,7 @@ void CudaIcoCodeGen::generateAllCudaKernels(
         k_size << interval.upperLevel() << " + " << interval.upperOffset();
       }
 
-      std::optional<std::map<int, std::vector<std::vector<ast::ReductionOverNeighborExpr>>>>
-          blockToMergeGroups = std::nullopt;
+      std::optional<MergeGroupMap> blockToMergeGroups = std::nullopt;
       if(codeGenOptions_.MergeReductions) {
         blockToMergeGroups =
             ReductionMergeGroupsComputer::ComputeReductionMergeGroups(stencilInstantiation);

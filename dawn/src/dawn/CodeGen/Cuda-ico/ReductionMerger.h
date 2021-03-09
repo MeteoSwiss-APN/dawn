@@ -36,13 +36,16 @@ namespace dawn {
 namespace codegen {
 namespace cudaico {
 
+using MergeGroupMap =
+    std::map<int, std::vector<std::vector<std::shared_ptr<ast::ReductionOverNeighborExpr>>>>;
+
 class ReductionMergeGroupsComputer {
   class FindMergeGroupsVisitor : public ast::ASTVisitorForwarding {
 
-    std::map<int, std::vector<std::vector<ast::ReductionOverNeighborExpr>>> blockMergeGroups;
+    MergeGroupMap blockMergeGroups;
 
     void visit(const std::shared_ptr<const ast::BlockStmt>& stmt) override {
-      std::vector<std::vector<ast::ReductionOverNeighborExpr>> mergeGroups;
+      std::vector<std::vector<std::shared_ptr<ast::ReductionOverNeighborExpr>>> mergeGroups;
 
       int outer_iterator = 0;
       int inner_iterator = 0;
@@ -68,8 +71,8 @@ class ReductionMergeGroupsComputer {
       while(outer_iterator < stmt->getStatements().size()) {
         const auto& curRedcution = getReduction(*stmt->getStatements()[outer_iterator]);
         if(curRedcution) {
-          std::vector<ast::ReductionOverNeighborExpr> mergeGroup;
-          mergeGroup.push_back(*curRedcution);
+          std::vector<std::shared_ptr<ast::ReductionOverNeighborExpr>> mergeGroup;
+          mergeGroup.push_back(curRedcution);
           inner_iterator = outer_iterator + 1;
           bool compatible = true;
           while(compatible && inner_iterator < stmt->getStatements().size()) {
@@ -80,7 +83,7 @@ class ReductionMergeGroupsComputer {
             } else {
               compatible &= curRedcution->getIterSpace() == nextRedcution->getIterSpace();
               if(compatible) {
-                mergeGroup.push_back(*nextRedcution);
+                mergeGroup.push_back(nextRedcution);
                 inner_iterator++;
               } else {
                 break;
@@ -97,9 +100,7 @@ class ReductionMergeGroupsComputer {
     }
 
   public:
-    std::map<int, std::vector<std::vector<ast::ReductionOverNeighborExpr>>> getMergGroupsByBlock() {
-      return blockMergeGroups;
-    }
+    MergeGroupMap getMergGroupsByBlock() { return blockMergeGroups; }
 
     void dumpMergeGroups() {
       for(const auto& blockIt : blockMergeGroups) {
@@ -107,10 +108,7 @@ class ReductionMergeGroupsComputer {
         for(int groupIt = 0; groupIt < blockIt.second.size(); groupIt++) {
           std::cout << "  GROUP: " << groupIt << "\n";
           for(auto& redIt : blockIt.second[groupIt]) {
-            std::cout << "    "
-                      << ast::ASTStringifier::toString(
-                             std::make_shared<ast::ReductionOverNeighborExpr>(redIt))
-                      << "\n";
+            std::cout << "    " << ast::ASTStringifier::toString(redIt) << "\n";
           }
         }
       }
@@ -118,8 +116,7 @@ class ReductionMergeGroupsComputer {
   };
 
 public:
-  static std::map<int, std::vector<std::vector<ast::ReductionOverNeighborExpr>>>
-  ComputeReductionMergeGroups(
+  static MergeGroupMap ComputeReductionMergeGroups(
       const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation) {
     FindMergeGroupsVisitor mergeGroupVtor;
     for(const auto& doMethod : iterateIIROver<iir::DoMethod>(*(stencilInstantiation->getIIR()))) {

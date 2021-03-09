@@ -240,7 +240,9 @@ void ASTStencilBody::visit(const std::shared_ptr<ast::ExprStmt>& stmt) {
   if(findReduceOverNeighborExpr.hasReduceOverNeighborExpr()) {
     const auto& reductions = findReduceOverNeighborExpr.reduceOverNeighborExprs();
     DAWN_ASSERT(reductions.size() == 1);
-    ss_ << reductionMap_.at(reductions[0]->getID()).str();
+    if(reductionMap_.count(reductions[0]->getID())) {
+      ss_ << reductionMap_.at(reductions[0]->getID()).str();
+    }
   }
 
   stmt->getExpr()->accept(*this);
@@ -254,7 +256,9 @@ void ASTStencilBody::visit(const std::shared_ptr<ast::VarDeclStmt>& stmt) {
   if(findReduceOverNeighborExpr.hasReduceOverNeighborExpr()) {
     const auto& reductions = findReduceOverNeighborExpr.reduceOverNeighborExprs();
     DAWN_ASSERT(reductions.size() == 1);
-    ss_ << reductionMap_.at(reductions[0]->getID()).str();
+    if(reductionMap_.count(reductions[0]->getID())) {
+      ss_ << reductionMap_.at(reductions[0]->getID()).str();
+    }
   }
 
   ASTCodeGenCXX::visit(stmt);
@@ -274,20 +278,29 @@ void ASTStencilBody::visit(const std::shared_ptr<ast::ReductionOverNeighborExpr>
   parentIsReduction_ = true;
   parentReductionID_ = expr->getID();
 
-  std::vector<ast::ReductionOverNeighborExpr> exprs{*expr};
+  std::vector<std::shared_ptr<ast::ReductionOverNeighborExpr>> exprs{expr};
+  std::vector<std::string> lhs_names{lhs_name};
 
   if(blockToMergeGroupMap_.has_value()) {
     // find "our" group
     for(auto group : blockToMergeGroupMap_->at(currentBlock_)) {
       if(std::any_of(group.begin(), group.end(),
-                     [expr](const ast::ReductionOverNeighborExpr& red) { return red == *expr; })) {
+                     [expr](const std::shared_ptr<ast::ReductionOverNeighborExpr>& red) {
+                       return *red == *expr;
+                     })) {
         if(group.size() > 1) {
           // we are in a group
-          if(group[0].getID() != expr->getID()) {
+          if(group[0]->getID() != expr->getID()) {
             // but not the first element, lets bail out
+            parentIsReduction_ = false;
+            parentReductionID_ = -1;
             return;
           }
           exprs = group;
+          lhs_names.clear();
+          for(const auto& red : group) {
+            lhs_names.push_back("lhs_" + std::to_string(red->getID()));
+          }
         }
       }
     }
@@ -296,11 +309,11 @@ void ASTStencilBody::visit(const std::shared_ptr<ast::ReductionOverNeighborExpr>
   std::stringstream& localSS_ = reductionMap_[expr->getID()];
 
   for(auto expr : exprs) {
-    std::string weights_name = "weights_" + std::to_string(expr.getID());
+    std::string weights_name = "weights_" + std::to_string(expr->getID());
     localSS_ << "::dawn::float_type " << lhs_name << " = ";
-    expr.getInit()->accept(*this);
+    expr->getInit()->accept(*this);
     localSS_ << ";\n";
-    auto weights = expr.getWeights();
+    auto weights = expr->getWeights();
     if(weights.has_value()) {
       localSS_ << "::dawn::float_type " << weights_name << "[" << weights->size() << "] = {";
       bool first = true;
@@ -323,21 +336,25 @@ void ASTStencilBody::visit(const std::shared_ptr<ast::ReductionOverNeighborExpr>
            << "pidx * " << chainToSparseSizeString(expr->getIterSpace()) << " + nbhIter"
            << "];\n";
   localSS_ << "if (nbhIdx == DEVICE_MISSING_VALUE) { continue; }";
-  if(!expr->isArithmetic()) {
-    localSS_ << lhs_name << " = " << expr->getOp() << "(" << lhs_name << ", ";
-  } else {
-    localSS_ << lhs_name << " " << expr->getOp() << "= ";
-  }
   // if(weights.has_value()) {
   //   localSS_ << weights_name << "[nbhIter] * ";
   // }
+  int lhs_iter = 0;
   for(auto expr : exprs) {
-    expr.getRhs()->accept(*this);
+    if(!expr->isArithmetic()) {
+      localSS_ << lhs_names[lhs_iter] << " = " << expr->getOp() << "(" << lhs_names[lhs_iter]
+               << ", ";
+    } else {
+      localSS_ << lhs_names[lhs_iter] << " " << expr->getOp() << "= ";
+    }
+    lhs_iter++;
+    expr->getRhs()->accept(*this);
+    localSS_ << ";\n";
   }
   if(!expr->isArithmetic()) {
     localSS_ << ")";
   }
-  localSS_ << ";}\n";
+  localSS_ << "}\n";
   parentIsReduction_ = false;
   parentReductionID_ = -1;
 }

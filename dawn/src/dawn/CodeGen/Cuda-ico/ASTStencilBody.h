@@ -39,6 +39,9 @@ class StencilMetaInformation;
 namespace codegen {
 namespace cudaico {
 
+using MergeGroupMap =
+    std::map<int, std::vector<std::vector<std::shared_ptr<ast::ReductionOverNeighborExpr>>>>;
+
 class FindReduceOverNeighborExpr : public ast::ASTVisitorForwardingNonConst {
   std::vector<std::shared_ptr<ast::ReductionOverNeighborExpr>> foundReductions_;
 
@@ -73,8 +76,7 @@ protected:
   int currentBlock_ = -1;
 
   std::map<int, std::stringstream> reductionMap_;
-  std::optional<std::map<int, std::vector<std::vector<ast::ReductionOverNeighborExpr>>>>
-      blockToMergeGroupMap_ = std::nullopt;
+  std::optional<MergeGroupMap> blockToMergeGroupMap_ = std::nullopt;
 
   /// Nesting level of argument lists of stencil function *calls*
   int nestingOfStencilFunArgLists_;
@@ -93,9 +95,7 @@ public:
   void setFirstPass() { firstPass_ = true; };
   void setSecondPass() { firstPass_ = false; };
   void setBlockID(int currentBlock) { currentBlock_ = currentBlock; }
-  void setBlockToMergeGroupMap(
-      std::optional<std::map<int, std::vector<std::vector<ast::ReductionOverNeighborExpr>>>>
-          blockToMergeGroupMap) {
+  void setBlockToMergeGroupMap(std::optional<MergeGroupMap> blockToMergeGroupMap) {
     blockToMergeGroupMap_ = blockToMergeGroupMap;
   }
 
