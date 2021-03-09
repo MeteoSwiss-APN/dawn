@@ -308,23 +308,27 @@ void ASTStencilBody::visit(const std::shared_ptr<ast::ReductionOverNeighborExpr>
 
   std::stringstream& localSS_ = reductionMap_[expr->getID()];
 
-  for(auto expr : exprs) {
-    std::string weights_name = "weights_" + std::to_string(expr->getID());
-    localSS_ << "::dawn::float_type " << lhs_name << " = ";
-    expr->getInit()->accept(*this);
-    localSS_ << ";\n";
-    auto weights = expr->getWeights();
-    if(weights.has_value()) {
-      localSS_ << "::dawn::float_type " << weights_name << "[" << weights->size() << "] = {";
-      bool first = true;
-      for(auto weight : *weights) {
-        if(!first) {
-          localSS_ << ", ";
+  {
+    int lhs_iter = 0;
+    for(auto expr : exprs) {
+      std::string weights_name = "weights_" + std::to_string(expr->getID());
+      localSS_ << "::dawn::float_type " << lhs_names[lhs_iter] << " = ";
+      lhs_iter++;
+      expr->getInit()->accept(*this);
+      localSS_ << ";\n";
+      auto weights = expr->getWeights();
+      if(weights.has_value()) {
+        localSS_ << "::dawn::float_type " << weights_name << "[" << weights->size() << "] = {";
+        bool first = true;
+        for(auto weight : *weights) {
+          if(!first) {
+            localSS_ << ", ";
+          }
+          weight->accept(*this);
+          first = false;
         }
-        weight->accept(*this);
-        first = false;
+        localSS_ << "};\n";
       }
-      localSS_ << "};\n";
     }
   }
 
@@ -336,23 +340,27 @@ void ASTStencilBody::visit(const std::shared_ptr<ast::ReductionOverNeighborExpr>
            << "pidx * " << chainToSparseSizeString(expr->getIterSpace()) << " + nbhIter"
            << "];\n";
   localSS_ << "if (nbhIdx == DEVICE_MISSING_VALUE) { continue; }";
-  // if(weights.has_value()) {
-  //   localSS_ << weights_name << "[nbhIter] * ";
-  // }
-  int lhs_iter = 0;
-  for(auto expr : exprs) {
-    if(!expr->isArithmetic()) {
-      localSS_ << lhs_names[lhs_iter] << " = " << expr->getOp() << "(" << lhs_names[lhs_iter]
-               << ", ";
-    } else {
-      localSS_ << lhs_names[lhs_iter] << " " << expr->getOp() << "= ";
+  {
+    int lhs_iter = 0;
+    for(auto expr : exprs) {
+      if(!expr->isArithmetic()) {
+        localSS_ << lhs_names[lhs_iter] << " = " << expr->getOp() << "(" << lhs_names[lhs_iter]
+                << ", ";
+      } else {
+        localSS_ << lhs_names[lhs_iter] << " " << expr->getOp() << "= ";
+      }
+      lhs_iter++;
+      if (expr->getWeights().has_value()) {
+        std::string weights_name = "weights_" + std::to_string(expr->getID());
+        localSS_ << weights_name << "[nbhIter] * ";
+      }
+      expr->getRhs()->accept(*this);
+      if(!expr->isArithmetic()) {
+        localSS_ << ");\n";
+      } else {
+        localSS_ << ";\n";
+      }
     }
-    lhs_iter++;
-    expr->getRhs()->accept(*this);
-    localSS_ << ";\n";
-  }
-  if(!expr->isArithmetic()) {
-    localSS_ << ")";
   }
   localSS_ << "}\n";
   parentIsReduction_ = false;
