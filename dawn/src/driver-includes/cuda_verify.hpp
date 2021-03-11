@@ -33,7 +33,10 @@ template <>
 struct compute_error<RelErrTag> {
   static double __device__ impl(const double expected, const double actual) {
     double error = 0.;
-    if(expected != actual) {
+    if(expected == actual) {
+    } else if(fabs(expected) < 1e-6 && fabs(actual) < 1e-6) {
+      error = fabs(expected - actual);
+    } else {
       error = fabs((expected - actual) / expected);
     }
     return error;
