@@ -42,7 +42,7 @@ using MergeGroupMap =
 
 // https://stackoverflow.com/questions/1964150/c-test-if-2-sets-are-disjoint
 template <class Set1, class Set2>
-bool static is_disjoint(const Set1& set1, const Set2& set2) {
+bool static isDisjoint(const Set1& set1, const Set2& set2) {
   if(set1.empty() || set2.empty())
     return true;
 
@@ -78,6 +78,9 @@ class ReductionMergeGroupsComputer {
     }
     void visit(const std::shared_ptr<ast::VarAccessExpr>& expr) override {
       readSet_.insert(*expr->getData<iir::IIRAccessExprData>().AccessID);
+    }
+    void visit(const std::shared_ptr<ast::AssignmentExpr>& expr) override {
+      expr->getRight()->accept(*this);
     }
 
   public:
@@ -130,53 +133,70 @@ class ReductionMergeGroupsComputer {
                stmt.getKind() == ast::Stmt::Kind::VarDeclStmt;
       };
 
-      auto getReduction = [&](ast::Stmt& stmt) -> std::shared_ptr<ast::ReductionOverNeighborExpr> {
+      auto getReductions =
+          [&](ast::Stmt& stmt) -> std::vector<std::shared_ptr<ast::ReductionOverNeighborExpr>> {
         if(!mayContainReduction(stmt)) {
-          return 0;
+          return {};
         }
         FindReduceOverNeighborExpr redFinder;
         stmt.accept(redFinder);
         if(!redFinder.hasReduceOverNeighborExpr()) {
-          return 0;
+          return {};
         }
-        DAWN_ASSERT(redFinder.reduceOverNeighborExprs().size() == 1);
-        return redFinder.reduceOverNeighborExprs()[0];
+        return redFinder.reduceOverNeighborExprs();
       };
 
       std::set<int> writeSet;
       std::set<int> readSet;
 
-      while(outerIterator < stmt->getStatements().size()) {
-        const auto& curRedcution = getReduction(*stmt->getStatements()[outerIterator]);
-        if(curRedcution) {
-          writeSet.insert(GetWriteID(stmt->getStatements()[outerIterator]));
-          std::vector<std::shared_ptr<ast::ReductionOverNeighborExpr>> mergeGroup;
-          mergeGroup.push_back(curRedcution);
-          innerIterator = outerIterator + 1;
-          bool compatible = true;
-          while(compatible && innerIterator < stmt->getStatements().size()) {
-            const auto& nextRedcution = getReduction(*stmt->getStatements()[innerIterator]);
-            if(!nextRedcution) {
-              compatible = false;
-              break;
-            } else {
-              auto nextReadSet = GetReadSet(stmt->getStatements()[innerIterator]);
-              readSet.insert(nextReadSet.begin(), nextReadSet.end());
-              compatible &= curRedcution->getIterSpace() == nextRedcution->getIterSpace();
-              compatible &= is_disjoint(writeSet, readSet);
-              if(compatible) {
-                mergeGroup.push_back(nextRedcution);
-                innerIterator++;
-              } else {
-                break;
-              }
-            }
+      std::map<int, int> reductionToClusterID;
+      std::map<int, int> reductionToStmtID;
+      std::vector<std::shared_ptr<ast::ReductionOverNeighborExpr>> reductions;
+
+      int clusterID = 0;
+      int stmtIter = 0;
+      for(const auto& stmt : stmt->getStatements()) {
+        auto reds = getReductions(*stmt);
+        if(reds.size()) {
+          for(auto red : reds) {
+            reductionToClusterID.insert({red->getID(), clusterID});
+            reductionToStmtID.insert({red->getID(), stmtIter});
+            reductions.push_back(red);
           }
-          mergeGroups.push_back(mergeGroup);
-          outerIterator = innerIterator;
         } else {
-          outerIterator++;
+          clusterID++;
         }
+        stmtIter++;
+      }
+
+      while(outerIterator < reductions.size()) {
+        const auto& curReduction = reductions[outerIterator];
+        writeSet.insert(
+            GetWriteID(stmt->getStatements()[reductionToStmtID.at(curReduction->getID())]));
+        std::vector<std::shared_ptr<ast::ReductionOverNeighborExpr>> mergeGroup;
+        mergeGroup.push_back(curReduction);
+        innerIterator = outerIterator + 1;
+        bool compatible = true;
+        while(compatible && innerIterator < reductions.size()) {
+          const auto& nextRedcution = reductions[innerIterator];
+          auto nextReadSet =
+              GetReadSet(stmt->getStatements()[reductionToStmtID.at(nextRedcution->getID())]);
+          readSet.insert(nextReadSet.begin(), nextReadSet.end());
+          compatible &= reductionToClusterID.at(curReduction->getID()) ==
+                        reductionToClusterID.at(nextRedcution->getID());
+          compatible &= curReduction->getIterSpace() == nextRedcution->getIterSpace();
+          compatible &=
+              isDisjoint(writeSet, readSet); // TODO read and write set do not need to be disjoint
+                                             // if two reductions are in same statement
+          if(compatible) {
+            mergeGroup.push_back(nextRedcution);
+            innerIterator++;
+          } else {
+            break;
+          }
+        }
+        mergeGroups.push_back(mergeGroup);
+        outerIterator = innerIterator;
       }
       blockMergeGroups[stmt->getID()] = mergeGroups;
 
@@ -184,6 +204,39 @@ class ReductionMergeGroupsComputer {
         s->accept(*this);
       }
     }
+
+    // while(outerIterator < stmt->getStatements().size()) {
+    //   const auto& curRedcution = getReduction(*stmt->getStatements()[outerIterator]);
+    //   if(curRedcution.size() != 0) {
+    //     writeSet.insert(GetWriteID(stmt->getStatements()[outerIterator]));
+    //     std::vector<std::shared_ptr<ast::ReductionOverNeighborExpr>> mergeGroup;
+    //     mergeGroup.push_back(curRedcution[0]);
+    //     innerIterator = outerIterator + 1;
+    //     bool compatible = true;
+    //     while(compatible && innerIterator < stmt->getStatements().size()) {
+    //       const auto& nextRedcution = getReduction(*stmt->getStatements()[innerIterator]);
+    //       if(nextRedcution.size() == 0) {
+    //         compatible = false;
+    //         break;
+    //       } else {
+    //         auto nextReadSet = GetReadSet(stmt->getStatements()[innerIterator]);
+    //         readSet.insert(nextReadSet.begin(), nextReadSet.end());
+    //         compatible &= curRedcution[0]->getIterSpace() == nextRedcution[0]->getIterSpace();
+    //         compatible &= isDisjoint(writeSet, readSet);
+    //         if(compatible) {
+    //           mergeGroup.push_back(nextRedcution[0]);
+    //           innerIterator++;
+    //         } else {
+    //           break;
+    //         }
+    //       }
+    //     }
+    //     mergeGroups.push_back(mergeGroup);
+    //     outerIterator = innerIterator;
+    //   } else {
+    //     outerIterator++;
+    //   }
+    // }
 
   public:
     MergeGroupMap getMergGroupsByBlock() { return blockMergeGroups; }

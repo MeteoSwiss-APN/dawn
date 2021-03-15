@@ -239,9 +239,10 @@ void ASTStencilBody::visit(const std::shared_ptr<ast::ExprStmt>& stmt) {
 
   if(findReduceOverNeighborExpr.hasReduceOverNeighborExpr()) {
     const auto& reductions = findReduceOverNeighborExpr.reduceOverNeighborExprs();
-    DAWN_ASSERT(reductions.size() == 1);
-    if(reductionMap_.count(reductions[0]->getID())) {
-      ss_ << reductionMap_.at(reductions[0]->getID()).str();
+    for(auto red : reductions) {
+      if(reductionMap_.count(red->getID())) {
+        ss_ << reductionMap_.at(red->getID()).str();
+      }
     }
   }
 
@@ -255,9 +256,10 @@ void ASTStencilBody::visit(const std::shared_ptr<ast::VarDeclStmt>& stmt) {
 
   if(findReduceOverNeighborExpr.hasReduceOverNeighborExpr()) {
     const auto& reductions = findReduceOverNeighborExpr.reduceOverNeighborExprs();
-    DAWN_ASSERT(reductions.size() == 1);
-    if(reductionMap_.count(reductions[0]->getID())) {
-      ss_ << reductionMap_.at(reductions[0]->getID()).str();
+    for(auto red : reductions) {
+      if(reductionMap_.count(red->getID())) {
+        ss_ << reductionMap_.at(red->getID()).str();
+      }
     }
   }
 
