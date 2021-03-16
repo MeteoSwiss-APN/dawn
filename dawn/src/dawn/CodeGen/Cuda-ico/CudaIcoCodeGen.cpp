@@ -200,6 +200,9 @@ public:
   }
 
   void visit(const std::shared_ptr<ast::FieldAccessExpr>& expr) override {
+    if(metadata_.getFieldDimensions(iir::getAccessID(expr)).isVertical()) {
+      return;
+    }
     auto unstrDim = ast::dimension_cast<const ast::UnstructuredFieldDimension&>(
         metadata_.getFieldDimensions(iir::getAccessID(expr)).getHorizontalFieldDimension());
     if(unstrDim.isSparse()) {
@@ -299,8 +302,9 @@ void CudaIcoCodeGen::generateRunFun(
       std::stringstream k_size;
       DAWN_ASSERT_MSG(intervalsConsistent(*stage),
                       "intervals in a stage must have same Levels for now!\n");
-      auto interval = stage->getChild(0)->getInterval();      
-      if(interval.levelIsEnd(iir::Interval::Bound::upper) && interval.levelIsEnd(iir::Interval::Bound::lower)) {
+      auto interval = stage->getChild(0)->getInterval();
+      if(interval.levelIsEnd(iir::Interval::Bound::upper) &&
+         interval.levelIsEnd(iir::Interval::Bound::lower)) {
         k_size << (interval.upperOffset() - interval.lowerOffset());
       } else if(interval.levelIsEnd(iir::Interval::Bound::upper)) {
         k_size << "kSize_ + " << interval.upperOffset() << " - "
