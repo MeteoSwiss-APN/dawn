@@ -221,10 +221,6 @@ std::string ASTStencilBody::makeIndexString(const std::shared_ptr<ast::FieldAcce
               ? ASTStencilBody::LoopNeighborIndexVarName()
               : ASTStencilBody::StageIndexVarName();
     }
-    if(offsets_.has_value()) {
-      resArgName = std::to_string(offsets_->front());
-      offsets_->pop_front();
-    }
     return "deref(LibTag{}, " + resArgName + "), " + kiterStr;
   }
 
@@ -257,10 +253,6 @@ std::string ASTStencilBody::makeIndexString(const std::shared_ptr<ast::FieldAcce
               ? ASTStencilBody::LoopNeighborIndexVarName()
               : ASTStencilBody::StageIndexVarName();
     }
-    if(offsets_.has_value()) {
-      resArgName = std::to_string(offsets_->front());
-      offsets_->pop_front();
-    }
     return "deref(LibTag{}, " + resArgName + ")";
   }
 
@@ -271,7 +263,7 @@ std::string ASTStencilBody::makeIndexString(const std::shared_ptr<ast::FieldAcce
                                 ? ASTStencilBody::ReductionSparseIndexVarName(reductionDepth_ - 1)
                                 : ASTStencilBody::LoopLinearIndexVarName();
     if(offsets_.has_value()) {
-      sparseArgName_ = std::to_string(offsets_->front());
+      sparseIdx = std::to_string(offsets_->front());
       offsets_->pop_front();
     }
     return "deref(LibTag{}, " + sparseArgName_ + ")," + sparseIdx;

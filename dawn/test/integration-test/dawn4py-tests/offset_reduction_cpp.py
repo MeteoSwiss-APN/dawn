@@ -25,18 +25,18 @@ import argparse
 import os
 
 import dawn4py
-from dawn4py.serialization import SIR
+from dawn4py.serialization import SIR, AST
 from dawn4py.serialization import utils as sir_utils
 from google.protobuf.json_format import MessageToJson, Parse
 
-OUTPUT_NAME = "offset_reduction"
+OUTPUT_NAME = "offset_reduction_cpp"
 OUTPUT_FILE = f"{OUTPUT_NAME}.cpp"
 OUTPUT_PATH = f"{OUTPUT_NAME}.cpp"
 
 
 def main(args: argparse.Namespace):
     interval = sir_utils.make_interval(
-        SIR.Interval.Start, SIR.Interval.End, 0, 0)
+        AST.Interval.Start, AST.Interval.End, 0, 0)
 
     # create the out = in[i+1] statement
     body_ast = sir_utils.make_ast(
@@ -53,8 +53,8 @@ def main(args: argparse.Namespace):
                         "prism_thick_e", horizontal_offset=sir_utils.make_unstructured_offset(True)),
                     ),
                     sir_utils.make_literal_access_expr(
-                        ".0", SIR.BuiltinType.Float),                    
-                    chain=[SIR.LocationType.Value("Edge"), SIR.LocationType.Value("Cell"), SIR.LocationType.Value("Edge")],
+                        ".0", AST.BuiltinType.Float),                    
+                    chain=[AST.LocationType.Value("Edge"), AST.LocationType.Value("Cell"), AST.LocationType.Value("Edge")],
                     weights=[sir_utils.make_unstructured_field_access_expr(
                         "e2c_aux", horizontal_offset=sir_utils.make_unstructured_offset(True)),
                         sir_utils.make_unstructured_field_access_expr(
@@ -66,17 +66,43 @@ def main(args: argparse.Namespace):
                     offsets=[0, 0, 1, 1]
                 ),
                 "=",
+            ),
+            sir_utils.make_assignment_stmt(
+                sir_utils.make_unstructured_field_access_expr("out_vn_e"),
+                sir_utils.make_reduction_over_neighbor_expr(
+                    "+",
+                    sir_utils.make_binary_operator(
+                    sir_utils.make_unstructured_field_access_expr(
+                        "raw_diam_coeff", horizontal_offset=sir_utils.make_unstructured_offset(True)),
+                    "*",
+                    sir_utils.make_unstructured_field_access_expr(
+                        "prism_thick_e", horizontal_offset=sir_utils.make_unstructured_offset(True)),
+                    ),
+                    sir_utils.make_literal_access_expr(
+                        ".0", AST.BuiltinType.Float),                    
+                    chain=[AST.LocationType.Value("Edge"), AST.LocationType.Value("Cell"), AST.LocationType.Value("Edge")],
+                    weights=[sir_utils.make_unstructured_field_access_expr(
+                        "e2c_aux_h", horizontal_offset=sir_utils.make_unstructured_offset(True)),
+                        sir_utils.make_unstructured_field_access_expr(
+                        "e2c_aux_h", horizontal_offset=sir_utils.make_unstructured_offset(True)),
+                        sir_utils.make_unstructured_field_access_expr(
+                        "e2c_aux_h", horizontal_offset=sir_utils.make_unstructured_offset(True)),
+                        sir_utils.make_unstructured_field_access_expr(
+                        "e2c_aux_h", horizontal_offset=sir_utils.make_unstructured_offset(True))],
+                    offsets=[0, 0, 1, 1]
+                ),
+                "=",
             )
         ]
     )
 
     vertical_region_stmt = sir_utils.make_vertical_region_decl_stmt(
-        body_ast, interval, SIR.VerticalRegion.Forward
+        body_ast, interval, AST.VerticalRegion.Forward
     )
 
     sir = sir_utils.make_sir(
         OUTPUT_FILE,
-        SIR.GridType.Value("Unstructured"),
+        AST.GridType.Value("Unstructured"),
         [
             sir_utils.make_stencil(
                 OUTPUT_NAME,
@@ -85,27 +111,33 @@ def main(args: argparse.Namespace):
                     sir_utils.make_field(
                         "out_vn_e",
                         sir_utils.make_field_dimensions_unstructured(
-                            [SIR.LocationType.Value("Edge")], 1
+                            [AST.LocationType.Value("Edge")], 1
                         ),
                     ),
                     sir_utils.make_field(
                         "raw_diam_coeff",
                         sir_utils.make_field_dimensions_unstructured(
-                            [SIR.LocationType.Value("Edge"), 
-                             SIR.LocationType.Value("Cell"), 
-                             SIR.LocationType.Value("Edge")], 1
+                            [AST.LocationType.Value("Edge"), 
+                             AST.LocationType.Value("Cell"), 
+                             AST.LocationType.Value("Edge")], 1
                         ),
                     ),
                     sir_utils.make_field(
                         "prism_thick_e",
                         sir_utils.make_field_dimensions_unstructured(                            
-                            [SIR.LocationType.Value("Edge")], 1
+                            [AST.LocationType.Value("Edge")], 1
                         ),
                     ),
                     sir_utils.make_field(
                         "e2c_aux",
                         sir_utils.make_field_dimensions_unstructured(                            
-                            [SIR.LocationType.Value("Edge"), SIR.LocationType.Value("Cell")], 1
+                            [AST.LocationType.Value("Edge"), AST.LocationType.Value("Cell")], 1
+                        ),
+                    ),
+                    sir_utils.make_field(
+                        "e2c_aux_h",
+                        sir_utils.make_field_dimensions_unstructured(                            
+                            [AST.LocationType.Value("Edge"), AST.LocationType.Value("Cell")], 0
                         ),
                     ),
                 ],
@@ -113,13 +145,8 @@ def main(args: argparse.Namespace):
         ],
     )
 
-    # print the SIR
-    f = open("offset_reduction.sir", "w")
-    f.write(MessageToJson(sir))
-    f.close()
-   
     # compile
-    code = dawn4py.compile(sir, backend=dawn4py.CodeGenBackend.CUDAIco)
+    code = dawn4py.compile(sir, backend=dawn4py.CodeGenBackend.CXXNaiveIco)
 
     # write to file
     print(f"Writing generated code to '{OUTPUT_PATH}'")

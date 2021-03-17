@@ -115,20 +115,11 @@ std::string ASTStencilBody::makeIndexString(const std::shared_ptr<ast::FieldAcce
 
   std::string denseSize = locToStrideString(unstrDims.getDenseLocationType());
 
-  std::string nbhIdx = "nbhIdx";
-  std::string nbhIter = "nbhIdx";
-
-  if(offsets_.has_value()) {
-    nbhIdx = std::to_string(offsets_->front());
-    nbhIter = std::to_string(offsets_->front());
-    offsets_->pop_front();
-  }
-
   if(isFullField && isDense) {
     if((parentIsReduction_ || parentIsForLoop_) &&
        ast::offset_cast<const ast::UnstructuredOffset&>(expr->getOffset().horizontalOffset())
            .hasOffset()) {
-      return kiterStr + "*" + denseSize + " + " + nbhIdx;
+      return kiterStr + "*" + denseSize + "+ nbhIdx";
     } else {
       return kiterStr + "*" + denseSize + "+ pidx";
     }
@@ -137,6 +128,11 @@ std::string ASTStencilBody::makeIndexString(const std::shared_ptr<ast::FieldAcce
   if(isFullField && isSparse) {
     DAWN_ASSERT_MSG(parentIsForLoop_ || parentIsReduction_,
                     "Sparse Field Access not allowed in this context");
+    std::string nbhIter = "nbhIter";
+    if(offsets_.has_value()) {
+      nbhIter = std::to_string(offsets_->front());
+      offsets_->pop_front();
+    }
     return nbhIter + " * kSize * " + denseSize + " + " + kiterStr + "*" + denseSize + " + pidx";
   }
 
@@ -144,7 +140,7 @@ std::string ASTStencilBody::makeIndexString(const std::shared_ptr<ast::FieldAcce
     if((parentIsReduction_ || parentIsForLoop_) &&
        ast::offset_cast<const ast::UnstructuredOffset&>(expr->getOffset().horizontalOffset())
            .hasOffset()) {
-      return nbhIdx;
+      return "nbhIdx";
     } else {
       return "pidx";
     }
@@ -153,7 +149,11 @@ std::string ASTStencilBody::makeIndexString(const std::shared_ptr<ast::FieldAcce
   if(isHorizontal && isSparse) {
     DAWN_ASSERT_MSG(parentIsForLoop_ || parentIsReduction_,
                     "Sparse Field Access not allowed in this context");
-    std::string sparseSize = chainToSparseSizeString(unstrDims.getIterSpace());
+    std::string nbhIter = "nbhIter";
+    if(offsets_.has_value()) {
+      nbhIter = std::to_string(offsets_->front());
+      offsets_->pop_front();
+    }
     return nbhIter + " * " + denseSize + " + pidx";
   }
 
