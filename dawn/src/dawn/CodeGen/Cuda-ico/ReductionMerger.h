@@ -205,39 +205,6 @@ class ReductionMergeGroupsComputer {
       }
     }
 
-    // while(outerIterator < stmt->getStatements().size()) {
-    //   const auto& curRedcution = getReduction(*stmt->getStatements()[outerIterator]);
-    //   if(curRedcution.size() != 0) {
-    //     writeSet.insert(GetWriteID(stmt->getStatements()[outerIterator]));
-    //     std::vector<std::shared_ptr<ast::ReductionOverNeighborExpr>> mergeGroup;
-    //     mergeGroup.push_back(curRedcution[0]);
-    //     innerIterator = outerIterator + 1;
-    //     bool compatible = true;
-    //     while(compatible && innerIterator < stmt->getStatements().size()) {
-    //       const auto& nextRedcution = getReduction(*stmt->getStatements()[innerIterator]);
-    //       if(nextRedcution.size() == 0) {
-    //         compatible = false;
-    //         break;
-    //       } else {
-    //         auto nextReadSet = GetReadSet(stmt->getStatements()[innerIterator]);
-    //         readSet.insert(nextReadSet.begin(), nextReadSet.end());
-    //         compatible &= curRedcution[0]->getIterSpace() == nextRedcution[0]->getIterSpace();
-    //         compatible &= isDisjoint(writeSet, readSet);
-    //         if(compatible) {
-    //           mergeGroup.push_back(nextRedcution[0]);
-    //           innerIterator++;
-    //         } else {
-    //           break;
-    //         }
-    //       }
-    //     }
-    //     mergeGroups.push_back(mergeGroup);
-    //     outerIterator = innerIterator;
-    //   } else {
-    //     outerIterator++;
-    //   }
-    // }
-
   public:
     MergeGroupMap getMergGroupsByBlock() { return blockMergeGroups; }
 
