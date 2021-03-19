@@ -16,11 +16,12 @@
 
 #include "dawn/AST/ASTExpr.h"
 #include "dawn/CodeGen/ASTCodeGenCXX.h"
-#include "dawn/CodeGen/CodeGenProperties.h"
 #include "dawn/CodeGen/CXXNaive-ico/ASTStencilBody.h"
+#include "dawn/CodeGen/CodeGenProperties.h"
 #include "dawn/IIR/Interval.h"
 #include "dawn/Support/StringUtil.h"
 
+#include <optional>
 #include <sstream>
 #include <stack>
 #include <string>
@@ -38,19 +39,36 @@ class StencilMetaInformation;
 namespace codegen {
 namespace cudaico {
 
+using MergeGroupMap =
+    std::map<int, std::vector<std::vector<std::shared_ptr<ast::ReductionOverNeighborExpr>>>>;
+
 class FindReduceOverNeighborExpr : public ast::ASTVisitorForwardingNonConst {
   std::vector<std::shared_ptr<ast::ReductionOverNeighborExpr>> foundReductions_;
+  std::map<int, int> reductionToBlock_;
+  int currentBlock_ = -1;
 
 public:
   void visit(const std::shared_ptr<ast::ReductionOverNeighborExpr>& expr) override {
     foundReductions_.push_back(expr);
+    reductionToBlock_.insert({expr->getID(), currentBlock_});
     return;
+  }
+  void visit(const std::shared_ptr<ast::BlockStmt>& stmt) override {
+    currentBlock_ = stmt->getID();
+    for(const auto& s : stmt->getStatements()) {
+      s->accept(*this);
+    }
   }
   bool hasReduceOverNeighborExpr() const { return !foundReductions_.empty(); }
   const std::vector<std::shared_ptr<ast::ReductionOverNeighborExpr>>&
   reduceOverNeighborExprs() const {
     return foundReductions_;
   }
+  int getBlockIDofReduction(const std::shared_ptr<ast::ReductionOverNeighborExpr>& expr) const {
+    return reductionToBlock_.at(expr->getID());
+  }
+  FindReduceOverNeighborExpr() = default;
+  FindReduceOverNeighborExpr(int currentBlock) : currentBlock_(currentBlock){};
 };
 
 /// @brief ASTVisitor to generate C++ naive code for the stencil and stencil function bodies
@@ -67,10 +85,12 @@ protected:
   bool parentIsReduction_ = false;
   int parentReductionID_ = -1;
   bool parentIsForLoop_ = false;
-
   bool firstPass_ = true;
 
+  int currentBlock_ = -1;
+
   std::map<int, std::stringstream> reductionMap_;
+  std::optional<MergeGroupMap> blockToMergeGroupMap_ = std::nullopt;
 
   /// Nesting level of argument lists of stencil function *calls*
   int nestingOfStencilFunArgLists_;
@@ -88,6 +108,10 @@ public:
 
   void setFirstPass() { firstPass_ = true; };
   void setSecondPass() { firstPass_ = false; };
+  void setBlockID(int currentBlock) { currentBlock_ = currentBlock; }
+  void setBlockToMergeGroupMap(std::optional<MergeGroupMap> blockToMergeGroupMap) {
+    blockToMergeGroupMap_ = blockToMergeGroupMap;
+  }
 
   /// @name Statement implementation
   /// @{

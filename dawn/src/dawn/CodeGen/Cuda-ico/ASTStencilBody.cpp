@@ -15,11 +15,14 @@
 #include "ASTStencilBody.h"
 #include "dawn/AST/ASTExpr.h"
 #include "dawn/AST/LocationType.h"
+#include "dawn/CodeGen/Cuda-ico/ReductionMerger.h"
 #include "dawn/IIR/AST.h"
 #include "dawn/IIR/ASTExpr.h"
+#include <algorithm>
 #include <memory>
 #include <sstream>
 #include <string>
+#include <vector>
 
 namespace dawn {
 namespace codegen {
@@ -28,6 +31,7 @@ namespace cudaico {
 void ASTStencilBody::visit(const std::shared_ptr<ast::BlockStmt>& stmt) {
   indent_ += DAWN_PRINT_INDENT;
   auto indent = std::string(indent_, ' ');
+  currentBlock_ = stmt->getID();
   for(const auto& s : stmt->getStatements()) {
     ss_ << indent;
     s->accept(*this);
@@ -235,8 +239,11 @@ void ASTStencilBody::visit(const std::shared_ptr<ast::ExprStmt>& stmt) {
 
   if(findReduceOverNeighborExpr.hasReduceOverNeighborExpr()) {
     const auto& reductions = findReduceOverNeighborExpr.reduceOverNeighborExprs();
-    DAWN_ASSERT(reductions.size() == 1);
-    ss_ << reductionMap_.at(reductions[0]->getID()).str();
+    for(auto red : reductions) {
+      if(reductionMap_.count(red->getID())) {
+        ss_ << reductionMap_.at(red->getID()).str();
+      }
+    }
   }
 
   stmt->getExpr()->accept(*this);
@@ -249,8 +256,11 @@ void ASTStencilBody::visit(const std::shared_ptr<ast::VarDeclStmt>& stmt) {
 
   if(findReduceOverNeighborExpr.hasReduceOverNeighborExpr()) {
     const auto& reductions = findReduceOverNeighborExpr.reduceOverNeighborExprs();
-    DAWN_ASSERT(reductions.size() == 1);
-    ss_ << reductionMap_.at(reductions[0]->getID()).str();
+    for(auto red : reductions) {
+      if(reductionMap_.count(red->getID())) {
+        ss_ << reductionMap_.at(red->getID()).str();
+      }
+    }
   }
 
   ASTCodeGenCXX::visit(stmt);
@@ -270,25 +280,60 @@ void ASTStencilBody::visit(const std::shared_ptr<ast::ReductionOverNeighborExpr>
   parentIsReduction_ = true;
   parentReductionID_ = expr->getID();
 
+  std::vector<std::shared_ptr<ast::ReductionOverNeighborExpr>> exprs{expr};
+  std::vector<std::string> lhs_names{lhs_name};
+
+  if(blockToMergeGroupMap_.has_value()) {
+    // find "our" group
+    for(auto group : blockToMergeGroupMap_->at(currentBlock_)) {
+      if(std::any_of(group.begin(), group.end(),
+                     [expr](const std::shared_ptr<ast::ReductionOverNeighborExpr>& red) {
+                       return *red == *expr;
+                     })) {
+        if(group.size() > 1) {
+          // we are in a group
+          if(group[0]->getID() != expr->getID()) {
+            // but not the first element, lets bail out
+            parentIsReduction_ = false;
+            parentReductionID_ = -1;
+            return;
+          }
+          exprs = group;
+          lhs_names.clear();
+          for(const auto& red : group) {
+            lhs_names.push_back("lhs_" + std::to_string(red->getID()));
+          }
+        }
+      }
+    }
+  }
+
   std::stringstream& localSS_ = reductionMap_[expr->getID()];
 
-  std::string weights_name = "weights_" + std::to_string(expr->getID());
-  localSS_ << "::dawn::float_type " << lhs_name << " = ";
-  expr->getInit()->accept(*this);
-  localSS_ << ";\n";
-  auto weights = expr->getWeights();
-  if(weights.has_value()) {
-    localSS_ << "::dawn::float_type " << weights_name << "[" << weights->size() << "] = {";
-    bool first = true;
-    for(auto weight : *weights) {
-      if(!first) {
-        localSS_ << ", ";
+  {
+    int lhs_iter = 0;
+    for(auto expr : exprs) {
+      std::string weights_name = "weights_" + std::to_string(expr->getID());
+      localSS_ << "::dawn::float_type " << lhs_names[lhs_iter] << " = ";
+      lhs_iter++;
+      expr->getInit()->accept(*this);
+      localSS_ << ";\n";
+      auto weights = expr->getWeights();
+      if(weights.has_value()) {
+        localSS_ << "::dawn::float_type " << weights_name << "[" << weights->size() << "] = {";
+        bool first = true;
+        for(auto weight : *weights) {
+          if(!first) {
+            localSS_ << ", ";
+          }
+          weight->accept(*this);
+          first = false;
+        }
+        localSS_ << "};\n";
       }
-      weight->accept(*this);
-      first = false;
     }
-    localSS_ << "};\n";
   }
+
   localSS_ << "for (int nbhIter = 0; nbhIter < " << chainToSparseSizeString(expr->getIterSpace())
            << "; nbhIter++)";
 
@@ -297,19 +342,29 @@ void ASTStencilBody::visit(const std::shared_ptr<ast::ReductionOverNeighborExpr>
            << "pidx * " << chainToSparseSizeString(expr->getIterSpace()) << " + nbhIter"
            << "];\n";
   localSS_ << "if (nbhIdx == DEVICE_MISSING_VALUE) { continue; }";
-  if(!expr->isArithmetic()) {
-    localSS_ << lhs_name << " = " << expr->getOp() << "(" << lhs_name << ", ";
-  } else {
-    localSS_ << lhs_name << " " << expr->getOp() << "= ";
+  {
+    int lhs_iter = 0;
+    for(auto expr : exprs) {
+      if(!expr->isArithmetic()) {
+        localSS_ << lhs_names[lhs_iter] << " = " << expr->getOp() << "(" << lhs_names[lhs_iter]
+                 << ", ";
+      } else {
+        localSS_ << lhs_names[lhs_iter] << " " << expr->getOp() << "= ";
+      }
+      lhs_iter++;
+      if(expr->getWeights().has_value()) {
+        std::string weights_name = "weights_" + std::to_string(expr->getID());
+        localSS_ << weights_name << "[nbhIter] * ";
+      }
+      expr->getRhs()->accept(*this);
+      if(!expr->isArithmetic()) {
+        localSS_ << ");\n";
+      } else {
+        localSS_ << ";\n";
+      }
+    }
   }
-  if(weights.has_value()) {
-    localSS_ << weights_name << "[nbhIter] * ";
-  }
-  expr->getRhs()->accept(*this);
-  if(!expr->isArithmetic()) {
-    localSS_ << ")";
-  }
-  localSS_ << ";}\n";
+  localSS_ << "}\n";
   parentIsReduction_ = false;
   parentReductionID_ = -1;
 }
