@@ -21,6 +21,7 @@
 #include "dawn/AST/LocationType.h"
 #include "dawn/CodeGen/CXXUtil.h"
 #include "dawn/CodeGen/Cuda-ico/LocToStringUtils.h"
+#include "dawn/CodeGen/Cuda-ico/ReductionMerger.h"
 #include "dawn/CodeGen/Cuda/CodeGeneratorHelper.h"
 #include "dawn/CodeGen/F90Util.h"
 #include "dawn/CodeGen/IcoChainSizes.h"
@@ -153,16 +154,18 @@ run(const std::map<std::string, std::shared_ptr<iir::StencilInstantiation>>&
       options.OutputCHeader == "" ? std::nullopt : std::make_optional(options.OutputCHeader),
       options.OutputFortranInterface == "" ? std::nullopt
                                            : std::make_optional(options.OutputFortranInterface),
-      Padding{options.paddingCells, options.paddingEdges, options.paddingVertices});
+      Padding{options.paddingCells, options.paddingEdges, options.paddingVertices},
+      options.MergeReductions);
 
   return CG.generateCode();
 }
 
 CudaIcoCodeGen::CudaIcoCodeGen(const StencilInstantiationContext& ctx, int maxHaloPoints,
                                std::optional<std::string> outputCHeader,
-                               std::optional<std::string> outputFortranInterface, Padding padding)
-    : CodeGen(ctx, maxHaloPoints, padding), codeGenOptions_{outputCHeader, outputFortranInterface} {
-}
+                               std::optional<std::string> outputFortranInterface, Padding padding,
+                               bool mergeReductions)
+    : CodeGen(ctx, maxHaloPoints, padding), codeGenOptions_{outputCHeader, outputFortranInterface,
+                                                            mergeReductions} {}
 
 CudaIcoCodeGen::~CudaIcoCodeGen() {}
 
@@ -896,22 +899,6 @@ void CudaIcoCodeGen::generateAllAPIVerifyFunctions(
   const std::string fullStencilName =
       "dawn_generated::cuda_ico::" + wrapperName + "::" + stencilName;
 
-  auto getDenseSizeName = [](dawn::ast::LocationType locType) -> std::string {
-    using dawn::ast::LocationType;
-    switch(locType) {
-    case LocationType::Edges:
-      return "dense_size_edges";
-      break;
-    case LocationType::Cells:
-      return "dense_size_cells";
-      break;
-    case LocationType::Vertices:
-      return "dense_size_vertices";
-      break;
-    default:
-      dawn_unreachable("invalid location type");
-    }
-  };
   auto getSerializeCall = [](dawn::ast::LocationType locType) -> std::string {
     using dawn::ast::LocationType;
     switch(locType) {
@@ -1028,6 +1015,11 @@ void CudaIcoCodeGen::generateAllAPIVerifyFunctions(
           verifyAPI.addPreprocessorDirective("endif");
         });
       }
+
+      verifyAPI.addPreprocessorDirective("ifdef __SERIALIZE_ON_ERROR\n"); // newline requried
+      verifyAPI.addStatement("serialize_flush_iter(\"" + wrapperName + "\", iteration)");
+      verifyAPI.addPreprocessorDirective("endif");
+
       verifyAPI.addStatement(
           "high_resolution_clock::time_point t_end = high_resolution_clock::now()");
       verifyAPI.addStatement(
@@ -1150,6 +1142,12 @@ void CudaIcoCodeGen::generateAllCudaKernels(
   ASTStencilBody stencilBodyCXXVisitor(stencilInstantiation->getMetaData(),
                                        codeGenOptions.UnstrPadding);
   const auto& globalsMap = stencilInstantiation->getIIR()->getGlobalVariableMap();
+  std::optional<MergeGroupMap> blockToMergeGroups = std::nullopt;
+  if(codeGenOptions_.MergeReductions) {
+    blockToMergeGroups =
+        ReductionMergeGroupsComputer::ComputeReductionMergeGroups(stencilInstantiation);
+  }
+  stencilBodyCXXVisitor.setBlockToMergeGroupMap(blockToMergeGroups);
 
   for(const auto& ms : iterateIIROver<iir::MultiStage>(*(stencilInstantiation->getIIR()))) {
     for(const auto& stage : ms->getChildren()) {
@@ -1294,10 +1292,12 @@ void CudaIcoCodeGen::generateAllCudaKernels(
           const iir::DoMethod& doMethod = *doMethodPtr;
 
           for(const auto& stmt : doMethod.getAST().getStatements()) {
-            FindReduceOverNeighborExpr findReduceOverNeighborExpr;
+            FindReduceOverNeighborExpr findReduceOverNeighborExpr(doMethod.getAST().getID());
             stmt->accept(findReduceOverNeighborExpr);
             stencilBodyCXXVisitor.setFirstPass();
             for(auto redExpr : findReduceOverNeighborExpr.reduceOverNeighborExprs()) {
+              stencilBodyCXXVisitor.setBlockID(
+                  findReduceOverNeighborExpr.getBlockIDofReduction(redExpr));
               redExpr->accept(stencilBodyCXXVisitor);
             }
             stencilBodyCXXVisitor.setSecondPass();

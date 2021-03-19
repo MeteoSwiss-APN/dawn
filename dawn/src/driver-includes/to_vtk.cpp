@@ -78,8 +78,8 @@ public:
   }
 
   ~StencilFieldsVtkOutput() {
-    fs << cells_ss.rdbuf();
-    fs << points_ss.rdbuf();
+    fs << cells_ss.str();
+    fs << points_ss.str();
     fs.close();
   }
 
@@ -117,14 +117,15 @@ static std::string formatNaNs(const double value) {
 
 namespace {
 StencilFieldsVtkOutput& getStencilFieldsVtkOutput(int num_k, std::string stencil_name, int iter) {
-  if(stencil_to_output_map.count(std::make_pair(stencil_name, iter - 1))) {
-    stencil_to_output_map.erase(std::make_pair(stencil_name, iter - 1));
-  }
   if(stencil_to_output_map.count(std::make_pair(stencil_name, iter)) == 0) {
     stencil_to_output_map.emplace(std::make_pair(stencil_name, iter),
                                   StencilFieldsVtkOutput(num_k, stencil_name, iter));
   }
   return stencil_to_output_map.at(std::make_pair(stencil_name, iter));
+}
+
+void flushAtIter(std::string stencil_name, int iter) {
+  stencil_to_output_map.erase(std::make_pair(stencil_name, iter - 1));
 }
 
 double* fieldFromGpu(const double* field_gpu, const int size) {
@@ -323,5 +324,9 @@ void serialize_dense_edges(int start_idx, int end_idx, int num_k, int dense_stri
 
   dense_edges_to_vtk(start_idx, end_idx, num_k, dense_stride, field, stencil_name, field_name,
                      iter);
+}
+
+void serialize_flush_iter(const char field_name[50], int iter) {
+  flushAtIter(std::string(field_name), iter);
 }
 }
