@@ -211,7 +211,8 @@ void CudaIcoCodeGen::generateGpuMesh(
   gpuMeshClass.addMember("int", "NumVertices");
   gpuMeshClass.addMember("int", "NumEdges");
   gpuMeshClass.addMember("int", "NumCells");
-  gpuMeshClass.addMember("dawn::unstructured_domain", "Domain");
+  gpuMeshClass.addMember("dawn::unstructured_domain", "DomainLower");
+  gpuMeshClass.addMember("dawn::unstructured_domain", "DomainUpper");
 
   CollectIterationSpaces spaceCollector;
   std::unordered_set<ast::UnstructuredIterationSpace, CollectIterationSpaces::IterSpaceHash> spaces;
@@ -233,7 +234,8 @@ void CudaIcoCodeGen::generateGpuMesh(
     gpuMeshFromGlobalCtor.addStatement("NumVertices = mesh->NumVertices");
     gpuMeshFromGlobalCtor.addStatement("NumCells = mesh->NumCells");
     gpuMeshFromGlobalCtor.addStatement("NumEdges = mesh->NumEdges");
-    gpuMeshFromGlobalCtor.addStatement("Domain = mesh->Domain");
+    gpuMeshFromGlobalCtor.addStatement("DomainLower = mesh->DomainLower");
+    gpuMeshFromGlobalCtor.addStatement("DomainUpper = mesh->DomainUpper");
     for(auto space : spaces) {
       gpuMeshFromGlobalCtor.addStatement(chainToTableString(space) + " = mesh->NeighborTables.at(" +
                                          "std::tuple<std::vector<dawn::LocationType>, bool>{" +
@@ -319,16 +321,16 @@ void CudaIcoCodeGen::generateRunFun(
       auto numElementsString = [&](ast::LocationType loc,
                                    std::optional<iir::Interval> iterSpace) -> std::string {
         return iterSpace.has_value()
-                   ? "mesh_.Domain({::dawn::LocationType::" + locToStringPlural(loc) + "," +
+                   ? "mesh_.DomainUpper({::dawn::LocationType::" + locToStringPlural(loc) + "," +
                          spaceMagicNumToEnum(iterSpace->upperLevel()) + "," +
                          std::to_string(iterSpace->upperOffset()) + "})" +
-                         "- mesh_.Domain({::dawn::LocationType::" + locToStringPlural(loc) + "," +
+                         "- mesh_.DomainLower({::dawn::LocationType::" + locToStringPlural(loc) + "," +
                          spaceMagicNumToEnum(iterSpace->lowerLevel()) + "," +
                          std::to_string(iterSpace->lowerOffset()) + "}) + 1"
                    : "mesh_.Num" + locToStringPlural(loc);
       };
       auto hOffsetSizeString = [&](ast::LocationType loc, iir::Interval iterSpace) -> std::string {
-        return "mesh_.Domain({::dawn::LocationType::" + locToStringPlural(loc) + "," +
+        return "mesh_.DomainLower({::dawn::LocationType::" + locToStringPlural(loc) + "," +
                spaceMagicNumToEnum(iterSpace.lowerLevel()) + "," +
                std::to_string(iterSpace.lowerOffset()) + "})";
       };

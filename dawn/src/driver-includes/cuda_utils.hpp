@@ -41,14 +41,19 @@ inline void gpuAssert(cudaError_t code, const char* file, int line, bool abort =
 namespace dawn {
 
 struct GlobalGpuTriMesh {
-  dawn::unstructured_domain Domain;
+  dawn::unstructured_domain DomainLower;
+  dawn::unstructured_domain DomainUpper;
   int NumEdges;
   int NumCells;
   int NumVertices;
   std::map<dawn::UnstructuredIterationSpace, int*> NeighborTables;
-  void set_splitter_index(dawn::LocationType loc, dawn::UnstructuredSubdomain space, int offset,
+  void set_splitter_index_lower(dawn::LocationType loc, dawn::UnstructuredSubdomain space, int offset,
                           int index) {
-    Domain.set_splitter_index({loc, space, offset}, index);
+    DomainLower.set_splitter_index({loc, space, offset}, index);
+  }
+  void set_splitter_index_upper(dawn::LocationType loc, dawn::UnstructuredSubdomain space, int offset,
+                          int index) {
+    DomainUpper.set_splitter_index({loc, space, offset}, index);
   }
 };
 
