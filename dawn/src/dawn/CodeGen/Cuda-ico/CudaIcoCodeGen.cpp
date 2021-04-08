@@ -1017,6 +1017,11 @@ void CudaIcoCodeGen::generateAllAPIVerifyFunctions(
           verifyAPI.addPreprocessorDirective("endif");
         });
       }
+
+      verifyAPI.addPreprocessorDirective("ifdef __SERIALIZE_ON_ERROR\n"); // newline requried
+      verifyAPI.addStatement("serialize_flush_iter(\"" + wrapperName + "\", iteration)");
+      verifyAPI.addPreprocessorDirective("endif");
+
       verifyAPI.addStatement(
           "high_resolution_clock::time_point t_end = high_resolution_clock::now()");
       verifyAPI.addStatement(
