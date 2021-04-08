@@ -326,7 +326,7 @@ void serialize_dense_edges(int start_idx, int end_idx, int num_k, int dense_stri
                      iter);
 }
 
-void serialize_flush_iter(const char field_name[50], int iter) {
-  flushAtIter(std::string(field_name), iter);
+void serialize_flush_iter(const char stencil_name[50], int iter) {
+  flushAtIter(std::string(stencil_name), iter);
 }
 }
