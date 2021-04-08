@@ -125,7 +125,7 @@ StencilFieldsVtkOutput& getStencilFieldsVtkOutput(int num_k, std::string stencil
 }
 
 void flushAtIter(std::string stencil_name, int iter) {
-  stencil_to_output_map.erase(std::make_pair(stencil_name, iter - 1));
+  stencil_to_output_map.erase(std::make_pair(stencil_name, iter));
 }
 
 double* fieldFromGpu(const double* field_gpu, const int size) {
