@@ -52,7 +52,9 @@ void ASTStencilBody::visit(const std::shared_ptr<ast::LoopStmt>& stmt) {
   ss_ << "int nbhIdx = " << chainToTableString(maybeChainPtr->getIterSpace()) << "["
       << "pidx * " << chainToSparseSizeString(maybeChainPtr->getIterSpace()) << " + nbhIter"
       << "];\n";
-  ss_ << "if (nbhIdx == DEVICE_MISSING_VALUE) { continue; }";
+  if(hasIrregularPentagons(maybeChainPtr->getChain())) {
+    ss_ << "if (nbhIdx == DEVICE_MISSING_VALUE) { continue; }";
+  }
 
   stmt->getBlockStmt()->accept(*this);
 
@@ -266,6 +268,11 @@ void ASTStencilBody::visit(const std::shared_ptr<ast::VarDeclStmt>& stmt) {
   ASTCodeGenCXX::visit(stmt);
 }
 
+bool ASTStencilBody::hasIrregularPentagons(const std::vector<ast::LocationType>& chain) {
+  assert(chain.size() > 1);
+  return (std::count(chain.begin(), chain.end() - 1, ast::LocationType::Vertices) != 0);
+}
+
 void ASTStencilBody::visit(const std::shared_ptr<ast::ReductionOverNeighborExpr>& expr) {
   DAWN_ASSERT_MSG(!parentIsReduction_,
                   "Nested Reductions not yet supported for CUDA code generation");
@@ -341,7 +348,11 @@ void ASTStencilBody::visit(const std::shared_ptr<ast::ReductionOverNeighborExpr>
   localSS_ << "int nbhIdx = " << chainToTableString(expr->getIterSpace()) << "["
            << "pidx * " << chainToSparseSizeString(expr->getIterSpace()) << " + nbhIter"
            << "];\n";
-  localSS_ << "if (nbhIdx == DEVICE_MISSING_VALUE) { continue; }";
+
+  if(hasIrregularPentagons(expr->getNbhChain())) {
+    localSS_ << "if (nbhIdx == DEVICE_MISSING_VALUE) { continue; }";
+  }
+
   {
     int lhs_iter = 0;
     for(auto expr : exprs) {

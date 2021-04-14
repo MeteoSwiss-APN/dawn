@@ -96,6 +96,7 @@ protected:
   int nestingOfStencilFunArgLists_;
 
   std::string makeIndexString(const std::shared_ptr<ast::FieldAccessExpr>& expr, std::string kiter);
+  bool hasIrregularPentagons(const std::vector<ast::LocationType>& chain);
 
 public:
   using Base = ASTCodeGenCXX;
