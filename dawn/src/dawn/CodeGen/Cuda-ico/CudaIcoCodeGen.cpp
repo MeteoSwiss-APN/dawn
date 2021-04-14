@@ -247,8 +247,7 @@ void CudaIcoCodeGen::generateGpuMesh(
 
 void CudaIcoCodeGen::generateGridFun(MemberFunction& gridFun) {
   gridFun.addStatement("int dK = (kSize + LEVELS_PER_THREAD - 1) / LEVELS_PER_THREAD");
-  gridFun.addStatement(
-      "return dim3((elSize + BLOCK_SIZE - 1) / BLOCK_SIZE, (dK + BLOCK_SIZE - 1) / BLOCK_SIZE, 1)");
+  gridFun.addStatement("return dim3((elSize + BLOCK_SIZE - 1) / BLOCK_SIZE, dK, 1)");
 }
 
 void CudaIcoCodeGen::generateRunFun(
@@ -271,7 +270,7 @@ void CudaIcoCodeGen::generateRunFun(
       stageLocType.insert(*stage->getLocationType());
     }
   }
-  runFun.addStatement("dim3 dB(BLOCK_SIZE, BLOCK_SIZE, 1)");
+  runFun.addStatement("dim3 dB(BLOCK_SIZE, 1, 1)");
 
   // start timers
   runFun.addStatement("sbase::start()");
@@ -324,8 +323,8 @@ void CudaIcoCodeGen::generateRunFun(
                    ? "mesh_.DomainUpper({::dawn::LocationType::" + locToStringPlural(loc) + "," +
                          spaceMagicNumToEnum(iterSpace->upperLevel()) + "," +
                          std::to_string(iterSpace->upperOffset()) + "})" +
-                         "- mesh_.DomainLower({::dawn::LocationType::" + locToStringPlural(loc) + "," +
-                         spaceMagicNumToEnum(iterSpace->lowerLevel()) + "," +
+                         "- mesh_.DomainLower({::dawn::LocationType::" + locToStringPlural(loc) +
+                         "," + spaceMagicNumToEnum(iterSpace->lowerLevel()) + "," +
                          std::to_string(iterSpace->lowerOffset()) + "}) + 1"
                    : "mesh_.Num" + locToStringPlural(loc);
       };
@@ -1629,8 +1628,8 @@ std::unique_ptr<TranslationUnit> CudaIcoCodeGen::generateCode() {
       "#include \"driver-includes/math.hpp\"",
       "#include \"driver-includes/timer_cuda.hpp\"",
       "#include <chrono>",
-      "#define BLOCK_SIZE 16",
-      "#define LEVELS_PER_THREAD 1",
+      "#define BLOCK_SIZE 128",
+      "#define LEVELS_PER_THREAD 4",
       "using namespace gridtools::dawn;",
   };
 
