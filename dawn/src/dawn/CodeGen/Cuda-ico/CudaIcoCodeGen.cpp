@@ -324,8 +324,8 @@ void CudaIcoCodeGen::generateRunFun(
                    ? "mesh_.DomainUpper({::dawn::LocationType::" + locToStringPlural(loc) + "," +
                          spaceMagicNumToEnum(iterSpace->upperLevel()) + "," +
                          std::to_string(iterSpace->upperOffset()) + "})" +
-                         "- mesh_.DomainLower({::dawn::LocationType::" + locToStringPlural(loc) + "," +
-                         spaceMagicNumToEnum(iterSpace->lowerLevel()) + "," +
+                         "- mesh_.DomainLower({::dawn::LocationType::" + locToStringPlural(loc) +
+                         "," + spaceMagicNumToEnum(iterSpace->lowerLevel()) + "," +
                          std::to_string(iterSpace->lowerOffset()) + "}) + 1"
                    : "mesh_.Num" + locToStringPlural(loc);
       };
@@ -1529,13 +1529,21 @@ generateF90InterfaceSI(FortranInterfaceModuleGen& fimGen,
                           ((i == (args.size() - 1)) && !includeErrorThreshold ? " &" : ", &"));
     }
     if(includeErrorThreshold) {
-      wrapper.addBodyLine(
-          "   MERGE(rel_err_threshold,DEFAULT_RELATIVE_ERROR_THRESHOLD,present(rel_err_threshold)) "
-          "&");
+      wrapper.addBodyLine("   threshold &");
     }
     wrapper.addBodyLine(")");
   };
+
+  runWrapper.addBodyLine("");
   runWrapper.addBodyLine("real(c_double) :: timing");
+  runWrapper.addBodyLine("real(c_double) :: threshold");
+  runWrapper.addBodyLine("");
+  runWrapper.addBodyLine("if (present(rel_err_threshold)) then");
+  runWrapper.addBodyLine("  threshold = rel_err_threshold");
+  runWrapper.addBodyLine("else");
+  runWrapper.addBodyLine("  threshold = DEFAULT_RELATIVE_ERROR_THRESHOLD");
+  runWrapper.addBodyLine("endif");
+  runWrapper.addBodyLine("");
   runWrapper.addACCLine("host_data use_device( &");
   auto fieldArgs = getFieldArgs(/*includeSavedState*/ true);
   for(int i = 0; i < fieldArgs.size(); ++i) {
