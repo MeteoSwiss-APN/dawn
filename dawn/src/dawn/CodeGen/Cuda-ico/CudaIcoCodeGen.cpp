@@ -271,7 +271,7 @@ void CudaIcoCodeGen::generateRunFun(
       stageLocType.insert(*stage->getLocationType());
     }
   }
-  runFun.addStatement("dim3 dB(BLOCK_SIZE, 1, 1)");
+  runFun.addStatement("dim3 dB(BLOCK_SIZE, BLOCK_SIZE, 1)");
 
   // start timers
   runFun.addStatement("sbase::start()");
