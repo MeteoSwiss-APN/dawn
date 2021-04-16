@@ -324,7 +324,7 @@ void CudaIcoCodeGen::generateRunFun(
                    ? "mesh_.DomainUpper({::dawn::LocationType::" + locToStringPlural(loc) + "," +
                          spaceMagicNumToEnum(iterSpace->upperLevel()) + "," +
                          std::to_string(iterSpace->upperOffset()) + "})" +
-                                                  "- mesh_.DomainLower({::dawn::LocationType::" + locToStringPlural(loc) + "," +
+                         "- mesh_.DomainLower({::dawn::LocationType::" + locToStringPlural(loc) + "," +
                          spaceMagicNumToEnum(iterSpace->lowerLevel()) + "," +
                          std::to_string(iterSpace->lowerOffset()) + "}) + 1"
                    : "mesh_.Num" + locToStringPlural(loc);
