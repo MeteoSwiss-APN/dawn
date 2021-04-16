@@ -1630,7 +1630,7 @@ std::unique_ptr<TranslationUnit> CudaIcoCodeGen::generateCode() {
       "#include \"driver-includes/timer_cuda.hpp\"",
       "#include <chrono>",
       "#define BLOCK_SIZE 16",
-      "#define LEVELS_PER_THREAD 4",
+      "#define LEVELS_PER_THREAD 1",
       "using namespace gridtools::dawn;",
   };
 
