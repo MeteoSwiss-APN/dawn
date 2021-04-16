@@ -247,7 +247,8 @@ void CudaIcoCodeGen::generateGpuMesh(
 
 void CudaIcoCodeGen::generateGridFun(MemberFunction& gridFun) {
   gridFun.addStatement("int dK = (kSize + LEVELS_PER_THREAD - 1) / LEVELS_PER_THREAD");
-  gridFun.addStatement("return dim3((elSize + BLOCK_SIZE - 1) / BLOCK_SIZE, dK, 1)");
+  gridFun.addStatement(
+      "return dim3((elSize + BLOCK_SIZE - 1) / BLOCK_SIZE, (dK + BLOCK_SIZE - 1) / BLOCK_SIZE, 1)");
 }
 
 void CudaIcoCodeGen::generateRunFun(
