@@ -27,6 +27,7 @@
 #include "dawn/CodeGen/IcoChainSizes.h"
 #include "dawn/IIR/Field.h"
 #include "dawn/IIR/Interval.h"
+#include "dawn/IIR/LoopOrder.h"
 #include "dawn/IIR/MultiStage.h"
 #include "dawn/IIR/Stage.h"
 #include "dawn/IIR/Stencil.h"
@@ -246,9 +247,14 @@ void CudaIcoCodeGen::generateGpuMesh(
 }
 
 void CudaIcoCodeGen::generateGridFun(MemberFunction& gridFun) {
-  gridFun.addStatement("int dK = (kSize + LEVELS_PER_THREAD - 1) / LEVELS_PER_THREAD");
-  gridFun.addStatement(
-      "return dim3((elSize + BLOCK_SIZE - 1) / BLOCK_SIZE, (dK + BLOCK_SIZE - 1) / BLOCK_SIZE, 1)");
+  gridFun.addBlockStatement("if (kparallel)", [&]() {
+    gridFun.addStatement("int dK = (kSize + LEVELS_PER_THREAD - 1) / LEVELS_PER_THREAD");
+    gridFun.addStatement("return dim3((elSize + BLOCK_SIZE - 1) / BLOCK_SIZE, (dK + BLOCK_SIZE - "
+                         "1) / BLOCK_SIZE, 1)");
+  });
+  gridFun.addBlockStatement("else", [&]() {
+    gridFun.addStatement("return dim3((elSize + BLOCK_SIZE - 1) / BLOCK_SIZE, 1, 1)");
+  });
 }
 
 void CudaIcoCodeGen::generateRunFun(
@@ -324,8 +330,8 @@ void CudaIcoCodeGen::generateRunFun(
                    ? "mesh_.DomainUpper({::dawn::LocationType::" + locToStringPlural(loc) + "," +
                          spaceMagicNumToEnum(iterSpace->upperLevel()) + "," +
                          std::to_string(iterSpace->upperOffset()) + "})" +
-                         "- mesh_.DomainLower({::dawn::LocationType::" + locToStringPlural(loc) + "," +
-                         spaceMagicNumToEnum(iterSpace->lowerLevel()) + "," +
+                         "- mesh_.DomainLower({::dawn::LocationType::" + locToStringPlural(loc) +
+                         "," + spaceMagicNumToEnum(iterSpace->lowerLevel()) + "," +
                          std::to_string(iterSpace->lowerOffset()) + "}) + 1"
                    : "mesh_.Num" + locToStringPlural(loc);
       };
@@ -334,6 +340,9 @@ void CudaIcoCodeGen::generateRunFun(
                spaceMagicNumToEnum(iterSpace.lowerLevel()) + "," +
                std::to_string(iterSpace.lowerOffset()) + "})";
       };
+
+      std::string iskparallel =
+          (ms->getLoopOrder() == iir::LoopOrderKind::Parallel) ? "true" : "false";
 
       auto domain = stage->getUnstructuredIterationSpace();
       std::string hSizeString = "hsize" + std::to_string(stage->getStageID());
@@ -347,7 +356,7 @@ void CudaIcoCodeGen::generateRunFun(
                             hOffsetSizeString(*stage->getLocationType(), *domain));
       }
       runFun.addStatement("dim3 dG" + std::to_string(stage->getStageID()) + " = grid(" +
-                          k_size.str() + ", " + hSizeString + ")");
+                          k_size.str() + ", " + hSizeString + "," + iskparallel + ")");
 
       //--------------------------------------
       // signature of kernel
@@ -721,7 +730,10 @@ void CudaIcoCodeGen::generateStencilClasses(
     auto gridFun = stencilClass.addMemberFunction("dim3", "grid");
     gridFun.addArg("int kSize");
     gridFun.addArg("int elSize");
+    gridFun.addArg("bool kparallel");
+
     generateGridFun(gridFun);
+
     gridFun.commit();
 
     // minmal ctor
@@ -1241,21 +1253,44 @@ void CudaIcoCodeGen::generateAllCudaKernels(
                       "intervals in a stage must have same Levels for now!\n");
       auto interval = stage->getChild(0)->getInterval();
 
+      std::stringstream k_size;
+      if(interval.levelIsEnd(iir::Interval::Bound::upper)) {
+        k_size << "kSize + " << interval.upperOffset();
+      } else {
+        k_size << interval.upperLevel() << " + " << interval.upperOffset();
+      }
+
       // pidx
       cudaKernel.addStatement("unsigned int pidx = blockIdx.x * blockDim.x + threadIdx.x");
-      cudaKernel.addStatement("unsigned int kidx = blockIdx.y * blockDim.y + threadIdx.y");
+      if(ms->getLoopOrder() == iir::LoopOrderKind::Parallel) {
 
-      if(interval.lowerLevelIsEnd() && interval.upperLevelIsEnd()) {
-        cudaKernel.addStatement("int klo = kidx * LEVELS_PER_THREAD + (kSize + " +
-                                std::to_string(interval.lowerOffset()) + ")");
-        cudaKernel.addStatement("int khi = (kidx + 1) * LEVELS_PER_THREAD + (kSize + " +
-                                std::to_string(interval.lowerOffset()) + ")");
+        cudaKernel.addStatement("unsigned int kidx = blockIdx.y * blockDim.y + threadIdx.y");
 
+        if(interval.lowerLevelIsEnd() && interval.upperLevelIsEnd()) {
+          cudaKernel.addStatement("int klo = kidx * LEVELS_PER_THREAD + (kSize + " +
+                                  std::to_string(interval.lowerOffset()) + ")");
+          cudaKernel.addStatement("int khi = (kidx + 1) * LEVELS_PER_THREAD + (kSize + " +
+                                  std::to_string(interval.lowerOffset()) + ")");
+
+        } else {
+          cudaKernel.addStatement("int klo = kidx * LEVELS_PER_THREAD + " +
+                                  std::to_string(interval.lowerOffset()));
+          cudaKernel.addStatement("int khi = (kidx + 1) * LEVELS_PER_THREAD + " +
+                                  std::to_string(interval.lowerOffset()));
+        }
       } else {
-        cudaKernel.addStatement("int klo = kidx * LEVELS_PER_THREAD + " +
-                                std::to_string(interval.lowerOffset()));
-        cudaKernel.addStatement("int khi = (kidx + 1) * LEVELS_PER_THREAD + " +
-                                std::to_string(interval.lowerOffset()));
+        if(interval.lowerLevelIsEnd()) {
+          cudaKernel.addStatement("int klo = (kSize + " + std::to_string(interval.lowerOffset()) +
+                                  ")");
+        } else {
+          cudaKernel.addStatement("int klo = " + std::to_string(interval.lowerOffset()));
+        }
+        if(interval.upperLevelIsEnd()) {
+          cudaKernel.addStatement("int khi = (kSize + " + std::to_string(interval.upperOffset()) +
+                                  ")");
+        } else {
+          cudaKernel.addStatement("int khi = " + std::to_string(interval.upperOffset()));
+        }
       }
 
       switch(loc) {
@@ -1275,13 +1310,6 @@ void CudaIcoCodeGen::generateAllCudaKernels(
 
       if(stage->getUnstructuredIterationSpace().has_value()) {
         cudaKernel.addStatement("pidx += hOffset");
-      }
-
-      std::stringstream k_size;
-      if(interval.levelIsEnd(iir::Interval::Bound::upper)) {
-        k_size << "kSize + " << interval.upperOffset();
-      } else {
-        k_size << interval.upperLevel() << " + " << interval.upperOffset();
       }
 
       // k loop (we ensured that all k intervals for all do methods in a stage are equal for
@@ -1530,7 +1558,8 @@ generateF90InterfaceSI(FortranInterfaceModuleGen& fimGen,
     }
     if(includeErrorThreshold) {
       wrapper.addBodyLine(
-          "   MERGE(rel_err_threshold,DEFAULT_RELATIVE_ERROR_THRESHOLD,present(rel_err_threshold)) "
+          "   "
+          "MERGE(rel_err_threshold,DEFAULT_RELATIVE_ERROR_THRESHOLD,present(rel_err_threshold)) "
           "&");
     }
     wrapper.addBodyLine(")");
