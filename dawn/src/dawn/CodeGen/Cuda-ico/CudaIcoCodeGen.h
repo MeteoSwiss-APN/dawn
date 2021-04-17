@@ -60,6 +60,13 @@ public:
   };
 
 private:
+
+std::string intervalBoundToString(const iir::Interval& interval,
+                                                  iir::Interval::Bound bound);
+std::string incrementIterator(std::string iter, iir::LoopOrderKind loopOrder);
+
+void generateKIntervalBounds(MemberFunction& cudaKernel, const iir::Interval& interval, iir::LoopOrderKind loopOrder);
+
   void
   generateAllCudaKernels(std::stringstream& ssSW,
                          const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation);
