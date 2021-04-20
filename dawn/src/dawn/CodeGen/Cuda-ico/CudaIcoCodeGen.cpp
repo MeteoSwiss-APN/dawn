@@ -1187,14 +1187,18 @@ void CudaIcoCodeGen::generateKIntervalBounds(MemberFunction& cudaKernel,
                             intervalBoundToString(interval, iir::Interval::Bound::upper));
   } else {
     cudaKernel.addStatement("int klo = " +
-                            intervalBoundToString(interval, iir::Interval::Bound::upper));
+                            intervalBoundToString(interval, iir::Interval::Bound::upper)+"-1");
     cudaKernel.addStatement("int khi = " +
-                            intervalBoundToString(interval, iir::Interval::Bound::lower));
+                            intervalBoundToString(interval, iir::Interval::Bound::lower)+"-1");
   }
 }
 
 std::string CudaIcoCodeGen::incrementIterator(std::string iter, iir::LoopOrderKind loopOrder) {
   return iter + ((loopOrder == iir::LoopOrderKind::Backward) ? "--" : "++");
+}
+
+std::string CudaIcoCodeGen::comparisonOperator(iir::LoopOrderKind loopOrder) {
+  return ((loopOrder == iir::LoopOrderKind::Backward) ? ">" : "<");
 }
 
 void CudaIcoCodeGen::generateAllCudaKernels(
@@ -1333,7 +1337,7 @@ void CudaIcoCodeGen::generateAllCudaKernels(
 
       // k loop (we ensured that all k intervals for all do methods in a stage are equal for
       // now)
-      cudaKernel.addBlockStatement("for(int kIter = klo; kIter < khi; "+incrementIterator("kIter", ms->getLoopOrder())+")", [&]() {
+      cudaKernel.addBlockStatement("for(int kIter = klo; kIter "+comparisonOperator(ms->getLoopOrder())+" khi; "+incrementIterator("kIter", ms->getLoopOrder())+")", [&]() {
         cudaKernel.addBlockStatement("if (kIter >= " + k_size.str() + ")",
                                      [&]() { cudaKernel.addStatement("return"); });
         for(const auto& doMethodPtr : stage->getChildren()) {
