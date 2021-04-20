@@ -704,7 +704,7 @@ void CudaIcoCodeGen::generateStencilClasses(
     meshGetter.addStatement("return mesh_");
     meshGetter.commit();
 
-    auto kSizeGetter = stencilClass.addMemberFunction("static int", "getkSize");
+    auto kSizeGetter = stencilClass.addMemberFunction("static int", "getKSize");
     kSizeGetter.finishArgs();
     kSizeGetter.startBody();
     kSizeGetter.addStatement("return kSize_");
@@ -801,7 +801,7 @@ void CudaIcoCodeGen::generateAllAPIRunFunctions(
     if(fromHost) {
       for(auto& apiRunFun : apiRunFuns) {
         apiRunFun->addArg("dawn::GlobalGpuTriMesh *mesh");
-        apiRunFun->addArg("int kSize");
+        apiRunFun->addArg("int k_size");
         addGlobalsArgs(globalsMap, *apiRunFun);
       }
     } else {
@@ -855,7 +855,7 @@ void CudaIcoCodeGen::generateAllAPIRunFunctions(
         }
         if(fromHost) {
           for(auto& apiRunFun : apiRunFuns) {
-            apiRunFun->addStatement(fullStencilName + "::setup(mesh, kSize)");
+            apiRunFun->addStatement(fullStencilName + "::setup(mesh, k_size)");
           }
           // depending if we are calling from c or from fortran, we need to transpose the data or
           // not
@@ -972,7 +972,7 @@ void CudaIcoCodeGen::generateAllAPIVerifyFunctions(
       verifyAPI.startBody();
       verifyAPI.addStatement("using namespace std::chrono");
       verifyAPI.addStatement("const auto &mesh = " + fullStencilName + "::" + "getMesh()");
-      verifyAPI.addStatement("int kSize = " + fullStencilName + "::" + "getkSize()");
+      verifyAPI.addStatement("int kSize = " + fullStencilName + "::" + "getKSize()");
       verifyAPI.addStatement(
           "high_resolution_clock::time_point t_start = high_resolution_clock::now()");
       verifyAPI.addStatement("bool isValid = true");
@@ -1111,10 +1111,10 @@ void CudaIcoCodeGen::generateMemMgmtFunctions(
 
   MemberFunction setupFun("void", "setup_" + wrapperName, ssSW, 0, onlyDecl);
   setupFun.addArg("dawn::GlobalGpuTriMesh *mesh");
-  setupFun.addArg("int kSize");
+  setupFun.addArg("int k_size");
   setupFun.finishArgs();
   if(!onlyDecl) {
-    setupFun.addStatement(fullStencilName + "::setup(mesh, kSize)");
+    setupFun.addStatement(fullStencilName + "::setup(mesh, k_size)");
   }
   setupFun.commit();
 
@@ -1300,11 +1300,11 @@ void CudaIcoCodeGen::generateAllCudaKernels(
                       "intervals in a stage must have same Levels for now!\n");
       auto interval = stage->getChild(0)->getInterval();
 
-      std::stringstream kSize;
+      std::stringstream k_size;
       if(interval.levelIsEnd(iir::Interval::Bound::upper)) {
-        kSize << "kSize + " << interval.upperOffset();
+        k_size << "kSize + " << interval.upperOffset();
       } else {
-        kSize << interval.upperLevel() << " + " << interval.upperOffset();
+        k_size << interval.upperLevel() << " + " << interval.upperOffset();
       }
 
       // pidx
@@ -1334,7 +1334,7 @@ void CudaIcoCodeGen::generateAllCudaKernels(
       // k loop (we ensured that all k intervals for all do methods in a stage are equal for
       // now)
       cudaKernel.addBlockStatement("for(int kIter = klo; kIter < khi; "+incrementIterator("kIter", ms->getLoopOrder())+")", [&]() {
-        cudaKernel.addBlockStatement("if (kIter >= " + kSize.str() + ")",
+        cudaKernel.addBlockStatement("if (kIter >= " + k_size.str() + ")",
                                      [&]() { cudaKernel.addStatement("return"); });
         for(const auto& doMethodPtr : stage->getChildren()) {
           // Generate Do-Method
@@ -1501,11 +1501,11 @@ generateF90InterfaceSI(FortranInterfaceModuleGen& fimGen,
 
   FortranWrapperAPI runWrapper = FortranWrapperAPI("wrap_run_" + stencilInstantiation->getName());
 
-  // only from host convenience wrapper takes mesh and kSize
+  // only from host convenience wrapper takes mesh and k_size
   const int fromDeviceAPIIdx = 0;
   const int fromHostAPIIdx = 1;
   interfaces[fromHostAPIIdx].addArg("mesh", FortranAPI::InterfaceType::OBJ);
-  interfaces[fromHostAPIIdx].addArg("kSize", FortranAPI::InterfaceType::INTEGER);
+  interfaces[fromHostAPIIdx].addArg("k_size", FortranAPI::InterfaceType::INTEGER);
 
   const int runAndVerifyIdx = 2;
 
@@ -1605,7 +1605,7 @@ generateF90InterfaceSI(FortranInterfaceModuleGen& fimGen,
   FortranInterfaceAPI setup("setup_" + stencilInstantiation->getName());
   FortranInterfaceAPI free("free_" + stencilInstantiation->getName());
   setup.addArg("mesh", FortranAPI::InterfaceType::OBJ);
-  setup.addArg("kSize", FortranAPI::InterfaceType::INTEGER);
+  setup.addArg("k_size", FortranAPI::InterfaceType::INTEGER);
 
   fimGen.addInterfaceAPI(std::move(setup));
   fimGen.addInterfaceAPI(std::move(free));
