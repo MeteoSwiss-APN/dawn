@@ -269,7 +269,7 @@ void ASTStencilBody::visit(const std::shared_ptr<ast::VarDeclStmt>& stmt) {
 }
 
 bool ASTStencilBody::hasIrregularPentagons(const std::vector<ast::LocationType>& chain) {
-  assert(chain.size() > 1);
+  DAWN_ASSERT(chain.size() > 1);
   return (std::count(chain.begin(), chain.end() - 1, ast::LocationType::Vertices) != 0);
 }
 
