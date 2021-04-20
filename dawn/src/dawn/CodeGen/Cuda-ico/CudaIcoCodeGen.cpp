@@ -297,7 +297,7 @@ void CudaIcoCodeGen::generateRunFun(
          interval.levelIsEnd(iir::Interval::Bound::lower)) {
         k_size << (interval.upperOffset() - interval.lowerOffset());
       } else if(interval.levelIsEnd(iir::Interval::Bound::upper)) {
-        k_size << "topLevel_ + " << interval.upperOffset() << " - "
+        k_size << "kSize_ + " << interval.upperOffset() << " - "
                << (interval.lowerOffset() + interval.lowerLevel());
       } else {
         k_size << interval.upperLevel() << " + " << interval.upperOffset() << " - "
@@ -414,7 +414,7 @@ void CudaIcoCodeGen::generateRunFun(
       }
 
       // we always need the k size
-      kernelCall << "topLevel_, ";
+      kernelCall << "kSize_, ";
 
       // in case of horizontal iteration space we need the offset
       if(domain.has_value()) {
@@ -462,24 +462,24 @@ static void allocTempFields(MemberFunction& ctor, const iir::Stencil& stencil, P
       auto dims = stencil.getMetadata().getFieldDimensions(accessID);
       if(dims.isVertical()) {
         ctor.addStatement("::dawn::allocField(&" +
-                          stencil.getMetadata().getNameFromAccessID(accessID) + "_, topLevel_)");
+                          stencil.getMetadata().getNameFromAccessID(accessID) + "_, kSize_)");
         continue;
       }
 
       bool isHorizontal = !dims.K();
-      std::string topLevelStr = (isHorizontal) ? "1" : "topLevel_";
+      std::string kSizeStr = (isHorizontal) ? "1" : "kSize_";
 
       auto hdims = ast::dimension_cast<ast::UnstructuredFieldDimension const&>(
           dims.getHorizontalFieldDimension());
       if(hdims.isDense()) {
         ctor.addStatement("::dawn::allocField(&" + fname + "_, mesh_." +
                           locToDenseSizeStringGpuMesh(hdims.getDenseLocationType(), padding) +
-                          ", " + topLevelStr + ")");
+                          ", " + kSizeStr + ")");
       } else {
         ctor.addStatement("::dawn::allocField(&" + fname + "_, " + "mesh_." +
                           locToDenseSizeStringGpuMesh(hdims.getDenseLocationType(), padding) +
                           ", " + chainToSparseSizeString(hdims.getIterSpace()) + ", " +
-                          topLevelStr + ")");
+                          kSizeStr + ")");
       }
     }
   }
@@ -498,7 +498,7 @@ void CudaIcoCodeGen::generateStencilFree(MemberFunction& stencilFree, const iir:
 void CudaIcoCodeGen::generateStencilSetup(MemberFunction& stencilSetup,
                                           const iir::Stencil& stencil) {
   stencilSetup.addStatement("mesh_ = GpuTriMesh(mesh)");
-  stencilSetup.addStatement("topLevel_ = topLevel");
+  stencilSetup.addStatement("kSize_ = kSize");
   stencilSetup.addStatement("is_setup_ = true");
   allocTempFields(stencilSetup, stencil, codeGenOptions.UnstrPadding);
 }
@@ -518,12 +518,12 @@ void CudaIcoCodeGen::generateCopyMemoryFun(MemberFunction& copyFun,
     auto fname = stencil.getMetadata().getFieldNameFromAccessID(fieldID);
     auto dims = stencil.getMetadata().getFieldDimensions(fieldID);
     if(dims.isVertical()) {
-      copyFun.addStatement("dawn::initField(" + fname + ", " + "&" + fname + "_, topLevel_)");
+      copyFun.addStatement("dawn::initField(" + fname + ", " + "&" + fname + "_, kSize_)");
       continue;
     }
 
     bool isHorizontal = !dims.K();
-    std::string topLevelStr = (isHorizontal) ? "1" : "topLevel_";
+    std::string kSizeStr = (isHorizontal) ? "1" : "kSize_";
 
     auto hdims = ast::dimension_cast<ast::UnstructuredFieldDimension const&>(
         dims.getHorizontalFieldDimension());
@@ -531,12 +531,12 @@ void CudaIcoCodeGen::generateCopyMemoryFun(MemberFunction& copyFun,
       copyFun.addStatement(
           "dawn::initField(" + fname + ", " + "&" + fname + "_, " + "mesh_." +
           locToDenseSizeStringGpuMesh(hdims.getDenseLocationType(), codeGenOptions.UnstrPadding) +
-          ", " + topLevelStr + ", do_reshape)");
+          ", " + kSizeStr + ", do_reshape)");
     } else {
       copyFun.addStatement(
           "dawn::initSparseField(" + fname + ", " + "&" + fname + "_, " + "mesh_." +
           locToDenseSizeStringGpuMesh(hdims.getNeighborChain()[0], codeGenOptions.UnstrPadding) +
-          ", " + chainToSparseSizeString(hdims.getIterSpace()) + ", " + topLevelStr +
+          ", " + chainToSparseSizeString(hdims.getIterSpace()) + ", " + kSizeStr +
           ", do_reshape)");
     }
   }
@@ -595,7 +595,7 @@ void CudaIcoCodeGen::generateCopyBackFun(MemberFunction& copyBackFun, const iir:
   auto getNumElements = [&](const iir::Stencil::FieldInfo& field) -> std::string {
     if(rawPtrs) {
       if(field.field.getFieldDimensions().isVertical()) {
-        return "topLevel_";
+        return "kSize_";
       }
 
       auto hdims = ast::dimension_cast<ast::UnstructuredFieldDimension const&>(
@@ -612,7 +612,7 @@ void CudaIcoCodeGen::generateCopyBackFun(MemberFunction& copyBackFun, const iir:
             ")" + "*" + chainToSparseSizeString(hdims.getIterSpace());
       }
       if(field.field.getFieldDimensions().K()) {
-        sizestr += " * topLevel_";
+        sizestr += " * kSize_";
       }
       return sizestr;
     } else {
@@ -636,18 +636,18 @@ void CudaIcoCodeGen::generateCopyBackFun(MemberFunction& copyBackFun, const iir:
             field.field.getFieldDimensions().getHorizontalFieldDimension());
 
         bool isHorizontal = !field.field.getFieldDimensions().K();
-        std::string topLevelStr = (isHorizontal) ? "1" : "topLevel_";
+        std::string kSizeStr = (isHorizontal) ? "1" : "kSize_";
 
         if(dims.isDense()) {
           copyBackFun.addStatement("dawn::reshape_back(host_buf, " + field.Name +
-                                   ((!rawPtrs) ? ".data()" : "") + " , " + topLevelStr +
+                                   ((!rawPtrs) ? ".data()" : "") + " , " + kSizeStr +
                                    ", mesh_." +
                                    locToDenseSizeStringGpuMesh(dims.getDenseLocationType(),
                                                                codeGenOptions.UnstrPadding) +
                                    ")");
         } else {
           copyBackFun.addStatement("dawn::reshape_back(host_buf, " + field.Name +
-                                   ((!rawPtrs) ? ".data()" : "") + ", " + topLevelStr + ", mesh_." +
+                                   ((!rawPtrs) ? ".data()" : "") + ", " + kSizeStr + ", mesh_." +
                                    locToDenseSizeStringGpuMesh(dims.getDenseLocationType(),
                                                                codeGenOptions.UnstrPadding) +
                                    ", " + chainToSparseSizeString(dims.getIterSpace()) + ")");
@@ -693,7 +693,7 @@ void CudaIcoCodeGen::generateStencilClasses(
         stencilClass.addMember("::dawn::float_type*", field.second.Name + "_");
       }
     }
-    stencilClass.addMember("static int", "topLevel_");
+    stencilClass.addMember("static int", "kSize_");
     stencilClass.addMember("static GpuTriMesh", "mesh_");
     stencilClass.addMember("static bool", "is_setup_");
 
@@ -704,11 +704,11 @@ void CudaIcoCodeGen::generateStencilClasses(
     meshGetter.addStatement("return mesh_");
     meshGetter.commit();
 
-    auto topLevelGetter = stencilClass.addMemberFunction("static int", "getTopLevel");
-    topLevelGetter.finishArgs();
-    topLevelGetter.startBody();
-    topLevelGetter.addStatement("return topLevel_");
-    topLevelGetter.commit();
+    auto kSizeGetter = stencilClass.addMemberFunction("static int", "getkSize");
+    kSizeGetter.finishArgs();
+    kSizeGetter.startBody();
+    kSizeGetter.addStatement("return kSize_");
+    kSizeGetter.commit();
 
     if(!globalsMap.empty()) {
       stencilClass.addMember("globals", "m_globals");
@@ -721,7 +721,7 @@ void CudaIcoCodeGen::generateStencilClasses(
 
     auto stencilClassSetup = stencilClass.addMemberFunction("static void", "setup");
     stencilClassSetup.addArg("const dawn::GlobalGpuTriMesh *mesh");
-    stencilClassSetup.addArg("int topLevel");
+    stencilClassSetup.addArg("int kSize");
     generateStencilSetup(stencilClassSetup, stencil);
     stencilClassSetup.commit();
 
@@ -801,7 +801,7 @@ void CudaIcoCodeGen::generateAllAPIRunFunctions(
     if(fromHost) {
       for(auto& apiRunFun : apiRunFuns) {
         apiRunFun->addArg("dawn::GlobalGpuTriMesh *mesh");
-        apiRunFun->addArg("int topLevel");
+        apiRunFun->addArg("int kSize");
         addGlobalsArgs(globalsMap, *apiRunFun);
       }
     } else {
@@ -855,7 +855,7 @@ void CudaIcoCodeGen::generateAllAPIRunFunctions(
         }
         if(fromHost) {
           for(auto& apiRunFun : apiRunFuns) {
-            apiRunFun->addStatement(fullStencilName + "::setup(mesh, topLevel)");
+            apiRunFun->addStatement(fullStencilName + "::setup(mesh, kSize)");
           }
           // depending if we are calling from c or from fortran, we need to transpose the data or
           // not
@@ -972,7 +972,7 @@ void CudaIcoCodeGen::generateAllAPIVerifyFunctions(
       verifyAPI.startBody();
       verifyAPI.addStatement("using namespace std::chrono");
       verifyAPI.addStatement("const auto &mesh = " + fullStencilName + "::" + "getMesh()");
-      verifyAPI.addStatement("int topLevel = " + fullStencilName + "::" + "getTopLevel()");
+      verifyAPI.addStatement("int kSize = " + fullStencilName + "::" + "getkSize()");
       verifyAPI.addStatement(
           "high_resolution_clock::time_point t_start = high_resolution_clock::now()");
       verifyAPI.addStatement("bool isValid = true");
@@ -988,7 +988,7 @@ void CudaIcoCodeGen::generateAllAPIVerifyFunctions(
         auto unstrDims = ast::dimension_cast<const ast::UnstructuredFieldDimension&>(
             fieldInfo.field.getFieldDimensions().getHorizontalFieldDimension());
 
-        std::string num_lev = (!fieldInfo.field.getFieldDimensions().K()) ? "1" : "topLevel";
+        std::string num_lev = (!fieldInfo.field.getFieldDimensions().K()) ? "1" : "kSize";
         std::string dense_stride = "(mesh." +
                                    locToDenseSizeStringGpuMesh(unstrDims.getDenseLocationType(),
                                                                codeGenOptions.UnstrPadding) +
@@ -1111,10 +1111,10 @@ void CudaIcoCodeGen::generateMemMgmtFunctions(
 
   MemberFunction setupFun("void", "setup_" + wrapperName, ssSW, 0, onlyDecl);
   setupFun.addArg("dawn::GlobalGpuTriMesh *mesh");
-  setupFun.addArg("int topLevel");
+  setupFun.addArg("int kSize");
   setupFun.finishArgs();
   if(!onlyDecl) {
-    setupFun.addStatement(fullStencilName + "::setup(mesh, topLevel)");
+    setupFun.addStatement(fullStencilName + "::setup(mesh, kSize)");
   }
   setupFun.commit();
 
@@ -1144,7 +1144,7 @@ void CudaIcoCodeGen::generateStaticMembersTrailer(
     ssSW << "::dawn::float_type *" << fullStencilName << "::" << fname << "_;\n";
   }
   ssSW << "int " << fullStencilName << "::"
-       << "topLevel_;\n";
+       << "kSize_;\n";
   ssSW << "bool " << fullStencilName << "::"
        << "is_setup_ = false;\n";
   ssSW << "dawn_generated::cuda_ico::" + wrapperName << "::GpuTriMesh " << fullStencilName << "::"
@@ -1154,7 +1154,7 @@ void CudaIcoCodeGen::generateStaticMembersTrailer(
 std::string CudaIcoCodeGen::intervalBoundToString(const iir::Interval& interval,
                                                   iir::Interval::Bound bound) {
   if(interval.levelIsEnd(bound)) {
-    return "topLevel + " + std::to_string(interval.offset(bound));
+    return "kSize + " + std::to_string(interval.offset(bound));
   } else {
     return std::to_string(interval.offset(bound));
   }
@@ -1169,9 +1169,9 @@ void CudaIcoCodeGen::generateKIntervalBounds(MemberFunction& cudaKernel,
     cudaKernel.addStatement("unsigned int kidx = blockIdx.y * blockDim.y + threadIdx.y");
 
     if(interval.lowerLevelIsEnd() && interval.upperLevelIsEnd()) {
-      cudaKernel.addStatement("int klo = kidx * LEVELS_PER_THREAD + (topLevel + " +
+      cudaKernel.addStatement("int klo = kidx * LEVELS_PER_THREAD + (kSize + " +
                               std::to_string(interval.lowerOffset()) + ")");
-      cudaKernel.addStatement("int khi = (kidx + 1) * LEVELS_PER_THREAD + (topLevel + " +
+      cudaKernel.addStatement("int khi = (kidx + 1) * LEVELS_PER_THREAD + (kSize + " +
                               std::to_string(interval.lowerOffset()) + ")");
 
     } else {
@@ -1271,7 +1271,7 @@ void CudaIcoCodeGen::generateAllCudaKernels(
       }
 
       // we always need the k size
-      cudaKernel.addArg("int topLevel");
+      cudaKernel.addArg("int kSize");
 
       // for horizontal iteration spaces we also need the offset
       if(stage->getUnstructuredIterationSpace().has_value()) {
@@ -1300,11 +1300,11 @@ void CudaIcoCodeGen::generateAllCudaKernels(
                       "intervals in a stage must have same Levels for now!\n");
       auto interval = stage->getChild(0)->getInterval();
 
-      std::stringstream topLevel;
+      std::stringstream kSize;
       if(interval.levelIsEnd(iir::Interval::Bound::upper)) {
-        topLevel << "topLevel + " << interval.upperOffset();
+        kSize << "kSize + " << interval.upperOffset();
       } else {
-        topLevel << interval.upperLevel() << " + " << interval.upperOffset();
+        kSize << interval.upperLevel() << " + " << interval.upperOffset();
       }
 
       // pidx
@@ -1334,7 +1334,7 @@ void CudaIcoCodeGen::generateAllCudaKernels(
       // k loop (we ensured that all k intervals for all do methods in a stage are equal for
       // now)
       cudaKernel.addBlockStatement("for(int kIter = klo; kIter < khi; "+incrementIterator("kIter", ms->getLoopOrder())+")", [&]() {
-        cudaKernel.addBlockStatement("if (kIter >= " + topLevel.str() + ")",
+        cudaKernel.addBlockStatement("if (kIter >= " + kSize.str() + ")",
                                      [&]() { cudaKernel.addStatement("return"); });
         for(const auto& doMethodPtr : stage->getChildren()) {
           // Generate Do-Method
@@ -1501,11 +1501,11 @@ generateF90InterfaceSI(FortranInterfaceModuleGen& fimGen,
 
   FortranWrapperAPI runWrapper = FortranWrapperAPI("wrap_run_" + stencilInstantiation->getName());
 
-  // only from host convenience wrapper takes mesh and topLevel
+  // only from host convenience wrapper takes mesh and kSize
   const int fromDeviceAPIIdx = 0;
   const int fromHostAPIIdx = 1;
   interfaces[fromHostAPIIdx].addArg("mesh", FortranAPI::InterfaceType::OBJ);
-  interfaces[fromHostAPIIdx].addArg("topLevel", FortranAPI::InterfaceType::INTEGER);
+  interfaces[fromHostAPIIdx].addArg("kSize", FortranAPI::InterfaceType::INTEGER);
 
   const int runAndVerifyIdx = 2;
 
@@ -1605,7 +1605,7 @@ generateF90InterfaceSI(FortranInterfaceModuleGen& fimGen,
   FortranInterfaceAPI setup("setup_" + stencilInstantiation->getName());
   FortranInterfaceAPI free("free_" + stencilInstantiation->getName());
   setup.addArg("mesh", FortranAPI::InterfaceType::OBJ);
-  setup.addArg("topLevel", FortranAPI::InterfaceType::INTEGER);
+  setup.addArg("kSize", FortranAPI::InterfaceType::INTEGER);
 
   fimGen.addInterfaceAPI(std::move(setup));
   fimGen.addInterfaceAPI(std::move(free));
