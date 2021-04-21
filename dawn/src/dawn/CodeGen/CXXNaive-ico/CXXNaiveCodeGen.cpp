@@ -81,7 +81,7 @@ std::string makeLoopImpl(int iExtent, int jExtent, const std::string& dim, const
 std::string makeIntervalBound(iir::Interval const& interval, iir::Interval::Bound bound) {
   return interval.levelIsEnd(bound)
              ? "( m_k_size == 0 ? 0 : (m_k_size - 1)) + " + std::to_string(interval.offset(bound))
-             : std::to_string(interval.bound(bound));
+             : std::to_string(interval.bound(bound)) +"-1";
 }
 
 std::string makeKLoop(bool isBackward, iir::Interval const& interval) {
