@@ -341,7 +341,8 @@ void CudaIcoCodeGen::generateRunFun(
                std::to_string(iterSpace.lowerOffset()) + "})";
       };
 
-      std::string iskparallel = (ms->getLoopOrder() == iir::LoopOrderKind::Parallel) ? "true" : "false";
+      std::string iskparallel =
+          (ms->getLoopOrder() == iir::LoopOrderKind::Parallel) ? "true" : "false";
 
       auto domain = stage->getUnstructuredIterationSpace();
       std::string hSizeString = "hsize" + std::to_string(stage->getStageID());
@@ -478,8 +479,8 @@ static void allocTempFields(MemberFunction& ctor, const iir::Stencil& stencil, P
       } else {
         ctor.addStatement("::dawn::allocField(&" + fname + "_, " + "mesh_." +
                           locToDenseSizeStringGpuMesh(hdims.getDenseLocationType(), padding) +
-                          ", " + chainToSparseSizeString(hdims.getIterSpace()) + ", " +
-                          kSizeStr + ")");
+                          ", " + chainToSparseSizeString(hdims.getIterSpace()) + ", " + kSizeStr +
+                          ")");
       }
     }
   }
@@ -536,8 +537,7 @@ void CudaIcoCodeGen::generateCopyMemoryFun(MemberFunction& copyFun,
       copyFun.addStatement(
           "dawn::initSparseField(" + fname + ", " + "&" + fname + "_, " + "mesh_." +
           locToDenseSizeStringGpuMesh(hdims.getNeighborChain()[0], codeGenOptions.UnstrPadding) +
-          ", " + chainToSparseSizeString(hdims.getIterSpace()) + ", " + kSizeStr +
-          ", do_reshape)");
+          ", " + chainToSparseSizeString(hdims.getIterSpace()) + ", " + kSizeStr + ", do_reshape)");
     }
   }
 }
@@ -640,8 +640,7 @@ void CudaIcoCodeGen::generateCopyBackFun(MemberFunction& copyBackFun, const iir:
 
         if(dims.isDense()) {
           copyBackFun.addStatement("dawn::reshape_back(host_buf, " + field.Name +
-                                   ((!rawPtrs) ? ".data()" : "") + " , " + kSizeStr +
-                                   ", mesh_." +
+                                   ((!rawPtrs) ? ".data()" : "") + " , " + kSizeStr + ", mesh_." +
                                    locToDenseSizeStringGpuMesh(dims.getDenseLocationType(),
                                                                codeGenOptions.UnstrPadding) +
                                    ")");
@@ -1186,10 +1185,10 @@ void CudaIcoCodeGen::generateKIntervalBounds(MemberFunction& cudaKernel,
     cudaKernel.addStatement("int khi = " +
                             intervalBoundToString(interval, iir::Interval::Bound::upper));
   } else {
-    cudaKernel.addStatement("int klo = " +
-                            intervalBoundToString(interval, iir::Interval::Bound::upper)+"-1");
-    cudaKernel.addStatement("int khi = " +
-                            intervalBoundToString(interval, iir::Interval::Bound::lower)+"-1");
+    cudaKernel.addStatement(
+        "int klo = " + intervalBoundToString(interval, iir::Interval::Bound::upper) + "-1");
+    cudaKernel.addStatement(
+        "int khi = " + intervalBoundToString(interval, iir::Interval::Bound::lower) + "-1");
   }
 }
 
@@ -1337,28 +1336,31 @@ void CudaIcoCodeGen::generateAllCudaKernels(
 
       // k loop (we ensured that all k intervals for all do methods in a stage are equal for
       // now)
-      cudaKernel.addBlockStatement("for(int kIter = klo; kIter "+comparisonOperator(ms->getLoopOrder())+" khi; "+incrementIterator("kIter", ms->getLoopOrder())+")", [&]() {
-        cudaKernel.addBlockStatement("if (kIter >= " + k_size.str() + ")",
-                                     [&]() { cudaKernel.addStatement("return"); });
-        for(const auto& doMethodPtr : stage->getChildren()) {
-          // Generate Do-Method
-          const iir::DoMethod& doMethod = *doMethodPtr;
+      cudaKernel.addBlockStatement(
+          "for(int kIter = klo; kIter " + comparisonOperator(ms->getLoopOrder()) + " khi; " +
+              incrementIterator("kIter", ms->getLoopOrder()) + ")",
+          [&]() {
+            cudaKernel.addBlockStatement("if (kIter >= " + k_size.str() + ")",
+                                         [&]() { cudaKernel.addStatement("return"); });
+            for(const auto& doMethodPtr : stage->getChildren()) {
+              // Generate Do-Method
+              const iir::DoMethod& doMethod = *doMethodPtr;
 
-          for(const auto& stmt : doMethod.getAST().getStatements()) {
-            FindReduceOverNeighborExpr findReduceOverNeighborExpr(doMethod.getAST().getID());
-            stmt->accept(findReduceOverNeighborExpr);
-            stencilBodyCXXVisitor.setFirstPass();
-            for(auto redExpr : findReduceOverNeighborExpr.reduceOverNeighborExprs()) {
-              stencilBodyCXXVisitor.setBlockID(
-                  findReduceOverNeighborExpr.getBlockIDofReduction(redExpr));
-              redExpr->accept(stencilBodyCXXVisitor);
+              for(const auto& stmt : doMethod.getAST().getStatements()) {
+                FindReduceOverNeighborExpr findReduceOverNeighborExpr(doMethod.getAST().getID());
+                stmt->accept(findReduceOverNeighborExpr);
+                stencilBodyCXXVisitor.setFirstPass();
+                for(auto redExpr : findReduceOverNeighborExpr.reduceOverNeighborExprs()) {
+                  stencilBodyCXXVisitor.setBlockID(
+                      findReduceOverNeighborExpr.getBlockIDofReduction(redExpr));
+                  redExpr->accept(stencilBodyCXXVisitor);
+                }
+                stencilBodyCXXVisitor.setSecondPass();
+                stmt->accept(stencilBodyCXXVisitor);
+                cudaKernel << stencilBodyCXXVisitor.getCodeAndResetStream();
+              }
             }
-            stencilBodyCXXVisitor.setSecondPass();
-            stmt->accept(stencilBodyCXXVisitor);
-            cudaKernel << stencilBodyCXXVisitor.getCodeAndResetStream();
-          }
-        }
-      });
+          });
     }
   }
 }
