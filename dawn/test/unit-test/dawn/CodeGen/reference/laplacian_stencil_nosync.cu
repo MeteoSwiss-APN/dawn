@@ -155,8 +155,8 @@ public:
         dim3 blocks(nbx, nby, nbz);
         generated_stencil47_ms46_kernel<<<blocks, threads>>>(
             nx, ny, nz, in_ds.strides()[1], in_ds.strides()[2],
-            (in.data() + in_ds.get_storage_info_ptr()->index(in.begin<0>(), in.begin<1>(), 0)),
-            (out.data() + out_ds.get_storage_info_ptr()->index(out.begin<0>(), out.begin<1>(), 0)));
+            (in.data() + in_ds.get_storage_info_ptr()->index(m_dom.iminus(), m_dom.jminus(), 0)),
+            (out.data() + out_ds.get_storage_info_ptr()->index(m_dom.iminus(), m_dom.jminus(), 0)));
       };
 
       // stopping timers

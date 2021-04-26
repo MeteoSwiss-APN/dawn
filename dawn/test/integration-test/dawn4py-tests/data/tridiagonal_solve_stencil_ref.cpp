@@ -314,10 +314,10 @@ public:
         dim3 blocks(nbx, nby, nbz);
         tridiagonal_solve_stencil_stencil49_ms107_kernel<<<blocks, threads>>>(
             nx, ny, nz, a_ds.strides()[1], a_ds.strides()[2],
-            (a.data() + a_ds.get_storage_info_ptr()->index(a.begin<0>(), a.begin<1>(), 0)),
-            (b.data() + b_ds.get_storage_info_ptr()->index(b.begin<0>(), b.begin<1>(), 0)),
-            (c.data() + c_ds.get_storage_info_ptr()->index(c.begin<0>(), c.begin<1>(), 0)),
-            (d.data() + d_ds.get_storage_info_ptr()->index(d.begin<0>(), d.begin<1>(), 0)));
+            (a.data() + a_ds.get_storage_info_ptr()->index(m_dom.iminus(), m_dom.jminus(), 0)),
+            (b.data() + b_ds.get_storage_info_ptr()->index(m_dom.iminus(), m_dom.jminus(), 0)),
+            (c.data() + c_ds.get_storage_info_ptr()->index(m_dom.iminus(), m_dom.jminus(), 0)),
+            (d.data() + d_ds.get_storage_info_ptr()->index(m_dom.iminus(), m_dom.jminus(), 0)));
       };
       {
         ;
@@ -333,8 +333,8 @@ public:
         dim3 blocks(nbx, nby, nbz);
         tridiagonal_solve_stencil_stencil49_ms108_kernel<<<blocks, threads>>>(
             nx, ny, nz, c_ds.strides()[1], c_ds.strides()[2],
-            (c.data() + c_ds.get_storage_info_ptr()->index(c.begin<0>(), c.begin<1>(), 0)),
-            (d.data() + d_ds.get_storage_info_ptr()->index(d.begin<0>(), d.begin<1>(), 0)));
+            (c.data() + c_ds.get_storage_info_ptr()->index(m_dom.iminus(), m_dom.jminus(), 0)),
+            (d.data() + d_ds.get_storage_info_ptr()->index(m_dom.iminus(), m_dom.jminus(), 0)));
       };
 
       // stopping timers
