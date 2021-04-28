@@ -704,10 +704,10 @@ public:
             m_xfx.get_storage_info_ptr()->template stride<1>(),
             m_xfx.get_storage_info_ptr()->template stride<4>(),
             (dp_ref.data() +
-             dp_ref_ds.get_storage_info_ptr()->index(dp_ref.begin<0>(), dp_ref.begin<1>(), 0)),
-            (ut.data() + ut_ds.get_storage_info_ptr()->index(ut.begin<0>(), ut.begin<1>(), 0)),
-            (vt.data() + vt_ds.get_storage_info_ptr()->index(vt.begin<0>(), vt.begin<1>(), 0)), xfx,
-            yfx);
+             dp_ref_ds.get_storage_info_ptr()->index(m_dom.iminus(), m_dom.jminus(), 0)),
+            (ut.data() + ut_ds.get_storage_info_ptr()->index(m_dom.iminus(), m_dom.jminus(), 0)),
+            (vt.data() + vt_ds.get_storage_info_ptr()->index(m_dom.iminus(), m_dom.jminus(), 0)),
+            xfx, yfx);
       };
       {
         ;
@@ -731,10 +731,10 @@ public:
             m_xfx.get_storage_info_ptr()->template stride<1>(),
             m_xfx.get_storage_info_ptr()->template stride<4>(),
             (dp_ref.data() +
-             dp_ref_ds.get_storage_info_ptr()->index(dp_ref.begin<0>(), dp_ref.begin<1>(), 0)),
-            (ut.data() + ut_ds.get_storage_info_ptr()->index(ut.begin<0>(), ut.begin<1>(), 0)),
-            (vt.data() + vt_ds.get_storage_info_ptr()->index(vt.begin<0>(), vt.begin<1>(), 0)), xfx,
-            yfx);
+             dp_ref_ds.get_storage_info_ptr()->index(m_dom.iminus(), m_dom.jminus(), 0)),
+            (ut.data() + ut_ds.get_storage_info_ptr()->index(m_dom.iminus(), m_dom.jminus(), 0)),
+            (vt.data() + vt_ds.get_storage_info_ptr()->index(m_dom.iminus(), m_dom.jminus(), 0)),
+            xfx, yfx);
       };
       {
         ;
@@ -758,10 +758,10 @@ public:
             m_xfx.get_storage_info_ptr()->template stride<1>(),
             m_xfx.get_storage_info_ptr()->template stride<4>(),
             (dp_ref.data() +
-             dp_ref_ds.get_storage_info_ptr()->index(dp_ref.begin<0>(), dp_ref.begin<1>(), 0)),
-            (ut.data() + ut_ds.get_storage_info_ptr()->index(ut.begin<0>(), ut.begin<1>(), 0)),
-            (vt.data() + vt_ds.get_storage_info_ptr()->index(vt.begin<0>(), vt.begin<1>(), 0)), xfx,
-            yfx);
+             dp_ref_ds.get_storage_info_ptr()->index(m_dom.iminus(), m_dom.jminus(), 0)),
+            (ut.data() + ut_ds.get_storage_info_ptr()->index(m_dom.iminus(), m_dom.jminus(), 0)),
+            (vt.data() + vt_ds.get_storage_info_ptr()->index(m_dom.iminus(), m_dom.jminus(), 0)),
+            xfx, yfx);
       };
       {
         ;
@@ -788,13 +788,13 @@ public:
             m_xfx.get_storage_info_ptr()->template stride<1>(),
             m_xfx.get_storage_info_ptr()->template stride<4>(),
             (area.data() +
-             area_ds.get_storage_info_ptr()->index(area.begin<0>(), area.begin<1>(), 0)),
+             area_ds.get_storage_info_ptr()->index(m_dom.iminus(), m_dom.jminus(), 0)),
             (gz_x.data() +
-             gz_x_ds.get_storage_info_ptr()->index(gz_x.begin<0>(), gz_x.begin<1>(), 0)),
+             gz_x_ds.get_storage_info_ptr()->index(m_dom.iminus(), m_dom.jminus(), 0)),
             (gz_y.data() +
-             gz_y_ds.get_storage_info_ptr()->index(gz_y.begin<0>(), gz_y.begin<1>(), 0)),
+             gz_y_ds.get_storage_info_ptr()->index(m_dom.iminus(), m_dom.jminus(), 0)),
             (gz_0.data() +
-             gz_0_ds.get_storage_info_ptr()->index(gz_0.begin<0>(), gz_0.begin<1>(), 0)),
+             gz_0_ds.get_storage_info_ptr()->index(m_dom.iminus(), m_dom.jminus(), 0)),
             xfx, yfx, fx, fy);
       };
       {
@@ -811,9 +811,9 @@ public:
         dim3 blocks(nbx, nby, nbz);
         update_dz_c_stencil443_ms789_kernel<<<blocks, threads>>>(
             m_globals, nx, ny, nz, gz_ds.strides()[1], gz_ds.strides()[2],
-            (gz.data() + gz_ds.get_storage_info_ptr()->index(gz.begin<0>(), gz.begin<1>(), 0)),
+            (gz.data() + gz_ds.get_storage_info_ptr()->index(m_dom.iminus(), m_dom.jminus(), 0)),
             (gz_0.data() +
-             gz_0_ds.get_storage_info_ptr()->index(gz_0.begin<0>(), gz_0.begin<1>(), 0)));
+             gz_0_ds.get_storage_info_ptr()->index(m_dom.iminus(), m_dom.jminus(), 0)));
       };
       {
         ;
@@ -830,10 +830,10 @@ public:
         dim3 blocks(nbx, nby, nbz);
         update_dz_c_stencil443_ms669_kernel<<<blocks, threads>>>(
             m_globals, nx, ny, nz, zs_ds.strides()[1], zs_ds.strides()[2],
-            (zs.data() + zs_ds.get_storage_info_ptr()->index(zs.begin<0>(), zs.begin<1>(), 0)),
-            (ws3.data() + ws3_ds.get_storage_info_ptr()->index(ws3.begin<0>(), ws3.begin<1>(), 0)),
+            (zs.data() + zs_ds.get_storage_info_ptr()->index(m_dom.iminus(), m_dom.jminus(), 0)),
+            (ws3.data() + ws3_ds.get_storage_info_ptr()->index(m_dom.iminus(), m_dom.jminus(), 0)),
             (gz_0.data() +
-             gz_0_ds.get_storage_info_ptr()->index(gz_0.begin<0>(), gz_0.begin<1>(), 0)));
+             gz_0_ds.get_storage_info_ptr()->index(m_dom.iminus(), m_dom.jminus(), 0)));
       };
       {
         ;
@@ -849,9 +849,9 @@ public:
         dim3 blocks(nbx, nby, nbz);
         update_dz_c_stencil443_ms673_kernel<<<blocks, threads>>>(
             m_globals, nx, ny, nz, gz_ds.strides()[1], gz_ds.strides()[2],
-            (gz.data() + gz_ds.get_storage_info_ptr()->index(gz.begin<0>(), gz.begin<1>(), 0)),
+            (gz.data() + gz_ds.get_storage_info_ptr()->index(m_dom.iminus(), m_dom.jminus(), 0)),
             (gz_0.data() +
-             gz_0_ds.get_storage_info_ptr()->index(gz_0.begin<0>(), gz_0.begin<1>(), 0)));
+             gz_0_ds.get_storage_info_ptr()->index(m_dom.iminus(), m_dom.jminus(), 0)));
       };
 
       // stopping timers

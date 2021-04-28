@@ -594,8 +594,17 @@ void CudaCodeGen::generateStencilRunMethod(
       const auto fieldName = metadata.getFieldNameFromAccessID(fieldPair.second.getAccessID());
       if(idx > 0)
         args += ",";
-      args += "(" + fieldName + ".data()+" + fieldName + "_ds.get_storage_info_ptr()->index(" +
-              fieldName + ".begin<0>(), " + fieldName + ".begin<1>(),0 ))";
+#ifdef INDEX_VIA_FIELD_BEGIN_MARKERS
+      const std::string i0_str = fieldName + ".begin<0>()";
+      const std::string i1_str = fieldName + ".begin<1>()";
+#else
+      const std::string i0_str = "m_dom.iminus()";
+      const std::string i1_str = "m_dom.jminus()";
+#endif
+      const std::string i2_str = "0";
+      const std::string index_str = "index(" + i0_str + "," + i1_str + "," + i2_str + ")";
+      args += "(" + fieldName + ".data()+" + fieldName + "_ds.get_storage_info_ptr()->" +
+              index_str + ")";
       ++idx;
     }
 

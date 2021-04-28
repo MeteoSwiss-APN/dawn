@@ -249,8 +249,7 @@ void CudaIcoCodeGen::generateGpuMesh(
 void CudaIcoCodeGen::generateGridFun(MemberFunction& gridFun) {
   gridFun.addBlockStatement("if (kparallel)", [&]() {
     gridFun.addStatement("int dK = (kSize + LEVELS_PER_THREAD - 1) / LEVELS_PER_THREAD");
-    gridFun.addStatement("return dim3((elSize + BLOCK_SIZE - 1) / BLOCK_SIZE, (dK + BLOCK_SIZE - "
-                         "1) / BLOCK_SIZE, 1)");
+    gridFun.addStatement("return dim3((elSize + BLOCK_SIZE - 1) / BLOCK_SIZE, dK, 1)");
   });
   gridFun.addBlockStatement("else", [&]() {
     gridFun.addStatement("return dim3((elSize + BLOCK_SIZE - 1) / BLOCK_SIZE, 1, 1)");
@@ -277,7 +276,7 @@ void CudaIcoCodeGen::generateRunFun(
       stageLocType.insert(*stage->getLocationType());
     }
   }
-  runFun.addStatement("dim3 dB(BLOCK_SIZE, BLOCK_SIZE, 1)");
+  runFun.addStatement("dim3 dB(BLOCK_SIZE, 1, 1)");
 
   // start timers
   runFun.addStatement("sbase::start()");
@@ -1582,14 +1581,21 @@ generateF90InterfaceSI(FortranInterfaceModuleGen& fimGen,
                           ((i == (args.size() - 1)) && !includeErrorThreshold ? " &" : ", &"));
     }
     if(includeErrorThreshold) {
-      wrapper.addBodyLine(
-          "   "
-          "MERGE(rel_err_threshold,DEFAULT_RELATIVE_ERROR_THRESHOLD,present(rel_err_threshold)) "
-          "&");
+      wrapper.addBodyLine("   threshold &");
     }
     wrapper.addBodyLine(")");
   };
+
+  runWrapper.addBodyLine("");
   runWrapper.addBodyLine("real(c_double) :: timing");
+  runWrapper.addBodyLine("real(c_double) :: threshold");
+  runWrapper.addBodyLine("");
+  runWrapper.addBodyLine("if (present(rel_err_threshold)) then");
+  runWrapper.addBodyLine("  threshold = rel_err_threshold");
+  runWrapper.addBodyLine("else");
+  runWrapper.addBodyLine("  threshold = DEFAULT_RELATIVE_ERROR_THRESHOLD");
+  runWrapper.addBodyLine("endif");
+  runWrapper.addBodyLine("");
   runWrapper.addACCLine("host_data use_device( &");
   auto fieldArgs = getFieldArgs(/*includeSavedState*/ true);
   for(int i = 0; i < fieldArgs.size(); ++i) {
@@ -1683,7 +1689,7 @@ std::unique_ptr<TranslationUnit> CudaIcoCodeGen::generateCode() {
       "#include \"driver-includes/math.hpp\"",
       "#include \"driver-includes/timer_cuda.hpp\"",
       "#include <chrono>",
-      "#define BLOCK_SIZE 16",
+      "#define BLOCK_SIZE 128",
       "#define LEVELS_PER_THREAD 1",
       "using namespace gridtools::dawn;",
   };
