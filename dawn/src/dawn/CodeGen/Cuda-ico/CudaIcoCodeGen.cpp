@@ -27,6 +27,7 @@
 #include "dawn/CodeGen/IcoChainSizes.h"
 #include "dawn/IIR/Field.h"
 #include "dawn/IIR/Interval.h"
+#include "dawn/IIR/LoopOrder.h"
 #include "dawn/IIR/MultiStage.h"
 #include "dawn/IIR/Stage.h"
 #include "dawn/IIR/Stencil.h"
@@ -246,8 +247,13 @@ void CudaIcoCodeGen::generateGpuMesh(
 }
 
 void CudaIcoCodeGen::generateGridFun(MemberFunction& gridFun) {
-  gridFun.addStatement("int dK = (kSize + LEVELS_PER_THREAD - 1) / LEVELS_PER_THREAD");
-  gridFun.addStatement("return dim3((elSize + BLOCK_SIZE - 1) / BLOCK_SIZE, dK, 1)");
+  gridFun.addBlockStatement("if (kparallel)", [&]() {
+    gridFun.addStatement("int dK = (kSize + LEVELS_PER_THREAD - 1) / LEVELS_PER_THREAD");
+    gridFun.addStatement("return dim3((elSize + BLOCK_SIZE - 1) / BLOCK_SIZE, dK, 1)");
+  });
+  gridFun.addBlockStatement("else", [&]() {
+    gridFun.addStatement("return dim3((elSize + BLOCK_SIZE - 1) / BLOCK_SIZE, 1, 1)");
+  });
 }
 
 void CudaIcoCodeGen::generateRunFun(
@@ -334,6 +340,9 @@ void CudaIcoCodeGen::generateRunFun(
                std::to_string(iterSpace.lowerOffset()) + "})";
       };
 
+      std::string iskparallel =
+          (ms->getLoopOrder() == iir::LoopOrderKind::Parallel) ? "true" : "false";
+
       auto domain = stage->getUnstructuredIterationSpace();
       std::string hSizeString = "hsize" + std::to_string(stage->getStageID());
       std::string numElString = "mesh_." + locToDenseSizeStringGpuMesh(*stage->getLocationType(),
@@ -346,7 +355,7 @@ void CudaIcoCodeGen::generateRunFun(
                             hOffsetSizeString(*stage->getLocationType(), *domain));
       }
       runFun.addStatement("dim3 dG" + std::to_string(stage->getStageID()) + " = grid(" +
-                          k_size.str() + ", " + hSizeString + ")");
+                          k_size.str() + ", " + hSizeString + "," + iskparallel + ")");
 
       //--------------------------------------
       // signature of kernel
@@ -720,7 +729,10 @@ void CudaIcoCodeGen::generateStencilClasses(
     auto gridFun = stencilClass.addMemberFunction("dim3", "grid");
     gridFun.addArg("int kSize");
     gridFun.addArg("int elSize");
+    gridFun.addArg("bool kparallel");
+
     generateGridFun(gridFun);
+
     gridFun.commit();
 
     // minmal ctor
@@ -1137,6 +1149,56 @@ void CudaIcoCodeGen::generateStaticMembersTrailer(
        << "mesh_;\n";
 }
 
+std::string CudaIcoCodeGen::intervalBoundToString(const iir::Interval& interval,
+                                                  iir::Interval::Bound bound) {
+  if(interval.levelIsEnd(bound)) {
+    return "kSize + " + std::to_string(interval.offset(bound));
+  } else {
+    return std::to_string(interval.offset(bound));
+  }
+}
+
+void CudaIcoCodeGen::generateKIntervalBounds(MemberFunction& cudaKernel,
+                                             const iir::Interval& interval,
+                                             iir::LoopOrderKind loopOrder) {
+  if(loopOrder == iir::LoopOrderKind::Parallel) {
+    // if(false) {
+
+    cudaKernel.addStatement("unsigned int kidx = blockIdx.y * blockDim.y + threadIdx.y");
+
+    if(interval.lowerLevelIsEnd() && interval.upperLevelIsEnd()) {
+      cudaKernel.addStatement("int klo = kidx * LEVELS_PER_THREAD + (kSize + " +
+                              std::to_string(interval.lowerOffset()) + ")");
+      cudaKernel.addStatement("int khi = (kidx + 1) * LEVELS_PER_THREAD + (kSize + " +
+                              std::to_string(interval.lowerOffset()) + ")");
+
+    } else {
+      cudaKernel.addStatement("int klo = kidx * LEVELS_PER_THREAD + " +
+                              std::to_string(interval.lowerOffset()));
+      cudaKernel.addStatement("int khi = (kidx + 1) * LEVELS_PER_THREAD + " +
+                              std::to_string(interval.lowerOffset()));
+    }
+  } else if(loopOrder == iir::LoopOrderKind::Forward) {
+    cudaKernel.addStatement("int klo = " +
+                            intervalBoundToString(interval, iir::Interval::Bound::lower));
+    cudaKernel.addStatement("int khi = " +
+                            intervalBoundToString(interval, iir::Interval::Bound::upper));
+  } else {
+    cudaKernel.addStatement(
+        "int klo = " + intervalBoundToString(interval, iir::Interval::Bound::upper) + "-1");
+    cudaKernel.addStatement(
+        "int khi = " + intervalBoundToString(interval, iir::Interval::Bound::lower) + "-1");
+  }
+}
+
+std::string CudaIcoCodeGen::incrementIterator(std::string iter, iir::LoopOrderKind loopOrder) {
+  return iter + ((loopOrder == iir::LoopOrderKind::Backward) ? "--" : "++");
+}
+
+std::string CudaIcoCodeGen::comparisonOperator(iir::LoopOrderKind loopOrder) {
+  return ((loopOrder == iir::LoopOrderKind::Backward) ? ">" : "<");
+}
+
 void CudaIcoCodeGen::generateAllCudaKernels(
     std::stringstream& ssSW,
     const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation) {
@@ -1240,22 +1302,17 @@ void CudaIcoCodeGen::generateAllCudaKernels(
                       "intervals in a stage must have same Levels for now!\n");
       auto interval = stage->getChild(0)->getInterval();
 
+      std::stringstream k_size;
+      if(interval.levelIsEnd(iir::Interval::Bound::upper)) {
+        k_size << "kSize + " << interval.upperOffset();
+      } else {
+        k_size << interval.upperLevel() << " + " << interval.upperOffset();
+      }
+
       // pidx
       cudaKernel.addStatement("unsigned int pidx = blockIdx.x * blockDim.x + threadIdx.x");
-      cudaKernel.addStatement("unsigned int kidx = blockIdx.y * blockDim.y + threadIdx.y");
 
-      if(interval.lowerLevelIsEnd() && interval.upperLevelIsEnd()) {
-        cudaKernel.addStatement("int klo = kidx * LEVELS_PER_THREAD + (kSize + " +
-                                std::to_string(interval.lowerOffset()) + ")");
-        cudaKernel.addStatement("int khi = (kidx + 1) * LEVELS_PER_THREAD + (kSize + " +
-                                std::to_string(interval.lowerOffset()) + ")");
-
-      } else {
-        cudaKernel.addStatement("int klo = kidx * LEVELS_PER_THREAD + " +
-                                std::to_string(interval.lowerOffset()));
-        cudaKernel.addStatement("int khi = (kidx + 1) * LEVELS_PER_THREAD + " +
-                                std::to_string(interval.lowerOffset()));
-      }
+      generateKIntervalBounds(cudaKernel, interval, ms->getLoopOrder());
 
       switch(loc) {
       case ast::LocationType::Cells:
@@ -1276,37 +1333,33 @@ void CudaIcoCodeGen::generateAllCudaKernels(
         cudaKernel.addStatement("pidx += hOffset");
       }
 
-      std::stringstream k_size;
-      if(interval.levelIsEnd(iir::Interval::Bound::upper)) {
-        k_size << "kSize + " << interval.upperOffset();
-      } else {
-        k_size << interval.upperLevel() << " + " << interval.upperOffset();
-      }
-
       // k loop (we ensured that all k intervals for all do methods in a stage are equal for
       // now)
-      cudaKernel.addBlockStatement("for(int kIter = klo; kIter < khi; kIter++)", [&]() {
-        cudaKernel.addBlockStatement("if (kIter >= " + k_size.str() + ")",
-                                     [&]() { cudaKernel.addStatement("return"); });
-        for(const auto& doMethodPtr : stage->getChildren()) {
-          // Generate Do-Method
-          const iir::DoMethod& doMethod = *doMethodPtr;
+      cudaKernel.addBlockStatement(
+          "for(int kIter = klo; kIter " + comparisonOperator(ms->getLoopOrder()) + " khi; " +
+              incrementIterator("kIter", ms->getLoopOrder()) + ")",
+          [&]() {
+            cudaKernel.addBlockStatement("if (kIter >= " + k_size.str() + ")",
+                                         [&]() { cudaKernel.addStatement("return"); });
+            for(const auto& doMethodPtr : stage->getChildren()) {
+              // Generate Do-Method
+              const iir::DoMethod& doMethod = *doMethodPtr;
 
-          for(const auto& stmt : doMethod.getAST().getStatements()) {
-            FindReduceOverNeighborExpr findReduceOverNeighborExpr(doMethod.getAST().getID());
-            stmt->accept(findReduceOverNeighborExpr);
-            stencilBodyCXXVisitor.setFirstPass();
-            for(auto redExpr : findReduceOverNeighborExpr.reduceOverNeighborExprs()) {
-              stencilBodyCXXVisitor.setBlockID(
-                  findReduceOverNeighborExpr.getBlockIDofReduction(redExpr));
-              redExpr->accept(stencilBodyCXXVisitor);
+              for(const auto& stmt : doMethod.getAST().getStatements()) {
+                FindReduceOverNeighborExpr findReduceOverNeighborExpr(doMethod.getAST().getID());
+                stmt->accept(findReduceOverNeighborExpr);
+                stencilBodyCXXVisitor.setFirstPass();
+                for(auto redExpr : findReduceOverNeighborExpr.reduceOverNeighborExprs()) {
+                  stencilBodyCXXVisitor.setBlockID(
+                      findReduceOverNeighborExpr.getBlockIDofReduction(redExpr));
+                  redExpr->accept(stencilBodyCXXVisitor);
+                }
+                stencilBodyCXXVisitor.setSecondPass();
+                stmt->accept(stencilBodyCXXVisitor);
+                cudaKernel << stencilBodyCXXVisitor.getCodeAndResetStream();
+              }
             }
-            stencilBodyCXXVisitor.setSecondPass();
-            stmt->accept(stencilBodyCXXVisitor);
-            cudaKernel << stencilBodyCXXVisitor.getCodeAndResetStream();
-          }
-        }
-      });
+          });
     }
   }
 }

@@ -80,14 +80,15 @@ std::string makeLoopImpl(int iExtent, int jExtent, const std::string& dim, const
 
 std::string makeIntervalBound(iir::Interval const& interval, iir::Interval::Bound bound) {
   return interval.levelIsEnd(bound)
-             ? "( m_k_size == 0 ? 0 : (m_k_size - 1)) + " + std::to_string(interval.offset(bound))
+             ? "( m_k_size == 0 ? 0 : (m_k_size)) + " + std::to_string(interval.offset(bound))
              : std::to_string(interval.bound(bound));
 }
 
 std::string makeKLoop(bool isBackward, iir::Interval const& interval) {
 
   const std::string lower = makeIntervalBound(interval, iir::Interval::Bound::lower);
-  const std::string upper = makeIntervalBound(interval, iir::Interval::Bound::upper);
+  // -1 since intervals are half-closed on the upper bound
+  const std::string upper = makeIntervalBound(interval, iir::Interval::Bound::upper) + "-1";
 
   return isBackward ? makeLoopImpl(0, 0, "k", upper, lower, ">=", "--")
                     : makeLoopImpl(0, 0, "k", lower, upper, "<=", "++");
