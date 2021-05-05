@@ -180,22 +180,20 @@ PYBIND11_MODULE(_dawn4py, m) {
       });
 
   py::class_<dawn::codegen::Options>(m, "CodeGenOptions")
-      .def(
-          py::init([](int MaxHaloSize, bool UseParallelEP, bool RunWithSync, int MaxBlocksPerSM,
-                      int nsms, int DomainSizeI, int DomainSizeJ, int DomainSizeK, int paddingCells,
-                      int paddingEdges, int paddingVertices, const std::string& OutputCHeader,
-                      const std::string& OutputFortranInterface) {
-            return dawn::codegen::Options{
-                MaxHaloSize,     UseParallelEP, RunWithSync,           MaxBlocksPerSM, nsms,
-                DomainSizeI,     DomainSizeJ,   DomainSizeK,           paddingCells,   paddingEdges,
-                paddingVertices, OutputCHeader, OutputFortranInterface};
-          }),
-          py::arg("max_halo_size") = 3, py::arg("use_parallel_ep") = false,
-          py::arg("run_with_sync") = true, py::arg("max_blocks_per_sm") = 0, py::arg("nsms") = 0,
-          py::arg("domain_size_i") = 0, py::arg("domain_size_j") = 0, py::arg("domain_size_k") = 0,
-          py::arg("padding_cells") = 0, py::arg("padding_edges") = 0,
-          py::arg("padding_vertices") = 0, py::arg("output_c_header") = "",
-          py::arg("output_fortran_interface") = "")
+      .def(py::init([](int MaxHaloSize, bool UseParallelEP, bool RunWithSync, int MaxBlocksPerSM,
+                       int nsms, int DomainSizeI, int DomainSizeJ, int DomainSizeK,
+                       const std::string& OutputCHeader, const std::string& OutputFortranInterface,
+                       bool MergeReductions) {
+             return dawn::codegen::Options{
+                 MaxHaloSize,    UseParallelEP, RunWithSync, MaxBlocksPerSM, nsms,
+                 DomainSizeI,    DomainSizeJ,   DomainSizeK, OutputCHeader,  OutputFortranInterface,
+                 MergeReductions};
+           }),
+           py::arg("max_halo_size") = 3, py::arg("use_parallel_ep") = false,
+           py::arg("run_with_sync") = true, py::arg("max_blocks_per_sm") = 0, py::arg("nsms") = 0,
+           py::arg("domain_size_i") = 0, py::arg("domain_size_j") = 0, py::arg("domain_size_k") = 0,
+           py::arg("output_c_header") = "", py::arg("output_fortran_interface") = "",
+           py::arg("merge_reductions") = false)
       .def_readwrite("max_halo_size", &dawn::codegen::Options::MaxHaloSize)
       .def_readwrite("use_parallel_ep", &dawn::codegen::Options::UseParallelEP)
       .def_readwrite("run_with_sync", &dawn::codegen::Options::RunWithSync)
@@ -204,11 +202,9 @@ PYBIND11_MODULE(_dawn4py, m) {
       .def_readwrite("domain_size_i", &dawn::codegen::Options::DomainSizeI)
       .def_readwrite("domain_size_j", &dawn::codegen::Options::DomainSizeJ)
       .def_readwrite("domain_size_k", &dawn::codegen::Options::DomainSizeK)
-      .def_readwrite("padding_cells", &dawn::codegen::Options::paddingCells)
-      .def_readwrite("padding_edges", &dawn::codegen::Options::paddingEdges)
-      .def_readwrite("padding_vertices", &dawn::codegen::Options::paddingVertices)
       .def_readwrite("output_c_header", &dawn::codegen::Options::OutputCHeader)
       .def_readwrite("output_fortran_interface", &dawn::codegen::Options::OutputFortranInterface)
+      .def_readwrite("merge_reductions", &dawn::codegen::Options::MergeReductions)
       .def("__repr__", [](const dawn::codegen::Options& self) {
         std::ostringstream ss;
         ss << "max_halo_size=" << self.MaxHaloSize << ",\n    "
@@ -219,14 +215,13 @@ PYBIND11_MODULE(_dawn4py, m) {
            << "domain_size_i=" << self.DomainSizeI << ",\n    "
            << "domain_size_j=" << self.DomainSizeJ << ",\n    "
            << "domain_size_k=" << self.DomainSizeK << ",\n    "
-           << "padding_cells=" << self.paddingCells << ",\n    "
-           << "padding_edges=" << self.paddingEdges << ",\n    "
-           << "padding_vertices=" << self.paddingVertices << ",\n    "
            << "output_c_header="
            << "\"" << self.OutputCHeader << "\""
            << ",\n    "
            << "output_fortran_interface="
-           << "\"" << self.OutputFortranInterface << "\"";
+           << "\"" << self.OutputFortranInterface << "\""
+           << ",\n    "
+           << "merge_reductions=" << self.MergeReductions;
         return "CodeGenOptions(\n    " + ss.str() + "\n)";
       });
 

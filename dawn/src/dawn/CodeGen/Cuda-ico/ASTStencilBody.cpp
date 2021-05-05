@@ -387,8 +387,7 @@ std::string ASTStencilBody::getName(const std::shared_ptr<ast::Expr>& expr) cons
   return metadata_.getFieldNameFromAccessID(iir::getAccessID(expr));
 }
 
-ASTStencilBody::ASTStencilBody(const iir::StencilMetaInformation& metadata, const Padding& padding)
-    : metadata_(metadata), padding_(padding) {}
+ASTStencilBody::ASTStencilBody(const iir::StencilMetaInformation& metadata) : metadata_(metadata) {}
 ASTStencilBody::~ASTStencilBody() {}
 
 } // namespace cudaico
