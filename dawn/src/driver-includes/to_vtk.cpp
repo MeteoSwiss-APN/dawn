@@ -43,7 +43,9 @@ public:
         *std::max_element(vlon, vlon + num_verts) - *std::min_element(vlon, vlon + num_verts);
     const double range = std::max(lat_range, lon_range);
 
-    fs.open(fname_pre + stencil_name + "_" + std::to_string(iteration) + ".vtk", std::fstream::out);
+    fs.open(fname_pre + stencil_name + "_rank" + std::to_string(mesh_info_vtk.rank_id) + "_" +
+                std::to_string(iteration) + ".vtk",
+            std::fstream::out);
 
     fs << "# vtk DataFile Version 3.0\n2D scalar data\nASCII\nDATASET "
           "UNSTRUCTURED_GRID\n";
@@ -138,8 +140,8 @@ void dense_cells_to_csv(int start_idx, int end_idx, int num_k, int dense_stride,
                         const double* field, const char stencil_name[50], const char field_name[50],
                         int iter) {
   std::fstream fs;
-  fs.open(std::string(stencil_name) + "_" + std::string(field_name) + "_" + std::to_string(iter) +
-              ".csv",
+  fs.open(std::string(stencil_name) + "_rank" + std::to_string(mesh_info_vtk.rank_id) + "_" +
+              std::string(field_name) + "_" + std::to_string(iter) + ".csv",
           std::fstream::out);
 
   fs << "\"";
@@ -184,8 +186,8 @@ void dense_verts_to_csv(int start_idx, int end_idx, int num_k, int dense_stride,
                         const double* field, const char stencil_name[50], const char field_name[50],
                         int iter) {
   std::fstream fs;
-  fs.open(std::string(stencil_name) + "_" + std::string(field_name) + "_" + std::to_string(iter) +
-              ".csv",
+  fs.open(std::string(stencil_name) + "_rank" + std::to_string(mesh_info_vtk.rank_id) + "_" +
+              std::string(field_name) + "_" + std::to_string(iter) + ".csv",
           std::fstream::out);
 
   fs << "\"";
@@ -230,8 +232,8 @@ void dense_edges_to_csv(int start_idx, int end_idx, int num_k, int dense_stride,
                         const double* field, const char stencil_name[50], const char field_name[50],
                         int iter) {
   std::fstream fs;
-  fs.open(std::string(stencil_name) + "_" + std::string(field_name) + "_" + std::to_string(iter) +
-              ".csv",
+  fs.open(std::string(stencil_name) + "_rank" + std::to_string(mesh_info_vtk.rank_id) + "_" +
+              std::string(field_name) + "_" + std::to_string(iter) + ".csv",
           std::fstream::out);
 
   fs << "\"";

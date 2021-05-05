@@ -9,6 +9,7 @@ struct MeshInfoVtk {
   int* mesh_cells_edge_idx = nullptr;   /*[3][num_cells]*/
   double* mesh_vlon = nullptr;          /*[num_vertices]*/
   double* mesh_vlat = nullptr;          /*[num_vertices]*/
+  int rank_id = 0;
 
   bool isInitialized() const {
     return mesh_num_edges && mesh_num_cells && mesh_num_verts && mesh_cells_vertex_idx &&
