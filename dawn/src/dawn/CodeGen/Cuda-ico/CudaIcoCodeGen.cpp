@@ -21,7 +21,6 @@
 #include "dawn/AST/LocationType.h"
 #include "dawn/CodeGen/CXXUtil.h"
 #include "dawn/CodeGen/Cuda-ico/LocToStringUtils.h"
-#include "dawn/CodeGen/Cuda-ico/ReductionMerger.h"
 #include "dawn/CodeGen/Cuda/CodeGeneratorHelper.h"
 #include "dawn/CodeGen/F90Util.h"
 #include "dawn/CodeGen/IcoChainSizes.h"
@@ -1205,12 +1204,6 @@ void CudaIcoCodeGen::generateAllCudaKernels(
   ASTStencilBody stencilBodyCXXVisitor(stencilInstantiation->getMetaData(),
                                        codeGenOptions.UnstrPadding);
   const auto& globalsMap = stencilInstantiation->getIIR()->getGlobalVariableMap();
-  std::optional<MergeGroupMap> blockToMergeGroups = std::nullopt;
-  if(codeGenOptions_.MergeReductions) {
-    blockToMergeGroups =
-        ReductionMergeGroupsComputer::ComputeReductionMergeGroups(stencilInstantiation);
-  }
-  stencilBodyCXXVisitor.setBlockToMergeGroupMap(blockToMergeGroups);
 
   for(const auto& ms : iterateIIROver<iir::MultiStage>(*(stencilInstantiation->getIIR()))) {
     for(const auto& stage : ms->getChildren()) {
@@ -1346,15 +1339,6 @@ void CudaIcoCodeGen::generateAllCudaKernels(
               const iir::DoMethod& doMethod = *doMethodPtr;
 
               for(const auto& stmt : doMethod.getAST().getStatements()) {
-                FindReduceOverNeighborExpr findReduceOverNeighborExpr(doMethod.getAST().getID());
-                stmt->accept(findReduceOverNeighborExpr);
-                stencilBodyCXXVisitor.setFirstPass();
-                for(auto redExpr : findReduceOverNeighborExpr.reduceOverNeighborExprs()) {
-                  stencilBodyCXXVisitor.setBlockID(
-                      findReduceOverNeighborExpr.getBlockIDofReduction(redExpr));
-                  redExpr->accept(stencilBodyCXXVisitor);
-                }
-                stencilBodyCXXVisitor.setSecondPass();
                 stmt->accept(stencilBodyCXXVisitor);
                 cudaKernel << stencilBodyCXXVisitor.getCodeAndResetStream();
               }

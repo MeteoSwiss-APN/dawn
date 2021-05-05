@@ -39,36 +39,22 @@ class StencilMetaInformation;
 namespace codegen {
 namespace cudaico {
 
-using MergeGroupMap =
-    std::map<int, std::vector<std::vector<std::shared_ptr<ast::ReductionOverNeighborExpr>>>>;
-
 class FindReduceOverNeighborExpr : public ast::ASTVisitorForwardingNonConst {
-  std::vector<std::shared_ptr<ast::ReductionOverNeighborExpr>> foundReductions_;
-  std::map<int, int> reductionToBlock_;
-  int currentBlock_ = -1;
+  bool found_ = false;
 
 public:
   void visit(const std::shared_ptr<ast::ReductionOverNeighborExpr>& expr) override {
-    foundReductions_.push_back(expr);
-    reductionToBlock_.insert({expr->getID(), currentBlock_});
+    found_ = true;
     return;
   }
   void visit(const std::shared_ptr<ast::BlockStmt>& stmt) override {
-    currentBlock_ = stmt->getID();
+    // TODO do we need this override ?
     for(const auto& s : stmt->getStatements()) {
       s->accept(*this);
     }
   }
-  bool hasReduceOverNeighborExpr() const { return !foundReductions_.empty(); }
-  const std::vector<std::shared_ptr<ast::ReductionOverNeighborExpr>>&
-  reduceOverNeighborExprs() const {
-    return foundReductions_;
-  }
-  int getBlockIDofReduction(const std::shared_ptr<ast::ReductionOverNeighborExpr>& expr) const {
-    return reductionToBlock_.at(expr->getID());
-  }
+  bool hasReduceOverNeighborExpr() const { return found_; }
   FindReduceOverNeighborExpr() = default;
-  FindReduceOverNeighborExpr(int currentBlock) : currentBlock_(currentBlock){};
 };
 
 /// @brief ASTVisitor to generate C++ naive code for the stencil and stencil function bodies
@@ -83,20 +69,19 @@ protected:
   std::string sparseArgName_ = "loc";
 
   bool parentIsReduction_ = false;
-  int parentReductionID_ = -1;
   bool parentIsForLoop_ = false;
-  bool firstPass_ = true;
 
-  int currentBlock_ = -1;
-
-  std::map<int, std::stringstream> reductionMap_;
-  std::optional<MergeGroupMap> blockToMergeGroupMap_ = std::nullopt;
+  std::map<int, std::unique_ptr<ASTStencilBody>> reductionParser_;
 
   /// Nesting level of argument lists of stencil function *calls*
   int nestingOfStencilFunArgLists_;
 
   std::string makeIndexString(const std::shared_ptr<ast::FieldAccessExpr>& expr, std::string kiter);
   bool hasIrregularPentagons(const std::vector<ast::LocationType>& chain);
+  void evalNeighbourReductionLambda(const std::shared_ptr<ast::ReductionOverNeighborExpr>& expr);
+  void generateLambda(std::stringstream& ss) const;
+  std::string pidx();
+  std::string nbhLambdaName(const std::shared_ptr<ast::Expr>& expr);
 
 public:
   using Base = ASTCodeGenCXX;
@@ -106,13 +91,6 @@ public:
   ASTStencilBody(const iir::StencilMetaInformation& metadata, const Padding& padding);
 
   virtual ~ASTStencilBody();
-
-  void setFirstPass() { firstPass_ = true; };
-  void setSecondPass() { firstPass_ = false; };
-  void setBlockID(int currentBlock) { currentBlock_ = currentBlock; }
-  void setBlockToMergeGroupMap(std::optional<MergeGroupMap> blockToMergeGroupMap) {
-    blockToMergeGroupMap_ = blockToMergeGroupMap;
-  }
 
   /// @name Statement implementation
   /// @{
