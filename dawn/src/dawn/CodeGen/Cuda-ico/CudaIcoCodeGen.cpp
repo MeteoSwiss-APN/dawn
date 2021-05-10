@@ -249,10 +249,10 @@ void CudaIcoCodeGen::generateGpuMesh(
 void CudaIcoCodeGen::generateGridFun(MemberFunction& gridFun) {
   gridFun.addBlockStatement("if (kparallel)", [&]() {
     gridFun.addStatement("int dK = (kSize + LEVELS_PER_THREAD - 1) / LEVELS_PER_THREAD");
-    gridFun.addStatement("return dim3((elSize + BLOCK_SIZE - 1) / BLOCK_SIZE, dK, 1)");
+    gridFun.addStatement("return dim3(std::max((elSize + BLOCK_SIZE - 1) / BLOCK_SIZE, 1), dK, 1)");
   });
   gridFun.addBlockStatement("else", [&]() {
-    gridFun.addStatement("return dim3((elSize + BLOCK_SIZE - 1) / BLOCK_SIZE, 1, 1)");
+    gridFun.addStatement("return dim3(std::max((elSize + BLOCK_SIZE - 1) / BLOCK_SIZE, 1), 1, 1)");
   });
 }
 
