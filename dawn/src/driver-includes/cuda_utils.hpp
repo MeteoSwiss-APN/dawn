@@ -46,13 +46,16 @@ struct GlobalGpuTriMesh {
   int NumEdges;
   int NumCells;
   int NumVertices;
+  int EdgeStride;
+  int CellStride;
+  int VertexStride;
   std::map<dawn::UnstructuredIterationSpace, int*> NeighborTables;
-  void set_splitter_index_lower(dawn::LocationType loc, dawn::UnstructuredSubdomain space, int offset,
-                          int index) {
+  void set_splitter_index_lower(dawn::LocationType loc, dawn::UnstructuredSubdomain space,
+                                int offset, int index) {
     DomainLower.set_splitter_index({loc, space, offset}, index);
   }
-  void set_splitter_index_upper(dawn::LocationType loc, dawn::UnstructuredSubdomain space, int offset,
-                          int index) {
+  void set_splitter_index_upper(dawn::LocationType loc, dawn::UnstructuredSubdomain space,
+                                int offset, int index) {
     DomainUpper.set_splitter_index({loc, space, offset}, index);
   }
 };

@@ -108,28 +108,23 @@ std::string chainToVectorString(std::vector<dawn::ast::LocationType> locs) {
   ss << "}";
   return ss.str();
 }
-std::string locToDenseSizeStringGpuMesh(dawn::ast::LocationType loc, std::optional<Padding> padding,
-                                        bool addParens) {
+std::string locToDenseSizeStringGpuMesh(dawn::ast::LocationType loc) {
   std::string ret;
   switch(loc) {
   case dawn::ast::LocationType::Cells:
-    ret = padding.has_value() ? "NumCells + " + std::to_string(padding->Cells()) : "NumCells";
+    ret = "NumCells";
     break;
   case dawn::ast::LocationType::Edges:
-    ret = padding.has_value() ? "NumEdges + " + std::to_string(padding->Edges()) : "NumEdges";
+    ret = "NumEdges";
     break;
   case dawn::ast::LocationType::Vertices:
-    ret = padding.has_value() ? "NumVertices + " + std::to_string(padding->Vertices())
-                              : "NumVertices";
+    ret = "NumVertices";
     break;
   default:
     dawn_unreachable("");
   }
-  if(addParens) {
-    return "(" + ret + ")";
-  } else {
-    return ret;
-  }
+
+  return ret;
 }
 std::string locToStrideString(dawn::ast::LocationType loc) {
   switch(loc) {
@@ -144,7 +139,7 @@ std::string locToStrideString(dawn::ast::LocationType loc) {
     break;
   default:
     dawn_unreachable("");
-  }  
+  }
 }
 std::string locToDenseTypeString(dawn::ast::LocationType loc) {
   switch(loc) {

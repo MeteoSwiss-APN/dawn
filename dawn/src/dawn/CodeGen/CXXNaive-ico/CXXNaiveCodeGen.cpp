@@ -99,15 +99,12 @@ std::unique_ptr<TranslationUnit>
 run(const std::map<std::string, std::shared_ptr<iir::StencilInstantiation>>&
         stencilInstantiationMap,
     const Options& options) {
-  CXXNaiveIcoCodeGen CG(
-      stencilInstantiationMap, options.MaxHaloSize,
-      Padding{options.paddingCells, options.paddingEdges, options.paddingVertices});
+  CXXNaiveIcoCodeGen CG(stencilInstantiationMap, options.MaxHaloSize);
   return CG.generateCode();
 } // namespace cxxnaiveico
 
-CXXNaiveIcoCodeGen::CXXNaiveIcoCodeGen(const StencilInstantiationContext& ctx, int maxHaloPoint,
-                                       Padding padding)
-    : CodeGen(ctx, maxHaloPoint, padding) {}
+CXXNaiveIcoCodeGen::CXXNaiveIcoCodeGen(const StencilInstantiationContext& ctx, int maxHaloPoint)
+    : CodeGen(ctx, maxHaloPoint) {}
 
 CXXNaiveIcoCodeGen::~CXXNaiveIcoCodeGen() {}
 
@@ -264,27 +261,23 @@ void CXXNaiveIcoCodeGen::generateStencilWrapperCtr(
           auto hdims = ast::dimension_cast<ast::UnstructuredFieldDimension const&>(
               field.getFieldDimensions().getHorizontalFieldDimension());
 
-          auto getPaddedNumElCall =
-              [&](const ast::UnstructuredFieldDimension& hdims) -> std::string {
+          auto getNumElements = [&](const ast::UnstructuredFieldDimension& hdims) -> std::string {
             switch(hdims.getDenseLocationType()) {
             case ast::LocationType::Cells:
-              return "numCells(LibTag{}, mesh) + " +
-                     std::to_string(codeGenOptions.UnstrPadding.Cells());
+              return "numCells(LibTag{}, mesh)";
             case ast::LocationType::Edges:
-              return "numEdges(LibTag{}, mesh) + " +
-                     std::to_string(codeGenOptions.UnstrPadding.Edges());
+              return "numEdges(LibTag{}, mesh)";
             case ast::LocationType::Vertices:
-              return "numVertices(LibTag{}, mesh) + " +
-                     std::to_string(codeGenOptions.UnstrPadding.Vertices());
+              return "numVertices(LibTag{}, mesh)";
             default:
               dawn_unreachable("invalid location");
             }
           };
 
           if(hdims.isDense()) {
-            allocString = "allocateField(LibTag{}, " + getPaddedNumElCall(hdims) + ", k_size)";
+            allocString = "allocateField(LibTag{}, " + getNumElements(hdims) + ", k_size)";
           } else {
-            allocString = "allocateField(LibTag{}, " + getPaddedNumElCall(hdims) + ", k_size, " +
+            allocString = "allocateField(LibTag{}, " + getNumElements(hdims) + ", k_size, " +
                           std::to_string(ICOChainSize(hdims.getNeighborChain())) +
                           (hdims.getIncludeCenter() ? "+1" : "") + ")";
           }
