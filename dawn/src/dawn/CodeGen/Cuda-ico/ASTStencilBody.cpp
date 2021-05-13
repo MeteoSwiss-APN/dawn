@@ -243,7 +243,7 @@ void ASTStencilBody::visit(const std::shared_ptr<ast::ExprStmt>& stmt) {
 
   // code generate lambda reductions on a second pass
   if(findReduceOverNeighborExpr.hasReduceOverNeighborExpr()) {
-    ASTStencilBody astParser(metadata_, padding_);
+    ASTStencilBody astParser(metadata_);
     stmt->getExpr()->accept(astParser);
 
     astParser.generateLambda(ss_);
@@ -261,7 +261,7 @@ void ASTStencilBody::visit(const std::shared_ptr<ast::VarDeclStmt>& stmt) {
 
   // code generate lambda reductions on a second pass
   if(findReduceOverNeighborExpr.hasReduceOverNeighborExpr()) {
-    ASTStencilBody astParser(metadata_, padding_);
+    ASTStencilBody astParser(metadata_);
     stmt->accept(astParser);
 
     astParser.generateLambda(ss_);
@@ -350,7 +350,7 @@ void ASTStencilBody::visit(const std::shared_ptr<ast::ReductionOverNeighborExpr>
 
   std::string lhs_name = nbhLambdaName(expr) + "(" + pidx() + ")";
 
-  reductionParser_.emplace(expr->getID(), std::make_unique<ASTStencilBody>(metadata_, padding_));
+  reductionParser_.emplace(expr->getID(), std::make_unique<ASTStencilBody>(metadata_));
   reductionParser_.at(expr->getID())->parentIsReduction_ = true;
   reductionParser_.at(expr->getID())->evalNeighbourReductionLambda(expr);
   ss_ << lhs_name;
