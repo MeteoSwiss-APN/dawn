@@ -36,7 +36,6 @@ protected:
   const StencilInstantiationContext& context_;
   struct codeGenOption {
     int MaxHaloPoints;
-    Padding UnstrPadding;
   } codeGenOptions;
 
   static size_t getVerticalTmpHaloSize(iir::Stencil const& stencil);
@@ -77,7 +76,7 @@ protected:
   const std::string bigWrapperMetadata_ = "m_meta_data";
 
 public:
-  CodeGen(const StencilInstantiationContext& ctx, int maxHaloPoints, Padding = {});
+  CodeGen(const StencilInstantiationContext& ctx, int maxHaloPoints);
   virtual ~CodeGen() {}
 
   /// @brief Generate code

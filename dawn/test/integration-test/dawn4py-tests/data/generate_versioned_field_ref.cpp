@@ -92,7 +92,7 @@ public:
                            ::dawn::edge_field_t<LibTag, ::dawn::float_type>& d,
                            ::dawn::edge_field_t<LibTag, ::dawn::float_type>& e)
       : m_stencil_37(mesh, k_size, a, b, c, d, e, m_c_0),
-        m_c_0(allocateField(LibTag{}, numEdges(LibTag{}, mesh) + 0, k_size)) {}
+        m_c_0(allocateField(LibTag{}, numEdges(LibTag{}, mesh), k_size)) {}
 
   void run() {
     m_stencil_37.run();

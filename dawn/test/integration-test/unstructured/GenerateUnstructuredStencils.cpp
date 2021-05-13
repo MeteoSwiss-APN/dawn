@@ -1130,38 +1130,5 @@ int main() {
     of << dawn::codegen::generate(tu) << std::endl;
   }
 
-  {
-    using namespace dawn::iir;
-    using LocType = dawn::ast::LocationType;
-
-    UnstructuredIIRBuilder b;
-    auto c_f = b.field("c_field", LocType::Cells);
-    auto e_f = b.field("e_field", LocType::Edges);
-    auto v_f = b.field("v_field", LocType::Vertices);
-
-    std::string stencilName = "padding";
-
-    auto stencilInstantiation = b.build(
-        stencilName,
-        b.stencil(b.multistage(
-            LoopOrderKind::Parallel,
-            b.stage(LocType::Cells, b.doMethod(dawn::ast::Interval::Start, dawn::ast::Interval::End,
-                                               b.stmt(b.assignExpr(b.at(c_f), b.lit(1.))))),
-            b.stage(LocType::Edges, b.doMethod(dawn::ast::Interval::Start, dawn::ast::Interval::End,
-                                               b.stmt(b.assignExpr(b.at(e_f), b.lit(1.))))),
-            b.stage(LocType::Vertices,
-                    b.doMethod(dawn::ast::Interval::Start, dawn::ast::Interval::End,
-                               b.stmt(b.assignExpr(b.at(v_f), b.lit(1.))))))));
-
-    std::ofstream of("generated/generated_" + stencilName + ".hpp");
-    DAWN_ASSERT_MSG(of, "couldn't open output file!\n");
-    dawn::codegen::Options opt;
-    opt.paddingCells = 10;
-    opt.paddingEdges = 20;
-    opt.paddingVertices = 30;
-    auto tu = dawn::codegen::run(stencilInstantiation, dawn::codegen::Backend::CXXNaiveIco, opt);
-    of << dawn::codegen::generate(tu) << std::endl;
-  }
-
   return 0;
 }
