@@ -50,7 +50,8 @@ void ASTStencilBody::visit(const std::shared_ptr<ast::LoopStmt>& stmt) {
   ss_ << "int nbhIdx = " << chainToTableString(maybeChainPtr->getIterSpace()) << "["
       << "pidx * " << chainToSparseSizeString(maybeChainPtr->getIterSpace()) << " + nbhIter"
       << "];\n";
-  if(hasIrregularPentagons(maybeChainPtr->getChain())) {
+  // if(hasIrregularPentagons(maybeChainPtr->getChain())) {
+  if(true) {
     ss_ << "if (nbhIdx == DEVICE_MISSING_VALUE) { continue; }";
   }
 
@@ -319,7 +320,8 @@ void ASTStencilBody::evalNeighbourReductionLambda(
       << "fpidx * " << chainToSparseSizeString(expr->getIterSpace()) << " + nbhIter"
       << "];\n";
 
-  if(hasIrregularPentagons(expr->getNbhChain())) {
+  // if(hasIrregularPentagons(expr->getNbhChain())) {
+  if(true) {
     ss_ << "if (nbhIdx == DEVICE_MISSING_VALUE) { continue; }";
   }
 
@@ -348,13 +350,10 @@ void ASTStencilBody::visit(const std::shared_ptr<ast::ReductionOverNeighborExpr>
 
   std::string lhs_name = nbhLambdaName(expr) + "(" + pidx() + ")";
 
-  parentIsReduction_ = true;
-
   reductionParser_.emplace(expr->getID(), std::make_unique<ASTStencilBody>(metadata_, padding_));
   reductionParser_.at(expr->getID())->parentIsReduction_ = true;
   reductionParser_.at(expr->getID())->evalNeighbourReductionLambda(expr);
   ss_ << lhs_name;
-  return;
 }
 
 std::string ASTStencilBody::getName(const std::shared_ptr<ast::VarDeclStmt>& stmt) const {
