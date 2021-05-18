@@ -55,14 +55,16 @@ bool verify_field(const int num_el, const double* dsl, const double* actual, std
   maxAbsErr = thrust::reduce(dev_ptr, dev_ptr + num_el, 0., thrust::maximum<double>());
   gpuErrchk(cudaPeekAtLastError());
 
-  std::cout << "[DSL] " << name << " absolute error: " << std::scientific << maxAbsErr << "\n"
+  std::cout << "[DSL] " << name << " maximum absolute error: " << std::scientific << maxAbsErr
+            << "\n"
             << std::flush;
 
   minAbsErr = thrust::reduce(dev_ptr, dev_ptr + num_el, std::numeric_limits<double>::infinity(),
                              thrust::minimum<double>());
   gpuErrchk(cudaPeekAtLastError());
 
-  std::cout << "[DSL] " << name << " absolute error: " << std::scientific << minAbsErr << "\n"
+  std::cout << "[DSL] " << name << " minimum absolute error: " << std::scientific << minAbsErr
+            << "\n"
             << std::flush;
 
   gpuErrchk(cudaFree(gpu_error));
