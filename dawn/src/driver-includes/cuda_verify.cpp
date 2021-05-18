@@ -15,7 +15,8 @@ __global__ void isclose_kernel(const int num_el, const double* __restrict__ dsl,
 
 bool verify_field(const int num_el, const double* dsl, const double* actual, std::string name,
                   const double rel_tol, const double abs_tol) {
-  double relErr, absErr;
+  double maxRelErr, minRelErr;
+  double maxAbsErr, minAbsErr;
   double* gpu_error;
 
   const int blockSize = 16;
@@ -31,21 +32,39 @@ bool verify_field(const int num_el, const double* dsl, const double* actual, std
 
   thrust::device_ptr<double> dev_ptr;
   dev_ptr = thrust::device_pointer_cast(gpu_error);
-  relErr = thrust::reduce(dev_ptr, dev_ptr + num_el, 0., thrust::maximum<double>());
 
+  maxRelErr = thrust::reduce(dev_ptr, dev_ptr + num_el, 0., thrust::maximum<double>());
   gpuErrchk(cudaPeekAtLastError());
-  std::cout << "[DSL] " << name << " relative error: " << std::scientific << relErr << "\n"
+
+  std::cout << "[DSL] " << name << " maximum relative error: " << std::scientific << maxRelErr
+            << "\n"
+            << std::flush;
+
+  minRelErr = thrust::reduce(dev_ptr, dev_ptr + num_el, std::numeric_limits<double>::infinity(),
+                             thrust::minimum<double>());
+  gpuErrchk(cudaPeekAtLastError());
+
+  std::cout << "[DSL] " << name << " minimum relative error: " << std::scientific << minRelErr
+            << "\n"
             << std::flush;
 
   compare_kernel<AbsErrTag><<<dG, dB>>>(num_el, dsl, actual, gpu_error);
   gpuErrchk(cudaPeekAtLastError());
 
   dev_ptr = thrust::device_pointer_cast(gpu_error);
-  absErr = thrust::reduce(dev_ptr, dev_ptr + num_el, 0., thrust::maximum<double>());
+  maxAbsErr = thrust::reduce(dev_ptr, dev_ptr + num_el, 0., thrust::maximum<double>());
   gpuErrchk(cudaPeekAtLastError());
 
-  std::cout << "[DSL] " << name << " absolute error: " << std::scientific << absErr << "\n"
+  std::cout << "[DSL] " << name << " absolute error: " << std::scientific << maxAbsErr << "\n"
             << std::flush;
+
+  minAbsErr = thrust::reduce(dev_ptr, dev_ptr + num_el, std::numeric_limits<double>::infinity(),
+                             thrust::minimum<double>());
+  gpuErrchk(cudaPeekAtLastError());
+
+  std::cout << "[DSL] " << name << " absolute error: " << std::scientific << minAbsErr << "\n"
+            << std::flush;
+
   gpuErrchk(cudaFree(gpu_error));
   gpuErrchk(cudaPeekAtLastError());
 
