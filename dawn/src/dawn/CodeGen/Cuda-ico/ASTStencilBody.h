@@ -85,6 +85,7 @@ protected:
   int parentReductionID_ = -1;
   bool parentIsForLoop_ = false;
   bool firstPass_ = true;
+  bool genAtlasCompatCode_ = false;
 
   int currentBlock_ = -1;
 
@@ -112,6 +113,7 @@ public:
   void setBlockToMergeGroupMap(std::optional<MergeGroupMap> blockToMergeGroupMap) {
     blockToMergeGroupMap_ = blockToMergeGroupMap;
   }
+  void setGenAtlasCompatCode(bool genAtlasCompatCode) { genAtlasCompatCode_ = genAtlasCompatCode; }
 
   /// @name Statement implementation
   /// @{
