@@ -251,7 +251,7 @@ void ASTStencilBody::visit(const std::shared_ptr<ast::ExprStmt>& stmt) {
   FindReduceOverNeighborExpr findReduceOverNeighborExpr;
   stmt->getExpr()->accept(findReduceOverNeighborExpr);
 
-  // code generate lambda reductions on a second pass
+  // if there are neighbour reductions, we preprocess them in advance in order to be able to code generate the loop over neighbour reduction before the expression stmt
   if(findReduceOverNeighborExpr.hasReduceOverNeighborExpr()) {
     ASTStencilBody astParser(metadata_, recursiveIterNest_);
     stmt->getExpr()->accept(astParser);

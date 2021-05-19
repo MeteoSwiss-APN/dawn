@@ -83,7 +83,7 @@ protected:
   std::string pidx();
   std::string nbhLhsName(const std::shared_ptr<ast::Expr>& expr);
 std::string nbhIterStr();
-std::string nbhIdxStr();
+std::string nbhIdxStr(); 
 std::string nbhIdx_m1Str();
 
 
