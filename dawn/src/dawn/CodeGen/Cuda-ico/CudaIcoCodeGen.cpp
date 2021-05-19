@@ -1203,8 +1203,8 @@ std::string CudaIcoCodeGen::comparisonOperator(iir::LoopOrderKind loopOrder) {
 void CudaIcoCodeGen::generateAllCudaKernels(
     std::stringstream& ssSW,
     const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation) {
-  ASTStencilBody stencilBodyCXXVisitor(stencilInstantiation->getMetaData());
-  stencilBodyCXXVisitor.setGenAtlasCompatCode(codeGenOptions_.AtlasCompatible);
+  ASTStencilBody stencilBodyCXXVisitor(stencilInstantiation->getMetaData(),
+                                       codeGenOptions_.AtlasCompatible);
   const auto& globalsMap = stencilInstantiation->getIIR()->getGlobalVariableMap();
   std::optional<MergeGroupMap> blockToMergeGroups = std::nullopt;
   if(codeGenOptions_.MergeReductions) {

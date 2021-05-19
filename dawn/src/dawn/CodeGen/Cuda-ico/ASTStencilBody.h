@@ -103,7 +103,7 @@ public:
   using Base::visit;
 
   /// @brief constructor
-  ASTStencilBody(const iir::StencilMetaInformation& metadata);
+  ASTStencilBody(const iir::StencilMetaInformation& metadata, bool genAtlasCompatCode);
 
   virtual ~ASTStencilBody();
 
@@ -113,7 +113,6 @@ public:
   void setBlockToMergeGroupMap(std::optional<MergeGroupMap> blockToMergeGroupMap) {
     blockToMergeGroupMap_ = blockToMergeGroupMap;
   }
-  void setGenAtlasCompatCode(bool genAtlasCompatCode) { genAtlasCompatCode_ = genAtlasCompatCode; }
 
   /// @name Statement implementation
   /// @{
