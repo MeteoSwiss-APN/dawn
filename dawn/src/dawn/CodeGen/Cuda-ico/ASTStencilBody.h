@@ -71,6 +71,7 @@ protected:
   bool parentIsForLoop_ = false;
 
   std::map<int, std::unique_ptr<ASTStencilBody>> reductionParser_;
+  int recursiveIterNest_;
 
   /// Nesting level of argument lists of stencil function *calls*
   int nestingOfStencilFunArgLists_;
@@ -80,14 +81,19 @@ protected:
   void evalNeighbourReductionLambda(const std::shared_ptr<ast::ReductionOverNeighborExpr>& expr);
   void generateLambda(std::stringstream& ss) const;
   std::string pidx();
-  std::string nbhLambdaName(const std::shared_ptr<ast::Expr>& expr);
+  std::string nbhLhsName(const std::shared_ptr<ast::Expr>& expr);
+std::string nbhIterStr();
+std::string nbhIdxStr();
+std::string nbhIdx_m1Str();
+
+
 
 public:
   using Base = ASTCodeGenCXX;
   using Base::visit;
 
   /// @brief constructor
-  ASTStencilBody(const iir::StencilMetaInformation& metadata);
+  ASTStencilBody(const iir::StencilMetaInformation& metadata, int recursiveIterNest = 0);
 
   virtual ~ASTStencilBody();
 

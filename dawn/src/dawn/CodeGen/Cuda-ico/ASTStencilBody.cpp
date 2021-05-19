@@ -37,22 +37,34 @@ void ASTStencilBody::visit(const std::shared_ptr<ast::BlockStmt>& stmt) {
   indent_ -= DAWN_PRINT_INDENT;
 }
 
+std::string ASTStencilBody::nbhIterStr() {
+  return "nbhIter" + std::to_string(recursiveIterNest_);
+}
+
+std::string ASTStencilBody::nbhIdx_m1Str() {
+  return "nbhIdx" + std::to_string(recursiveIterNest_-1);
+}
+
+std::string ASTStencilBody::nbhIdxStr() {
+  return "nbhIdx" + std::to_string(recursiveIterNest_);
+}
+
 void ASTStencilBody::visit(const std::shared_ptr<ast::LoopStmt>& stmt) {
   const auto maybeChainPtr =
       dynamic_cast<const ast::ChainIterationDescr*>(stmt->getIterationDescrPtr());
   DAWN_ASSERT_MSG(maybeChainPtr, "general loop concept not implemented yet!\n");
 
   parentIsForLoop_ = true;
-  ss_ << "for (int nbhIter = 0; nbhIter < "
-      << chainToSparseSizeString(maybeChainPtr->getIterSpace()) << "; nbhIter++)";
+  ss_ << "for (int "+nbhIterStr()+" = 0; "+nbhIterStr()+" < "
+      << chainToSparseSizeString(maybeChainPtr->getIterSpace()) << "; "+nbhIterStr()+"++)";
 
   ss_ << "{\n";
-  ss_ << "int nbhIdx = " << chainToTableString(maybeChainPtr->getIterSpace()) << "["
-      << "pidx * " << chainToSparseSizeString(maybeChainPtr->getIterSpace()) << " + nbhIter"
+  ss_ << "int "+nbhIdxStr()+" = " << chainToTableString(maybeChainPtr->getIterSpace()) << "["
+      << "pidx * " << chainToSparseSizeString(maybeChainPtr->getIterSpace()) << " + "+nbhIterStr()
       << "];\n";
   // if(hasIrregularPentagons(maybeChainPtr->getChain())) {
   if(true) {
-    ss_ << "if (nbhIdx == DEVICE_MISSING_VALUE) { continue; }";
+    ss_ << "if ("+nbhIdxStr()+" == DEVICE_MISSING_VALUE) { continue; }";
   }
 
   stmt->getBlockStmt()->accept(*this);
@@ -142,7 +154,7 @@ std::string ASTStencilBody::makeIndexString(const std::shared_ptr<ast::FieldAcce
     if((parentIsReduction_ || parentIsForLoop_) &&
        ast::offset_cast<const ast::UnstructuredOffset&>(expr->getOffset().horizontalOffset())
            .hasOffset()) {
-      return kiterStr + "*" + denseSize + "+ nbhIdx";
+      return kiterStr + "*" + denseSize + "+ "+nbhIdxStr();
     } else {
       return kiterStr + "*" + denseSize + "+ " + pidx();
     }
@@ -152,14 +164,14 @@ std::string ASTStencilBody::makeIndexString(const std::shared_ptr<ast::FieldAcce
     std::cout << "Parent " << parentIsForLoop_ << "," << parentIsReduction_ << std::endl;
     DAWN_ASSERT_MSG(parentIsForLoop_ || parentIsReduction_,
                     "Sparse Field Access not allowed in this context");
-    return "nbhIter * kSize * " + denseSize + " + " + kiterStr + "*" + denseSize + " + " + pidx();
+    return nbhIterStr()+" * kSize * " + denseSize + " + " + kiterStr + "*" + denseSize + " + " + pidx();
   }
 
   if(isHorizontal && isDense) {
     if((parentIsReduction_ || parentIsForLoop_) &&
        ast::offset_cast<const ast::UnstructuredOffset&>(expr->getOffset().horizontalOffset())
            .hasOffset()) {
-      return "nbhIdx";
+      return nbhIdxStr();
     } else {
       return "pidx";
     }
@@ -171,7 +183,7 @@ std::string ASTStencilBody::makeIndexString(const std::shared_ptr<ast::FieldAcce
     DAWN_ASSERT_MSG(parentIsForLoop_ || parentIsReduction_,
                     "Sparse Field Access not allowed in this context");
     std::string sparseSize = chainToSparseSizeString(unstrDims.getIterSpace());
-    return "nbhIter * " + denseSize + " + " + pidx();
+    return nbhIterStr()+" * " + denseSize + " + " + pidx();
   }
 
   DAWN_ASSERT_MSG(false, "Bad Field configuration found in code gen!");
@@ -231,8 +243,6 @@ void ASTStencilBody::generateLambda(std::stringstream& ss) const {
 
   for(auto& it : reductionParser_) {
     const std::unique_ptr<ASTStencilBody>& tt = it.second;
-    // move instead?
-    tt->generateLambda(ss);
     ss << (*tt).ss_.rdbuf();
   }
 }
@@ -243,11 +253,10 @@ void ASTStencilBody::visit(const std::shared_ptr<ast::ExprStmt>& stmt) {
 
   // code generate lambda reductions on a second pass
   if(findReduceOverNeighborExpr.hasReduceOverNeighborExpr()) {
-    ASTStencilBody astParser(metadata_);
+    ASTStencilBody astParser(metadata_, recursiveIterNest_);
     stmt->getExpr()->accept(astParser);
 
     astParser.generateLambda(ss_);
-
     reductionParser_ = std::move(astParser.reductionParser_);
   }
 
@@ -261,7 +270,7 @@ void ASTStencilBody::visit(const std::shared_ptr<ast::VarDeclStmt>& stmt) {
 
   // code generate lambda reductions on a second pass
   if(findReduceOverNeighborExpr.hasReduceOverNeighborExpr()) {
-    ASTStencilBody astParser(metadata_);
+    ASTStencilBody astParser(metadata_, recursiveIterNest_);
     stmt->accept(astParser);
 
     astParser.generateLambda(ss_);
@@ -277,13 +286,13 @@ bool ASTStencilBody::hasIrregularPentagons(const std::vector<ast::LocationType>&
   return (std::count(chain.begin(), chain.end() - 1, ast::LocationType::Vertices) != 0);
 }
 
-std::string ASTStencilBody::nbhLambdaName(const std::shared_ptr<ast::Expr>& expr) {
-  return "nbh_lambda" + std::to_string(expr->getID());
+std::string ASTStencilBody::nbhLhsName(const std::shared_ptr<ast::Expr>& expr) {
+  return "lhs_" + std::to_string(expr->getID());
 }
 
 std::string ASTStencilBody::pidx() {
-  if(parentIsReduction_)
-    return "fpidx";
+  if(recursiveIterNest_ > 0 )
+    return nbhIdx_m1Str();
   else
     return "pidx";
 }
@@ -291,8 +300,8 @@ std::string ASTStencilBody::pidx() {
 void ASTStencilBody::evalNeighbourReductionLambda(
     const std::shared_ptr<ast::ReductionOverNeighborExpr>& expr) {
 
-  ss_ << "auto " << nbhLambdaName(expr) << " = [&] (int fpidx) {" << std::endl;
-  auto lhs_name = "lhs_" + std::to_string(expr->getID());
+  // ss_ << "auto " << nbhLambdaName(expr) << " = [&] (int fpidx) {" << std::endl;
+  auto lhs_name = nbhLhsName(expr);
 
   std::string weights_name = "weights_" + std::to_string(expr->getID());
   ss_ << "::dawn::float_type " << lhs_name << " = ";
@@ -312,17 +321,30 @@ void ASTStencilBody::evalNeighbourReductionLambda(
     ss_ << "};\n";
   }
 
-  ss_ << "for (int nbhIter = 0; nbhIter < " << chainToSparseSizeString(expr->getIterSpace())
-      << "; nbhIter++)";
+  ss_ << "for (int "+nbhIterStr()+" = 0; "+nbhIterStr()+" < " << chainToSparseSizeString(expr->getIterSpace())
+      << "; "+nbhIterStr()+"++)";
 
   ss_ << "{\n";
-  ss_ << "int nbhIdx = " << chainToTableString(expr->getIterSpace()) << "["
-      << "fpidx * " << chainToSparseSizeString(expr->getIterSpace()) << " + nbhIter"
+  ss_ << "int "+nbhIdxStr()+" = " << chainToTableString(expr->getIterSpace()) << "["
+      << pidx() << " * " << chainToSparseSizeString(expr->getIterSpace()) << " + "+nbhIterStr()
       << "];\n";
 
   // if(hasIrregularPentagons(expr->getNbhChain())) {
   if(true) {
-    ss_ << "if (nbhIdx == DEVICE_MISSING_VALUE) { continue; }";
+    ss_ << "if ("+nbhIdxStr()+" == DEVICE_MISSING_VALUE) { continue; }";
+  }
+
+  FindReduceOverNeighborExpr findReduceOverNeighborExpr;
+  expr->getRhs()->accept(findReduceOverNeighborExpr);
+
+  // code generate lambda reductions on a second pass
+  if(findReduceOverNeighborExpr.hasReduceOverNeighborExpr()) {
+    ASTStencilBody astParser(metadata_, recursiveIterNest_+1);
+    expr->getRhs()->accept(astParser);
+
+    for(auto& redParser: astParser.reductionParser_) {
+      ss_ << (redParser.second)->ss_.str();
+    }
   }
 
   if(!expr->isArithmetic()) {
@@ -332,8 +354,9 @@ void ASTStencilBody::evalNeighbourReductionLambda(
   }
   if(expr->getWeights().has_value()) {
     std::string weights_name = "weights_" + std::to_string(expr->getID());
-    ss_ << weights_name << "[nbhIter] * ";
+    ss_ << weights_name << "["+nbhIterStr()+"] * ";
   }
+
   expr->getRhs()->accept(*this);
 
   if(!expr->isArithmetic()) {
@@ -342,15 +365,13 @@ void ASTStencilBody::evalNeighbourReductionLambda(
     ss_ << ";\n";
   }
   ss_ << "}\n";
-
-  ss_ << "return " << lhs_name << ";};\n";
 }
 
 void ASTStencilBody::visit(const std::shared_ptr<ast::ReductionOverNeighborExpr>& expr) {
 
-  std::string lhs_name = nbhLambdaName(expr) + "(" + pidx() + ")";
+  std::string lhs_name = nbhLhsName(expr);
 
-  reductionParser_.emplace(expr->getID(), std::make_unique<ASTStencilBody>(metadata_));
+  reductionParser_.emplace(expr->getID(), std::make_unique<ASTStencilBody>(metadata_, recursiveIterNest_));
   reductionParser_.at(expr->getID())->parentIsReduction_ = true;
   reductionParser_.at(expr->getID())->evalNeighbourReductionLambda(expr);
   ss_ << lhs_name;
@@ -363,7 +384,8 @@ std::string ASTStencilBody::getName(const std::shared_ptr<ast::Expr>& expr) cons
   return metadata_.getFieldNameFromAccessID(iir::getAccessID(expr));
 }
 
-ASTStencilBody::ASTStencilBody(const iir::StencilMetaInformation& metadata) : metadata_(metadata) {}
+ASTStencilBody::ASTStencilBody(const iir::StencilMetaInformation& metadata, int recursiveIterNest) : 
+  metadata_(metadata), recursiveIterNest_(recursiveIterNest){}
 ASTStencilBody::~ASTStencilBody() {}
 
 } // namespace cudaico
