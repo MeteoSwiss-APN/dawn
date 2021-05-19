@@ -79,14 +79,14 @@ protected:
   std::string makeIndexString(const std::shared_ptr<ast::FieldAccessExpr>& expr, std::string kiter);
   bool hasIrregularPentagons(const std::vector<ast::LocationType>& chain);
   void evalNeighbourReductionLambda(const std::shared_ptr<ast::ReductionOverNeighborExpr>& expr);
-  void generateLambda(std::stringstream& ss) const;
+  void generateNeighbourRedLoop(std::stringstream& ss) const;
   std::string pidx();
   std::string nbhLhsName(const std::shared_ptr<ast::Expr>& expr);
-std::string nbhIterStr();
-std::string nbhIdxStr(); 
-std::string nbhIdx_m1Str();
-
-
+  std::string nbhIterStr();
+  // symbol of the current neighbour index in a reduction loop
+  std::string nbhIdxStr();
+  // in case of nested reduction, this is the symbol of the index of parent reduction loop
+  std::string nbhIdx_m1Str();
 
 public:
   using Base = ASTCodeGenCXX;
