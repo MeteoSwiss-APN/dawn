@@ -34,10 +34,9 @@ std::string chainToDenseSizeStringHostMesh(std::vector<dawn::ast::LocationType> 
 
 std::string chainToVectorString(std::vector<dawn::ast::LocationType> locs);
 
-std::string locToDenseSizeStringGpuMesh(dawn::ast::LocationType loc, std::optional<Padding>,
-                                        bool addParens = false);
+std::string locToDenseSizeStringGpuMesh(dawn::ast::LocationType loc);
 
-std::string locToStrideString(dawn::ast::LocationType loc);                                        
+std::string locToStrideString(dawn::ast::LocationType loc);
 
 std::string locToDenseTypeString(dawn::ast::LocationType loc);
 

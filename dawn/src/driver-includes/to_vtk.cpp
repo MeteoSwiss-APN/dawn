@@ -43,7 +43,9 @@ public:
         *std::max_element(vlon, vlon + num_verts) - *std::min_element(vlon, vlon + num_verts);
     const double range = std::max(lat_range, lon_range);
 
-    fs.open(fname_pre + stencil_name + "_" + std::to_string(iteration) + ".vtk", std::fstream::out);
+    fs.open(fname_pre + stencil_name + "_rank" + std::to_string(mesh_info_vtk.rank_id) + "_" +
+                std::to_string(iteration) + ".vtk",
+            std::fstream::out);
 
     fs << "# vtk DataFile Version 3.0\n2D scalar data\nASCII\nDATASET "
           "UNSTRUCTURED_GRID\n";
@@ -78,8 +80,8 @@ public:
   }
 
   ~StencilFieldsVtkOutput() {
-    fs << cells_ss.rdbuf();
-    fs << points_ss.rdbuf();
+    fs << cells_ss.str();
+    fs << points_ss.str();
     fs.close();
   }
 
@@ -117,14 +119,15 @@ static std::string formatNaNs(const double value) {
 
 namespace {
 StencilFieldsVtkOutput& getStencilFieldsVtkOutput(int num_k, std::string stencil_name, int iter) {
-  if(stencil_to_output_map.count(std::make_pair(stencil_name, iter - 1))) {
-    stencil_to_output_map.erase(std::make_pair(stencil_name, iter - 1));
-  }
   if(stencil_to_output_map.count(std::make_pair(stencil_name, iter)) == 0) {
     stencil_to_output_map.emplace(std::make_pair(stencil_name, iter),
                                   StencilFieldsVtkOutput(num_k, stencil_name, iter));
   }
   return stencil_to_output_map.at(std::make_pair(stencil_name, iter));
+}
+
+void flushAtIter(std::string stencil_name, int iter) {
+  stencil_to_output_map.erase(std::make_pair(stencil_name, iter));
 }
 
 double* fieldFromGpu(const double* field_gpu, const int size) {
@@ -137,8 +140,8 @@ void dense_cells_to_csv(int start_idx, int end_idx, int num_k, int dense_stride,
                         const double* field, const char stencil_name[50], const char field_name[50],
                         int iter) {
   std::fstream fs;
-  fs.open(std::string(stencil_name) + "_" + std::string(field_name) + "_" + std::to_string(iter) +
-              ".csv",
+  fs.open(std::string(stencil_name) + "_rank" + std::to_string(mesh_info_vtk.rank_id) + "_" +
+              std::string(field_name) + "_" + std::to_string(iter) + ".csv",
           std::fstream::out);
 
   fs << "\"";
@@ -183,8 +186,8 @@ void dense_verts_to_csv(int start_idx, int end_idx, int num_k, int dense_stride,
                         const double* field, const char stencil_name[50], const char field_name[50],
                         int iter) {
   std::fstream fs;
-  fs.open(std::string(stencil_name) + "_" + std::string(field_name) + "_" + std::to_string(iter) +
-              ".csv",
+  fs.open(std::string(stencil_name) + "_rank" + std::to_string(mesh_info_vtk.rank_id) + "_" +
+              std::string(field_name) + "_" + std::to_string(iter) + ".csv",
           std::fstream::out);
 
   fs << "\"";
@@ -229,8 +232,8 @@ void dense_edges_to_csv(int start_idx, int end_idx, int num_k, int dense_stride,
                         const double* field, const char stencil_name[50], const char field_name[50],
                         int iter) {
   std::fstream fs;
-  fs.open(std::string(stencil_name) + "_" + std::string(field_name) + "_" + std::to_string(iter) +
-              ".csv",
+  fs.open(std::string(stencil_name) + "_rank" + std::to_string(mesh_info_vtk.rank_id) + "_" +
+              std::string(field_name) + "_" + std::to_string(iter) + ".csv",
           std::fstream::out);
 
   fs << "\"";
@@ -323,5 +326,9 @@ void serialize_dense_edges(int start_idx, int end_idx, int num_k, int dense_stri
 
   dense_edges_to_vtk(start_idx, end_idx, num_k, dense_stride, field, stencil_name, field_name,
                      iter);
+}
+
+void serialize_flush_iter(const char stencil_name[50], int iter) {
+  flushAtIter(std::string(stencil_name), iter);
 }
 }

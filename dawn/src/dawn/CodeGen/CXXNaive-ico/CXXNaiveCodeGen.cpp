@@ -80,14 +80,15 @@ std::string makeLoopImpl(int iExtent, int jExtent, const std::string& dim, const
 
 std::string makeIntervalBound(iir::Interval const& interval, iir::Interval::Bound bound) {
   return interval.levelIsEnd(bound)
-             ? "( m_k_size == 0 ? 0 : (m_k_size - 1)) + " + std::to_string(interval.offset(bound))
+             ? "( m_k_size == 0 ? 0 : (m_k_size)) + " + std::to_string(interval.offset(bound))
              : std::to_string(interval.bound(bound));
 }
 
 std::string makeKLoop(bool isBackward, iir::Interval const& interval) {
 
   const std::string lower = makeIntervalBound(interval, iir::Interval::Bound::lower);
-  const std::string upper = makeIntervalBound(interval, iir::Interval::Bound::upper);
+  // -1 since intervals are half-closed on the upper bound
+  const std::string upper = makeIntervalBound(interval, iir::Interval::Bound::upper) + "-1";
 
   return isBackward ? makeLoopImpl(0, 0, "k", upper, lower, ">=", "--")
                     : makeLoopImpl(0, 0, "k", lower, upper, "<=", "++");
@@ -98,15 +99,12 @@ std::unique_ptr<TranslationUnit>
 run(const std::map<std::string, std::shared_ptr<iir::StencilInstantiation>>&
         stencilInstantiationMap,
     const Options& options) {
-  CXXNaiveIcoCodeGen CG(
-      stencilInstantiationMap, options.MaxHaloSize,
-      Padding{options.paddingCells, options.paddingEdges, options.paddingVertices});
+  CXXNaiveIcoCodeGen CG(stencilInstantiationMap, options.MaxHaloSize);
   return CG.generateCode();
 } // namespace cxxnaiveico
 
-CXXNaiveIcoCodeGen::CXXNaiveIcoCodeGen(const StencilInstantiationContext& ctx, int maxHaloPoint,
-                                       Padding padding)
-    : CodeGen(ctx, maxHaloPoint, padding) {}
+CXXNaiveIcoCodeGen::CXXNaiveIcoCodeGen(const StencilInstantiationContext& ctx, int maxHaloPoint)
+    : CodeGen(ctx, maxHaloPoint) {}
 
 CXXNaiveIcoCodeGen::~CXXNaiveIcoCodeGen() {}
 
@@ -263,27 +261,23 @@ void CXXNaiveIcoCodeGen::generateStencilWrapperCtr(
           auto hdims = ast::dimension_cast<ast::UnstructuredFieldDimension const&>(
               field.getFieldDimensions().getHorizontalFieldDimension());
 
-          auto getPaddedNumElCall =
-              [&](const ast::UnstructuredFieldDimension& hdims) -> std::string {
+          auto getNumElements = [&](const ast::UnstructuredFieldDimension& hdims) -> std::string {
             switch(hdims.getDenseLocationType()) {
             case ast::LocationType::Cells:
-              return "numCells(LibTag{}, mesh) + " +
-                     std::to_string(codeGenOptions.UnstrPadding.Cells());
+              return "numCells(LibTag{}, mesh)";
             case ast::LocationType::Edges:
-              return "numEdges(LibTag{}, mesh) + " +
-                     std::to_string(codeGenOptions.UnstrPadding.Edges());
+              return "numEdges(LibTag{}, mesh)";
             case ast::LocationType::Vertices:
-              return "numVertices(LibTag{}, mesh) + " +
-                     std::to_string(codeGenOptions.UnstrPadding.Vertices());
+              return "numVertices(LibTag{}, mesh)";
             default:
               dawn_unreachable("invalid location");
             }
           };
 
           if(hdims.isDense()) {
-            allocString = "allocateField(LibTag{}, " + getPaddedNumElCall(hdims) + ", k_size)";
+            allocString = "allocateField(LibTag{}, " + getNumElements(hdims) + ", k_size)";
           } else {
-            allocString = "allocateField(LibTag{}, " + getPaddedNumElCall(hdims) + ", k_size, " +
+            allocString = "allocateField(LibTag{}, " + getNumElements(hdims) + ", k_size, " +
                           std::to_string(ICOChainSize(hdims.getNeighborChain())) +
                           (hdims.getIncludeCenter() ? "+1" : "") + ")";
           }

@@ -9,6 +9,7 @@ struct MeshInfoVtk {
   int* mesh_cells_edge_idx = nullptr;   /*[3][num_cells]*/
   double* mesh_vlon = nullptr;          /*[num_vertices]*/
   double* mesh_vlat = nullptr;          /*[num_vertices]*/
+  int rank_id = 0;
 
   bool isInitialized() const {
     return mesh_num_edges && mesh_num_cells && mesh_num_verts && mesh_cells_vertex_idx &&
@@ -40,4 +41,5 @@ void serialize_dense_verts(int start_idx, int end_idx, int num_k, int dense_stri
 void serialize_dense_edges(int start_idx, int end_idx, int num_k, int dense_stride,
                            const double* field, const char stencil_name[50],
                            const char field_name[50], int iter);
+void serialize_flush_iter(const char stencil_name[50], int iter);
 }

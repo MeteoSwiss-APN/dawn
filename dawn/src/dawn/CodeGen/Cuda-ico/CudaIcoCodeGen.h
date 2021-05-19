@@ -23,6 +23,7 @@
 #include <unordered_map>
 
 #include "LocToStringUtils.h"
+#include "ReductionMerger.h"
 
 namespace dawn {
 namespace iir {
@@ -46,7 +47,7 @@ public:
   ///@brief constructor
   CudaIcoCodeGen(const StencilInstantiationContext& ctx, int maxHaloPoints,
                  std::optional<std::string> outputCHeader,
-                 std::optional<std::string> outputFortranInterface, Padding = {});
+                 std::optional<std::string> outputFortranInterface, bool mergeStages = false);
   virtual ~CudaIcoCodeGen();
   virtual std::unique_ptr<TranslationUnit> generateCode() override;
 
@@ -54,9 +55,17 @@ public:
     // TODO: consider adding options for hard-coded values (e.g. BLOCK_SIZE)
     std::optional<std::string> OutputCHeader;
     std::optional<std::string> OutputFortranInterface;
+    bool MergeReductions;
   };
 
 private:
+  std::string intervalBoundToString(const iir::Interval& interval, iir::Interval::Bound bound);
+  std::string incrementIterator(std::string iter, iir::LoopOrderKind loopOrder);
+  std::string comparisonOperator(iir::LoopOrderKind loopOrder);
+
+  void generateKIntervalBounds(MemberFunction& cudaKernel, const iir::Interval& interval,
+                               iir::LoopOrderKind loopOrder);
+
   void
   generateAllCudaKernels(std::stringstream& ssSW,
                          const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation);

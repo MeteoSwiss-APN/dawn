@@ -62,7 +62,7 @@ private:
     void run() {
       using ::dawn::deref;
       {
-        for(int k = 0 + 0; k <= (m_k_size == 0 ? 0 : (m_k_size - 1)) + 0 + 0; ++k) {
+        for(int k = 0 + 0; k <= (m_k_size == 0 ? 0 : (m_k_size)) + 0 - 1 + 0; ++k) {
           for(auto const& loc : getVertices(LibTag{}, m_mesh)) {
             m_rot_vec(deref(LibTag{}, loc), (k + 0)) =
                 reduce(LibTag{}, m_mesh, loc, (::dawn::float_type)0.0,
@@ -166,8 +166,8 @@ public:
       : m_stencil_68(mesh, k_size, vec, div_vec, rot_vec, m___tmp_nab_60, m___tmp_nab_61,
                      nabla2_vec, primal_edge_length, dual_edge_length, tangent_orientation,
                      geofac_rot, geofac_div),
-        m___tmp_nab_60(allocateField(LibTag{}, numEdges(LibTag{}, mesh) + 0, k_size)),
-        m___tmp_nab_61(allocateField(LibTag{}, numEdges(LibTag{}, mesh) + 0, k_size)) {}
+        m___tmp_nab_60(allocateField(LibTag{}, numEdges(LibTag{}, mesh), k_size)),
+        m___tmp_nab_61(allocateField(LibTag{}, numEdges(LibTag{}, mesh), k_size)) {}
 
   void run() {
     m_stencil_68.run();

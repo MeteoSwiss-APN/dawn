@@ -30,7 +30,6 @@ set(generated_stencil_codes generated_accumulateEdgeToCell.hpp
   generated_nestedSimple.hpp
   generated_nestedWithField.hpp
   generated_nestedWithSparse.hpp
-  generated_padding.hpp
   generated_reductionAndFillWithCenterSparse.hpp
   generated_reductionInIfConditional.hpp
   generated_reductionWithCenter.hpp

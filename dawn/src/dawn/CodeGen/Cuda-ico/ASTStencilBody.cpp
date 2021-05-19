@@ -13,13 +13,17 @@
 //===------------------------------------------------------------------------------------------===//
 
 #include "ASTStencilBody.h"
+#include "dawn/AST/ASTExpr.h"
 #include "dawn/AST/LocationType.h"
+#include "dawn/CodeGen/Cuda-ico/ReductionMerger.h"
 #include "dawn/IIR/AST.h"
 #include "dawn/IIR/ASTExpr.h"
+#include <algorithm>
 #include <memory>
 #include <optional>
 #include <sstream>
 #include <string>
+#include <vector>
 
 namespace dawn {
 namespace codegen {
@@ -28,6 +32,7 @@ namespace cudaico {
 void ASTStencilBody::visit(const std::shared_ptr<ast::BlockStmt>& stmt) {
   indent_ += DAWN_PRINT_INDENT;
   auto indent = std::string(indent_, ' ');
+  currentBlock_ = stmt->getID();
   for(const auto& s : stmt->getStatements()) {
     ss_ << indent;
     s->accept(*this);
@@ -48,7 +53,9 @@ void ASTStencilBody::visit(const std::shared_ptr<ast::LoopStmt>& stmt) {
   ss_ << "int nbhIdx = " << chainToTableString(maybeChainPtr->getIterSpace()) << "["
       << "pidx * " << chainToSparseSizeString(maybeChainPtr->getIterSpace()) << " + nbhIter"
       << "];\n";
-  ss_ << "if (nbhIdx == DEVICE_MISSING_VALUE) { continue; }";
+  if(hasIrregularPentagons(maybeChainPtr->getChain())) {
+    ss_ << "if (nbhIdx == DEVICE_MISSING_VALUE) { continue; }";
+  }
 
   stmt->getBlockStmt()->accept(*this);
 
@@ -77,25 +84,48 @@ void ASTStencilBody::visit(const std::shared_ptr<ast::ReturnStmt>& stmt) {
 }
 
 void ASTStencilBody::visit(const std::shared_ptr<ast::VarAccessExpr>& expr) {
+  std::stringstream& localSS = parentIsReduction_ ? reductionMap_[parentReductionID_] : ss_;
   std::string name = getName(expr);
   int AccessID = iir::getAccessID(expr);
 
   if(metadata_.isAccessType(iir::FieldAccessType::GlobalVariable, AccessID)) {
-    ss_ << "globals." << name;
+    localSS << "globals." << name;
   } else {
-    ss_ << name;
+    localSS << name;
 
     if(expr->isArrayAccess()) {
-      ss_ << "[";
+      localSS << "[";
       expr->getIndex()->accept(*this);
-      ss_ << "]";
+      localSS << "]";
     }
   }
 }
 
-void ASTStencilBody::visit(const std::shared_ptr<ast::AssignmentExpr>& expr) {
+void ASTStencilBody::visit(const std::shared_ptr<ast::LiteralAccessExpr>& expr) {
+  std::stringstream& localSS = parentIsReduction_ ? reductionMap_[parentReductionID_] : ss_;
+  std::string type(ASTCodeGenCXX::builtinTypeIDToCXXType(expr->getBuiltinType(), false));
+  localSS << (type.empty() ? "" : "(" + type + ") ") << expr->getValue();
+}
+
+void ASTStencilBody::visit(const std::shared_ptr<ast::UnaryOperator>& expr) {
+  std::stringstream& localSS = parentIsReduction_ ? reductionMap_[parentReductionID_] : ss_;
+  localSS << "(" << expr->getOp();
+  expr->getOperand()->accept(*this);
+  localSS << ")";
+}
+void ASTStencilBody::visit(const std::shared_ptr<ast::BinaryOperator>& expr) {
+  std::stringstream& localSS = parentIsReduction_ ? reductionMap_[parentReductionID_] : ss_;
+  localSS << "(";
   expr->getLeft()->accept(*this);
-  ss_ << " " << expr->getOp() << " ";
+  localSS << " " << expr->getOp() << " ";
+  expr->getRight()->accept(*this);
+  localSS << ")";
+}
+
+void ASTStencilBody::visit(const std::shared_ptr<ast::AssignmentExpr>& expr) {
+  std::stringstream& localSS = parentIsReduction_ ? reductionMap_[parentReductionID_] : ss_;
+  expr->getLeft()->accept(*this);
+  localSS << " " << expr->getOp() << " ";
   expr->getRight()->accept(*this);
 }
 
@@ -162,36 +192,42 @@ std::string ASTStencilBody::makeIndexString(const std::shared_ptr<ast::FieldAcce
 }
 
 void ASTStencilBody::visit(const std::shared_ptr<ast::FieldAccessExpr>& expr) {
+  std::stringstream& localSS = parentIsReduction_ ? reductionMap_[parentReductionID_] : ss_;
+
   if(!expr->getOffset().hasVerticalIndirection()) {
-    ss_ << expr->getName() + "[" +
-               makeIndexString(expr, "(kIter + " +
-                                         std::to_string(expr->getOffset().verticalShift()) + ")") +
-               "]";
+    localSS << expr->getName() + "[" +
+                   makeIndexString(expr, "(kIter + " +
+                                             std::to_string(expr->getOffset().verticalShift()) +
+                                             ")") +
+                   "]";
   } else {
     auto vertOffset = makeIndexString(std::static_pointer_cast<ast::FieldAccessExpr>(
                                           expr->getOffset().getVerticalIndirectionFieldAsExpr()),
                                       "kIter");
-    ss_ << expr->getName() + "[" +
-               makeIndexString(expr, "(int)(" +
-                                         expr->getOffset().getVerticalIndirectionFieldName() + "[" +
-                                         vertOffset + "] " + " + " +
-                                         std::to_string(expr->getOffset().verticalShift()) + ")") +
-               "]";
+    localSS << expr->getName() + "[" +
+                   makeIndexString(expr,
+                                   "(int)(" + expr->getOffset().getVerticalIndirectionFieldName() +
+                                       "[" + vertOffset + "] " + " + " +
+                                       std::to_string(expr->getOffset().verticalShift()) + ")") +
+                   "]";
   }
 }
 
 void ASTStencilBody::visit(const std::shared_ptr<ast::FunCallExpr>& expr) {
+  std::stringstream& localSS = parentIsReduction_ ? reductionMap_[parentReductionID_] : ss_;
+
   std::string callee = expr->getCallee();
   // TODO: temporary hack to remove namespace prefixes
   std::size_t lastcolon = callee.find_last_of(":");
-  ss_ << callee.substr(lastcolon + 1) << "(";
+
+  localSS << callee.substr(lastcolon + 1) << "(";
 
   std::size_t numArgs = expr->getArguments().size();
   for(std::size_t i = 0; i < numArgs; ++i) {
     expr->getArguments()[i]->accept(*this);
-    ss_ << (i == numArgs - 1 ? "" : ", ");
+    localSS << (i == numArgs - 1 ? "" : ", ");
   }
-  ss_ << ")";
+  localSS << ")";
 }
 
 void ASTStencilBody::visit(const std::shared_ptr<ast::IfStmt>& stmt) {
@@ -209,6 +245,44 @@ void ASTStencilBody::visit(const std::shared_ptr<ast::IfStmt>& stmt) {
   }
 }
 
+void ASTStencilBody::visit(const std::shared_ptr<ast::ExprStmt>& stmt) {
+  FindReduceOverNeighborExpr findReduceOverNeighborExpr;
+  stmt->getExpr()->accept(findReduceOverNeighborExpr);
+
+  if(findReduceOverNeighborExpr.hasReduceOverNeighborExpr()) {
+    const auto& reductions = findReduceOverNeighborExpr.reduceOverNeighborExprs();
+    for(auto red : reductions) {
+      if(reductionMap_.count(red->getID())) {
+        ss_ << reductionMap_.at(red->getID()).str();
+      }
+    }
+  }
+
+  stmt->getExpr()->accept(*this);
+  ss_ << ";\n";
+}
+
+void ASTStencilBody::visit(const std::shared_ptr<ast::VarDeclStmt>& stmt) {
+  FindReduceOverNeighborExpr findReduceOverNeighborExpr;
+  stmt->accept(findReduceOverNeighborExpr);
+
+  if(findReduceOverNeighborExpr.hasReduceOverNeighborExpr()) {
+    const auto& reductions = findReduceOverNeighborExpr.reduceOverNeighborExprs();
+    for(auto red : reductions) {
+      if(reductionMap_.count(red->getID())) {
+        ss_ << reductionMap_.at(red->getID()).str();
+      }
+    }
+  }
+
+  ASTCodeGenCXX::visit(stmt);
+}
+
+bool ASTStencilBody::hasIrregularPentagons(const std::vector<ast::LocationType>& chain) {
+  DAWN_ASSERT(chain.size() > 1);
+  return (std::count(chain.begin(), chain.end() - 1, ast::LocationType::Vertices) != 0);
+}
+
 void ASTStencilBody::visit(const std::shared_ptr<ast::ReductionOverNeighborExpr>& expr) {
   DAWN_ASSERT_MSG(!parentIsReduction_,
                   "Nested Reductions not yet supported for CUDA code generation");
@@ -216,56 +290,108 @@ void ASTStencilBody::visit(const std::shared_ptr<ast::ReductionOverNeighborExpr>
   std::string lhs_name = "lhs_" + std::to_string(expr->getID());
 
   if(!firstPass_) {
-    ss_ << " " << lhs_name << " ";
+    ss_ << lhs_name;
     return;
   }
 
   parentIsReduction_ = true;
+  parentReductionID_ = expr->getID();
 
-  std::string weights_name = "weights_" + std::to_string(expr->getID());
-  ss_ << "::dawn::float_type " << lhs_name << " = ";
-  expr->getInit()->accept(*this);
-  ss_ << ";\n";
-  auto weights = expr->getWeights();
+  std::vector<std::shared_ptr<ast::ReductionOverNeighborExpr>> exprs{expr};
+  std::vector<std::string> lhs_names{lhs_name};
 
-  if(!expr->getOffsets().empty()) {
-    offsets_ = std::deque<int>(expr->getOffsets().begin(), expr->getOffsets().end());
-  }
-  if(weights.has_value()) {
-    ss_ << "::dawn::float_type " << weights_name << "[" << weights->size() << "] = {";
-    bool first = true;
-    for(auto weight : *weights) {
-      if(!first) {
-        ss_ << ", ";
+  if(blockToMergeGroupMap_.has_value()) {
+    // find "our" group
+    for(auto group : blockToMergeGroupMap_->at(currentBlock_)) {
+      if(std::any_of(group.begin(), group.end(),
+                     [expr](const std::shared_ptr<ast::ReductionOverNeighborExpr>& red) {
+                       return *red == *expr;
+                     })) {
+        if(group.size() > 1) {
+          // we are in a group
+          if(group[0]->getID() != expr->getID()) {
+            // but not the first element, lets bail out
+            parentIsReduction_ = false;
+            parentReductionID_ = -1;
+            return;
+          }
+          exprs = group;
+          lhs_names.clear();
+          for(const auto& red : group) {
+            lhs_names.push_back("lhs_" + std::to_string(red->getID()));
+          }
+        }
       }
-      weight->accept(*this);
-      first = false;
     }
-    ss_ << "};\n";
   }
-  offsets_ = std::nullopt;
-  ss_ << "for (int nbhIter = 0; nbhIter < " << chainToSparseSizeString(expr->getIterSpace())
-      << "; nbhIter++)";
 
-  ss_ << "{\n";
-  ss_ << "int nbhIdx = " << chainToTableString(expr->getIterSpace()) << "["
-      << "pidx * " << chainToSparseSizeString(expr->getIterSpace()) << " + nbhIter"
-      << "];\n";
-  ss_ << "if (nbhIdx == DEVICE_MISSING_VALUE) { continue; }";
-  if(!expr->isArithmetic()) {
-    ss_ << lhs_name << " = " << expr->getOp() << "(" << lhs_name << ", ";
-  } else {
-    ss_ << lhs_name << " " << expr->getOp() << "= ";
+  std::stringstream& localSS_ = reductionMap_[expr->getID()];
+
+  {
+    int lhs_iter = 0;
+    for(auto expr : exprs) {
+      std::string weights_name = "weights_" + std::to_string(expr->getID());
+      localSS_ << "::dawn::float_type " << lhs_names[lhs_iter] << " = ";
+      lhs_iter++;
+      expr->getInit()->accept(*this);
+      localSS_ << ";\n";
+      auto weights = expr->getWeights();
+      if(!expr->getOffsets().empty()) {
+        offsets_ = std::deque<int>(expr->getOffsets().begin(), expr->getOffsets().end());
+      }
+      if(weights.has_value()) {
+        localSS_ << "::dawn::float_type " << weights_name << "[" << weights->size() << "] = {";
+        bool first = true;
+        for(auto weight : *weights) {
+          if(!first) {
+            localSS_ << ", ";
+          }
+          weight->accept(*this);
+          first = false;
+        }
+        localSS_ << "};\n";
+        offsets_ = std::nullopt;
+      }
+    }
   }
-  if(weights.has_value()) {
-    ss_ << weights_name << "[nbhIter] * ";
+
+  localSS_ << "for (int nbhIter = 0; nbhIter < " << chainToSparseSizeString(expr->getIterSpace())
+           << "; nbhIter++)";
+
+  localSS_ << "{\n";
+  localSS_ << "int nbhIdx = " << chainToTableString(expr->getIterSpace()) << "["
+           << "pidx * " << chainToSparseSizeString(expr->getIterSpace()) << " + nbhIter"
+           << "];\n";
+
+  if(hasIrregularPentagons(expr->getNbhChain())) {
+    localSS_ << "if (nbhIdx == DEVICE_MISSING_VALUE) { continue; }";
   }
-  expr->getRhs()->accept(*this);
-  if(!expr->isArithmetic()) {
-    ss_ << ")";
+
+  {
+    int lhs_iter = 0;
+    for(auto expr : exprs) {
+      if(!expr->isArithmetic()) {
+        localSS_ << lhs_names[lhs_iter] << " = " << expr->getOp() << "(" << lhs_names[lhs_iter]
+                 << ", ";
+      } else {
+        localSS_ << lhs_names[lhs_iter] << " " << expr->getOp() << "= ";
+      }
+      lhs_iter++;
+      if(expr->getWeights().has_value()) {
+        std::string weights_name = "weights_" + std::to_string(expr->getID());
+        localSS_ << weights_name << "[nbhIter] * ";
+      }
+      expr->getRhs()->accept(*this);
+      if(!expr->isArithmetic()) {
+        localSS_ << ");\n";
+      } else {
+        localSS_ << ";\n";
+      }
+    }
   }
-  ss_ << ";}\n";
+  localSS_ << "}\n";
   parentIsReduction_ = false;
+  parentReductionID_ = -1;
 }
 
 std::string ASTStencilBody::getName(const std::shared_ptr<ast::VarDeclStmt>& stmt) const {
@@ -275,8 +401,7 @@ std::string ASTStencilBody::getName(const std::shared_ptr<ast::Expr>& expr) cons
   return metadata_.getFieldNameFromAccessID(iir::getAccessID(expr));
 }
 
-ASTStencilBody::ASTStencilBody(const iir::StencilMetaInformation& metadata, const Padding& padding)
-    : metadata_(metadata), padding_(padding) {}
+ASTStencilBody::ASTStencilBody(const iir::StencilMetaInformation& metadata) : metadata_(metadata) {}
 ASTStencilBody::~ASTStencilBody() {}
 
 } // namespace cudaico

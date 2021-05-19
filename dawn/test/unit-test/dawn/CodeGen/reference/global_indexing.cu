@@ -179,10 +179,10 @@ public:
         dim3 blocks(nbx, nby, nbz);
         generated_stencil28_ms27_kernel<<<blocks, threads>>>(
             nx, ny, nz, in_field_ds.strides()[1], in_field_ds.strides()[2],
-            (in_field.data() + in_field_ds.get_storage_info_ptr()->index(in_field.begin<0>(),
-                                                                         in_field.begin<1>(), 0)),
-            (out_field.data() + out_field_ds.get_storage_info_ptr()->index(
-                                    out_field.begin<0>(), out_field.begin<1>(), 0)));
+            (in_field.data() +
+             in_field_ds.get_storage_info_ptr()->index(m_dom.iminus(), m_dom.jminus(), 0)),
+            (out_field.data() +
+             out_field_ds.get_storage_info_ptr()->index(m_dom.iminus(), m_dom.jminus(), 0)));
       };
 
       // stopping timers

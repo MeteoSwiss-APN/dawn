@@ -188,6 +188,16 @@ public:
       first = false;
     }
     ss_ << "}";
+    if(expr->getWeights().has_value()) {
+      ss_ << ", weights = {";
+      std::string delim = "";
+      for(auto w : *expr->getWeights()) {
+        ss_ << delim;
+        w->accept(*this);
+        delim = ", ";
+      }
+      ss_ << "}";
+    }
     ss_ << "): ";
     expr->getRhs()->accept(*this);
   }
