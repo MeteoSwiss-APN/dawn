@@ -25,12 +25,14 @@
 #include "dawn/CodeGen/Cuda/CodeGeneratorHelper.h"
 #include "dawn/CodeGen/F90Util.h"
 #include "dawn/CodeGen/IcoChainSizes.h"
+#include "dawn/IIR/ASTExpr.h"
 #include "dawn/IIR/Field.h"
 #include "dawn/IIR/Interval.h"
 #include "dawn/IIR/LoopOrder.h"
 #include "dawn/IIR/MultiStage.h"
 #include "dawn/IIR/Stage.h"
 #include "dawn/IIR/Stencil.h"
+#include "dawn/IIR/StencilMetaInformation.h"
 #include "dawn/SIR/SIR.h"
 #include "dawn/Support/Assert.h"
 #include "dawn/Support/Exception.h"
@@ -185,6 +187,11 @@ public:
     for(auto c : expr->getChildren()) {
       c->accept(*this);
     }
+    if(expr->getWeights().has_value()) {
+      for(auto w : expr->getWeights().value()) {
+        w->accept(*this);
+      }
+    }
   }
 
   void visit(const std::shared_ptr<ast::LoopStmt>& stmt) override {
@@ -195,12 +202,26 @@ public:
     }
   }
 
+  void visit(const std::shared_ptr<ast::FieldAccessExpr>& expr) override {
+    if(metadata_.getFieldDimensions(iir::getAccessID(expr)).isVertical()) {
+      return;
+    }
+    auto unstrDim = ast::dimension_cast<const ast::UnstructuredFieldDimension&>(
+        metadata_.getFieldDimensions(iir::getAccessID(expr)).getHorizontalFieldDimension());
+    if(unstrDim.isSparse()) {
+      spaces_.insert(unstrDim.getIterSpace());
+    }
+  }
+
   const std::unordered_set<ast::UnstructuredIterationSpace, IterSpaceHash>& getSpaces() const {
     return spaces_;
   }
 
+  CollectIterationSpaces(const iir::StencilMetaInformation& metadata) : metadata_(metadata) {}
+
 private:
   std::unordered_set<ast::UnstructuredIterationSpace, IterSpaceHash> spaces_;
+  const iir::StencilMetaInformation& metadata_;
 };
 
 void CudaIcoCodeGen::generateGpuMesh(
@@ -217,7 +238,7 @@ void CudaIcoCodeGen::generateGpuMesh(
   gpuMeshClass.addMember("dawn::unstructured_domain", "DomainLower");
   gpuMeshClass.addMember("dawn::unstructured_domain", "DomainUpper");
 
-  CollectIterationSpaces spaceCollector;
+  CollectIterationSpaces spaceCollector(stencilInstantiation->getMetaData());
   std::unordered_set<ast::UnstructuredIterationSpace, CollectIterationSpaces::IterSpaceHash> spaces;
   for(const auto& doMethod : iterateIIROver<iir::DoMethod>(*(stencilInstantiation->getIIR()))) {
     doMethod->getAST().accept(spaceCollector);
@@ -370,7 +391,7 @@ void CudaIcoCodeGen::generateRunFun(
       kernelCall << kName;
 
       // which nbh tables need to be passed / which templates need to be defined?
-      CollectIterationSpaces chainStringCollector;
+      CollectIterationSpaces chainStringCollector(stencilInstantiation->getMetaData());
       for(const auto& doMethod : stage->getChildren()) {
         doMethod->getAST().accept(chainStringCollector);
       }
@@ -763,7 +784,7 @@ void CudaIcoCodeGen::generateAllAPIRunFunctions(
   const auto& stencils = stencilInstantiation->getStencils();
   DAWN_ASSERT_MSG(stencils.size() <= 1, "code generation only for at most one stencil!\n");
 
-  CollectIterationSpaces chainCollector;
+  CollectIterationSpaces chainCollector(stencilInstantiation->getMetaData());
   std::set<std::vector<ast::LocationType>> chains;
   for(const auto& doMethod : iterateIIROver<iir::DoMethod>(*(stencilInstantiation->getIIR()))) {
     doMethod->getAST().accept(chainCollector);
@@ -1223,7 +1244,7 @@ void CudaIcoCodeGen::generateAllCudaKernels(
       //--------------------------------------
 
       // which nbh tables / size templates need to be passed?
-      CollectIterationSpaces chainStringCollector;
+      CollectIterationSpaces chainStringCollector(stencilInstantiation->getMetaData());
       for(const auto& doMethod : stage->getChildren()) {
         doMethod->getAST().accept(chainStringCollector);
       }
@@ -1375,7 +1396,7 @@ std::string CudaIcoCodeGen::generateStencilInstantiation(
 
   generateAllCudaKernels(ssSW, stencilInstantiation);
 
-  CollectIterationSpaces spaceCollector;
+  CollectIterationSpaces spaceCollector(stencilInstantiation->getMetaData());
   std::unordered_set<ast::UnstructuredIterationSpace, CollectIterationSpaces::IterSpaceHash> spaces;
   for(const auto& doMethod : iterateIIROver<iir::DoMethod>(*(stencilInstantiation->getIIR()))) {
     doMethod->getAST().accept(spaceCollector);

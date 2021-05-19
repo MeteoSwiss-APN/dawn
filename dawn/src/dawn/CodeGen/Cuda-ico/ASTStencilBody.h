@@ -84,6 +84,8 @@ protected:
   bool parentIsReduction_ = false;
   int parentReductionID_ = -1;
   bool parentIsForLoop_ = false;
+  std::optional<std::deque<int>> offsets_;
+
   bool firstPass_ = true;
 
   int currentBlock_ = -1;

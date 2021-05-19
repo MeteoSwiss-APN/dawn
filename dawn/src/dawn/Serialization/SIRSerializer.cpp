@@ -13,10 +13,10 @@
 //===------------------------------------------------------------------------------------------===//
 
 #include "dawn/Serialization/SIRSerializer.h"
+#include "dawn/AST/AST/statements.pb.h"
 #include "dawn/SIR/AST.h"
 #include "dawn/SIR/SIR.h"
 #include "dawn/SIR/SIR/SIR.pb.h"
-#include "dawn/AST/AST/statements.pb.h"
 #include "dawn/Serialization/ASTSerializer.h"
 #include "dawn/Support/Exception.h"
 #include "dawn/Support/Format.h"
@@ -276,8 +276,7 @@ static std::shared_ptr<sir::Field> makeField(const dawn::proto::ast::Field& fiel
   return field;
 }
 
-static BuiltinTypeID
-makeBuiltinTypeID(const dawn::proto::ast::BuiltinType& builtinTypeProto) {
+static BuiltinTypeID makeBuiltinTypeID(const dawn::proto::ast::BuiltinType& builtinTypeProto) {
   switch(builtinTypeProto.type_id()) {
   case dawn::proto::ast::BuiltinType_TypeID_Invalid:
     return BuiltinTypeID::Invalid;
@@ -343,10 +342,9 @@ makeVerticalRegion(const dawn::proto::ast::VerticalRegion& verticalRegionProto) 
   auto interval = makeInterval(verticalRegionProto.interval());
 
   // VerticalRegion.LoopOrder
-  auto loopOrder =
-      verticalRegionProto.loop_order() == dawn::proto::ast::VerticalRegion::Backward
-          ? sir::VerticalRegion::LoopOrderKind::Backward
-          : sir::VerticalRegion::LoopOrderKind::Forward;
+  auto loopOrder = verticalRegionProto.loop_order() == dawn::proto::ast::VerticalRegion::Backward
+                       ? sir::VerticalRegion::LoopOrderKind::Backward
+                       : sir::VerticalRegion::LoopOrderKind::Forward;
 
   auto verticalRegion = std::make_shared<sir::VerticalRegion>(ast, interval, loopOrder, loc);
 
@@ -530,14 +528,19 @@ static std::shared_ptr<ast::Expr> makeExpr(const dawn::proto::ast::Expr& express
       chain.push_back(getLocationTypeFromProtoLocationType(exprProto.iter_space().chain(i)));
     }
 
+    std::vector<int> offsets;
+    for(int i = 0; i < exprProto.offsets_size(); ++i) {
+      offsets.push_back(exprProto.offsets(i));
+    }
+
     if(weights.size() > 0) {
       return std::make_shared<ast::ReductionOverNeighborExpr>(
           exprProto.op(), makeExpr(exprProto.rhs()), makeExpr(exprProto.init()), weights, chain,
-          exprProto.iter_space().include_center(), makeLocation(exprProto));
+          exprProto.iter_space().include_center(), offsets, makeLocation(exprProto));
     } else {
       return std::make_shared<ast::ReductionOverNeighborExpr>(
           exprProto.op(), makeExpr(exprProto.rhs()), makeExpr(exprProto.init()), chain,
-          exprProto.iter_space().include_center(), makeLocation(exprProto));
+          exprProto.iter_space().include_center(), offsets, makeLocation(exprProto));
     }
   }
   case dawn::proto::ast::Expr::EXPR_NOT_SET:
@@ -726,8 +729,7 @@ static std::shared_ptr<SIR> deserializeImpl(const std::string& str, SIRSerialize
       stencilFunction->Loc = makeLocation(stencilFunctionProto);
 
       // StencilFunction.Args
-      for(const dawn::proto::ast::StencilFunctionArg& sirArg :
-          stencilFunctionProto.arguments()) {
+      for(const dawn::proto::ast::StencilFunctionArg& sirArg : stencilFunctionProto.arguments()) {
         switch(sirArg.Arg_case()) {
         case dawn::proto::ast::StencilFunctionArg::kFieldValue:
           stencilFunction->Args.emplace_back(makeField(sirArg.field_value()));
@@ -764,20 +766,24 @@ static std::shared_ptr<SIR> deserializeImpl(const std::string& str, SIRSerialize
 
       switch(sirValue.Value_case()) {
       case proto::ast::GlobalVariableValue::kBooleanValue:
-        value = std::make_shared<ast::Global>(static_cast<bool>(sirValue.boolean_value()), isConstExpr);
+        value =
+            std::make_shared<ast::Global>(static_cast<bool>(sirValue.boolean_value()), isConstExpr);
         break;
       case proto::ast::GlobalVariableValue::kIntegerValue:
-        value = std::make_shared<ast::Global>(static_cast<int>(sirValue.integer_value()), isConstExpr);
+        value =
+            std::make_shared<ast::Global>(static_cast<int>(sirValue.integer_value()), isConstExpr);
         break;
       case proto::ast::GlobalVariableValue::kFloatValue:
-        value = std::make_shared<ast::Global>(static_cast<float>(sirValue.float_value()), isConstExpr);
+        value =
+            std::make_shared<ast::Global>(static_cast<float>(sirValue.float_value()), isConstExpr);
         break;
       case proto::ast::GlobalVariableValue::kDoubleValue:
-        value = std::make_shared<ast::Global>(static_cast<double>(sirValue.double_value()), isConstExpr);
+        value = std::make_shared<ast::Global>(static_cast<double>(sirValue.double_value()),
+                                              isConstExpr);
         break;
       case proto::ast::GlobalVariableValue::kStringValue:
         value = std::make_shared<ast::Global>(static_cast<std::string>(sirValue.string_value()),
-                                         isConstExpr);
+                                              isConstExpr);
         break;
       case proto::ast::GlobalVariableValue::VALUE_NOT_SET:
       default:

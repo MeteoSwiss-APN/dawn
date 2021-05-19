@@ -20,6 +20,7 @@
 #include "dawn/IIR/ASTExpr.h"
 #include <algorithm>
 #include <memory>
+#include <optional>
 #include <sstream>
 #include <string>
 #include <vector>
@@ -157,7 +158,12 @@ std::string ASTStencilBody::makeIndexString(const std::shared_ptr<ast::FieldAcce
   if(isFullField && isSparse) {
     DAWN_ASSERT_MSG(parentIsForLoop_ || parentIsReduction_,
                     "Sparse Field Access not allowed in this context");
-    return "nbhIter * kSize * " + denseSize + " + " + kiterStr + "*" + denseSize + " + pidx";
+    std::string nbhIter = "nbhIter";
+    if(offsets_.has_value()) {
+      nbhIter = std::to_string(offsets_->front());
+      offsets_->pop_front();
+    }
+    return nbhIter + " * kSize * " + denseSize + " + " + kiterStr + "*" + denseSize + " + pidx";
   }
 
   if(isHorizontal && isDense) {
@@ -173,8 +179,12 @@ std::string ASTStencilBody::makeIndexString(const std::shared_ptr<ast::FieldAcce
   if(isHorizontal && isSparse) {
     DAWN_ASSERT_MSG(parentIsForLoop_ || parentIsReduction_,
                     "Sparse Field Access not allowed in this context");
-    std::string sparseSize = chainToSparseSizeString(unstrDims.getIterSpace());
-    return "nbhIter * " + denseSize + " + pidx";
+    std::string nbhIter = "nbhIter";
+    if(offsets_.has_value()) {
+      nbhIter = std::to_string(offsets_->front());
+      offsets_->pop_front();
+    }
+    return nbhIter + " * " + denseSize + " + pidx";
   }
 
   DAWN_ASSERT_MSG(false, "Bad Field configuration found in code gen!");
@@ -326,6 +336,9 @@ void ASTStencilBody::visit(const std::shared_ptr<ast::ReductionOverNeighborExpr>
       expr->getInit()->accept(*this);
       localSS_ << ";\n";
       auto weights = expr->getWeights();
+      if(!expr->getOffsets().empty()) {
+        offsets_ = std::deque<int>(expr->getOffsets().begin(), expr->getOffsets().end());
+      }
       if(weights.has_value()) {
         localSS_ << "::dawn::float_type " << weights_name << "[" << weights->size() << "] = {";
         bool first = true;
@@ -337,6 +350,7 @@ void ASTStencilBody::visit(const std::shared_ptr<ast::ReductionOverNeighborExpr>
           first = false;
         }
         localSS_ << "};\n";
+        offsets_ = std::nullopt;
       }
     }
   }

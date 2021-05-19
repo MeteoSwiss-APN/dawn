@@ -42,7 +42,8 @@ void WeightChecker::WeightCheckerImpl::visit(
     DAWN_ASSERT(nameToDimensions_.count(fieldName));
     weightsValid_ = ast::dimension_cast<const ast::UnstructuredFieldDimension&>(
                         nameToDimensions_.at(fieldName).getHorizontalFieldDimension())
-                        .isDense();
+                        .isDense() ||
+                    parentAllowsSparse_;
   }
 }
 void WeightChecker::WeightCheckerImpl::visit(
@@ -74,6 +75,7 @@ void WeightChecker::WeightCheckerImpl::visit(
 void WeightChecker::WeightCheckerImpl::visit(
     const std::shared_ptr<dawn::ast::ReductionOverNeighborExpr>& expr) {
 
+  parentAllowsSparse_ = !expr->getOffsets().empty();
   if(expr->getWeights().has_value()) {
     parentIsWeight_ = true;
     for(const auto& weight : *expr->getWeights()) {
@@ -84,6 +86,7 @@ void WeightChecker::WeightCheckerImpl::visit(
     }
     parentIsWeight_ = false;
   }
+  parentAllowsSparse_ = false;
 
   expr->getRhs()->accept(*this);
 }
