@@ -281,10 +281,7 @@ void CudaIcoCodeGen::generateRunFun(
       stageLocType.insert(*stage->getLocationType());
     }
   }
-  runFun.addStatement("dim3 dB(BLOCK_SIZE, 1, 1)");
-
-  // start timers
-  runFun.addStatement("sbase::start()");
+  runFun.addStatement("dim3 dB(BLOCK_SIZE, 1, 1)");  
 
   for(const auto& ms : iterateIIROver<iir::MultiStage>(*(stencilInstantiation->getIIR()))) {
     for(const auto& stage : ms->getChildren()) {
@@ -354,6 +351,11 @@ void CudaIcoCodeGen::generateRunFun(
       std::string hOffsetString = "hoffset" + std::to_string(stage->getStageID());
       runFun.addStatement("int " + hSizeString + " = " +
                           numElementsString(*stage->getLocationType(), domain));
+      runFun.addBlockStatement("if (" + hSizeString + " == 0)", [&]() {
+        runFun.addStatement("return");
+      });                          
+      // start timers
+      runFun.addStatement("sbase::start()");                          
       if(domain.has_value()) {
         runFun.addStatement("int " + hOffsetString + " = " +
                             hOffsetSizeString(*stage->getLocationType(), *domain));
