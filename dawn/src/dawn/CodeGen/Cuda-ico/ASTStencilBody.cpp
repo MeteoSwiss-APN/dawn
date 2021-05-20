@@ -52,7 +52,7 @@ void ASTStencilBody::visit(const std::shared_ptr<ast::LoopStmt>& stmt) {
   ss_ << "int nbhIdx = " << chainToTableString(maybeChainPtr->getIterSpace()) << "["
       << "pidx * " << chainToSparseSizeString(maybeChainPtr->getIterSpace()) << " + nbhIter"
       << "];\n";
-  if(hasIrregularPentagons(maybeChainPtr->getChain())) {
+  if(hasIrregularPentagons(maybeChainPtr->getChain()) || genAtlasCompatCode_) {
     ss_ << "if (nbhIdx == DEVICE_MISSING_VALUE) { continue; }";
   }
 
@@ -349,7 +349,7 @@ void ASTStencilBody::visit(const std::shared_ptr<ast::ReductionOverNeighborExpr>
            << "pidx * " << chainToSparseSizeString(expr->getIterSpace()) << " + nbhIter"
            << "];\n";
 
-  if(hasIrregularPentagons(expr->getNbhChain())) {
+  if(hasIrregularPentagons(expr->getNbhChain()) || genAtlasCompatCode_) {
     localSS_ << "if (nbhIdx == DEVICE_MISSING_VALUE) { continue; }";
   }
 
@@ -387,7 +387,8 @@ std::string ASTStencilBody::getName(const std::shared_ptr<ast::Expr>& expr) cons
   return metadata_.getFieldNameFromAccessID(iir::getAccessID(expr));
 }
 
-ASTStencilBody::ASTStencilBody(const iir::StencilMetaInformation& metadata) : metadata_(metadata) {}
+ASTStencilBody::ASTStencilBody(const iir::StencilMetaInformation& metadata, bool genAtlasCompatCode)
+    : metadata_(metadata), genAtlasCompatCode_(genAtlasCompatCode) {}
 ASTStencilBody::~ASTStencilBody() {}
 
 } // namespace cudaico

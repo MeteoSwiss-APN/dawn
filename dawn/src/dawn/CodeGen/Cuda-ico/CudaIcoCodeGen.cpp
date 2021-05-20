@@ -155,7 +155,7 @@ run(const std::map<std::string, std::shared_ptr<iir::StencilInstantiation>>&
       options.OutputCHeader == "" ? std::nullopt : std::make_optional(options.OutputCHeader),
       options.OutputFortranInterface == "" ? std::nullopt
                                            : std::make_optional(options.OutputFortranInterface),
-      options.MergeReductions);
+      options.MergeReductions, options.AtlasCompatible);
 
   return CG.generateCode();
 }
@@ -163,9 +163,9 @@ run(const std::map<std::string, std::shared_ptr<iir::StencilInstantiation>>&
 CudaIcoCodeGen::CudaIcoCodeGen(const StencilInstantiationContext& ctx, int maxHaloPoints,
                                std::optional<std::string> outputCHeader,
                                std::optional<std::string> outputFortranInterface,
-                               bool mergeReductions)
+                               bool mergeReductions, bool atlasCompatible)
     : CodeGen(ctx, maxHaloPoints), codeGenOptions_{outputCHeader, outputFortranInterface,
-                                                   mergeReductions} {}
+                                                   mergeReductions, atlasCompatible} {}
 
 CudaIcoCodeGen::~CudaIcoCodeGen() {}
 
@@ -1205,7 +1205,8 @@ std::string CudaIcoCodeGen::comparisonOperator(iir::LoopOrderKind loopOrder) {
 void CudaIcoCodeGen::generateAllCudaKernels(
     std::stringstream& ssSW,
     const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation) {
-  ASTStencilBody stencilBodyCXXVisitor(stencilInstantiation->getMetaData());
+  ASTStencilBody stencilBodyCXXVisitor(stencilInstantiation->getMetaData(),
+                                       codeGenOptions_.AtlasCompatible);
   const auto& globalsMap = stencilInstantiation->getIIR()->getGlobalVariableMap();
   std::optional<MergeGroupMap> blockToMergeGroups = std::nullopt;
   if(codeGenOptions_.MergeReductions) {

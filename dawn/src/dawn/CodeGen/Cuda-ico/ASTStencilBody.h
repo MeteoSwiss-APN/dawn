@@ -85,6 +85,7 @@ protected:
   int parentReductionID_ = -1;
   bool parentIsForLoop_ = false;
   bool firstPass_ = true;
+  bool genAtlasCompatCode_ = false;
 
   int currentBlock_ = -1;
 
@@ -102,7 +103,7 @@ public:
   using Base::visit;
 
   /// @brief constructor
-  ASTStencilBody(const iir::StencilMetaInformation& metadata);
+  ASTStencilBody(const iir::StencilMetaInformation& metadata, bool genAtlasCompatCode);
 
   virtual ~ASTStencilBody();
 
