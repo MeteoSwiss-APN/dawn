@@ -941,6 +941,9 @@ void CudaIcoCodeGen::generateAllAPIVerifyFunctions(
                        stencilInstantiation->getMetaData().getNameFromAccessID(fieldID) + "_dsl");
       verifyAPI.addArg("const ::dawn::float_type *" +
                        stencilInstantiation->getMetaData().getNameFromAccessID(fieldID));
+    }
+    for(auto fieldID : getUsedFields(stencil, {dawn::iir::Field::IntendKind::Output,
+                                               dawn::iir::Field::IntendKind::InputOutput})) {
       verifyAPI.addArg("const double " +
                        stencilInstantiation->getMetaData().getNameFromAccessID(fieldID) +
                        "_rel_tol");
@@ -961,6 +964,9 @@ void CudaIcoCodeGen::generateAllAPIVerifyFunctions(
       runAndVerifyAPI.addArg("::dawn::float_type *" +
                              stencilInstantiation->getMetaData().getNameFromAccessID(fieldID) +
                              "_before");
+    }
+    for(auto fieldID : getUsedFields(stencil, {dawn::iir::Field::IntendKind::InputOutput,
+                                               dawn::iir::Field::IntendKind::Output})) {
       runAndVerifyAPI.addArg("const double " +
                              stencilInstantiation->getMetaData().getNameFromAccessID(fieldID) +
                              "_rel_tol");
@@ -1083,6 +1089,10 @@ void CudaIcoCodeGen::generateAllAPIVerifyFunctions(
                                        dawn::iir::Field::IntendKind::InputOutput})) {
         outputVerifyFields.push_back(fieldName + "_before");
         outputVerifyFields.push_back(fieldName);
+      }
+      for(const auto& fieldName :
+          getUsedFieldsNames(stencil, {dawn::iir::Field::IntendKind::Output,
+                                       dawn::iir::Field::IntendKind::InputOutput})) {
         outputVerifyFields.push_back(fieldName + "_rel_tol");
         outputVerifyFields.push_back(fieldName + "_abs_tol");
       }
