@@ -154,7 +154,7 @@ run(const std::map<std::string, std::shared_ptr<iir::StencilInstantiation>>&
       options.OutputCHeader == "" ? std::nullopt : std::make_optional(options.OutputCHeader),
       options.OutputFortranInterface == "" ? std::nullopt
                                            : std::make_optional(options.OutputFortranInterface),
-      options.MergeReductions);
+      options.MergeReductions, options.AtlasCompatible);
 
   return CG.generateCode();
 }
@@ -162,9 +162,9 @@ run(const std::map<std::string, std::shared_ptr<iir::StencilInstantiation>>&
 CudaIcoCodeGen::CudaIcoCodeGen(const StencilInstantiationContext& ctx, int maxHaloPoints,
                                std::optional<std::string> outputCHeader,
                                std::optional<std::string> outputFortranInterface,
-                               bool mergeReductions)
+                               bool mergeReductions, bool atlasCompatible)
     : CodeGen(ctx, maxHaloPoints), codeGenOptions_{outputCHeader, outputFortranInterface,
-                                                   mergeReductions} {}
+                                                   mergeReductions, atlasCompatible} {}
 
 CudaIcoCodeGen::~CudaIcoCodeGen() {}
 
@@ -280,10 +280,7 @@ void CudaIcoCodeGen::generateRunFun(
       stageLocType.insert(*stage->getLocationType());
     }
   }
-  runFun.addStatement("dim3 dB(BLOCK_SIZE, 1, 1)");
-
-  // start timers
-  runFun.addStatement("sbase::start()");
+  runFun.addStatement("dim3 dB(BLOCK_SIZE, 1, 1)");  
 
   for(const auto& ms : iterateIIROver<iir::MultiStage>(*(stencilInstantiation->getIIR()))) {
     for(const auto& stage : ms->getChildren()) {
@@ -353,6 +350,11 @@ void CudaIcoCodeGen::generateRunFun(
       std::string hOffsetString = "hoffset" + std::to_string(stage->getStageID());
       runFun.addStatement("int " + hSizeString + " = " +
                           numElementsString(*stage->getLocationType(), domain));
+      runFun.addBlockStatement("if (" + hSizeString + " == 0)", [&]() {
+        runFun.addStatement("return");
+      });                          
+      // start timers
+      runFun.addStatement("sbase::start()");                          
       if(domain.has_value()) {
         runFun.addStatement("int " + hOffsetString + " = " +
                             hOffsetSizeString(*stage->getLocationType(), *domain));
@@ -938,9 +940,14 @@ void CudaIcoCodeGen::generateAllAPIVerifyFunctions(
                        stencilInstantiation->getMetaData().getNameFromAccessID(fieldID) + "_dsl");
       verifyAPI.addArg("const ::dawn::float_type *" +
                        stencilInstantiation->getMetaData().getNameFromAccessID(fieldID));
+      verifyAPI.addArg("const double " +
+                       stencilInstantiation->getMetaData().getNameFromAccessID(fieldID) +
+                       "_rel_tol");
+      verifyAPI.addArg("const double " +
+                       stencilInstantiation->getMetaData().getNameFromAccessID(fieldID) +
+                       "_abs_tol");
     }
     verifyAPI.addArg("const int iteration");
-    verifyAPI.addArg("const double rel_err_threshold");
     verifyAPI.finishArgs();
 
     addGlobalsArgs(globalsMap, runAndVerifyAPI);
@@ -953,8 +960,13 @@ void CudaIcoCodeGen::generateAllAPIVerifyFunctions(
       runAndVerifyAPI.addArg("::dawn::float_type *" +
                              stencilInstantiation->getMetaData().getNameFromAccessID(fieldID) +
                              "_before");
+      runAndVerifyAPI.addArg("const double " +
+                             stencilInstantiation->getMetaData().getNameFromAccessID(fieldID) +
+                             "_rel_tol");
+      runAndVerifyAPI.addArg("const double " +
+                             stencilInstantiation->getMetaData().getNameFromAccessID(fieldID) +
+                             "_abs_tol");
     }
-    runAndVerifyAPI.addArg("const double rel_err_threshold");
     runAndVerifyAPI.finishArgs();
 
     if(!onlyDecl) {
@@ -966,8 +978,7 @@ void CudaIcoCodeGen::generateAllAPIVerifyFunctions(
       verifyAPI.addStatement("int kSize = " + fullStencilName + "::" + "getKSize()");
       verifyAPI.addStatement(
           "high_resolution_clock::time_point t_start = high_resolution_clock::now()");
-      verifyAPI.addStatement("bool isValid = true");
-      verifyAPI.addStatement("double relErr");
+      verifyAPI.addStatement("bool isValid");
 
       for(auto fieldID : getUsedFields(stencil, {dawn::iir::Field::IntendKind::Output,
                                                  dawn::iir::Field::IntendKind::InputOutput})) {
@@ -990,12 +1001,12 @@ void CudaIcoCodeGen::generateAllAPIVerifyFunctions(
                     "::" + chainToSparseSizeString(unstrDims.getIterSpace());
         }
 
-        verifyAPI.addStatement("relErr = ::dawn::verify_field(" + num_el + ", " + fieldInfo.Name +
+        verifyAPI.addStatement("isValid = ::dawn::verify_field(" + num_el + ", " + fieldInfo.Name +
                                "_dsl" + "," + fieldInfo.Name + ", \"" + fieldInfo.Name + "\"" +
-                               ")");
+                               "," + fieldInfo.Name + "_rel_tol" + "," + fieldInfo.Name +
+                               "_abs_tol" + ")");
 
-        verifyAPI.addBlockStatement("if (relErr > rel_err_threshold)", [&]() {
-          verifyAPI.addStatement("isValid = false");
+        verifyAPI.addBlockStatement("if (!isValid)", [&]() {
           verifyAPI.addPreprocessorDirective("ifdef __SERIALIZE_ON_ERROR");
           if(!unstrDims.isSparse()) {
             // serialize actual field
@@ -1071,12 +1082,13 @@ void CudaIcoCodeGen::generateAllAPIVerifyFunctions(
                                        dawn::iir::Field::IntendKind::InputOutput})) {
         outputVerifyFields.push_back(fieldName + "_before");
         outputVerifyFields.push_back(fieldName);
+        outputVerifyFields.push_back(fieldName + "_rel_tol");
+        outputVerifyFields.push_back(fieldName + "_abs_tol");
       }
 
-      runAndVerifyAPI.addStatement("verify_" + wrapperName + "(" +
-                                   explodeToStr(concatenateVectors(
-                                       {outputVerifyFields, {"iteration", "rel_err_threshold"}})) +
-                                   ")");
+      runAndVerifyAPI.addStatement(
+          "verify_" + wrapperName + "(" +
+          explodeToStr(concatenateVectors({outputVerifyFields, {"iteration"}})) + ")");
 
       runAndVerifyAPI.addStatement("iteration++");
     }
@@ -1192,7 +1204,8 @@ std::string CudaIcoCodeGen::comparisonOperator(iir::LoopOrderKind loopOrder) {
 void CudaIcoCodeGen::generateAllCudaKernels(
     std::stringstream& ssSW,
     const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation) {
-  ASTStencilBody stencilBodyCXXVisitor(stencilInstantiation->getMetaData());
+  ASTStencilBody stencilBodyCXXVisitor(stencilInstantiation->getMetaData(),
+                                       codeGenOptions_.AtlasCompatible);
   const auto& globalsMap = stencilInstantiation->getIIR()->getGlobalVariableMap();
 
   for(const auto& ms : iterateIIROver<iir::MultiStage>(*(stencilInstantiation->getIIR()))) {
@@ -1488,7 +1501,7 @@ generateF90InterfaceSI(FortranInterfaceModuleGen& fimGen,
 
   const int runAndVerifyIdx = 2;
 
-  auto addArgsToAPI = [&](FortranAPI& api, bool includeSavedState) {
+  auto addArgsToAPI = [&](FortranAPI& api, bool includeSavedState, bool optThresholds) {
     for(const auto& global : globalsMap) {
       api.addArg(global.first, globalTypeToFortType(global.second));
     }
@@ -1510,19 +1523,33 @@ generateF90InterfaceSI(FortranInterfaceModuleGen& fimGen,
             ,
             stencilInstantiation->getMetaData().getFieldDimensions(fieldID).rank());
       }
+      for(auto fieldID : getUsedFields(stencil, {dawn::iir::Field::IntendKind::Output,
+                                                 dawn::iir::Field::IntendKind::InputOutput})) {
+        if(optThresholds) {
+          api.addOptArg(stencilInstantiation->getMetaData().getNameFromAccessID(fieldID) +
+                            "_rel_tol",
+                        FortranAPI::InterfaceType::DOUBLE);
+          api.addOptArg(stencilInstantiation->getMetaData().getNameFromAccessID(fieldID) +
+                            "_abs_tol",
+                        FortranAPI::InterfaceType::DOUBLE);
+        } else {
+          api.addArg(stencilInstantiation->getMetaData().getNameFromAccessID(fieldID) + "_rel_tol",
+                     FortranAPI::InterfaceType::DOUBLE);
+          api.addArg(stencilInstantiation->getMetaData().getNameFromAccessID(fieldID) + "_abs_tol",
+                     FortranAPI::InterfaceType::DOUBLE);
+        }
+      }
     }
   };
 
-  addArgsToAPI(interfaces[fromDeviceAPIIdx], /*includeSavedState*/ false);
+  addArgsToAPI(interfaces[fromDeviceAPIIdx], /*includeSavedState*/ false, false);
   fimGen.addInterfaceAPI(std::move(interfaces[fromDeviceAPIIdx]));
-  addArgsToAPI(interfaces[fromHostAPIIdx], /*includeSavedState*/ false);
+  addArgsToAPI(interfaces[fromHostAPIIdx], /*includeSavedState*/ false, false);
   fimGen.addInterfaceAPI(std::move(interfaces[fromHostAPIIdx]));
-  addArgsToAPI(interfaces[runAndVerifyIdx], /*includeSavedState*/ true);
-  interfaces[runAndVerifyIdx].addArg("rel_err_threshold", FortranAPI::InterfaceType::DOUBLE);
+  addArgsToAPI(interfaces[runAndVerifyIdx], /*includeSavedState*/ true, false);
   fimGen.addInterfaceAPI(std::move(interfaces[runAndVerifyIdx]));
 
-  addArgsToAPI(runWrapper, /*includeSavedState*/ true);
-  runWrapper.addOptArg("rel_err_threshold", FortranAPI::InterfaceType::DOUBLE);
+  addArgsToAPI(runWrapper, /*includeSavedState*/ true, true);
 
   auto getFieldArgs = [&](bool includeSavedState) -> std::vector<std::string> {
     std::vector<std::string> args;
@@ -1539,6 +1566,15 @@ generateF90InterfaceSI(FortranInterfaceModuleGen& fimGen,
     return args;
   };
 
+  std::vector<std::string> threshold_names;
+  for(auto fieldID : getUsedFields(stencil, {dawn::iir::Field::IntendKind::Output,
+                                             dawn::iir::Field::IntendKind::InputOutput})) {
+    threshold_names.push_back(stencilInstantiation->getMetaData().getNameFromAccessID(fieldID) +
+                              "_rel_err_tol");
+    threshold_names.push_back(stencilInstantiation->getMetaData().getNameFromAccessID(fieldID) +
+                              "_abs_err_tol");
+  }
+
   auto genCallArgs = [&](FortranWrapperAPI& wrapper, std::string first = "",
                          bool includeSavedState = false, bool includeErrorThreshold = false) {
     wrapper.addBodyLine("( &");
@@ -1554,22 +1590,52 @@ generateF90InterfaceSI(FortranInterfaceModuleGen& fimGen,
       wrapper.addBodyLine("   " + args[i] +
                           ((i == (args.size() - 1)) && !includeErrorThreshold ? " &" : ", &"));
     }
+
     if(includeErrorThreshold) {
-      wrapper.addBodyLine("   threshold &");
+      for(int i = 0; i < threshold_names.size() - 1; i++) {
+        wrapper.addBodyLine("   " + threshold_names[i] + ", &");
+      }
+
+      wrapper.addBodyLine("   " + threshold_names[threshold_names.size() - 1] + " &");
     }
+
     wrapper.addBodyLine(")");
   };
 
   runWrapper.addBodyLine("");
   runWrapper.addBodyLine("real(c_double) :: timing");
-  runWrapper.addBodyLine("real(c_double) :: threshold");
+
+  for(int i = 0; i < threshold_names.size(); i++) {
+    runWrapper.addBodyLine("real(c_double) :: " + threshold_names[i]);
+  }
+
   runWrapper.addBodyLine("");
-  runWrapper.addBodyLine("if (present(rel_err_threshold)) then");
-  runWrapper.addBodyLine("  threshold = rel_err_threshold");
-  runWrapper.addBodyLine("else");
-  runWrapper.addBodyLine("  threshold = DEFAULT_RELATIVE_ERROR_THRESHOLD");
-  runWrapper.addBodyLine("endif");
-  runWrapper.addBodyLine("");
+  for(auto fieldID : getUsedFields(stencil, {dawn::iir::Field::IntendKind::Output,
+                                             dawn::iir::Field::IntendKind::InputOutput})) {
+    runWrapper.addBodyLine("if (present(" +
+                           stencilInstantiation->getMetaData().getNameFromAccessID(fieldID) +
+                           "_rel_tol" + ")) then");
+    runWrapper.addBodyLine(
+        "  " + stencilInstantiation->getMetaData().getNameFromAccessID(fieldID) + "_rel_err_tol" +
+        " = " + stencilInstantiation->getMetaData().getNameFromAccessID(fieldID) + "_rel_tol");
+    runWrapper.addBodyLine("else");
+    runWrapper.addBodyLine("  " + stencilInstantiation->getMetaData().getNameFromAccessID(fieldID) +
+                           "_rel_err_tol" + " = DEFAULT_RELATIVE_ERROR_THRESHOLD");
+    runWrapper.addBodyLine("endif");
+    runWrapper.addBodyLine("");
+
+    runWrapper.addBodyLine("if (present(" +
+                           stencilInstantiation->getMetaData().getNameFromAccessID(fieldID) +
+                           "_abs_tol" + ")) then");
+    runWrapper.addBodyLine(
+        "  " + stencilInstantiation->getMetaData().getNameFromAccessID(fieldID) + "_abs_err_tol" +
+        " = " + stencilInstantiation->getMetaData().getNameFromAccessID(fieldID) + "_abs_tol");
+    runWrapper.addBodyLine("else");
+    runWrapper.addBodyLine("  " + stencilInstantiation->getMetaData().getNameFromAccessID(fieldID) +
+                           "_abs_err_tol" + " = DEFAULT_ABSOLUTE_ERROR_THRESHOLD");
+    runWrapper.addBodyLine("endif");
+    runWrapper.addBodyLine("");
+  }
   runWrapper.addACCLine("host_data use_device( &");
   auto fieldArgs = getFieldArgs(/*includeSavedState*/ true);
   for(int i = 0; i < fieldArgs.size(); ++i) {
@@ -1600,6 +1666,7 @@ generateF90InterfaceSI(FortranInterfaceModuleGen& fimGen,
 std::string CudaIcoCodeGen::generateF90Interface(std::string moduleName) const {
   std::stringstream ss;
   ss << "#define DEFAULT_RELATIVE_ERROR_THRESHOLD 1.0d-12" << std::endl;
+  ss << "#define DEFAULT_ABSOLUTE_ERROR_THRESHOLD 0.0d1" << std::endl;
   IndentedStringStream iss(ss);
 
   FortranInterfaceModuleGen fimGen(iss, moduleName);

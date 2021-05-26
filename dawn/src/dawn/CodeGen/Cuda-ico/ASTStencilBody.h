@@ -69,6 +69,7 @@ protected:
 
   bool parentIsReduction_ = false;
   bool parentIsForLoop_ = false;
+  bool genAtlasCompatCode_ = false;
 
   std::map<int, std::unique_ptr<ASTStencilBody>> reductionParser_;
   int recursiveIterNest_;
@@ -93,7 +94,9 @@ public:
   using Base::visit;
 
   /// @brief constructor
-  ASTStencilBody(const iir::StencilMetaInformation& metadata, int recursiveIterNest = 0);
+
+  ASTStencilBody(const iir::StencilMetaInformation& metadata, bool genAtlasCompatCode,
+                 int recursiveIterNest = 0);
 
   virtual ~ASTStencilBody();
 

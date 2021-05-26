@@ -58,11 +58,9 @@ void ASTStencilBody::visit(const std::shared_ptr<ast::LoopStmt>& stmt) {
   ss_ << "int " + nbhIdxStr() + " = " << chainToTableString(maybeChainPtr->getIterSpace()) << "["
       << "pidx * " << chainToSparseSizeString(maybeChainPtr->getIterSpace()) << " + " + nbhIterStr()
       << "];\n";
-  // if(hasIrregularPentagons(maybeChainPtr->getChain())) {
-  if(true) {
+  if(hasIrregularPentagons(maybeChainPtr->getChain()) || genAtlasCompatCode_) {
     ss_ << "if (" + nbhIdxStr() + " == DEVICE_MISSING_VALUE) { continue; }";
   }
-
   stmt->getBlockStmt()->accept(*this);
 
   ss_ << "}\n";
@@ -271,7 +269,7 @@ void ASTStencilBody::visit(const std::shared_ptr<ast::VarDeclStmt>& stmt) {
 
   // code generate lambda reductions on a second pass
   if(findReduceOverNeighborExpr.hasReduceOverNeighborExpr()) {
-    ASTStencilBody astParser(metadata_, recursiveIterNest_);
+    ASTStencilBody astParser(metadata_, genAtlasCompatCode_, recursiveIterNest_);
     stmt->accept(astParser);
 
     astParser.generateNeighbourRedLoop(ss_);
@@ -329,10 +327,8 @@ void ASTStencilBody::evalNeighbourReductionLambda(
   ss_ << "int " + nbhIdxStr() + " = " << chainToTableString(expr->getIterSpace()) << "[" << pidx()
       << " * " << chainToSparseSizeString(expr->getIterSpace()) << " + " + nbhIterStr() << "];\n";
 
-  // TODO remove this hack
-  // if(hasIrregularPentagons(expr->getNbhChain())) {
-  if(true) {
-    ss_ << "if (" + nbhIdxStr() + " == DEVICE_MISSING_VALUE) { continue; }";
+  if(hasIrregularPentagons(expr->getNbhChain()) || genAtlasCompatCode_) {
+    localSS_ << "if (" + nbhIdxStr() + " == DEVICE_MISSING_VALUE) { continue; }";
   }
 
   FindReduceOverNeighborExpr findReduceOverNeighborExpr;
@@ -341,7 +337,7 @@ void ASTStencilBody::evalNeighbourReductionLambda(
   // here we have finished generating the loop over neighbours structure
   // before we generate the expression, we check if (and generate) nested neighbour reductions
   if(findReduceOverNeighborExpr.hasReduceOverNeighborExpr()) {
-    ASTStencilBody astParser(metadata_, recursiveIterNest_ + 1);
+    ASTStencilBody astParser(metadata_, genAtlasCompatCode_, recursiveIterNest_ + 1);
     expr->getRhs()->accept(astParser);
 
     for(auto& redParser : astParser.reductionParser_) {
@@ -387,8 +383,10 @@ std::string ASTStencilBody::getName(const std::shared_ptr<ast::Expr>& expr) cons
   return metadata_.getFieldNameFromAccessID(iir::getAccessID(expr));
 }
 
-ASTStencilBody::ASTStencilBody(const iir::StencilMetaInformation& metadata, int recursiveIterNest)
-    : metadata_(metadata), recursiveIterNest_(recursiveIterNest) {}
+ASTStencilBody::ASTStencilBody(const iir::StencilMetaInformation& metadata, bool genAtlasCompatCode,
+                               int recursiveIterNest)
+    : metadata_(metadata), genAtlasCompatCode_(genAtlasCompatCode),
+      recursiveIterNest_(recursiveIterNest) {}
 ASTStencilBody::~ASTStencilBody() {}
 
 } // namespace cudaico
