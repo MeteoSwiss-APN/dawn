@@ -251,7 +251,7 @@ void ASTStencilBody::visit(const std::shared_ptr<ast::ExprStmt>& stmt) {
   // generate the loop over neighbour reduction before the expression stmt
   if(findReduceOverNeighborExpr.hasReduceOverNeighborExpr()) {
     // instantiate a new ast stencil body to parse exclusively the neighbour reductions
-    ASTStencilBody astParser(metadata_, recursiveIterNest_);
+    ASTStencilBody astParser(metadata_, genAtlasCompatCode_, recursiveIterNest_);
     stmt->getExpr()->accept(astParser);
 
     // code generate the loop over neighbours reduction
@@ -328,7 +328,7 @@ void ASTStencilBody::evalNeighbourReductionLambda(
       << " * " << chainToSparseSizeString(expr->getIterSpace()) << " + " + nbhIterStr() << "];\n";
 
   if(hasIrregularPentagons(expr->getNbhChain()) || genAtlasCompatCode_) {
-    localSS_ << "if (" + nbhIdxStr() + " == DEVICE_MISSING_VALUE) { continue; }";
+    ss_ << "if (" + nbhIdxStr() + " == DEVICE_MISSING_VALUE) { continue; }";
   }
 
   FindReduceOverNeighborExpr findReduceOverNeighborExpr;
