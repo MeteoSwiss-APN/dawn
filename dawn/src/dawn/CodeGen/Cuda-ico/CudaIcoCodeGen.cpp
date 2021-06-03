@@ -356,7 +356,7 @@ void CudaIcoCodeGen::generateRunFun(
       runFun.addBlockStatement("if (" + hSizeString + " == 0)",
                                [&]() { runFun.addStatement("return"); });
       // start timers
-      runFun.addStatement("sbase::start()");
+      // runFun.addStatement("sbase::start()");
       if(domain.has_value()) {
         runFun.addStatement("int " + hOffsetString + " = " +
                             hOffsetSizeString(*stage->getLocationType(), *domain));
@@ -453,7 +453,7 @@ void CudaIcoCodeGen::generateRunFun(
   }
 
   // stop timers
-  runFun.addStatement("sbase::pause()");
+  // runFun.addStatement("sbase::pause()");
 }
 
 static void allocTempFields(MemberFunction& ctor, const iir::Stencil& stencil) {
@@ -865,8 +865,8 @@ void CudaIcoCodeGen::generateAllAPIRunFunctions(
         }
         for(auto& apiRunFun : apiRunFuns) {
           apiRunFun->addStatement("s.run()");
-          apiRunFun->addStatement("double time = s.get_time()");
-          apiRunFun->addStatement("s.reset()");
+          // apiRunFun->addStatement("double time = s.get_time()");
+          // apiRunFun->addStatement("s.reset()");
         }
         if(fromHost) {
           apiRunFuns[0]->addStatement("s.CopyResultToHost(" + ioFieldStr + ", true)");
@@ -876,7 +876,7 @@ void CudaIcoCodeGen::generateAllAPIRunFunctions(
           }
         }
         for(auto& apiRunFun : apiRunFuns) {
-          apiRunFun->addStatement("return time");
+          apiRunFun->addStatement("return 0.");
           apiRunFun->commit();
         }
       }
