@@ -155,7 +155,7 @@ run(const std::map<std::string, std::shared_ptr<iir::StencilInstantiation>>&
       options.OutputCHeader == "" ? std::nullopt : std::make_optional(options.OutputCHeader),
       options.OutputFortranInterface == "" ? std::nullopt
                                            : std::make_optional(options.OutputFortranInterface),
-      options.MergeReductions, options.AtlasCompatible);
+      options.MergeReductions, options.AtlasCompatible, options.BlockSize, options.LevelsPerThread);
 
   return CG.generateCode();
 }
@@ -163,9 +163,11 @@ run(const std::map<std::string, std::shared_ptr<iir::StencilInstantiation>>&
 CudaIcoCodeGen::CudaIcoCodeGen(const StencilInstantiationContext& ctx, int maxHaloPoints,
                                std::optional<std::string> outputCHeader,
                                std::optional<std::string> outputFortranInterface,
-                               bool mergeReductions, bool atlasCompatible)
-    : CodeGen(ctx, maxHaloPoints), codeGenOptions_{outputCHeader, outputFortranInterface,
-                                                   mergeReductions, atlasCompatible} {}
+                               bool mergeReductions, bool atlasCompatible, int blockSize,
+                               int levelsPerThread)
+    : CodeGen(ctx, maxHaloPoints), codeGenOptions_{outputCHeader,   outputFortranInterface,
+                                                   mergeReductions, atlasCompatible,
+                                                   blockSize,       levelsPerThread} {}
 
 CudaIcoCodeGen::~CudaIcoCodeGen() {}
 
@@ -281,7 +283,7 @@ void CudaIcoCodeGen::generateRunFun(
       stageLocType.insert(*stage->getLocationType());
     }
   }
-  runFun.addStatement("dim3 dB(BLOCK_SIZE, 1, 1)");  
+  runFun.addStatement("dim3 dB(BLOCK_SIZE, 1, 1)");
 
   for(const auto& ms : iterateIIROver<iir::MultiStage>(*(stencilInstantiation->getIIR()))) {
     for(const auto& stage : ms->getChildren()) {
@@ -351,11 +353,10 @@ void CudaIcoCodeGen::generateRunFun(
       std::string hOffsetString = "hoffset" + std::to_string(stage->getStageID());
       runFun.addStatement("int " + hSizeString + " = " +
                           numElementsString(*stage->getLocationType(), domain));
-      runFun.addBlockStatement("if (" + hSizeString + " == 0)", [&]() {
-        runFun.addStatement("return");
-      });                          
+      runFun.addBlockStatement("if (" + hSizeString + " == 0)",
+                               [&]() { runFun.addStatement("return"); });
       // start timers
-      runFun.addStatement("sbase::start()");                          
+      runFun.addStatement("sbase::start()");
       if(domain.has_value()) {
         runFun.addStatement("int " + hOffsetString + " = " +
                             hOffsetSizeString(*stage->getLocationType(), *domain));
@@ -1756,8 +1757,8 @@ std::unique_ptr<TranslationUnit> CudaIcoCodeGen::generateCode() {
       "#include \"driver-includes/math.hpp\"",
       "#include \"driver-includes/timer_cuda.hpp\"",
       "#include <chrono>",
-      "#define BLOCK_SIZE 128",
-      "#define LEVELS_PER_THREAD 1",
+      "#define BLOCK_SIZE " + std::to_string(codeGenOptions_.BlockSize),
+      "#define LEVELS_PER_THREAD " + std::to_string(codeGenOptions_.LevelsPerThread),
       "using namespace gridtools::dawn;",
   };
 
