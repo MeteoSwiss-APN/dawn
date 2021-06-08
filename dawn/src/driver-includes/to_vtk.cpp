@@ -114,7 +114,11 @@ static std::string formatNaNs(const double value) {
     return "nan";
   }
 
-  return std::to_string(value);
+  // return std::to_string(value);
+  std::stringstream ss;
+  ss << std::setprecision(std::numeric_limits<long double>::digits10 + 1);
+  ss << value;
+  return ss.str();
 }
 
 namespace {

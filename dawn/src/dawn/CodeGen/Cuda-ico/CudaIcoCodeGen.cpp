@@ -356,7 +356,11 @@ void CudaIcoCodeGen::generateRunFun(
       runFun.addBlockStatement("if (" + hSizeString + " == 0)",
                                [&]() { runFun.addStatement("return"); });
       // start timers
+<<<<<<< HEAD
       // runFun.addStatement("sbase::start()");
+=======
+      runFun.addStatement("sbase::start()");
+>>>>>>> master
       if(domain.has_value()) {
         runFun.addStatement("int " + hOffsetString + " = " +
                             hOffsetSizeString(*stage->getLocationType(), *domain));
