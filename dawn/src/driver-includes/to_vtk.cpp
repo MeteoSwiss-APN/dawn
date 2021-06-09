@@ -50,7 +50,7 @@ public:
     fs << "# vtk DataFile Version 3.0\n2D scalar data\nASCII\nDATASET "
           "UNSTRUCTURED_GRID\n";
 
-    fs << "POINTS " << num_verts * num_k << " float\n";
+    fs << "POINTS " << num_verts * num_k << " double\n";
 
     for(int k = 0; k < num_k; k++) {
       for(int nodeIter = 0; nodeIter < num_verts; nodeIter++) {
@@ -169,7 +169,7 @@ void dense_cells_to_vtk(int start_idx, int end_idx, int num_k, int dense_stride,
 
   auto& output = getStencilFieldsVtkOutput(num_k, std::string(stencil_name), iter);
 
-  output.cellData() << "SCALARS " << std::string(field_name) << " float 1\nLOOKUP_TABLE default\n";
+  output.cellData() << "SCALARS " << std::string(field_name) << " double 1\nLOOKUP_TABLE default\n";
 
   for(int k = 0; k < num_k; k++) {
     for(int cellIter = 0; cellIter < mesh_info_vtk.mesh_num_cells; cellIter++) {
@@ -215,7 +215,7 @@ void dense_verts_to_vtk(int start_idx, int end_idx, int num_k, int dense_stride,
 
   auto& output = getStencilFieldsVtkOutput(num_k, std::string(stencil_name), iter);
 
-  output.pointData() << "SCALARS " << std::string(field_name) << " float 1\nLOOKUP_TABLE default\n";
+  output.pointData() << "SCALARS " << std::string(field_name) << " double 1\nLOOKUP_TABLE default\n";
 
   for(int k = 0; k < num_k; k++) {
     for(int pointIter = 0; pointIter < mesh_info_vtk.mesh_num_verts; pointIter++) {
@@ -268,7 +268,7 @@ void dense_edges_to_vtk(int start_idx, int end_idx, int num_k, int dense_stride,
 
   auto& output = getStencilFieldsVtkOutput(num_k, std::string(stencil_name), iter);
   // Edges not supported by vtk, need to interpolate into cells.
-  output.cellData() << "SCALARS " << std::string(field_name) << " float 1\nLOOKUP_TABLE default\n";
+  output.cellData() << "SCALARS " << std::string(field_name) << " double 1\nLOOKUP_TABLE default\n";
 
   for(int k = 0; k < num_k; k++) {
     for(int cellIter = 0; cellIter < mesh_info_vtk.mesh_num_cells; cellIter++) {
