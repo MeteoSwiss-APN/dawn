@@ -52,6 +52,8 @@ public:
 
     fs << "POINTS " << num_verts * num_k << " double\n";
 
+    fs << std::setprecision(std::numeric_limits<double>::max_digits10);
+
     for(int k = 0; k < num_k; k++) {
       for(int nodeIter = 0; nodeIter < num_verts; nodeIter++) {
         double x = vlat[nodeIter];
@@ -171,6 +173,8 @@ void dense_cells_to_vtk(int start_idx, int end_idx, int num_k, int dense_stride,
 
   output.cellData() << "SCALARS " << std::string(field_name) << " double 1\nLOOKUP_TABLE default\n";
 
+  output.cellData() << std::setprecision(std::numeric_limits<double>::max_digits10);
+
   for(int k = 0; k < num_k; k++) {
     for(int cellIter = 0; cellIter < mesh_info_vtk.mesh_num_cells; cellIter++) {
       if(cellIter < start_idx || cellIter > end_idx) {
@@ -216,6 +220,8 @@ void dense_verts_to_vtk(int start_idx, int end_idx, int num_k, int dense_stride,
   auto& output = getStencilFieldsVtkOutput(num_k, std::string(stencil_name), iter);
 
   output.pointData() << "SCALARS " << std::string(field_name) << " double 1\nLOOKUP_TABLE default\n";
+
+  output.pointData() << std::setprecision(std::numeric_limits<double>::max_digits10);
 
   for(int k = 0; k < num_k; k++) {
     for(int pointIter = 0; pointIter < mesh_info_vtk.mesh_num_verts; pointIter++) {
@@ -269,6 +275,8 @@ void dense_edges_to_vtk(int start_idx, int end_idx, int num_k, int dense_stride,
   auto& output = getStencilFieldsVtkOutput(num_k, std::string(stencil_name), iter);
   // Edges not supported by vtk, need to interpolate into cells.
   output.cellData() << "SCALARS " << std::string(field_name) << " double 1\nLOOKUP_TABLE default\n";
+
+  output.cellData() << std::setprecision(std::numeric_limits<double>::max_digits10);
 
   for(int k = 0; k < num_k; k++) {
     for(int cellIter = 0; cellIter < mesh_info_vtk.mesh_num_cells; cellIter++) {
