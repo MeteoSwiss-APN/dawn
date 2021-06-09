@@ -111,13 +111,22 @@ public:
 // (stencil_name, iteration) -> vtk_output_handle
 std::map<std::pair<std::string, int>, StencilFieldsVtkOutput> stencil_to_output_map;
 
-static std::string formatNaNs(const double value) {
-  if(std::isnan(value)) {
-    return "nan";
-  }
+// wrapper type so we can overload `std::ostream <<` and get vtk compatible formatting for NaNs
+struct formatNaNs {
+  double value;
+  formatNaNs(double value): value(value) {}
+};
 
-  return std::to_string(value);
+std::ostream& operator<<(std::ostream& os, const formatNaNs& wrapper)
+{
+  if(std::isnan(wrapper.value)) {
+    os << "nan";
+  } else {
+    os << wrapper.value;
+  }
+  return os;
 }
+
 
 namespace {
 StencilFieldsVtkOutput& getStencilFieldsVtkOutput(int num_k, std::string stencil_name, int iter) {
