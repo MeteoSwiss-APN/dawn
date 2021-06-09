@@ -148,7 +148,7 @@ void dense_cells_to_csv(int start_idx, int end_idx, int num_k, int dense_stride,
   fs << field_name;
   fs << "\"\n";
 
-  fs << std::setprecision(std::numeric_limits<long double>::digits10 + 1);
+  fs << std::setprecision(std::numeric_limits<double>::max_digits10);
 
   for(int k = 0; k < num_k; k++) {
     for(int cellIter = 0; cellIter < mesh_info_vtk.mesh_num_cells; cellIter++) {
@@ -194,7 +194,7 @@ void dense_verts_to_csv(int start_idx, int end_idx, int num_k, int dense_stride,
   fs << field_name;
   fs << "\"\n";
 
-  fs << std::setprecision(std::numeric_limits<long double>::digits10 + 1);
+  fs << std::setprecision(std::numeric_limits<double>::max_digits10);
 
   for(int k = 0; k < num_k; k++) {
     for(int vertIter = 0; vertIter < mesh_info_vtk.mesh_num_verts; vertIter++) {
@@ -240,7 +240,7 @@ void dense_edges_to_csv(int start_idx, int end_idx, int num_k, int dense_stride,
   fs << field_name;
   fs << "\"\n";
 
-  fs << std::setprecision(std::numeric_limits<long double>::digits10 + 1);
+  fs << std::setprecision(std::numeric_limits<double>::max_digits10);
 
   for(int k = 0; k < num_k; k++) {
     for(int cellIter = 0; cellIter < mesh_info_vtk.mesh_num_cells; cellIter++) {
