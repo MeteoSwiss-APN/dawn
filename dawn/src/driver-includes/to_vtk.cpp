@@ -50,7 +50,9 @@ public:
     fs << "# vtk DataFile Version 3.0\n2D scalar data\nASCII\nDATASET "
           "UNSTRUCTURED_GRID\n";
 
-    fs << "POINTS " << num_verts * num_k << " float\n";
+    fs << "POINTS " << num_verts * num_k << " double\n";
+
+    fs << std::setprecision(std::numeric_limits<double>::max_digits10);
 
     for(int k = 0; k < num_k; k++) {
       for(int nodeIter = 0; nodeIter < num_verts; nodeIter++) {
@@ -109,13 +111,22 @@ public:
 // (stencil_name, iteration) -> vtk_output_handle
 std::map<std::pair<std::string, int>, StencilFieldsVtkOutput> stencil_to_output_map;
 
-static std::string formatNaNs(const double value) {
-  if(std::isnan(value)) {
-    return "nan";
-  }
+// wrapper type so we can overload `std::ostream <<` and get vtk compatible formatting for NaNs
+struct formatNaNs {
+  double value;
+  formatNaNs(double value): value(value) {}
+};
 
-  return std::to_string(value);
+std::ostream& operator<<(std::ostream& os, const formatNaNs& wrapper)
+{
+  if(std::isnan(wrapper.value)) {
+    os << "nan";
+  } else {
+    os << wrapper.value;
+  }
+  return os;
 }
+
 
 namespace {
 StencilFieldsVtkOutput& getStencilFieldsVtkOutput(int num_k, std::string stencil_name, int iter) {
@@ -148,7 +159,7 @@ void dense_cells_to_csv(int start_idx, int end_idx, int num_k, int dense_stride,
   fs << field_name;
   fs << "\"\n";
 
-  fs << std::setprecision(std::numeric_limits<long double>::digits10 + 1);
+  fs << std::setprecision(std::numeric_limits<double>::max_digits10);
 
   for(int k = 0; k < num_k; k++) {
     for(int cellIter = 0; cellIter < mesh_info_vtk.mesh_num_cells; cellIter++) {
@@ -169,7 +180,9 @@ void dense_cells_to_vtk(int start_idx, int end_idx, int num_k, int dense_stride,
 
   auto& output = getStencilFieldsVtkOutput(num_k, std::string(stencil_name), iter);
 
-  output.cellData() << "SCALARS " << std::string(field_name) << " float 1\nLOOKUP_TABLE default\n";
+  output.cellData() << "SCALARS " << std::string(field_name) << " double 1\nLOOKUP_TABLE default\n";
+
+  output.cellData() << std::setprecision(std::numeric_limits<double>::max_digits10);
 
   for(int k = 0; k < num_k; k++) {
     for(int cellIter = 0; cellIter < mesh_info_vtk.mesh_num_cells; cellIter++) {
@@ -194,7 +207,7 @@ void dense_verts_to_csv(int start_idx, int end_idx, int num_k, int dense_stride,
   fs << field_name;
   fs << "\"\n";
 
-  fs << std::setprecision(std::numeric_limits<long double>::digits10 + 1);
+  fs << std::setprecision(std::numeric_limits<double>::max_digits10);
 
   for(int k = 0; k < num_k; k++) {
     for(int vertIter = 0; vertIter < mesh_info_vtk.mesh_num_verts; vertIter++) {
@@ -215,7 +228,9 @@ void dense_verts_to_vtk(int start_idx, int end_idx, int num_k, int dense_stride,
 
   auto& output = getStencilFieldsVtkOutput(num_k, std::string(stencil_name), iter);
 
-  output.pointData() << "SCALARS " << std::string(field_name) << " float 1\nLOOKUP_TABLE default\n";
+  output.pointData() << "SCALARS " << std::string(field_name) << " double 1\nLOOKUP_TABLE default\n";
+
+  output.pointData() << std::setprecision(std::numeric_limits<double>::max_digits10);
 
   for(int k = 0; k < num_k; k++) {
     for(int pointIter = 0; pointIter < mesh_info_vtk.mesh_num_verts; pointIter++) {
@@ -240,7 +255,7 @@ void dense_edges_to_csv(int start_idx, int end_idx, int num_k, int dense_stride,
   fs << field_name;
   fs << "\"\n";
 
-  fs << std::setprecision(std::numeric_limits<long double>::digits10 + 1);
+  fs << std::setprecision(std::numeric_limits<double>::max_digits10);
 
   for(int k = 0; k < num_k; k++) {
     for(int cellIter = 0; cellIter < mesh_info_vtk.mesh_num_cells; cellIter++) {
@@ -268,7 +283,9 @@ void dense_edges_to_vtk(int start_idx, int end_idx, int num_k, int dense_stride,
 
   auto& output = getStencilFieldsVtkOutput(num_k, std::string(stencil_name), iter);
   // Edges not supported by vtk, need to interpolate into cells.
-  output.cellData() << "SCALARS " << std::string(field_name) << " float 1\nLOOKUP_TABLE default\n";
+  output.cellData() << "SCALARS " << std::string(field_name) << " double 1\nLOOKUP_TABLE default\n";
+
+  output.cellData() << std::setprecision(std::numeric_limits<double>::max_digits10);
 
   for(int k = 0; k < num_k; k++) {
     for(int cellIter = 0; cellIter < mesh_info_vtk.mesh_num_cells; cellIter++) {
