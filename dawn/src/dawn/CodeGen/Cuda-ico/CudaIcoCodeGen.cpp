@@ -1065,7 +1065,7 @@ void CudaIcoCodeGen::generateAllAPIVerifyFunctions(
         return fieldNames;
       };
 
-      runAndVerifyAPI.addStatement("double time = run_" + wrapperName + "(" +
+      runAndVerifyAPI.addStatement("run_" + wrapperName + "(" +
                                    explodeToStr(concatenateVectors(
                                        {getGlobalsNames(globalsMap), getDSLFieldsNames(stencil)})) +
                                    ")");
