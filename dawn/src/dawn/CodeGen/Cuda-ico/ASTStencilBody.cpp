@@ -323,8 +323,9 @@ void ASTStencilBody::evalNeighbourReduction(
       << chainToSparseSizeString(expr->getIterSpace()) << "; " + nbhIterStr() + "++)";
 
   ss_ << "{\n";
-  ss_ << "int " + nbhIdxStr() + " = " << chainToTableString(expr->getIterSpace()) << "[" << pidxStr()
-      << " * " << chainToSparseSizeString(expr->getIterSpace()) << " + " + nbhIterStr() << "];\n";
+  ss_ << "int " + nbhIdxStr() + " = " << chainToTableString(expr->getIterSpace()) << "["
+      << pidxStr() << " * " << chainToSparseSizeString(expr->getIterSpace()) << " + " + nbhIterStr()
+      << "];\n";
 
   if(hasIrregularPentagons(expr->getNbhChain()) || genAtlasCompatCode_) {
     ss_ << "if (" + nbhIdxStr() + " == DEVICE_MISSING_VALUE) { continue; }";
@@ -368,8 +369,8 @@ void ASTStencilBody::visit(const std::shared_ptr<ast::ReductionOverNeighborExpr>
 
   std::string lhs_name = nbhLhsName(expr);
 
-  reductionParser_.emplace(expr->getID(),
-                           std::make_unique<ASTStencilBody>(metadata_, recursiveIterNest_));
+  reductionParser_.emplace(expr->getID(), std::make_unique<ASTStencilBody>(
+                                              metadata_, genAtlasCompatCode_, recursiveIterNest_));
   reductionParser_.at(expr->getID())->parentIsReduction_ = true;
   reductionParser_.at(expr->getID())->evalNeighbourReduction(expr);
   ss_ << lhs_name;
