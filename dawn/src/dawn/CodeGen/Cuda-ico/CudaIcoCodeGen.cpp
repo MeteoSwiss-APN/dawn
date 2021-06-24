@@ -391,7 +391,7 @@ void CudaIcoCodeGen::generateRunFun(
       }
 
       kernelCall << "<<<"
-                 << "dG" + std::to_string(stage->getStageID()) + ",dB"
+                 << "dG" + std::to_string(stage->getStageID()) + ",dB," << "stream_id_"
                  << ">>>(";
       if(!globalsMap.empty()) {
         kernelCall << "m_globals, ";
@@ -499,6 +499,7 @@ void CudaIcoCodeGen::generateStencilSetup(MemberFunction& stencilSetup,
   stencilSetup.addStatement("mesh_ = GpuTriMesh(mesh)");
   stencilSetup.addStatement("kSize_ = kSize");
   stencilSetup.addStatement("is_setup_ = true");
+  stencilSetup.addStatement("stream_id_ = stream_id");
   allocTempFields(stencilSetup, stencil);
 }
 
@@ -686,6 +687,7 @@ void CudaIcoCodeGen::generateStencilClasses(
     stencilClass.addMember("static int", "kSize_");
     stencilClass.addMember("static GpuTriMesh", "mesh_");
     stencilClass.addMember("static bool", "is_setup_");
+    stencilClass.addMember("static int", "stream_id_");
 
     stencilClass.changeAccessibility("public");
     auto meshGetter = stencilClass.addMemberFunction("static const GpuTriMesh &", "getMesh");
@@ -712,6 +714,7 @@ void CudaIcoCodeGen::generateStencilClasses(
     auto stencilClassSetup = stencilClass.addMemberFunction("static void", "setup");
     stencilClassSetup.addArg("const dawn::GlobalGpuTriMesh *mesh");
     stencilClassSetup.addArg("int kSize");
+    stencilClassSetup.addArg("int stream_id");
     generateStencilSetup(stencilClassSetup, stencil);
     stencilClassSetup.commit();
 
@@ -844,7 +847,7 @@ void CudaIcoCodeGen::generateAllAPIRunFunctions(
         }
         if(fromHost) {
           for(auto& apiRunFun : apiRunFuns) {
-            apiRunFun->addStatement(fullStencilName + "::setup(mesh, k_size)");
+            apiRunFun->addStatement(fullStencilName + "::setup(mesh, k_size, 0)");
           }
           // depending if we are calling from c or from fortran, we need to transpose the data or
           // not
@@ -1116,9 +1119,10 @@ void CudaIcoCodeGen::generateMemMgmtFunctions(
   MemberFunction setupFun("void", "setup_" + wrapperName, ssSW, 0, onlyDecl);
   setupFun.addArg("dawn::GlobalGpuTriMesh *mesh");
   setupFun.addArg("int k_size");
+  setupFun.addArg("int stream_id");
   setupFun.finishArgs();
   if(!onlyDecl) {
-    setupFun.addStatement(fullStencilName + "::setup(mesh, k_size)");
+    setupFun.addStatement(fullStencilName + "::setup(mesh, k_size, stream_id)");
   }
   setupFun.commit();
 
@@ -1149,6 +1153,8 @@ void CudaIcoCodeGen::generateStaticMembersTrailer(
   }
   ssSW << "int " << fullStencilName << "::"
        << "kSize_;\n";
+  ssSW << "int " << fullStencilName << "::"
+       << "stream_id_;\n";
   ssSW << "bool " << fullStencilName << "::"
        << "is_setup_ = false;\n";
   ssSW << "dawn_generated::cuda_ico::" + wrapperName << "::GpuTriMesh " << fullStencilName << "::"
@@ -1502,7 +1508,7 @@ generateF90InterfaceSI(FortranInterfaceModuleGen& fimGen,
   const int fromDeviceAPIIdx = 0;
   const int fromHostAPIIdx = 1;
   interfaces[fromHostAPIIdx].addArg("mesh", FortranAPI::InterfaceType::OBJ);
-  interfaces[fromHostAPIIdx].addArg("k_size", FortranAPI::InterfaceType::INTEGER);
+  interfaces[fromHostAPIIdx].addArg("k_size", FortranAPI::InterfaceType::INTEGER);  
 
   const int runAndVerifyIdx = 2;
 
@@ -1662,6 +1668,7 @@ generateF90InterfaceSI(FortranInterfaceModuleGen& fimGen,
   FortranInterfaceAPI free("free_" + stencilInstantiation->getName());
   setup.addArg("mesh", FortranAPI::InterfaceType::OBJ);
   setup.addArg("k_size", FortranAPI::InterfaceType::INTEGER);
+  setup.addArg("stream_id", FortranAPI::InterfaceType::INTEGER);
 
   fimGen.addInterfaceAPI(std::move(setup));
   fimGen.addInterfaceAPI(std::move(free));
