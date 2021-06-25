@@ -45,13 +45,6 @@ class FindReduceOverNeighborExpr : public ast::ASTVisitorForwardingNonConst {
 public:
   void visit(const std::shared_ptr<ast::ReductionOverNeighborExpr>& expr) override {
     found_ = true;
-    return;
-  }
-  void visit(const std::shared_ptr<ast::BlockStmt>& stmt) override {
-    // TODO do we need this override ?
-    for(const auto& s : stmt->getStatements()) {
-      s->accept(*this);
-    }
   }
   bool hasReduceOverNeighborExpr() const { return found_; }
   FindReduceOverNeighborExpr() = default;
@@ -77,17 +70,17 @@ protected:
   /// Nesting level of argument lists of stencil function *calls*
   int nestingOfStencilFunArgLists_;
 
-  std::string makeIndexString(const std::shared_ptr<ast::FieldAccessExpr>& expr, std::string kiter);
-  bool hasIrregularPentagons(const std::vector<ast::LocationType>& chain);
+  std::string makeIndexString(const std::shared_ptr<ast::FieldAccessExpr>& expr, std::string kiter) const;
+  bool hasIrregularPentagons(const std::vector<ast::LocationType>& chain) const;
   void evalNeighbourReduction(const std::shared_ptr<ast::ReductionOverNeighborExpr>& expr);
   void generateNeighbourRedLoop(std::stringstream& ss) const;
-  std::string nbhLhsName(const std::shared_ptr<ast::Expr>& expr);
-  std::string pidxStr();
-  std::string nbhIterStr();
+  std::string nbhLhsName(const std::shared_ptr<ast::Expr>& expr) const;
+  std::string pidxStr() const;
+  std::string nbhIterStr() const;
   // symbol of the current neighbour index in a reduction loop
-  std::string nbhIdxStr();
+  std::string nbhIdxStr() const;
   // in case of nested reduction, this is the symbol of the index of parent reduction loop
-  std::string nbhIdxParentStr();
+  std::string nbhIdxParentStr() const;
 
 public:
   using Base = ASTCodeGenCXX;

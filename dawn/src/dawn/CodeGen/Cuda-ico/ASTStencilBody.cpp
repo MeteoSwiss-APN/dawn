@@ -37,13 +37,13 @@ void ASTStencilBody::visit(const std::shared_ptr<ast::BlockStmt>& stmt) {
   indent_ -= DAWN_PRINT_INDENT;
 }
 
-std::string ASTStencilBody::nbhIterStr() { return "nbhIter" + std::to_string(recursiveIterNest_); }
+std::string ASTStencilBody::nbhIterStr() const { return "nbhIter" + std::to_string(recursiveIterNest_); }
 
-std::string ASTStencilBody::nbhIdxParentStr() {
+std::string ASTStencilBody::nbhIdxParentStr() const {
   return "nbhIdx" + std::to_string(recursiveIterNest_ - 1);
 }
 
-std::string ASTStencilBody::nbhIdxStr() { return "nbhIdx" + std::to_string(recursiveIterNest_); }
+std::string ASTStencilBody::nbhIdxStr() const { return "nbhIdx" + std::to_string(recursiveIterNest_); }
 
 void ASTStencilBody::visit(const std::shared_ptr<ast::LoopStmt>& stmt) {
   const auto maybeChainPtr =
@@ -129,7 +129,7 @@ void ASTStencilBody::visit(const std::shared_ptr<ast::AssignmentExpr>& expr) {
 }
 
 std::string ASTStencilBody::makeIndexString(const std::shared_ptr<ast::FieldAccessExpr>& expr,
-                                            std::string kiterStr) {
+                                            std::string kiterStr) const {
   bool isVertical = metadata_.getFieldDimensions(iir::getAccessID(expr)).isVertical();
   if(isVertical) {
     return kiterStr;
@@ -281,16 +281,16 @@ void ASTStencilBody::visit(const std::shared_ptr<ast::VarDeclStmt>& stmt) {
   ASTCodeGenCXX::visit(stmt);
 }
 
-bool ASTStencilBody::hasIrregularPentagons(const std::vector<ast::LocationType>& chain) {
+bool ASTStencilBody::hasIrregularPentagons(const std::vector<ast::LocationType>& chain) const {
   DAWN_ASSERT(chain.size() > 1);
   return (std::count(chain.begin(), chain.end() - 1, ast::LocationType::Vertices) != 0);
 }
 
-std::string ASTStencilBody::nbhLhsName(const std::shared_ptr<ast::Expr>& expr) {
+std::string ASTStencilBody::nbhLhsName(const std::shared_ptr<ast::Expr>& expr) const {
   return "lhs_" + std::to_string(expr->getID());
 }
 
-std::string ASTStencilBody::pidxStr() {
+std::string ASTStencilBody::pidxStr() const {
   // the pidx within a nested neighbour reduction is the parent neighbor reduction loop index
   if(recursiveIterNest_ > 0)
     return nbhIdxParentStr();
