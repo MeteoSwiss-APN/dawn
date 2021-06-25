@@ -162,11 +162,9 @@ run(const std::map<std::string, std::shared_ptr<iir::StencilInstantiation>>&
 CudaIcoCodeGen::CudaIcoCodeGen(const StencilInstantiationContext& ctx, int maxHaloPoints,
                                std::optional<std::string> outputCHeader,
                                std::optional<std::string> outputFortranInterface,
-                               bool atlasCompatible, int blockSize,
-                               int levelsPerThread)
-    : CodeGen(ctx, maxHaloPoints), codeGenOptions_{outputCHeader,   outputFortranInterface,
-                                                   atlasCompatible,
-                                                   blockSize,       levelsPerThread} {}
+                               bool atlasCompatible, int blockSize, int levelsPerThread)
+    : CodeGen(ctx, maxHaloPoints), codeGenOptions_{outputCHeader, outputFortranInterface,
+                                                   atlasCompatible, blockSize, levelsPerThread} {}
 
 CudaIcoCodeGen::~CudaIcoCodeGen() {}
 

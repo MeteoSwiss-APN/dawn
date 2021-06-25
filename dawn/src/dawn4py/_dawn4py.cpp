@@ -184,17 +184,10 @@ PYBIND11_MODULE(_dawn4py, m) {
                        int nsms, int DomainSizeI, int DomainSizeJ, int DomainSizeK,
                        const std::string& OutputCHeader, const std::string& OutputFortranInterface,
                        bool AtlasCompatible) {
-             return dawn::codegen::Options{MaxHaloSize,
-                                           UseParallelEP,
-                                           RunWithSync,
-                                           MaxBlocksPerSM,
-                                           nsms,
-                                           DomainSizeI,
-                                           DomainSizeJ,
-                                           DomainSizeK,
-                                           OutputCHeader,
-                                           OutputFortranInterface,
-                                           AtlasCompatible};
+             return dawn::codegen::Options{
+                 MaxHaloSize,    UseParallelEP, RunWithSync, MaxBlocksPerSM, nsms,
+                 DomainSizeI,    DomainSizeJ,   DomainSizeK, OutputCHeader,  OutputFortranInterface,
+                 AtlasCompatible};
            }),
            py::arg("max_halo_size") = 3, py::arg("use_parallel_ep") = false,
            py::arg("run_with_sync") = true, py::arg("max_blocks_per_sm") = 0, py::arg("nsms") = 0,

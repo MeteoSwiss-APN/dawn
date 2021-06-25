@@ -70,7 +70,8 @@ protected:
   /// Nesting level of argument lists of stencil function *calls*
   int nestingOfStencilFunArgLists_;
 
-  std::string makeIndexString(const std::shared_ptr<ast::FieldAccessExpr>& expr, std::string kiter) const;
+  std::string makeIndexString(const std::shared_ptr<ast::FieldAccessExpr>& expr,
+                              std::string kiter) const;
   bool hasIrregularPentagons(const std::vector<ast::LocationType>& chain) const;
   void evalNeighbourReduction(const std::shared_ptr<ast::ReductionOverNeighborExpr>& expr);
   void generateNeighbourRedLoop(std::stringstream& ss) const;

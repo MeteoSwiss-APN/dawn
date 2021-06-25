@@ -46,8 +46,8 @@ public:
   ///@brief constructor
   CudaIcoCodeGen(const StencilInstantiationContext& ctx, int maxHaloPoints,
                  std::optional<std::string> outputCHeader,
-                 std::optional<std::string> outputFortranInterface,
-                 bool atlasCompatible, int blockSize, int levelsPerThread);
+                 std::optional<std::string> outputFortranInterface, bool atlasCompatible,
+                 int blockSize, int levelsPerThread);
   virtual ~CudaIcoCodeGen();
   virtual std::unique_ptr<TranslationUnit> generateCode() override;
 

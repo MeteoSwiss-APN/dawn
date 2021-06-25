@@ -37,13 +37,17 @@ void ASTStencilBody::visit(const std::shared_ptr<ast::BlockStmt>& stmt) {
   indent_ -= DAWN_PRINT_INDENT;
 }
 
-std::string ASTStencilBody::nbhIterStr() const { return "nbhIter" + std::to_string(recursiveIterNest_); }
+std::string ASTStencilBody::nbhIterStr() const {
+  return "nbhIter" + std::to_string(recursiveIterNest_);
+}
 
 std::string ASTStencilBody::nbhIdxParentStr() const {
   return "nbhIdx" + std::to_string(recursiveIterNest_ - 1);
 }
 
-std::string ASTStencilBody::nbhIdxStr() const { return "nbhIdx" + std::to_string(recursiveIterNest_); }
+std::string ASTStencilBody::nbhIdxStr() const {
+  return "nbhIdx" + std::to_string(recursiveIterNest_);
+}
 
 void ASTStencilBody::visit(const std::shared_ptr<ast::LoopStmt>& stmt) {
   const auto maybeChainPtr =
@@ -269,7 +273,7 @@ void ASTStencilBody::visit(const std::shared_ptr<ast::VarDeclStmt>& stmt) {
 
   if(findReduceOverNeighborExpr.hasReduceOverNeighborExpr()) {
     ASTStencilBody astParser(metadata_, genAtlasCompatCode_, recursiveIterNest_);
-    for(auto& expr: stmt->getInitList()) {
+    for(auto& expr : stmt->getInitList()) {
       expr->accept(astParser);
     }
 
