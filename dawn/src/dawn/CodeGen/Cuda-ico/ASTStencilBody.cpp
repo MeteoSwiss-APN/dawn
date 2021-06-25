@@ -269,7 +269,9 @@ void ASTStencilBody::visit(const std::shared_ptr<ast::VarDeclStmt>& stmt) {
 
   if(findReduceOverNeighborExpr.hasReduceOverNeighborExpr()) {
     ASTStencilBody astParser(metadata_, genAtlasCompatCode_, recursiveIterNest_);
-    stmt->accept(astParser);
+    for(auto& expr: stmt->getInitList()) {
+      expr->accept(astParser);
+    }
 
     astParser.generateNeighbourRedLoop(ss_);
 
@@ -298,7 +300,6 @@ std::string ASTStencilBody::pidxStr() {
 
 void ASTStencilBody::evalNeighbourReduction(
     const std::shared_ptr<ast::ReductionOverNeighborExpr>& expr) {
-
   auto lhs_name = nbhLhsName(expr);
 
   std::string weights_name = "weights_" + std::to_string(expr->getID());
