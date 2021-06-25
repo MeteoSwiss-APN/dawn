@@ -21,7 +21,6 @@
 #include "dawn/AST/LocationType.h"
 #include "dawn/CodeGen/CXXUtil.h"
 #include "dawn/CodeGen/Cuda-ico/LocToStringUtils.h"
-#include "dawn/CodeGen/Cuda-ico/ReductionMerger.h"
 #include "dawn/CodeGen/Cuda/CodeGeneratorHelper.h"
 #include "dawn/CodeGen/F90Util.h"
 #include "dawn/CodeGen/IcoChainSizes.h"
@@ -155,7 +154,7 @@ run(const std::map<std::string, std::shared_ptr<iir::StencilInstantiation>>&
       options.OutputCHeader == "" ? std::nullopt : std::make_optional(options.OutputCHeader),
       options.OutputFortranInterface == "" ? std::nullopt
                                            : std::make_optional(options.OutputFortranInterface),
-      options.MergeReductions, options.AtlasCompatible, options.BlockSize, options.LevelsPerThread);
+      options.AtlasCompatible, options.BlockSize, options.LevelsPerThread);
 
   return CG.generateCode();
 }
@@ -163,11 +162,9 @@ run(const std::map<std::string, std::shared_ptr<iir::StencilInstantiation>>&
 CudaIcoCodeGen::CudaIcoCodeGen(const StencilInstantiationContext& ctx, int maxHaloPoints,
                                std::optional<std::string> outputCHeader,
                                std::optional<std::string> outputFortranInterface,
-                               bool mergeReductions, bool atlasCompatible, int blockSize,
-                               int levelsPerThread)
-    : CodeGen(ctx, maxHaloPoints), codeGenOptions_{outputCHeader,   outputFortranInterface,
-                                                   mergeReductions, atlasCompatible,
-                                                   blockSize,       levelsPerThread} {}
+                               bool atlasCompatible, int blockSize, int levelsPerThread)
+    : CodeGen(ctx, maxHaloPoints), codeGenOptions_{outputCHeader, outputFortranInterface,
+                                                   atlasCompatible, blockSize, levelsPerThread} {}
 
 CudaIcoCodeGen::~CudaIcoCodeGen() {}
 
@@ -1211,12 +1208,6 @@ void CudaIcoCodeGen::generateAllCudaKernels(
   ASTStencilBody stencilBodyCXXVisitor(stencilInstantiation->getMetaData(),
                                        codeGenOptions_.AtlasCompatible);
   const auto& globalsMap = stencilInstantiation->getIIR()->getGlobalVariableMap();
-  std::optional<MergeGroupMap> blockToMergeGroups = std::nullopt;
-  if(codeGenOptions_.MergeReductions) {
-    blockToMergeGroups =
-        ReductionMergeGroupsComputer::ComputeReductionMergeGroups(stencilInstantiation);
-  }
-  stencilBodyCXXVisitor.setBlockToMergeGroupMap(blockToMergeGroups);
 
   for(const auto& ms : iterateIIROver<iir::MultiStage>(*(stencilInstantiation->getIIR()))) {
     for(const auto& stage : ms->getChildren()) {
@@ -1352,15 +1343,6 @@ void CudaIcoCodeGen::generateAllCudaKernels(
               const iir::DoMethod& doMethod = *doMethodPtr;
 
               for(const auto& stmt : doMethod.getAST().getStatements()) {
-                FindReduceOverNeighborExpr findReduceOverNeighborExpr(doMethod.getAST().getID());
-                stmt->accept(findReduceOverNeighborExpr);
-                stencilBodyCXXVisitor.setFirstPass();
-                for(auto redExpr : findReduceOverNeighborExpr.reduceOverNeighborExprs()) {
-                  stencilBodyCXXVisitor.setBlockID(
-                      findReduceOverNeighborExpr.getBlockIDofReduction(redExpr));
-                  redExpr->accept(stencilBodyCXXVisitor);
-                }
-                stencilBodyCXXVisitor.setSecondPass();
                 stmt->accept(stencilBodyCXXVisitor);
                 cudaKernel << stencilBodyCXXVisitor.getCodeAndResetStream();
               }
