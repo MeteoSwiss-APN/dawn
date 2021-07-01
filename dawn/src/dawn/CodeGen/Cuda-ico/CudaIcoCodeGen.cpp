@@ -391,7 +391,8 @@ void CudaIcoCodeGen::generateRunFun(
       }
 
       kernelCall << "<<<"
-                 << "dG" + std::to_string(stage->getStageID()) + ",dB," << "0, stream_"
+                 << "dG" + std::to_string(stage->getStageID()) + ",dB,"
+                 << "0, stream_"
                  << ">>>(";
       if(!globalsMap.empty()) {
         kernelCall << "m_globals, ";
@@ -1508,7 +1509,7 @@ generateF90InterfaceSI(FortranInterfaceModuleGen& fimGen,
   const int fromDeviceAPIIdx = 0;
   const int fromHostAPIIdx = 1;
   interfaces[fromHostAPIIdx].addArg("mesh", FortranAPI::InterfaceType::OBJ);
-  interfaces[fromHostAPIIdx].addArg("k_size", FortranAPI::InterfaceType::INTEGER);  
+  interfaces[fromHostAPIIdx].addArg("k_size", FortranAPI::InterfaceType::INTEGER);
 
   const int runAndVerifyIdx = 2;
 
