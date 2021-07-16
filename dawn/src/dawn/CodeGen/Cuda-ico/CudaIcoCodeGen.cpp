@@ -1047,7 +1047,7 @@ void CudaIcoCodeGen::generateAllAPIVerifyFunctions(
       runAndVerifyAPI.addStatement("static int iteration = 0");
 
       runAndVerifyAPI.addStatement("std::cout << \"[DSL] Running stencil " + wrapperName +
-                                   "...\\n\" << std::flush");
+                                   " (\" << iteration << \") ...\\n\" << std::flush");
 
       auto getDSLFieldsNames = [&fieldInfos, &stencilInstantiation](
                                    const iir::Stencil& stencil) -> std::vector<std::string> {
