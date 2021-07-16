@@ -1049,18 +1049,24 @@ void CudaIcoCodeGen::generateAllAPIVerifyFunctions(
       runAndVerifyAPI.addStatement("std::cout << \"[DSL] Running stencil " + wrapperName +
                                    "...\\n\" << std::flush");
 
-      auto getDSLFieldsNames =
-          [&fieldInfos](const iir::Stencil& stencil) -> std::vector<std::string> {
-        auto usedFields = getUsedFields(stencil);
+      auto getDSLFieldsNames = [&fieldInfos, &stencilInstantiation](
+                                   const iir::Stencil& stencil) -> std::vector<std::string> {
+        auto apiFields = stencilInstantiation->getMetaData().getAPIFields();
 
         std::vector<std::string> fieldNames;
-        for(auto fieldID : usedFields) {
-          auto fieldInfo = fieldInfos.at(fieldID);
-          if(fieldInfo.field.getIntend() == dawn::iir::Field::IntendKind::InputOutput ||
-             fieldInfo.field.getIntend() == dawn::iir::Field::IntendKind::Output) {
-            fieldNames.push_back(fieldInfo.Name + "_before");
+        for(auto fieldID : apiFields) {
+
+          if(fieldInfos.count(fieldID) == 0) {
+            // field is unused, so we don't need a `..._before` variant
+            fieldNames.push_back(stencilInstantiation->getMetaData().getNameFromAccessID(fieldID));
           } else {
-            fieldNames.push_back(fieldInfo.Name);
+            auto fieldInfo = fieldInfos.at(fieldID);
+            if(fieldInfo.field.getIntend() == dawn::iir::Field::IntendKind::InputOutput ||
+               fieldInfo.field.getIntend() == dawn::iir::Field::IntendKind::Output) {
+              fieldNames.push_back(fieldInfo.Name + "_before");
+            } else {
+              fieldNames.push_back(fieldInfo.Name);
+            }
           }
         }
         return fieldNames;
