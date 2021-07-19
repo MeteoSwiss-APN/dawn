@@ -16,6 +16,9 @@
 #include "dawn/IIR/ASTExpr.h"
 
 static int dimensionsCompatible(int leftDim, int rightDim) {
+  // everything can be assigned to a full field.
+  // dimensionless expressions are ok (-1).
+  // otherwise dimensions need to match (this prohibits vert = hor/full and hor = vert)
   return leftDim == 3 || rightDim == -1 || leftDim == -1 || leftDim == rightDim;
 }
 
@@ -60,30 +63,14 @@ void IntegrityChecker::iterate(const std::unique_ptr<iir::DoMethod>& doMethod) {
   }
 }
 
-void IntegrityChecker::visit(const std::shared_ptr<ast::BlockStmt>& statement) {
-  for(const auto& stmt : statement->getStatements()) {
-    stmt->accept(*this);
+void IntegrityChecker::visit(const std::shared_ptr<ast::VarAccessExpr>& expr) {
+  int accessID = iir::getAccessID(expr);
+  auto& idToDim = metadata_.getFieldIDToDimsMap();
+  if(!idToDim.count(accessID)) {
+    curDimensions_ = -1;
+  } else {
+    curDimensions_ = idToDim.at(accessID).numSpatialDimensions();
   }
-}
-
-void IntegrityChecker::visit(const std::shared_ptr<ast::ExprStmt>& statement) {
-  statement->getExpr()->accept(*this);
-}
-
-void IntegrityChecker::visit(const std::shared_ptr<ast::ReturnStmt>& stmt) {
-  stmt->getExpr()->accept(*this);
-}
-
-void IntegrityChecker::visit(const std::shared_ptr<ast::IfStmt>& stmt) {
-  stmt->getCondExpr()->accept(*this);
-  stmt->getThenStmt()->accept(*this);
-  if(stmt->hasElse())
-    stmt->getElseStmt()->accept(*this);
-}
-
-void IntegrityChecker::visit(const std::shared_ptr<ast::VarDeclStmt>& stmt) {
-  for(const auto& expr : stmt->getInitList())
-    expr->accept(*this);
 }
 
 void IntegrityChecker::visit(const std::shared_ptr<ast::AssignmentExpr>& expr) {
@@ -162,11 +149,6 @@ void IntegrityChecker::visit(const std::shared_ptr<ast::FieldAccessExpr>& expr) 
   curDimensions_ = metadata_.getFieldDimensions(accessID).numSpatialDimensions();
 }
 
-void IntegrityChecker::visit(const std::shared_ptr<ast::UnaryOperator>& expr) {
-  for(auto& stmt : expr->getChildren())
-    stmt->accept(*this);
-}
-
 void IntegrityChecker::visit(const std::shared_ptr<ast::ReductionOverNeighborExpr>& expr) {
   bool parentHadIterationContext = parentHasIterationContext_;
   parentHasIterationContext_ = true;
@@ -180,21 +162,6 @@ void IntegrityChecker::visit(const std::shared_ptr<ast::LoopStmt>& expr) {
   for(auto& stmt : expr->getChildren())
     stmt->accept(*this);
   parentHasIterationContext_ = false;
-}
-
-void IntegrityChecker::visit(const std::shared_ptr<ast::BinaryOperator>& expr) {
-  for(auto& stmt : expr->getChildren())
-    stmt->accept(*this);
-}
-
-void IntegrityChecker::visit(const std::shared_ptr<ast::TernaryOperator>& expr) {
-  for(auto& stmt : expr->getChildren())
-    stmt->accept(*this);
-}
-
-void IntegrityChecker::visit(const std::shared_ptr<ast::FunCallExpr>& expr) {
-  for(auto& stmt : expr->getChildren())
-    stmt->accept(*this);
 }
 
 } // namespace dawn

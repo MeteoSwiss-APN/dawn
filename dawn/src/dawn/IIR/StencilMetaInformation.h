@@ -228,8 +228,6 @@ public:
   bool hasNameToAccessID(const std::string& name) const {
     return AccessIDToNameMap_.reverseHas(name);
   }
-  /// @brief Get the field-AccessID set
-  const std::set<int>& getFieldAccessIDSet() const;
 
   /// @brief Get the field-AccessID set
   const std::set<int>& getGlobalVariableAccessIDSet() const;
