@@ -156,8 +156,8 @@ public:
     return sparse_dimension_.shape(0) * sparse_dimension_.shape(1) * sparse_dimension_.shape(2);
   }
   std::tuple<size_t, size_t, size_t> getShape() const {
-    return std::make_tuple(sparse_dimension_.shape(0), sparse_dimension_.shape(1),
-                           sparse_dimension_.shape(2));
+    return std::make_tuple(sparse_dimension_.shape(0), sparse_dimension_.shape(2),
+                           sparse_dimension_.shape(1));
   }
 
   SparseDimension(atlas::array::ArrayView<T, 3> const& sparse_dimension)
