@@ -6,7 +6,6 @@
 #include "driver-includes/to_vtk.h"
 #define GRIDTOOLS_DAWN_NO_INCLUDE
 #include "driver-includes/math.hpp"
-#include "driver-includes/timer_cuda.hpp"
 #include <chrono>
 #define BLOCK_SIZE 128
 #define LEVELS_PER_THREAD 1
@@ -38,22 +37,22 @@ __global__ void offset_reduction_cuda_stencil34_ms47_s52_kernel(
         e2c_aux[0 * kSize * EdgeStride + (kIter + 0) * EdgeStride + pidx],
         e2c_aux[1 * kSize * EdgeStride + (kIter + 0) * EdgeStride + pidx],
         e2c_aux[1 * kSize * EdgeStride + (kIter + 0) * EdgeStride + pidx]};
-    for(int nbhIter = 0; nbhIter < E_C_E_SIZE; nbhIter++) {
-      int nbhIdx = eceTable[pidx * E_C_E_SIZE + nbhIter];
-      lhs_36 += weights_36[nbhIter] *
-                (raw_diam_coeff[nbhIter * kSize * EdgeStride + (kIter + 0) * EdgeStride + pidx] *
-                 prism_thick_e[(kIter + 0) * EdgeStride + nbhIdx]);
+    for(int nbhIter0 = 0; nbhIter0 < E_C_E_SIZE; nbhIter0++) {
+      int nbhIdx0 = eceTable[pidx * E_C_E_SIZE + nbhIter0];
+      lhs_36 += weights_36[nbhIter0] *
+                (raw_diam_coeff[nbhIter0 * kSize * EdgeStride + (kIter + 0) * EdgeStride + pidx] *
+                 prism_thick_e[(kIter + 0) * EdgeStride + nbhIdx0]);
     }
     out_vn_e[(kIter + 0) * EdgeStride + pidx] = lhs_36;
     ::dawn::float_type lhs_40 = (::dawn::float_type).0;
     ::dawn::float_type weights_40[4] = {
         e2c_aux_h[0 * EdgeStride + pidx], e2c_aux_h[0 * EdgeStride + pidx],
         e2c_aux_h[1 * EdgeStride + pidx], e2c_aux_h[1 * EdgeStride + pidx]};
-    for(int nbhIter = 0; nbhIter < E_C_E_SIZE; nbhIter++) {
-      int nbhIdx = eceTable[pidx * E_C_E_SIZE + nbhIter];
-      lhs_40 += weights_40[nbhIter] *
-                (raw_diam_coeff[nbhIter * kSize * EdgeStride + (kIter + 0) * EdgeStride + pidx] *
-                 prism_thick_e[(kIter + 0) * EdgeStride + nbhIdx]);
+    for(int nbhIter0 = 0; nbhIter0 < E_C_E_SIZE; nbhIter0++) {
+      int nbhIdx0 = eceTable[pidx * E_C_E_SIZE + nbhIter0];
+      lhs_40 += weights_40[nbhIter0] *
+                (raw_diam_coeff[nbhIter0 * kSize * EdgeStride + (kIter + 0) * EdgeStride + pidx] *
+                 prism_thick_e[(kIter + 0) * EdgeStride + nbhIdx0]);
     }
     out_vn_e[(kIter + 0) * EdgeStride + pidx] = lhs_40;
   }
@@ -63,13 +62,6 @@ class offset_reduction_cuda {
 public:
   static const int E_C_E_SIZE = 4;
   static const int E_C_SIZE = 2;
-
-  struct sbase : public timer_cuda {
-
-    sbase(std::string name) : timer_cuda(name) {}
-
-    double get_time() { return total_time(); }
-  };
 
   struct GpuTriMesh {
     int NumVertices;
@@ -101,7 +93,7 @@ public:
     }
   };
 
-  struct stencil_34 : public sbase {
+  struct stencil_34 {
   private:
     ::dawn::float_type* out_vn_e_;
     ::dawn::float_type* raw_diam_coeff_;
@@ -111,6 +103,7 @@ public:
     static int kSize_;
     static GpuTriMesh mesh_;
     static bool is_setup_;
+    static cudaStream_t stream_;
 
   public:
     static const GpuTriMesh& getMesh() { return mesh_; }
@@ -119,10 +112,11 @@ public:
 
     static void free() {}
 
-    static void setup(const dawn::GlobalGpuTriMesh* mesh, int kSize) {
+    static void setup(const dawn::GlobalGpuTriMesh* mesh, int kSize, cudaStream_t stream) {
       mesh_ = GpuTriMesh(mesh);
       kSize_ = kSize;
       is_setup_ = true;
+      stream_ = stream;
     }
 
     dim3 grid(int kSize, int elSize, bool kparallel) {
@@ -134,7 +128,7 @@ public:
       }
     }
 
-    stencil_34() : sbase("stencil_34") {}
+    stencil_34() {}
 
     void run() {
       if(!is_setup_) {
@@ -143,19 +137,20 @@ public:
         return;
       }
       dim3 dB(BLOCK_SIZE, 1, 1);
-      sbase::start();
       int hsize52 = mesh_.NumEdges;
+      if(hsize52 == 0) {
+        return;
+      }
       dim3 dG52 = grid(kSize_ + 0 - 0, hsize52, false);
       offset_reduction_cuda_stencil34_ms47_s52_kernel<E_C_SIZE, E_C_E_SIZE>
-          <<<dG52, dB>>>(mesh_.EdgeStride, kSize_, hsize52, mesh_.ecTable, mesh_.eceTable,
-                         out_vn_e_, raw_diam_coeff_, prism_thick_e_, e2c_aux_, e2c_aux_h_);
+          <<<dG52, dB, 0, stream_>>>(mesh_.EdgeStride, kSize_, hsize52, mesh_.ecTable,
+                                     mesh_.eceTable, out_vn_e_, raw_diam_coeff_, prism_thick_e_,
+                                     e2c_aux_, e2c_aux_h_);
 #ifndef NDEBUG
 
       gpuErrchk(cudaPeekAtLastError());
       gpuErrchk(cudaDeviceSynchronize());
 #endif
-
-      sbase::pause();
     }
 
     void CopyResultToHost(::dawn::float_type* out_vn_e, bool do_reshape) {
@@ -198,47 +193,41 @@ public:
 } // namespace cuda_ico
 } // namespace dawn_generated
 extern "C" {
-double run_offset_reduction_cuda_from_c_host(dawn::GlobalGpuTriMesh* mesh, int k_size,
-                                             ::dawn::float_type* out_vn_e,
-                                             ::dawn::float_type* raw_diam_coeff,
-                                             ::dawn::float_type* prism_thick_e,
-                                             ::dawn::float_type* e2c_aux,
-                                             ::dawn::float_type* e2c_aux_h) {
+void run_offset_reduction_cuda_from_c_host(dawn::GlobalGpuTriMesh* mesh, int k_size,
+                                           ::dawn::float_type* out_vn_e,
+                                           ::dawn::float_type* raw_diam_coeff,
+                                           ::dawn::float_type* prism_thick_e,
+                                           ::dawn::float_type* e2c_aux,
+                                           ::dawn::float_type* e2c_aux_h) {
   dawn_generated::cuda_ico::offset_reduction_cuda::stencil_34 s;
-  dawn_generated::cuda_ico::offset_reduction_cuda::stencil_34::setup(mesh, k_size);
+  dawn_generated::cuda_ico::offset_reduction_cuda::stencil_34::setup(mesh, k_size, 0);
   s.copy_memory(out_vn_e, raw_diam_coeff, prism_thick_e, e2c_aux, e2c_aux_h, true);
   s.run();
-  double time = s.get_time();
-  s.reset();
   s.CopyResultToHost(out_vn_e, true);
   dawn_generated::cuda_ico::offset_reduction_cuda::stencil_34::free();
-  return time;
+  return;
 }
-double run_offset_reduction_cuda_from_fort_host(dawn::GlobalGpuTriMesh* mesh, int k_size,
-                                                ::dawn::float_type* out_vn_e,
-                                                ::dawn::float_type* raw_diam_coeff,
-                                                ::dawn::float_type* prism_thick_e,
-                                                ::dawn::float_type* e2c_aux,
-                                                ::dawn::float_type* e2c_aux_h) {
+void run_offset_reduction_cuda_from_fort_host(dawn::GlobalGpuTriMesh* mesh, int k_size,
+                                              ::dawn::float_type* out_vn_e,
+                                              ::dawn::float_type* raw_diam_coeff,
+                                              ::dawn::float_type* prism_thick_e,
+                                              ::dawn::float_type* e2c_aux,
+                                              ::dawn::float_type* e2c_aux_h) {
   dawn_generated::cuda_ico::offset_reduction_cuda::stencil_34 s;
-  dawn_generated::cuda_ico::offset_reduction_cuda::stencil_34::setup(mesh, k_size);
+  dawn_generated::cuda_ico::offset_reduction_cuda::stencil_34::setup(mesh, k_size, 0);
   s.copy_memory(out_vn_e, raw_diam_coeff, prism_thick_e, e2c_aux, e2c_aux_h, false);
   s.run();
-  double time = s.get_time();
-  s.reset();
   s.CopyResultToHost(out_vn_e, false);
   dawn_generated::cuda_ico::offset_reduction_cuda::stencil_34::free();
-  return time;
+  return;
 }
-double run_offset_reduction_cuda(::dawn::float_type* out_vn_e, ::dawn::float_type* raw_diam_coeff,
-                                 ::dawn::float_type* prism_thick_e, ::dawn::float_type* e2c_aux,
-                                 ::dawn::float_type* e2c_aux_h) {
+void run_offset_reduction_cuda(::dawn::float_type* out_vn_e, ::dawn::float_type* raw_diam_coeff,
+                               ::dawn::float_type* prism_thick_e, ::dawn::float_type* e2c_aux,
+                               ::dawn::float_type* e2c_aux_h) {
   dawn_generated::cuda_ico::offset_reduction_cuda::stencil_34 s;
   s.copy_pointers(out_vn_e, raw_diam_coeff, prism_thick_e, e2c_aux, e2c_aux_h);
   s.run();
-  double time = s.get_time();
-  s.reset();
-  return time;
+  return;
 }
 bool verify_offset_reduction_cuda(const ::dawn::float_type* out_vn_e_dsl,
                                   const ::dawn::float_type* out_vn_e, const double out_vn_e_rel_tol,
@@ -274,23 +263,24 @@ void run_and_verify_offset_reduction_cuda(
     ::dawn::float_type* out_vn_e_before, const double out_vn_e_rel_tol,
     const double out_vn_e_abs_tol) {
   static int iteration = 0;
-  std::cout << "[DSL] Running stencil offset_reduction_cuda...\n" << std::flush;
-  double time =
-      run_offset_reduction_cuda(out_vn_e_before, raw_diam_coeff, prism_thick_e, e2c_aux, e2c_aux_h);
+  std::cout << "[DSL] Running stencil offset_reduction_cuda (" << iteration << ") ...\n"
+            << std::flush;
+  run_offset_reduction_cuda(out_vn_e_before, raw_diam_coeff, prism_thick_e, e2c_aux, e2c_aux_h);
   std::cout << "[DSL] offset_reduction_cuda run time: " << time << "s\n" << std::flush;
   std::cout << "[DSL] Verifying stencil offset_reduction_cuda...\n" << std::flush;
   verify_offset_reduction_cuda(out_vn_e_before, out_vn_e, out_vn_e_rel_tol, out_vn_e_abs_tol,
                                iteration);
   iteration++;
 }
-void setup_offset_reduction_cuda(dawn::GlobalGpuTriMesh* mesh, int k_size) {
-  dawn_generated::cuda_ico::offset_reduction_cuda::stencil_34::setup(mesh, k_size);
+void setup_offset_reduction_cuda(dawn::GlobalGpuTriMesh* mesh, int k_size, cudaStream_t stream) {
+  dawn_generated::cuda_ico::offset_reduction_cuda::stencil_34::setup(mesh, k_size, stream);
 }
 void free_offset_reduction_cuda() {
   dawn_generated::cuda_ico::offset_reduction_cuda::stencil_34::free();
 }
 }
 int dawn_generated::cuda_ico::offset_reduction_cuda::stencil_34::kSize_;
+cudaStream_t dawn_generated::cuda_ico::offset_reduction_cuda::stencil_34::stream_;
 bool dawn_generated::cuda_ico::offset_reduction_cuda::stencil_34::is_setup_ = false;
 dawn_generated::cuda_ico::offset_reduction_cuda::GpuTriMesh
     dawn_generated::cuda_ico::offset_reduction_cuda::stencil_34::mesh_;

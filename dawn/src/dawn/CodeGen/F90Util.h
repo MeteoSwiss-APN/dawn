@@ -74,7 +74,7 @@ public:
 
 class FortranAPI {
 public:
-  enum class InterfaceType { INTEGER, FLOAT, DOUBLE, CHAR, BOOLEAN, OBJ };
+  enum class InterfaceType { INTEGER, FLOAT, DOUBLE, CHAR, BOOLEAN, OBJ, CUDA_STREAM_T };
   FortranAPI(std::string name, std::optional<InterfaceType> returnType = std::nullopt)
       : name_(name) {
     if(returnType) {
@@ -103,6 +103,8 @@ protected:
       return "logical(c_bool)";
     case InterfaceType::OBJ:
       return "type(c_ptr)";
+    case InterfaceType::CUDA_STREAM_T:   
+      return "integer(kind=acc_handle_kind)";
     }
     return "";
   }
@@ -136,6 +138,7 @@ protected:
 
     ss.increaseIndent();
     ss << "use, intrinsic :: iso_c_binding" << endline;
+    ss << "use openacc" << endline;
     streamArgsDecls(ss);
   }
 

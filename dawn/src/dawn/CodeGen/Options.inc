@@ -47,6 +47,8 @@ OPT(int, DomainSizeJ, 0, "domain-size-j", "", "j domain size for compiler optimi
 OPT(int, DomainSizeK, 0, "domain-size-k", "", "k domain size for compiler optimization", "", true, false)
 OPT(std::string, OutputCHeader, "", "output-c-header", "", "Write C header to <File>", "<File>", true, false)
 OPT(std::string, OutputFortranInterface, "", "output-f90-interface", "", "Write Fortran90 interface to <File>", "<File>", true, false)
-OPT(bool, MergeReductions, false, "merge-reductions", "", "Attempt to merge reductions on same iteration spaces (experimental)", "", false, true)
+OPT(bool, AtlasCompatible, false, "atlas-compatible", "", "Emit code that is save to run on atlas meshes (assume incomplete neighborhoods for all chains)", "", false, true)
+OPT(int, BlockSize, 128, "block-size", "", "number of threads per block for cuda-ico backend", "", true, false)
+OPT(int, LevelsPerThread, 1, "levels-per-thread", "", "number of vertical levels each thread works on for cuda-ico backend", "", true, false)
 
 // clang-format on
