@@ -672,6 +672,7 @@ public:
   std::vector<ast::LocationType> getNbhChain() const { return iterSpace_; };
   ast::LocationType getLhsLocation() const { return iterSpace_.Chain.front(); };
   const std::optional<std::vector<std::shared_ptr<Expr>>>& getWeights() const { return weights_; };
+  std::optional<std::vector<std::shared_ptr<Expr>>>& getWeights() { return weights_; };
   bool getIncludeCenter() const { return iterSpace_.IncludeCenter; };
   ast::UnstructuredIterationSpace getIterSpace() const { return iterSpace_; }
 
