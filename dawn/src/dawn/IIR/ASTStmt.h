@@ -14,6 +14,7 @@
 
 #pragma once
 
+#include "dawn/AST/ASTExpr.h"
 #include "dawn/AST/ASTStmt.h"
 #include "dawn/IIR/Accesses.h"
 #include <memory>
@@ -92,6 +93,10 @@ template <typename... Args>
 std::shared_ptr<ast::VarDeclStmt> makeVarDeclStmt(Args&&... args) {
   return std::make_shared<ast::VarDeclStmt>(std::make_unique<VarDeclStmtData>(),
                                             std::forward<Args>(args)...);
+}
+template <typename... Args>
+std::shared_ptr<ast::ReductionOverNeighborExpr> makeReductionOverNeighborExpr(Args&&... args) {
+  return std::make_shared<ast::ReductionOverNeighborExpr>(std::forward<Args>(args)...);
 }
 template <typename... Args>
 std::shared_ptr<ast::VerticalRegionDeclStmt> makeVerticalRegionDeclStmt(Args&&... args) {

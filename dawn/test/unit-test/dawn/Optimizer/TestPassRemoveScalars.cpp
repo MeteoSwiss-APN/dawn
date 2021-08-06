@@ -11,13 +11,17 @@
 //  See LICENSE.txt for details.
 //
 //===------------------------------------------------------------------------------------------===//
+#include "dawn/AST/ASTExpr.h"
+#include "dawn/AST/ASTStmt.h"
 #include "dawn/Optimizer/PassRemoveScalars.h"
 #include "dawn/Support/Logger.h"
 #include "dawn/Unittest/ASTConstructionAliases.h"
 #include "dawn/Unittest/IIRBuilder.h"
 #include "dawn/Unittest/UnittestUtils.h"
+#include "driver-includes/unstructured_interface.hpp"
 
 #include <gtest/gtest.h>
+#include <memory>
 #include <sstream>
 
 using namespace dawn;
@@ -586,6 +590,65 @@ TEST(TestRemoveScalars, warn_condition_adimensional_03) {
   PassRemoveScalars passRemoveScalars;
   passRemoveScalars.run(stencil);
   ASSERT_NE(output.str().find("Skipping removal of scalar variables."), std::string::npos);
+}
+
+TEST(TestRemoveScalars, remove_scalars_in_weights) {
+  using namespace dawn::iir;
+  using LocType = dawn::ast::LocationType;
+
+  // let's assume we have a stencil like this.
+  //
+  // def tempWeight(inF: Field[Cell], outF: Field[Edge]):
+  //   tempF: Field[Edge]
+  //   with domain.upward:
+  //     tempF = 1
+  //     outF = sum_over(Edge > Cell, inF, weights=[tempF, 1-tempF])
+  //
+  // now, the TemporaryType pass will do its thing and replace tempF with a VarDecl
+  // (enhanving dusk with a imaginary gtclang like vardecl syntax)
+  //
+  // def tempWeight(inF: Field[Cell], outF: Field[Edge]):
+  //   with domain.upward:
+  //     double tempF = 1
+  //     outF = sum_over(Edge > Cell, inF, weights=[tempF, 1-tempF])
+  //
+  // let's now test if the tempF in the weights vector were correctly replaced with
+  // LiteralAccessExprs
+
+  UnstructuredIIRBuilder b;
+  auto outF = b.field("outF", ast::LocationType::Edges);
+  auto inF = b.field("inF", ast::LocationType::Cells);
+  auto tempF = b.localvar("tempF", dawn::BuiltinTypeID::Double, {b.lit(1.0)},
+                          iir::LocalVariableType::Scalar);
+
+  auto stencil = b.build(
+      "generated",
+      b.stencil(b.multistage(
+          dawn::iir::LoopOrderKind::Forward,
+          b.stage(b.doMethod(
+              dawn::ast::Interval::Start, dawn::ast::Interval::End, b.declareVar(tempF),
+              b.stmt(b.assignExpr(b.at(tempF), b.lit(1.))),
+              b.stmt(b.assignExpr(
+                  b.at(outF),
+                  b.reduceOverNeighborExpr(
+                      Op::plus, b.at(inF),
+                      b.lit(0.), {LocType::Edges, LocType::Cells},
+                      std::vector<std::shared_ptr<ast::Expr>>{
+                          b.at(tempF), b.binaryExpr(b.lit(1.), b.at(tempF), Op::minus)}))))))));
+
+  PassRemoveScalars passRemoveScalars;
+  passRemoveScalars.run(stencil);
+
+  // Check that there is 1 statement
+  ASSERT_EQ(getFirstDoMethod(stencil).getAST().getStatements().size(), 1);
+
+  auto firstStatement = getNthStmt(getFirstDoMethod(stencil), 0);
+
+  ASSERT_TRUE(firstStatement->equals(
+      expr(assign(field("outF"), red(field("inF"), {lit(1.), binop(lit(1.0), "-", lit(1.0))},
+                                     {LocType::Edges, LocType::Cells})))
+          .get(),
+      /*compareData = */ false));
 }
 
 } // namespace
