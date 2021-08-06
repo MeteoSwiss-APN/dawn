@@ -71,11 +71,10 @@ public:
   void visit(const std::shared_ptr<StencilCallDeclStmt>& stmt) override {}
   void visit(const std::shared_ptr<BoundaryConditionDeclStmt>& stmt) override {}
   void visit(const std::shared_ptr<ReductionOverNeighborExpr>& expr) override {
-    auto& weights = expr->getWeights();
-    if(weights.has_value()) {
-      for(auto& weight : weights.value()) {
-        if(weight == oldExpr_) {
-          weight = newExpr_;
+    if(expr->hasWeights()) {
+      for(int i = 0; i < expr->getWeights()->size(); i++) {
+        if(expr->getWeights()->at(i)->equals(oldExpr_)) {
+          expr->setWeight(i, newExpr_);
         }
       }
     }

@@ -21,6 +21,7 @@
 
 #include "dawn/Support/Array.h"
 #include "dawn/Support/ArrayRef.h"
+#include "dawn/Support/Assert.h"
 #include "dawn/Support/Type.h"
 #include "dawn/Support/UIDGenerator.h"
 #include <array>
@@ -672,11 +673,14 @@ public:
   std::vector<ast::LocationType> getNbhChain() const { return iterSpace_; };
   ast::LocationType getLhsLocation() const { return iterSpace_.Chain.front(); };
   const std::optional<std::vector<std::shared_ptr<Expr>>>& getWeights() const { return weights_; };
-  std::optional<std::vector<std::shared_ptr<Expr>>>& getWeights() { return weights_; };
+  bool hasWeights() const { return weights_.has_value(); }
+  void setWeight(int idx, std::shared_ptr<Expr> weight);
   bool getIncludeCenter() const { return iterSpace_.IncludeCenter; };
   ast::UnstructuredIterationSpace getIterSpace() const { return iterSpace_; }
 
   ExprRangeType getChildren() const override;
+  virtual void replaceChildren(const std::shared_ptr<Expr>& oldExpr,
+                               const std::shared_ptr<Expr>& newExpr) override;
 
   static bool classof(const Expr* expr) {
     return expr->getKind() == Kind::ReductionOverNeighborExpr;

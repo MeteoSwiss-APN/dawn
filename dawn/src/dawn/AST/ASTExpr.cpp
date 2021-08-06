@@ -495,7 +495,20 @@ std::shared_ptr<Expr> ReductionOverNeighborExpr::clone() const {
 
 ArrayRef<std::shared_ptr<Expr>> ReductionOverNeighborExpr::getChildren() const {
   return ExprRangeType(operands_);
-} // namespace ast
+}
+
+void ReductionOverNeighborExpr::setWeight(int idx, std::shared_ptr<Expr> weight) {
+  DAWN_ASSERT_MSG(hasWeights(), "set weights is only possible if there already are weights");
+  DAWN_ASSERT_MSG(idx >= 0 && idx < weights_->size(), "weight index out of range");
+  weights_->at(idx) = weight;
+  operands_.at(idx + 2) = weight;
+}
+
+void ReductionOverNeighborExpr::replaceChildren(const std::shared_ptr<Expr>& oldExpr,
+                                                const std::shared_ptr<Expr>& newExpr) {
+  [[maybe_unused]] bool success = ASTHelper::replaceOperands(oldExpr, newExpr, operands_);
+  DAWN_ASSERT_MSG((success), ("Expression not found"));
+}
 
 bool ReductionOverNeighborExpr::equals(const Expr* other, bool compareData) const {
   const ReductionOverNeighborExpr* otherPtr = dyn_cast<ReductionOverNeighborExpr>(other);
