@@ -508,6 +508,7 @@ void ReductionOverNeighborExpr::replaceChildren(const std::shared_ptr<Expr>& old
                                                 const std::shared_ptr<Expr>& newExpr) {
   [[maybe_unused]] bool success = ASTHelper::replaceOperands(oldExpr, newExpr, operands_);
   DAWN_ASSERT_MSG((success), ("Expression not found"));
+  weights_ = std::vector<std::shared_ptr<Expr>>(operands_.begin() + 2, operands_.end());
 }
 
 bool ReductionOverNeighborExpr::equals(const Expr* other, bool compareData) const {
@@ -534,7 +535,7 @@ bool ReductionOverNeighborExpr::equals(const Expr* other, bool compareData) cons
 
 bool ReductionOverNeighborExpr::isArithmetic() const {
   return any_of(ast::ReductionOverNeighborExpr::arithmeticOps,
-                 [&](std::string op) { return op_ == op; });
+                [&](std::string op) { return op_ == op; });
 }
 
 } // namespace ast
