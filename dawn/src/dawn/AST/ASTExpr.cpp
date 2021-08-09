@@ -522,7 +522,8 @@ bool ReductionOverNeighborExpr::equals(const Expr* other, bool compareData) cons
       return false;
     }
     for(int i = 0; i < weights_->size(); i++) {
-      if(*weights_.value().at(i) != *otherPtr->getWeights().value().at(i)) {
+      if(!(*weights_.value().at(i))
+              .equals((const ast::Expr*)otherPtr->getWeights().value().at(i).get(), compareData)) {
         return false;
       }
     }

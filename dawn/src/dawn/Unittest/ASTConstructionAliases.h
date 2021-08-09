@@ -58,20 +58,18 @@ inline decltype(auto) vardecl(const std::string& name, BuiltinTypeID type = Buil
   return iir::makeVarDeclStmt(Type(type), name, 0, "=", ast::VarDeclStmt::InitList{});
 }
 
-inline decltype(auto) red(const std::shared_ptr<ast::Expr> rhs,
-                          std::vector<std::shared_ptr<ast::Expr>> weights,
-                          std::vector<ast::LocationType> chain) {
-  return iir::makeReductionOverNeighborExpr(
-      "+", rhs, std::make_shared<dawn::ast::LiteralAccessExpr>("0.", dawn::BuiltinTypeID::Double),
-      weights, chain);
-}
-
 template <typename T>
 decltype(auto) lit(T&& value) {
   return std::make_shared<dawn::ast::LiteralAccessExpr>(
       std::to_string(std::forward<T>(value)),
       dawn::ast::Value::typeToBuiltinTypeID(
           dawn::ast::Value::TypeInfo<typename std::decay<T>::type>::Type));
+}
+
+inline decltype(auto) red(const std::shared_ptr<ast::Expr> rhs,
+                          std::vector<std::shared_ptr<ast::Expr>> weights,
+                          std::vector<ast::LocationType> chain) {
+  return iir::makeReductionOverNeighborExpr("+", rhs, lit(0.), weights, chain);
 }
 
 template <typename... Args>
