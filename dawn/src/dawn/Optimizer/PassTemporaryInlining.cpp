@@ -17,9 +17,49 @@
 #include "dawn/AST/ASTStmt.h"
 #include "dawn/IIR/ASTExpr.h"
 #include "dawn/IIR/ASTMatcher.h"
+#include "dawn/IIR/AccessComputation.h"
 #include "dawn/IIR/StencilInstantiation.h"
+#include "dawn/Support/Logger.h"
 #include <memory>
 #include <unordered_map>
+
+namespace {
+void cleanUp(const std::shared_ptr<dawn::iir::StencilInstantiation>& stencilInstantiation) {
+  for(const auto& multiStage :
+      dawn::iterateIIROver<dawn::iir::MultiStage>(*stencilInstantiation->getIIR())) {
+    for(auto curStageIt = multiStage->childrenBegin(); curStageIt != multiStage->childrenEnd();
+        curStageIt++) {
+      dawn::iir::Stage& curStage = **curStageIt;
+      for(auto curDoMethodIt = curStage.childrenBegin(); curDoMethodIt != curStage.childrenEnd();) {
+        dawn::iir::DoMethod& curDoMethod = **curDoMethodIt;
+
+        if(curDoMethod.isEmptyOrNullStmt()) {
+          DAWN_LOG(INFO) << stencilInstantiation->getName() << ": DoMethod: " << curDoMethod.getID()
+                         << " has empty body after inlining a temporary, removing";
+
+          curDoMethodIt = curStage.childrenErase(curDoMethodIt);
+        } else {
+          curDoMethodIt++;
+        }
+      }
+
+      for(auto& doMethod : curStage.getChildren()) {
+        doMethod->update(dawn::iir::NodeUpdateType::level);
+      }
+      curStage.update(dawn::iir::NodeUpdateType::levelAndTreeAbove);
+    }
+
+    for(auto curStageIt = multiStage->childrenBegin(); curStageIt != multiStage->childrenEnd();) {
+      dawn::iir::Stage& curStage = **curStageIt;
+      if(curStage.childrenEmpty()) {
+        curStageIt = multiStage->childrenErase(curStageIt);
+      } else {
+        curStageIt++;
+      }
+    }
+  }
+}
+} // namespace
 
 namespace dawn {
 
@@ -67,6 +107,10 @@ bool PassTemporaryInlining::run(
                                                             iir::getAccessID(lhs)) &&
            occCount.at(iir::getAccessID(lhs)) == 1) {
           candidates.push_back(std::static_pointer_cast<ast::AssignmentExpr>(cand));
+
+          DAWN_LOG(INFO) << stencilInstantiation->getName() << " inlined computation of "
+                         << stencilInstantiation->getMetaData().getNameFromAccessID(
+                                iir::getAccessID(lhs));
         }
       }
     }
@@ -94,10 +138,21 @@ bool PassTemporaryInlining::run(
         (*stmtIt)->acceptAndReplace(replacer);
         stmtIt++;
       }
+
+      computeAccesses(stencilInstantiation->getMetaData(), doMethod->getAST().getStatements());
+      doMethod->update(iir::NodeUpdateType::levelAndTreeAbove);
     }
   }
 
+  for(auto cand : candidates) {
+    int fieldAccess =
+        iir::getAccessID(std::static_pointer_cast<ast::FieldAccessExpr>(cand->getLeft()));
+    stencilInstantiation->getMetaData().removeAccessID(fieldAccess);
+  }
+
+  cleanUp(stencilInstantiation);
+
   return true;
-} // namespace dawn
+}
 
 } // namespace dawn

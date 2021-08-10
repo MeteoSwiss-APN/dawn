@@ -55,10 +55,15 @@ TEST(TestTemporaryInline, test_temporary_inline_01) {
   PassTemporaryInlining passTemporaryInline;
   passTemporaryInline.run(stencil);
 
-  std::ofstream of("generated_InlineTest.hpp");
-  DAWN_ASSERT_MSG(of, "couldn't open output file!\n");
-  auto tu = dawn::codegen::run(stencil, dawn::codegen::Backend::CXXNaiveIco);
-  of << dawn::codegen::generate(tu) << std::endl;
+  ASSERT_EQ(getFirstDoMethod(stencil).getAST().getStatements().size(), 1);
+
+  auto firstStatement = getNthStmt(getFirstDoMethod(stencil), 0);
+
+  ASSERT_TRUE(firstStatement->equals(
+      expr(assign(field("outF"), red(red(field("inF"), {LocType::Edges, LocType::Cells}),
+                                     {LocType::Vertices, LocType::Edges})))
+          .get(),
+      /*compareData = */ false));
 }
 
 TEST(TestTemporaryInline, test_temporary_inline_02) {
@@ -84,13 +89,23 @@ TEST(TestTemporaryInline, test_temporary_inline_02) {
                   b.at(outF), b.reduceOverNeighborExpr(Op::plus, b.at(tempF), b.lit(0.),
                                                        {LocType::Vertices, LocType::Edges}))))))));
 
+  auto stencilBefore = stencil->clone();
   PassTemporaryInlining passTemporaryInline;
   passTemporaryInline.run(stencil);
 
-  std::ofstream of("generated/generated_InlineTest.hpp");
-  DAWN_ASSERT_MSG(of, "couldn't open output file!\n");
-  auto tu = dawn::codegen::run(stencil, dawn::codegen::Backend::CXXNaiveIco);
-  of << dawn::codegen::generate(tu) << std::endl;
+  // lets check that stmts were left alone by the pass
+  ASSERT_EQ(stencil->getStencils().size(), stencilBefore->getStencils().size());
+
+  for(int stenIdx = 0; stenIdx < stencil->getStencils().size(); stenIdx++) {
+    auto stmtsBefore = iterateIIROverStmt(*stencilBefore->getStencils()[stenIdx]);
+    auto stmtsAfter = iterateIIROverStmt(*stencil->getStencils()[stenIdx]);
+
+    ASSERT_EQ(stmtsBefore.size(), stmtsAfter.size());
+
+    for(auto stmtIdx = 0; stmtIdx < stmtsBefore.size(); stmtIdx++) {
+      ASSERT_TRUE(stmtsBefore[stmtIdx]->equals(stmtsAfter[stmtIdx].get()));
+    }
+  }
 }
 
 } // namespace

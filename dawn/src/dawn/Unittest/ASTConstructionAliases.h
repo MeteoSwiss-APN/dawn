@@ -71,6 +71,10 @@ inline decltype(auto) red(const std::shared_ptr<ast::Expr> rhs,
                           std::vector<ast::LocationType> chain) {
   return iir::makeReductionOverNeighborExpr("+", rhs, lit(0.), weights, chain);
 }
+inline decltype(auto) red(const std::shared_ptr<ast::Expr> rhs,
+                          std::vector<ast::LocationType> chain) {
+  return iir::makeReductionOverNeighborExpr("+", rhs, lit(0.), chain);
+}
 
 template <typename... Args>
 decltype(auto) global(Args&&... args) {

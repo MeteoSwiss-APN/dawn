@@ -36,6 +36,7 @@ enum class PassGroup {
   SetBlockSize,
   DataLocalityMetric,
   SetLoopOrder,
+  TemporaryInlining
 };
 
 struct Options {
