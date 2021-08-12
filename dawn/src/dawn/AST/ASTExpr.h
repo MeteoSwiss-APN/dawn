@@ -647,6 +647,7 @@ private:
   // hold a copy of the (shared pointer to) the weights
   std::vector<std::shared_ptr<Expr>> operands_ = std::vector<std::shared_ptr<Expr>>(2);
   bool chainIsValid() const;
+  std::vector<int> offsets_ = {};
 
 public:
   inline static const std::vector<std::string> arithmeticOps{"+", "-", "*", "/", "%"};
@@ -654,12 +655,13 @@ public:
   /// @{
   ReductionOverNeighborExpr(std::string const& op, std::shared_ptr<Expr> const& rhs,
                             std::shared_ptr<Expr> const& init, std::vector<ast::LocationType> chain,
-                            bool includeCenter = false, SourceLocation loc = SourceLocation());
+                            bool includeCenter = false, std::vector<int> offsets_ = {},
+                            SourceLocation loc = SourceLocation());
   ReductionOverNeighborExpr(std::string const& op, std::shared_ptr<Expr> const& rhs,
                             std::shared_ptr<Expr> const& init,
                             std::vector<std::shared_ptr<Expr>> weights,
                             std::vector<ast::LocationType> chain, bool includeCenter = false,
-                            SourceLocation loc = SourceLocation());
+                            std::vector<int> offsets_ = {}, SourceLocation loc = SourceLocation());
   ReductionOverNeighborExpr(ReductionOverNeighborExpr const& stmt);
   ReductionOverNeighborExpr& operator=(ReductionOverNeighborExpr const& stmt);
   /// @}
@@ -672,6 +674,7 @@ public:
   std::vector<ast::LocationType> getNbhChain() const { return iterSpace_; };
   ast::LocationType getLhsLocation() const { return iterSpace_.Chain.front(); };
   const std::optional<std::vector<std::shared_ptr<Expr>>>& getWeights() const { return weights_; };
+  const std::vector<int>& getOffsets() const { return offsets_; };
   bool getIncludeCenter() const { return iterSpace_.IncludeCenter; };
   ast::UnstructuredIterationSpace getIterSpace() const { return iterSpace_; }
 

@@ -21,6 +21,8 @@
 #include "dawn/IIR/StencilFunctionInstantiation.h"
 #include "dawn/SIR/SIR.h"
 #include "dawn/Support/Unreachable.h"
+#include <iterator>
+#include <optional>
 
 static std::string nbhChainToVectorString(const std::vector<dawn::ast::LocationType>& chain) {
   auto getLocationTypeString = [](dawn::ast::LocationType type) {
@@ -228,6 +230,10 @@ std::string ASTStencilBody::makeIndexString(const std::shared_ptr<ast::FieldAcce
     std::string sparseIdx = parentIsReduction_
                                 ? ASTStencilBody::ReductionSparseIndexVarName(reductionDepth_ - 1)
                                 : ASTStencilBody::LoopLinearIndexVarName();
+    if(offsets_.has_value()) {
+      sparseIdx = std::to_string(offsets_->front());
+      offsets_->pop_front();
+    }
     return "deref(LibTag{}, " + sparseArgName_ + ")," + sparseIdx + ", " + kiterStr;
   }
 
@@ -256,6 +262,10 @@ std::string ASTStencilBody::makeIndexString(const std::shared_ptr<ast::FieldAcce
     std::string sparseIdx = parentIsReduction_
                                 ? ASTStencilBody::ReductionSparseIndexVarName(reductionDepth_ - 1)
                                 : ASTStencilBody::LoopLinearIndexVarName();
+    if(offsets_.has_value()) {
+      sparseIdx = std::to_string(offsets_->front());
+      offsets_->pop_front();
+    }
     return "deref(LibTag{}, " + sparseArgName_ + ")," + sparseIdx;
   }
 
@@ -408,10 +418,7 @@ void ASTStencilBody::visit(const std::shared_ptr<ast::ReductionOverNeighborExpr>
   reductionDepth_++;
   expr->getRhs()->accept(*this);
   reductionDepth_--;
-  if(reductionDepth_ == 0) {
-    parentIsReduction_ = false;
-    currentChain_.clear();
-  }
+
   // "pop" argName
   denseArgName_ = argName;
   if(!expr->isArithmetic()) {
@@ -421,6 +428,9 @@ void ASTStencilBody::visit(const std::shared_ptr<ast::ReductionOverNeighborExpr>
   ss_ << ASTStencilBody::ReductionSparseIndexVarName(reductionDepth_) << "++;\n";
   ss_ << "return lhs;\n";
   ss_ << "}";
+  if(!expr->getOffsets().empty()) {
+    offsets_ = std::deque<int>(expr->getOffsets().begin(), expr->getOffsets().end());
+  }
   if(hasWeights) {
     auto weights = expr->getWeights().value();
     bool first = true;
@@ -440,6 +450,12 @@ void ASTStencilBody::visit(const std::shared_ptr<ast::ReductionOverNeighborExpr>
     ss_ << ", /*include center*/ true";
   }
   ss_ << ")";
+  offsets_ = std::nullopt;
+
+  if(reductionDepth_ == 0) {
+    parentIsReduction_ = false;
+    currentChain_.clear();
+  }
 }
 
 void ASTStencilBody::setCurrentStencilFunction(

@@ -327,8 +327,8 @@ public:
   std::unique_ptr<iir::Stencil> stencil(MultiStages&&... multistages) {
     DAWN_ASSERT(si_);
     auto ret = std::make_unique<iir::Stencil>(si_->getMetaData(), ast::Attr{}, si_->nextUID());
-    int x[] = {(ret->insertChild(std::forward<MultiStages>(multistages)), 0)...};
-    (void)x;
+    // int x[] = {(ret->insertChild(std::forward<MultiStages>(multistages)), 0)...};
+    (ret->insertChild(std::forward<MultiStages>(multistages)), ...);
     return ret;
   }
 

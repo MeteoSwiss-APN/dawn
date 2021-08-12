@@ -62,6 +62,7 @@ protected:
 
   bool parentIsReduction_ = false;
   bool parentIsForLoop_ = false;
+  std::optional<std::deque<int>> offsets_;
   bool genAtlasCompatCode_ = false;
 
   std::map<int, std::unique_ptr<ASTStencilBody>> reductionParser_;
@@ -70,8 +71,7 @@ protected:
   /// Nesting level of argument lists of stencil function *calls*
   int nestingOfStencilFunArgLists_;
 
-  std::string makeIndexString(const std::shared_ptr<ast::FieldAccessExpr>& expr,
-                              std::string kiter) const;
+  std::string makeIndexString(const std::shared_ptr<ast::FieldAccessExpr>& expr, std::string kiter);
   bool hasIrregularPentagons(const std::vector<ast::LocationType>& chain) const;
   void evalNeighbourReduction(const std::shared_ptr<ast::ReductionOverNeighborExpr>& expr);
   void generateNeighbourRedLoop(std::stringstream& ss) const;
