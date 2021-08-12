@@ -100,11 +100,15 @@ bool PassTemporaryInlining::run(
   std::vector<std::shared_ptr<ast::AssignmentExpr>> candidates;
   for(const auto& it : assignmentsExprs) {
     const auto& cand = std::static_pointer_cast<ast::BinaryOperator>(it);
-    if(cand->getLeft()->getKind() == ast::Expr::Kind::FieldAccessExpr &&
-       cand->getRight()->getKind() == ast::Expr::Kind::ReductionOverNeighborExpr) {
+    if(cand->getLeft()->getKind() == ast::Expr::Kind::FieldAccessExpr) {
       if(auto lhs = std::dynamic_pointer_cast<ast::FieldAccessExpr>(cand->getLeft())) {
         if(stencilInstantiation->getMetaData().isAccessType(iir::FieldAccessType::StencilTemporary,
                                                             iir::getAccessID(lhs)) &&
+           ast::dimension_cast<const ast::UnstructuredFieldDimension&>(
+               stencilInstantiation->getMetaData()
+                   .getFieldDimensions(iir::getAccessID(lhs))
+                   .getHorizontalFieldDimension())
+               .isDense() &&
            occCount.at(iir::getAccessID(lhs)) == 1) {
           candidates.push_back(std::static_pointer_cast<ast::AssignmentExpr>(cand));
 

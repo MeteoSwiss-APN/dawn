@@ -108,4 +108,44 @@ TEST(TestTemporaryInline, test_temporary_inline_02) {
   }
 }
 
+TEST(TestTemporaryInline, test_temporary_inline_03) {
+  using namespace dawn::iir;
+  using LocType = dawn::ast::LocationType;
+
+  UnstructuredIIRBuilder b;
+  auto outF = b.field("outF", ast::LocationType::Vertices);
+  auto inFLft = b.field("inFLft", ast::LocationType::Edges);
+  auto inFRgt = b.field("inFRgt", ast::LocationType::Edges);
+  auto tempF = b.tmpField("tempF", ast::LocationType::Edges);
+
+  auto stencil = b.build(
+      "generated",
+      b.stencil(b.multistage(
+          dawn::iir::LoopOrderKind::Forward,
+          b.stage(
+              LocType::Edges,
+              b.doMethod(dawn::ast::Interval::Start, dawn::ast::Interval::End,
+                         b.stmt(b.assignExpr(b.at(tempF),
+                                             b.binaryExpr(b.at(inFLft), b.at(inFRgt), Op::plus))))),
+          b.stage(LocType::Vertices,
+                  b.doMethod(dawn::ast::Interval::Start, dawn::ast::Interval::End,
+                             b.stmt(b.assignExpr(b.at(outF),
+                                                 b.reduceOverNeighborExpr(
+                                                     Op::plus, b.at(tempF), b.lit(0.),
+                                                     {LocType::Vertices, LocType::Edges}))))))));
+
+  PassTemporaryInlining passTemporaryInline;
+  passTemporaryInline.run(stencil);
+
+  ASSERT_EQ(getFirstDoMethod(stencil).getAST().getStatements().size(), 1);
+
+  auto firstStatement = getNthStmt(getFirstDoMethod(stencil), 0);
+
+  ASSERT_TRUE(firstStatement->equals(
+      expr(assign(field("outF"), red(binop(field("inFLft"), "+", field("inFRgt")),
+                                     {LocType::Vertices, LocType::Edges})))
+          .get(),
+      /*compareData = */ false));
+}
+
 } // namespace
