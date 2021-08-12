@@ -39,6 +39,9 @@ public:
   /// @brief Pass implementation
   bool run(const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation,
            const Options& options = {}) override;
+
+  bool run_old(const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation,
+               const Options& options = {});
 };
 
 } // namespace dawn
