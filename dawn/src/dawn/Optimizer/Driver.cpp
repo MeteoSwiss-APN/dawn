@@ -16,7 +16,9 @@
 #include "dawn/CodeGen/Driver.h"
 #include "dawn/CodeGen/TranslationUnit.h"
 #include "dawn/Optimizer/Lowering.h"
+#include "dawn/Optimizer/Options.h"
 #include "dawn/Optimizer/PassManager.h"
+#include "dawn/Optimizer/PassTemporaryInlining.h"
 #include "dawn/SIR/SIR.h"
 #include "dawn/Support/Exception.h"
 #include "dawn/Support/Logger.h"
@@ -257,6 +259,11 @@ run(const std::map<std::string, std::shared_ptr<iir::StencilInstantiation>>&
       passManager.pushBackPass<PassTemporaryType>();
       passManager.pushBackPass<PassLocalVarType>();
       passManager.pushBackPass<PassRemoveScalars>();
+      // validation check
+      passManager.pushBackPass<PassValidation>();
+      break;
+    case PassGroup::TemporaryInlining:
+      passManager.pushBackPass<PassTemporaryInlining>();
       // validation check
       passManager.pushBackPass<PassValidation>();
       break;

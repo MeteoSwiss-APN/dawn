@@ -29,6 +29,7 @@ add_executable(${executable}
   TestPassStageReordering.cpp
   TestPassTemporaryMerger.cpp
   TestPassTemporaryType.cpp
+  TestPassTemporaryInline.cpp
   TestTemporaryToFunction.cpp
 )
 target_link_libraries(${executable} PRIVATE DawnOptimizer DawnCompiler DawnAST DawnUnittest gtest gtest_main)

@@ -30,6 +30,8 @@ add_library(DawnOptimizer
   PassFixVersionedInputFields.h
   PassInlining.cpp
   PassInlining.h
+  PassTemporaryInlining.h
+  PassTemporaryInlining.cpp
   PassIntervalPartitioning.cpp
   PassIntervalPartitioning.h
   PassLocalVarType.h

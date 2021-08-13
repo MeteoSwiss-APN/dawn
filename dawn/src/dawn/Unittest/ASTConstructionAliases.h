@@ -14,6 +14,9 @@
 
 #pragma once
 
+#include "dawn/AST/ASTExpr.h"
+#include "dawn/AST/LocationType.h"
+#include "dawn/AST/Value.h"
 #include "dawn/IIR/ASTExpr.h"
 #include "dawn/IIR/ASTStmt.h"
 #include "dawn/IIR/Field.h"
@@ -44,6 +47,7 @@ EXPR_CONSTRUCTOR_ALIAS(binop, ast::BinaryOperator)
 EXPR_CONSTRUCTOR_ALIAS(var, ast::VarAccessExpr)
 EXPR_CONSTRUCTOR_ALIAS(field, ast::FieldAccessExpr)
 EXPR_CONSTRUCTOR_ALIAS(lit, ast::LiteralAccessExpr)
+EXPR_CONSTRUCTOR_ALIAS(red, ast::ReductionOverNeighborExpr)
 
 template <typename... Stmts>
 decltype(auto) block(Stmts&&... stmts) {
@@ -60,6 +64,16 @@ decltype(auto) lit(T&& value) {
       std::to_string(std::forward<T>(value)),
       dawn::ast::Value::typeToBuiltinTypeID(
           dawn::ast::Value::TypeInfo<typename std::decay<T>::type>::Type));
+}
+
+inline decltype(auto) red(const std::shared_ptr<ast::Expr> rhs,
+                          std::vector<std::shared_ptr<ast::Expr>> weights,
+                          std::vector<ast::LocationType> chain) {
+  return iir::makeReductionOverNeighborExpr("+", rhs, lit(0.), weights, chain);
+}
+inline decltype(auto) red(const std::shared_ptr<ast::Expr> rhs,
+                          std::vector<ast::LocationType> chain) {
+  return iir::makeReductionOverNeighborExpr("+", rhs, lit(0.), chain);
 }
 
 template <typename... Args>

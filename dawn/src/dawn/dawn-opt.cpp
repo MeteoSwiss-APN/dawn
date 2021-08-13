@@ -71,6 +71,8 @@ dawn::PassGroup parsePassGroup(const std::string& passGroup) {
     return dawn::PassGroup::MultiStageMerger;
   else if(passGroup == "SetLoopOrder" || passGroup == "set-loop-order")
     return dawn::PassGroup::SetLoopOrder;
+  else if(passGroup == "TemporaryInlining" || passGroup == "temporary-inlining")
+    return dawn::PassGroup::TemporaryInlining;
   else
     throw std::runtime_error(std::string("Unknown pass group: ") + passGroup);
 }

@@ -25,8 +25,6 @@
 #include "dawn/Support/Assert.h"
 #include "dawn/Unittest/IIRBuilder.h"
 
-#include "testMutator.h"
-
 #include <fstream>
 
 // not in use, but can be employed to rapidly inject indirected reads into existing IIR

@@ -183,17 +183,27 @@ PYBIND11_MODULE(_dawn4py, m) {
       .def(py::init([](int MaxHaloSize, bool UseParallelEP, bool RunWithSync, int MaxBlocksPerSM,
                        int nsms, int DomainSizeI, int DomainSizeJ, int DomainSizeK,
                        const std::string& OutputCHeader, const std::string& OutputFortranInterface,
-                       bool AtlasCompatible) {
-             return dawn::codegen::Options{
-                 MaxHaloSize,    UseParallelEP, RunWithSync, MaxBlocksPerSM, nsms,
-                 DomainSizeI,    DomainSizeJ,   DomainSizeK, OutputCHeader,  OutputFortranInterface,
-                 AtlasCompatible};
+                       bool AtlasCompatible, int BlockSize, int LevelsPerThread) {
+             return dawn::codegen::Options{MaxHaloSize,
+                                           UseParallelEP,
+                                           RunWithSync,
+                                           MaxBlocksPerSM,
+                                           nsms,
+                                           DomainSizeI,
+                                           DomainSizeJ,
+                                           DomainSizeK,
+                                           OutputCHeader,
+                                           OutputFortranInterface,
+                                           AtlasCompatible,
+                                           BlockSize,
+                                           LevelsPerThread};
            }),
            py::arg("max_halo_size") = 3, py::arg("use_parallel_ep") = false,
            py::arg("run_with_sync") = true, py::arg("max_blocks_per_sm") = 0, py::arg("nsms") = 0,
            py::arg("domain_size_i") = 0, py::arg("domain_size_j") = 0, py::arg("domain_size_k") = 0,
            py::arg("output_c_header") = "", py::arg("output_fortran_interface") = "",
-           py::arg("atlas_compatible") = false)
+           py::arg("atlas_compatible") = false, py::arg("block_size") = 128,
+           py::arg("levels_per_thread") = 1)
       .def_readwrite("max_halo_size", &dawn::codegen::Options::MaxHaloSize)
       .def_readwrite("use_parallel_ep", &dawn::codegen::Options::UseParallelEP)
       .def_readwrite("run_with_sync", &dawn::codegen::Options::RunWithSync)
@@ -205,6 +215,8 @@ PYBIND11_MODULE(_dawn4py, m) {
       .def_readwrite("output_c_header", &dawn::codegen::Options::OutputCHeader)
       .def_readwrite("output_fortran_interface", &dawn::codegen::Options::OutputFortranInterface)
       .def_readwrite("atlas_compatible", &dawn::codegen::Options::AtlasCompatible)
+      .def_readwrite("block_size", &dawn::codegen::Options::BlockSize)
+      .def_readwrite("levels_per_thread", &dawn::codegen::Options::LevelsPerThread)
       .def("__repr__", [](const dawn::codegen::Options& self) {
         std::ostringstream ss;
         ss << "max_halo_size=" << self.MaxHaloSize << ",\n    "
@@ -221,7 +233,9 @@ PYBIND11_MODULE(_dawn4py, m) {
            << "output_fortran_interface="
            << "\"" << self.OutputFortranInterface << "\""
            << ",\n    "
-           << "atlas_compatible=" << self.AtlasCompatible;
+           << "atlas_compatible=" << self.AtlasCompatible << ",\n    "
+           << "block_size=" << self.BlockSize << ",\n    "
+           << "levels_per_thread=" << self.LevelsPerThread;
         return "CodeGenOptions(\n    " + ss.str() + "\n)";
       });
 

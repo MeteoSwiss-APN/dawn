@@ -90,6 +90,13 @@ TEST_F(TestPassTemporaryType, DontDemoteSparse) {
   runTest("input/DontDemoteSparse.iir", {});
 }
 
+TEST_F(TestPassTemporaryType, DemoteAlsoInWeights) {
+  // tempF: Field[Edge]
+  // with domain.upward:
+  //   tempF = test
+  //   outF = sum_over(Edge > Cell, inF, weights=[tempF, tempF])
+  runTest("input/AlsoDemoteWeight.iir", {"tempF"});
+}
 TEST_F(TestPassTemporaryType, PromoteTest1) {
   /*
     vertical_region(k_start, k_end) {
