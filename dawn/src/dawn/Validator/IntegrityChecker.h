@@ -14,8 +14,8 @@
 
 #pragma once
 
-#include "dawn/IIR/ASTExpr.h"
 #include "dawn/AST/ASTUtil.h"
+#include "dawn/IIR/ASTExpr.h"
 #include "dawn/IIR/StencilInstantiation.h"
 #include "dawn/Support/Exception.h"
 
@@ -38,19 +38,11 @@ public:
 
   void run();
 
-  void visit(const std::shared_ptr<ast::BlockStmt>& stmt) override;
-  void visit(const std::shared_ptr<ast::ExprStmt>& stmt) override;
-  void visit(const std::shared_ptr<ast::ReturnStmt>& stmt) override;
-  void visit(const std::shared_ptr<ast::IfStmt>& stmt) override;
-  void visit(const std::shared_ptr<ast::VarDeclStmt>& stmt) override;
+  void visit(const std::shared_ptr<ast::VarAccessExpr>& stmt) override;
   void visit(const std::shared_ptr<ast::AssignmentExpr>& expr) override;
   void visit(const std::shared_ptr<ast::FieldAccessExpr>& expr) override;
-  void visit(const std::shared_ptr<ast::UnaryOperator>& expr) override;
   void visit(const std::shared_ptr<ast::ReductionOverNeighborExpr>& expr) override;
   void visit(const std::shared_ptr<ast::LoopStmt>& expr) override;
-  void visit(const std::shared_ptr<ast::BinaryOperator>& expr) override;
-  void visit(const std::shared_ptr<ast::TernaryOperator>& expr) override;
-  void visit(const std::shared_ptr<ast::FunCallExpr>& expr) override;
 
 private:
   void iterate(iir::StencilInstantiation* instantiation);
