@@ -48,7 +48,6 @@ bool PassValidation::run(const std::shared_ptr<iir::StencilInstantiation>& insta
     if(!stageConsistent)
       throw SemanticError("Stage location type consistency check failed at line " +
                           std::to_string(stageConsistencyErrorLocation.Line) + " " + description);
-    ;
     auto [weightsValid, weightValidErrorLocation] = WeightChecker::CheckWeights(*iir, metadata);
     if(!weightsValid)
       throw SemanticError("Found invalid weights at line " +

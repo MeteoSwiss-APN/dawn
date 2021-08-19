@@ -495,7 +495,23 @@ std::shared_ptr<Expr> ReductionOverNeighborExpr::clone() const {
 
 ArrayRef<std::shared_ptr<Expr>> ReductionOverNeighborExpr::getChildren() const {
   return ExprRangeType(operands_);
-} // namespace ast
+}
+
+void ReductionOverNeighborExpr::setWeight(int idx, std::shared_ptr<Expr> weight) {
+  DAWN_ASSERT_MSG(hasWeights(), "set weights is only possible if there already are weights");
+  DAWN_ASSERT_MSG(idx >= 0 && idx < weights_->size(), "weight index out of range");
+  weights_->at(idx) = weight;
+  operands_.at(idx + 2) = weight;
+}
+
+void ReductionOverNeighborExpr::replaceChildren(const std::shared_ptr<Expr>& oldExpr,
+                                                const std::shared_ptr<Expr>& newExpr) {
+  [[maybe_unused]] bool success = ASTHelper::replaceOperands(oldExpr, newExpr, operands_);
+  DAWN_ASSERT_MSG((success), ("Expression not found"));
+  if(operands_.size() > 2) {
+    weights_ = std::vector<std::shared_ptr<Expr>>(operands_.begin() + 2, operands_.end());
+  }
+}
 
 bool ReductionOverNeighborExpr::equals(const Expr* other, bool compareData) const {
   const ReductionOverNeighborExpr* otherPtr = dyn_cast<ReductionOverNeighborExpr>(other);
@@ -508,7 +524,8 @@ bool ReductionOverNeighborExpr::equals(const Expr* other, bool compareData) cons
       return false;
     }
     for(int i = 0; i < weights_->size(); i++) {
-      if(*weights_.value().at(i) != *otherPtr->getWeights().value().at(i)) {
+      if(!(*weights_.value().at(i))
+              .equals((const ast::Expr*)otherPtr->getWeights().value().at(i).get(), compareData)) {
         return false;
       }
     }
@@ -521,7 +538,7 @@ bool ReductionOverNeighborExpr::equals(const Expr* other, bool compareData) cons
 
 bool ReductionOverNeighborExpr::isArithmetic() const {
   return any_of(ast::ReductionOverNeighborExpr::arithmeticOps,
-                 [&](std::string op) { return op_ == op; });
+                [&](std::string op) { return op_ == op; });
 }
 
 } // namespace ast

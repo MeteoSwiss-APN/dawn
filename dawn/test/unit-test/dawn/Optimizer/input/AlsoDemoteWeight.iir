@@ -1,0 +1,485 @@
+{
+  "metadata": {
+    "accessIDToName": {
+      "22": "__tmp_tem_22",
+      "21": "test",
+      "20": "outF",
+      "19": "inF"
+    },
+    "accessIDToType": {
+      "20": 6,
+      "19": 6,
+      "22": 3,
+      "21": 6
+    },
+    "literalIDToName": {
+      "-39": "0."
+    },
+    "fieldAccessIDs": [
+      19,
+      20,
+      21,
+      22
+    ],
+    "APIFieldIDs": [
+      19,
+      20,
+      21
+    ],
+    "temporaryFieldIDs": [
+      22
+    ],
+    "versionedFields": {},
+    "fieldIDtoDimensions": {
+      "22": {
+        "unstructuredHorizontalDimension": {
+          "iterSpace": {
+            "chain": [
+              "Edge"
+            ]
+          }
+        },
+        "maskK": 1
+      },
+      "21": {
+        "unstructuredHorizontalDimension": {
+          "iterSpace": {
+            "chain": [
+              "Edge"
+            ]
+          }
+        },
+        "maskK": 1
+      },
+      "20": {
+        "unstructuredHorizontalDimension": {
+          "iterSpace": {
+            "chain": [
+              "Edge"
+            ]
+          }
+        },
+        "maskK": 1
+      },
+      "19": {
+        "unstructuredHorizontalDimension": {
+          "iterSpace": {
+            "chain": [
+              "Cell"
+            ]
+          }
+        },
+        "maskK": 1
+      }
+    },
+    "idToStencilCall": {
+      "23": {
+        "stencilCallDeclStmt": {
+          "stencilCall": {
+            "loc": {
+              "Line": -1,
+              "Column": -1
+            },
+            "callee": "__code_gen_23"
+          },
+          "loc": {
+            "Line": -1,
+            "Column": -1
+          },
+          "data": {},
+          "ID": 24
+        }
+      }
+    },
+    "stencilLocation": {
+      "Line": -1,
+      "Column": -1
+    },
+    "stencilName": "generated"
+  },
+  "internalIR": {
+    "gridType": "Unstructured",
+    "stencils": [
+      {
+        "multiStages": [
+          {
+            "stages": [
+              {
+                "doMethods": [
+                  {
+                    "ast": {
+                      "blockStmt": {
+                        "statements": [
+                          {
+                            "exprStmt": {
+                              "expr": {
+                                "assignmentExpr": {
+                                  "left": {
+                                    "fieldAccessExpr": {
+                                      "name": "__tmp_tem_22",
+                                      "zeroOffset": {},
+                                      "argumentMap": [
+                                        -1,
+                                        -1,
+                                        -1
+                                      ],
+                                      "argumentOffset": [
+                                        0,
+                                        0,
+                                        0
+                                      ],
+                                      "loc": {
+                                        "Line": -1,
+                                        "Column": -1
+                                      },
+                                      "data": {
+                                        "accessID": 22
+                                      },
+                                      "ID": 54
+                                    }
+                                  },
+                                  "op": "=",
+                                  "right": {
+                                    "fieldAccessExpr": {
+                                      "name": "test",
+                                      "zeroOffset": {},
+                                      "argumentMap": [
+                                        -1,
+                                        -1,
+                                        -1
+                                      ],
+                                      "argumentOffset": [
+                                        0,
+                                        0,
+                                        0
+                                      ],
+                                      "loc": {
+                                        "Line": -1,
+                                        "Column": -1
+                                      },
+                                      "data": {
+                                        "accessID": 21
+                                      },
+                                      "ID": 25
+                                    }
+                                  },
+                                  "loc": {
+                                    "Line": -1,
+                                    "Column": -1
+                                  },
+                                  "ID": 55
+                                }
+                              },
+                              "loc": {
+                                "Line": -1,
+                                "Column": -1
+                              },
+                              "data": {
+                                "accesses": {
+                                  "writeAccess": {
+                                    "22": {
+                                      "zeroExtent": {},
+                                      "verticalExtent": {}
+                                    }
+                                  },
+                                  "readAccess": {
+                                    "21": {
+                                      "zeroExtent": {},
+                                      "verticalExtent": {}
+                                    }
+                                  }
+                                }
+                              },
+                              "ID": 56
+                            }
+                          }
+                        ],
+                        "loc": {
+                          "Line": -1,
+                          "Column": -1
+                        },
+                        "data": {},
+                        "ID": 47
+                      }
+                    },
+                    "doMethodID": 1,
+                    "interval": {
+                      "specialLowerLevel": "Start",
+                      "specialUpperLevel": "End"
+                    }
+                  }
+                ],
+                "stageID": 46,
+                "locationType": "Edge"
+              },
+              {
+                "doMethods": [
+                  {
+                    "ast": {
+                      "blockStmt": {
+                        "statements": [
+                          {
+                            "exprStmt": {
+                              "expr": {
+                                "assignmentExpr": {
+                                  "left": {
+                                    "fieldAccessExpr": {
+                                      "name": "outF",
+                                      "zeroOffset": {},
+                                      "argumentMap": [
+                                        -1,
+                                        -1,
+                                        -1
+                                      ],
+                                      "argumentOffset": [
+                                        0,
+                                        0,
+                                        0
+                                      ],
+                                      "loc": {
+                                        "Line": -1,
+                                        "Column": -1
+                                      },
+                                      "data": {
+                                        "accessID": 20
+                                      },
+                                      "ID": 30
+                                    }
+                                  },
+                                  "op": "=",
+                                  "right": {
+                                    "reductionOverNeighborExpr": {
+                                      "op": "+",
+                                      "rhs": {
+                                        "fieldAccessExpr": {
+                                          "name": "inF",
+                                          "zeroOffset": {},
+                                          "argumentMap": [
+                                            -1,
+                                            -1,
+                                            -1
+                                          ],
+                                          "argumentOffset": [
+                                            0,
+                                            0,
+                                            0
+                                          ],
+                                          "loc": {
+                                            "Line": -1,
+                                            "Column": -1
+                                          },
+                                          "data": {
+                                            "accessID": 19
+                                          },
+                                          "ID": 13
+                                        }
+                                      },
+                                      "init": {
+                                        "literalAccessExpr": {
+                                          "value": "0.",
+                                          "type": {
+                                            "typeId": "Double"
+                                          },
+                                          "loc": {
+                                            "Line": -1,
+                                            "Column": -1
+                                          },
+                                          "data": {
+                                            "accessID": -39
+                                          },
+                                          "ID": 12
+                                        }
+                                      },
+                                      "weights": [
+                                        {
+                                          "fieldAccessExpr": {
+                                            "name": "__tmp_tem_22",
+                                            "zeroOffset": {},
+                                            "argumentMap": [
+                                              -1,
+                                              -1,
+                                              -1
+                                            ],
+                                            "argumentOffset": [
+                                              0,
+                                              0,
+                                              0
+                                            ],
+                                            "loc": {
+                                              "Line": -1,
+                                              "Column": -1
+                                            },
+                                            "data": {
+                                              "accessID": 22
+                                            },
+                                            "ID": 50
+                                          }
+                                        },
+                                        {
+                                          "fieldAccessExpr": {
+                                            "name": "__tmp_tem_22",
+                                            "zeroOffset": {},
+                                            "argumentMap": [
+                                              -1,
+                                              -1,
+                                              -1
+                                            ],
+                                            "argumentOffset": [
+                                              0,
+                                              0,
+                                              0
+                                            ],
+                                            "loc": {
+                                              "Line": -1,
+                                              "Column": -1
+                                            },
+                                            "data": {
+                                              "accessID": 22
+                                            },
+                                            "ID": 50
+                                          }
+                                        },
+                                        {
+                                          "fieldAccessExpr": {
+                                            "name": "__tmp_tem_22",
+                                            "zeroOffset": {},
+                                            "argumentMap": [
+                                              -1,
+                                              -1,
+                                              -1
+                                            ],
+                                            "argumentOffset": [
+                                              0,
+                                              0,
+                                              0
+                                            ],
+                                            "loc": {
+                                              "Line": -1,
+                                              "Column": -1
+                                            },
+                                            "data": {
+                                              "accessID": 22
+                                            },
+                                            "ID": 50
+                                          }
+                                        },
+                                        {
+                                          "fieldAccessExpr": {
+                                            "name": "__tmp_tem_22",
+                                            "zeroOffset": {},
+                                            "argumentMap": [
+                                              -1,
+                                              -1,
+                                              -1
+                                            ],
+                                            "argumentOffset": [
+                                              0,
+                                              0,
+                                              0
+                                            ],
+                                            "loc": {
+                                              "Line": -1,
+                                              "Column": -1
+                                            },
+                                            "data": {
+                                              "accessID": 22
+                                            },
+                                            "ID": 50
+                                          }
+                                        }
+                                      ],
+                                      "iterSpace": {
+                                        "chain": [
+                                          "Edge",
+                                          "Cell"
+                                        ]
+                                      }
+                                    }
+                                  },
+                                  "loc": {
+                                    "Line": -1,
+                                    "Column": -1
+                                  },
+                                  "ID": 31
+                                }
+                              },
+                              "loc": {
+                                "Line": -1,
+                                "Column": -1
+                              },
+                              "data": {
+                                "accesses": {
+                                  "writeAccess": {
+                                    "20": {
+                                      "zeroExtent": {},
+                                      "verticalExtent": {}
+                                    }
+                                  },
+                                  "readAccess": {
+                                    "-39": {
+                                      "zeroExtent": {},
+                                      "verticalExtent": {}
+                                    },
+                                    "19": {
+                                      "zeroExtent": {},
+                                      "verticalExtent": {}
+                                    },
+                                    "22": {
+                                      "zeroExtent": {},
+                                      "verticalExtent": {}
+                                    }
+                                  }
+                                }
+                              },
+                              "ID": 32
+                            }
+                          }
+                        ],
+                        "loc": {
+                          "Line": -1,
+                          "Column": -1
+                        },
+                        "data": {},
+                        "ID": 49
+                      }
+                    },
+                    "doMethodID": 2,
+                    "interval": {
+                      "specialLowerLevel": "Start",
+                      "specialUpperLevel": "End"
+                    }
+                  }
+                ],
+                "stageID": 48,
+                "locationType": "Edge"
+              }
+            ],
+            "multiStageID": 36
+          }
+        ],
+        "stencilID": 23,
+        "attr": {}
+      }
+    ],
+    "controlFlowStatements": [
+      {
+        "stencilCallDeclStmt": {
+          "stencilCall": {
+            "loc": {
+              "Line": -1,
+              "Column": -1
+            },
+            "callee": "__code_gen_23"
+          },
+          "loc": {
+            "Line": -1,
+            "Column": -1
+          },
+          "data": {},
+          "ID": 24
+        }
+      }
+    ]
+  },
+  "filename": "AlsoDemoteWeight"
+}
