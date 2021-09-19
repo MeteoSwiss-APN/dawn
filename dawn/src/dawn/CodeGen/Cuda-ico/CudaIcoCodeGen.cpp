@@ -498,6 +498,11 @@ void CudaIcoCodeGen::generateStencilSetup(MemberFunction& stencilSetup,
   stencilSetup.addStatement("kSize_ = kSize");
   stencilSetup.addStatement("is_setup_ = true");
   stencilSetup.addStatement("stream_ = stream");
+  for(const auto& fieldName :
+      getUsedFieldsNames(stencil, {dawn::iir::Field::IntendKind::Output,
+                                   dawn::iir::Field::IntendKind::InputOutput})) {
+    stencilSetup.addStatement(fieldName + "_kSize_ = " + fieldName + "_kSize");
+  }
   allocTempFields(stencilSetup, stencil);
 }
 
@@ -687,6 +692,13 @@ void CudaIcoCodeGen::generateStencilClasses(
     stencilClass.addMember("static bool", "is_setup_");
     stencilClass.addMember("static cudaStream_t", "stream_");
 
+    for(auto fieldID : getUsedFields(stencil, {dawn::iir::Field::IntendKind::Output,
+                                               dawn::iir::Field::IntendKind::InputOutput})) {
+      stencilClass.addMember("static int",
+                             stencilInstantiation->getMetaData().getNameFromAccessID(fieldID) +
+                                 "_kSize_");
+    }
+
     stencilClass.changeAccessibility("public");
     auto meshGetter = stencilClass.addMemberFunction("static const GpuTriMesh &", "getMesh");
     meshGetter.finishArgs();
@@ -699,6 +711,18 @@ void CudaIcoCodeGen::generateStencilClasses(
     kSizeGetter.startBody();
     kSizeGetter.addStatement("return kSize_");
     kSizeGetter.commit();
+
+    for(auto fieldID : getUsedFields(stencil, {dawn::iir::Field::IntendKind::Output,
+                                               dawn::iir::Field::IntendKind::InputOutput})) {
+      auto kSizeFieldGetter = stencilClass.addMemberFunction(
+          "static int",
+          "get_" + stencilInstantiation->getMetaData().getNameFromAccessID(fieldID) + "_KSize");
+      kSizeFieldGetter.finishArgs();
+      kSizeFieldGetter.startBody();
+      kSizeFieldGetter.addStatement(
+          "return " + stencilInstantiation->getMetaData().getNameFromAccessID(fieldID) + "_kSize_");
+      kSizeFieldGetter.commit();
+    }
 
     if(!globalsMap.empty()) {
       stencilClass.addMember("globals", "m_globals");
@@ -713,6 +737,12 @@ void CudaIcoCodeGen::generateStencilClasses(
     stencilClassSetup.addArg("const dawn::GlobalGpuTriMesh *mesh");
     stencilClassSetup.addArg("int kSize");
     stencilClassSetup.addArg("cudaStream_t stream");
+    for(auto fieldID : getUsedFields(stencil, {dawn::iir::Field::IntendKind::Output,
+                                               dawn::iir::Field::IntendKind::InputOutput})) {
+      stencilClassSetup.addArg("const int " +
+                               stencilInstantiation->getMetaData().getNameFromAccessID(fieldID) +
+                               "_kSize");
+    }
     generateStencilSetup(stencilClassSetup, stencil);
     stencilClassSetup.commit();
 
@@ -845,7 +875,14 @@ void CudaIcoCodeGen::generateAllAPIRunFunctions(
         }
         if(fromHost) {
           for(auto& apiRunFun : apiRunFuns) {
-            apiRunFun->addStatement(fullStencilName + "::setup(mesh, k_size, 0)");
+            std::string k_size_concat_string;
+            for(const auto& fieldName :
+                getUsedFieldsNames(stencil, {dawn::iir::Field::IntendKind::Output,
+                                             dawn::iir::Field::IntendKind::InputOutput})) {
+              k_size_concat_string += ", k_size";
+            }
+            apiRunFun->addStatement(fullStencilName + "::setup(mesh, k_size, 0" +
+                                    k_size_concat_string + ")");
           }
           // depending if we are calling from c or from fortran, we need to transpose the data or
           // not
@@ -991,7 +1028,10 @@ void CudaIcoCodeGen::generateAllAPIVerifyFunctions(
         auto unstrDims = ast::dimension_cast<const ast::UnstructuredFieldDimension&>(
             fieldInfo.field.getFieldDimensions().getHorizontalFieldDimension());
 
-        std::string num_lev = (!fieldInfo.field.getFieldDimensions().K()) ? "1" : "kSize";
+        verifyAPI.addStatement("int " + fieldInfo.Name + "_kSize = " + fullStencilName +
+                               "::" + "get_" + fieldInfo.Name + "_KSize()");
+        std::string num_lev =
+            (!fieldInfo.field.getFieldDimensions().K()) ? "1" : fieldInfo.Name + "_kSize";
         std::string dense_stride =
             "(mesh." + locToStrideString(unstrDims.getDenseLocationType()) + ")";
         std::string indexOfLastHorElement =
@@ -1119,14 +1159,29 @@ void CudaIcoCodeGen::generateMemMgmtFunctions(
       StencilContext::SC_Stencil, stencilInstantiation->getStencils()[0]->getStencilID());
   const std::string fullStencilName =
       "dawn_generated::cuda_ico::" + wrapperName + "::" + stencilName;
+  const auto& stencils = stencilInstantiation->getStencils();
+  DAWN_ASSERT_MSG(stencils.size() <= 1, "code generation only for at most one stencil!\n");
+  const auto& stencil = *stencils[0];
 
   MemberFunction setupFun("void", "setup_" + wrapperName, ssSW, 0, onlyDecl);
   setupFun.addArg("dawn::GlobalGpuTriMesh *mesh");
   setupFun.addArg("int k_size");
   setupFun.addArg("cudaStream_t stream");
+  for(const auto& fieldName :
+      getUsedFieldsNames(stencil, {dawn::iir::Field::IntendKind::Output,
+                                   dawn::iir::Field::IntendKind::InputOutput})) {
+    setupFun.addArg("const int " + fieldName + "_k_size");
+  }
   setupFun.finishArgs();
   if(!onlyDecl) {
-    setupFun.addStatement(fullStencilName + "::setup(mesh, k_size, stream)");
+    std::string k_size_concat_string;
+    for(const auto& fieldName :
+        getUsedFieldsNames(stencil, {dawn::iir::Field::IntendKind::Output,
+                                     dawn::iir::Field::IntendKind::InputOutput})) {
+      k_size_concat_string += ", " + fieldName + "_k_size";
+    }
+    setupFun.addStatement(fullStencilName + "::setup(mesh, k_size, stream" + k_size_concat_string +
+                          ")");
   }
   setupFun.commit();
 
@@ -1142,6 +1197,9 @@ void CudaIcoCodeGen::generateMemMgmtFunctions(
 void CudaIcoCodeGen::generateStaticMembersTrailer(
     std::stringstream& ssSW, const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation,
     CodeGenProperties& codeGenProperties) const {
+  const auto& constStencils = stencilInstantiation->getStencils();
+  DAWN_ASSERT_MSG(constStencils.size() <= 1, "code generation only for at most one stencil!\n");
+  const auto& constStencil = *constStencils[0];
   auto& stencil = stencilInstantiation->getStencils()[0];
   const std::string wrapperName = stencilInstantiation->getName();
   std::string stencilName =
@@ -1159,6 +1217,11 @@ void CudaIcoCodeGen::generateStaticMembersTrailer(
        << "kSize_;\n";
   ssSW << "cudaStream_t " << fullStencilName << "::"
        << "stream_;\n";
+  for(const auto& fieldName :
+      getUsedFieldsNames(constStencil, {dawn::iir::Field::IntendKind::Output,
+                                        dawn::iir::Field::IntendKind::InputOutput})) {
+    ssSW << "int " << fullStencilName << "::" << fieldName + "_kSize_;\n";
+  }
   ssSW << "bool " << fullStencilName << "::"
        << "is_setup_ = false;\n";
   ssSW << "dawn_generated::cuda_ico::" + wrapperName << "::GpuTriMesh " << fullStencilName << "::"
@@ -1523,6 +1586,7 @@ generateF90InterfaceSI(FortranInterfaceModuleGen& fimGen,
             ,
             stencilInstantiation->getMetaData().getFieldDimensions(fieldID).rank());
       }
+
       for(auto fieldID : getUsedFields(stencil, {dawn::iir::Field::IntendKind::Output,
                                                  dawn::iir::Field::IntendKind::InputOutput})) {
         if(optThresholds) {
@@ -1550,6 +1614,8 @@ generateF90InterfaceSI(FortranInterfaceModuleGen& fimGen,
   fimGen.addInterfaceAPI(std::move(interfaces[runAndVerifyIdx]));
 
   addArgsToAPI(runWrapper, /*includeSavedState*/ true, true);
+
+  std::string fortranIndent = "   ";
 
   auto getFieldArgs = [&](bool includeSavedState) -> std::vector<std::string> {
     std::vector<std::string> args;
@@ -1580,23 +1646,23 @@ generateF90InterfaceSI(FortranInterfaceModuleGen& fimGen,
     wrapper.addBodyLine("( &");
 
     if(first != "") {
-      wrapper.addBodyLine("   " + first + ", &"); // TODO remove
+      wrapper.addBodyLine(fortranIndent + first + ", &"); // TODO remove
     }
 
     auto args = concatenateVectors<std::string>(
         {getGlobalsNames(globalsMap), getFieldArgs(includeSavedState)});
 
     for(int i = 0; i < args.size(); ++i) {
-      wrapper.addBodyLine("   " + args[i] +
+      wrapper.addBodyLine(fortranIndent + args[i] +
                           ((i == (args.size() - 1)) && !includeErrorThreshold ? " &" : ", &"));
     }
 
     if(includeErrorThreshold) {
       for(int i = 0; i < threshold_names.size() - 1; i++) {
-        wrapper.addBodyLine("   " + threshold_names[i] + ", &");
+        wrapper.addBodyLine(fortranIndent + threshold_names[i] + ", &");
       }
 
-      wrapper.addBodyLine("   " + threshold_names[threshold_names.size() - 1] + " &");
+      wrapper.addBodyLine(fortranIndent + threshold_names[threshold_names.size() - 1] + " &");
     }
 
     wrapper.addBodyLine(")");
@@ -1638,7 +1704,7 @@ generateF90InterfaceSI(FortranInterfaceModuleGen& fimGen,
   runWrapper.addACCLine("host_data use_device( &");
   auto fieldArgs = getFieldArgs(/*includeSavedState*/ true);
   for(int i = 0; i < fieldArgs.size(); ++i) {
-    runWrapper.addACCLine("   " + fieldArgs[i] + (i == (fieldArgs.size() - 1) ? " &" : ", &"));
+    runWrapper.addACCLine(fortranIndent + fieldArgs[i] + (i == (fieldArgs.size() - 1) ? " &" : ", &"));
   }
   runWrapper.addACCLine(")");
   runWrapper.addBodyLine("#ifdef __DSL_VERIFY", /*withIndentation*/ false);
@@ -1652,15 +1718,80 @@ generateF90InterfaceSI(FortranInterfaceModuleGen& fimGen,
 
   fimGen.addWrapperAPI(std::move(runWrapper));
 
+  std::vector<std::string> verticalBoundNames;
+  for(auto fieldID : getUsedFields(stencil, {dawn::iir::Field::IntendKind::Output,
+                                             dawn::iir::Field::IntendKind::InputOutput})) {
+    verticalBoundNames.push_back(stencilInstantiation->getMetaData().getNameFromAccessID(fieldID) +
+                                  "_kvert_max");
+  }
+
   // memory management functions for production interface
   FortranInterfaceAPI setup("setup_" + stencilInstantiation->getName());
   FortranInterfaceAPI free("free_" + stencilInstantiation->getName());
   setup.addArg("mesh", FortranAPI::InterfaceType::OBJ);
   setup.addArg("k_size", FortranAPI::InterfaceType::INTEGER);
   setup.addArg("stream", FortranAPI::InterfaceType::CUDA_STREAM_T);
+  for(auto fieldID : getUsedFields(stencil, {dawn::iir::Field::IntendKind::Output,
+                                             dawn::iir::Field::IntendKind::InputOutput})) {
+    setup.addArg(stencilInstantiation->getMetaData().getNameFromAccessID(fieldID) + "_kmax",
+                 FortranAPI::InterfaceType::INTEGER);
+  }
 
   fimGen.addInterfaceAPI(std::move(setup));
   fimGen.addInterfaceAPI(std::move(free));
+
+  FortranWrapperAPI setupWrapper("wrap_setup_" + stencilInstantiation->getName());
+  setupWrapper.addArg("mesh", FortranAPI::InterfaceType::OBJ);
+  setupWrapper.addArg("k_size", FortranAPI::InterfaceType::INTEGER);
+  setupWrapper.addArg("stream", FortranAPI::InterfaceType::CUDA_STREAM_T);
+
+  for(auto fieldID : getUsedFields(stencil, {dawn::iir::Field::IntendKind::Output,
+                                             dawn::iir::Field::IntendKind::InputOutput})) {
+    setupWrapper.addOptArg(stencilInstantiation->getMetaData().getNameFromAccessID(fieldID) +
+                               "_kmax",
+                           FortranAPI::InterfaceType::INTEGER);
+  }
+
+  setupWrapper.addBodyLine("");
+
+  for(int i = 0; i < verticalBoundNames.size(); i++) {
+    setupWrapper.addBodyLine("integer(c_int) :: " + verticalBoundNames[i]);
+  }
+
+  setupWrapper.addBodyLine("");
+
+  for(auto fieldID : getUsedFields(stencil, {dawn::iir::Field::IntendKind::Output,
+                                             dawn::iir::Field::IntendKind::InputOutput})) {
+    setupWrapper.addBodyLine("if (present(" +
+                             stencilInstantiation->getMetaData().getNameFromAccessID(fieldID) +
+                             "_kmax" + ")) then");
+    setupWrapper.addBodyLine(
+        "  " + stencilInstantiation->getMetaData().getNameFromAccessID(fieldID) + "_kvert_max" +
+        " = " + stencilInstantiation->getMetaData().getNameFromAccessID(fieldID) + "_kmax");
+    setupWrapper.addBodyLine("else");
+    setupWrapper.addBodyLine("  " +
+                             stencilInstantiation->getMetaData().getNameFromAccessID(fieldID) +
+                             "_kvert_max" + " = k_size");
+    setupWrapper.addBodyLine("endif");
+    setupWrapper.addBodyLine("");
+  }
+
+  setupWrapper.addBodyLine("call setup_" + stencilInstantiation->getName() + " &");
+
+  setupWrapper.addBodyLine("( &");
+  setupWrapper.addBodyLine(fortranIndent + "mesh, &");
+  setupWrapper.addBodyLine(fortranIndent + "k_size, &");
+  setupWrapper.addBodyLine(fortranIndent + "stream, &");
+
+  for(int i = 0; i < verticalBoundNames.size() - 1; i++) {
+    setupWrapper.addBodyLine(fortranIndent + verticalBoundNames[i] + ", &");
+  }
+
+  setupWrapper.addBodyLine(fortranIndent + verticalBoundNames[verticalBoundNames.size() - 1] + " &");
+
+  setupWrapper.addBodyLine(")");
+
+  fimGen.addWrapperAPI(std::move(setupWrapper));
 }
 
 std::string CudaIcoCodeGen::generateF90Interface(std::string moduleName) const {
