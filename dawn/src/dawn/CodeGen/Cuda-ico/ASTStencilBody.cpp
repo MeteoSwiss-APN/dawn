@@ -256,6 +256,8 @@ void ASTStencilBody::visit(const std::shared_ptr<ast::ExprStmt>& stmt) {
   if(findReduceOverNeighborExpr.hasReduceOverNeighborExpr()) {
     // instantiate a new ast stencil body to parse exclusively the neighbour reductions
     ASTStencilBody astParser(metadata_, genAtlasCompatCode_, recursiveIterNest_);
+    astParser.parentIsForLoop_ = parentIsForLoop_;
+    astParser.parentIsReduction_ = parentIsReduction_;
     stmt->getExpr()->accept(astParser);
 
     // code generate the loop over neighbours reduction
@@ -273,6 +275,8 @@ void ASTStencilBody::visit(const std::shared_ptr<ast::VarDeclStmt>& stmt) {
 
   if(findReduceOverNeighborExpr.hasReduceOverNeighborExpr()) {
     ASTStencilBody astParser(metadata_, genAtlasCompatCode_, recursiveIterNest_);
+    astParser.parentIsForLoop_ = parentIsForLoop_;
+    astParser.parentIsReduction_ = parentIsReduction_;
     for(auto& expr : stmt->getInitList()) {
       expr->accept(astParser);
     }
@@ -343,6 +347,9 @@ void ASTStencilBody::evalNeighbourReduction(
   // before we generate the expression, we check if (and generate) nested neighbour reductions
   if(findReduceOverNeighborExpr.hasReduceOverNeighborExpr()) {
     ASTStencilBody astParser(metadata_, genAtlasCompatCode_, recursiveIterNest_ + 1);
+    astParser.parentIsForLoop_ = parentIsForLoop_;
+    astParser.parentIsReduction_ = parentIsReduction_;
+
     expr->getRhs()->accept(astParser);
 
     for(auto& redParser : astParser.reductionParser_) {
