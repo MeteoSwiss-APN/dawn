@@ -254,7 +254,15 @@ void generateNbhTable(dawn::mesh_t<LibTag> const& mesh, std::vector<dawn::Locati
   }
 
   assert(hostTable.size() == numElements * numNbhPerElement);
-  gpuErrchk(cudaMemcpy(target, hostTable.data(), sizeof(int) * numElements * numNbhPerElement,
-                       cudaMemcpyHostToDevice));
+
+  std::vector<int> transposedHostTable(numElements * numNbhPerElement);
+  for(int i = 0; i < numElements; i++) {
+    for(int j = 0; j < numNbhPerElement; j++) {
+      transposedHostTable[j * numElements + i] = hostTable[i * numNbhPerElement + j];
+    }
+  }
+
+  gpuErrchk(cudaMemcpy(target, transposedHostTable.data(),
+                       sizeof(int) * numElements * numNbhPerElement, cudaMemcpyHostToDevice));
 }
 } // namespace dawn

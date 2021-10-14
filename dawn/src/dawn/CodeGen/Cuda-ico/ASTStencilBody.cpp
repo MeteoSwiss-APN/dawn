@@ -60,7 +60,7 @@ void ASTStencilBody::visit(const std::shared_ptr<ast::LoopStmt>& stmt) {
 
   ss_ << "{\n";
   ss_ << "int " + nbhIdxStr() + " = " << chainToTableString(maybeChainPtr->getIterSpace()) << "["
-      << "pidx * " << chainToSparseSizeString(maybeChainPtr->getIterSpace()) << " + " + nbhIterStr()
+      << "pidx + " << locToStrideString(maybeChainPtr->getIterSpace().Chain[0]) << " * " + nbhIterStr()
       << "];\n";
   if(hasIrregularPentagons(maybeChainPtr->getChain()) || genAtlasCompatCode_) {
     ss_ << "if (" + nbhIdxStr() + " == DEVICE_MISSING_VALUE) { continue; }";
@@ -329,7 +329,7 @@ void ASTStencilBody::evalNeighbourReduction(
 
   ss_ << "{\n";
   ss_ << "int " + nbhIdxStr() + " = " << chainToTableString(expr->getIterSpace()) << "["
-      << pidxStr() << " * " << chainToSparseSizeString(expr->getIterSpace()) << " + " + nbhIterStr()
+      << pidxStr() << " + " << locToStrideString(expr->getIterSpace().Chain[0]) << " * " + nbhIterStr()
       << "];\n";
 
   if(hasIrregularPentagons(expr->getNbhChain()) || genAtlasCompatCode_) {
