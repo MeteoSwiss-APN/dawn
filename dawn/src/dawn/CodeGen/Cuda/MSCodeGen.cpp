@@ -726,7 +726,7 @@ void MSCodeGen::generateCudaKernelCode() {
     }
 
     if(globalNames_.find("checkOffset") == globalNames_.end()) {
-      MemberFunction offsetFunc("__device__ bool", "checkOffset", ss_);
+      MemberFunction offsetFunc("__device__ static bool", "checkOffset", ss_);
       offsetFunc.addArg("unsigned int min");
       offsetFunc.addArg("unsigned int max");
       offsetFunc.addArg("unsigned int val");
@@ -1082,9 +1082,18 @@ void MSCodeGen::generateCudaKernelCode() {
             for(auto [index, interval] : enumerate(stage->getIterationSpace())) {
               if(interval.has_value()) {
                 std::string arrName = prefix + iterators.at(index) + "Indices";
+                std::string offset;
+                if (iterators[index] == 'I') {
+                  offset = "blockIdx.x * " + std::to_string(ntx) + " + " + std::string{(char) std::tolower(iterators.at(index))} + "block";
+                }
+
+                if (iterators[index] == 'J') {
+                  offset = "blockIdx.y * " + std::to_string(nty) + " + " + std::string{(char) std::tolower(iterators.at(index))} + "block";
+                }
+
                 guard += " && checkOffset(" + arrName + "_[0], " + arrName +
                          "_[1], globalOffsets_[" + std::to_string(index) + "] + " +
-                         (char)std::tolower(iterators.at(index)) + "block)";
+                         "(" + offset +"))";
               }
             }
           }

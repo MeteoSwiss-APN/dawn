@@ -253,6 +253,11 @@ GT_FUNCTION T isnan(const T x) {
   return std::isnan(x);
 }
 
+
+template <typename T>
+GT_FUNCTION T sign(const T val) {
+  return (T(0) < val) - (val < T(0));;
+}
 /** @} */
 } // namespace math
 } // namespace dawn
