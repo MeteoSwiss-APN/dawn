@@ -14,7 +14,7 @@
 //
 //===------------------------------------------------------------------------------------------===//
 #define DAWN_GENERATED 1
-#define GRIDTOOLS_DAWN_HALO_EXTENT 3
+#define GRIDTOOLS_DAWN_HALO_EXTENT 0
 #define GT_VECTOR_LIMIT_SIZE 30
 
 #undef FUSION_MAX_VECTOR_SIZE
@@ -28,35 +28,34 @@
 #include "test/integration-test/CodeGen/Macros.hpp"
 #include "driver-includes/verify.hpp"
 #include "test/integration-test/CodeGen/Options.hpp"
-#include "test/integration-test/CodeGen/generated/copy_stencil_c++-naive.cpp"
+#include "test/integration-test/CodeGen/generated/iteration_space_stencil_c++-naive.cpp"
 
 #ifndef OPTBACKEND
 #define OPTBACKEND gt
 #endif
 
 // clang-format off
-#include INCLUDE_FILE(test/integration-test/CodeGen/generated/copy_stencil_,OPTBACKEND.cpp)
+#include INCLUDE_FILE(test/integration-test/CodeGen/generated/iteration_space_stencil_,OPTBACKEND.cpp)
 // clang-format on
 
 using namespace dawn;
-TEST(copy_stencil, test) {
+TEST(iteration_space_stencil, test) {
   domain dom(Options::getInstance().m_size[0], Options::getInstance().m_size[1],
              Options::getInstance().m_size[2]);
   dom.set_halos(halo::value, halo::value, halo::value, halo::value, 0, 0);
 
   verifier verif(dom);
 
-  meta_data_t meta_data(dom.isize(), dom.jsize(), dom.ksize());
-  storage_t in(meta_data, "in"), out_gt(meta_data, "out-gt"), out_naive(meta_data, "out-naive");
-
-  verif.fillMath(8.0, 2.0, 1.5, 1.5, 2.0, 4.0, in);
+  meta_data_t meta_data(dom.isize(), dom.jsize(), dom.ksize() + 1);
+  storage_t out_gt(meta_data, "out-gt"), out_naive(meta_data, "out-naive");
+  
   verif.fill(-1.0, out_gt, out_naive);
 
-  dawn_generated::OPTBACKEND::copy_stencil copy_gt(dom);
-  dawn_generated::cxxnaive::copy_stencil copy_naive(dom);
+  dawn_generated::OPTBACKEND::iteration_space_stencil iteration_space_gt(dom);
+  dawn_generated::cxxnaive::iteration_space_stencil iteration_space_naive(dom);
 
-  copy_gt.run(in, out_gt);
-  copy_naive.run(in, out_naive);
+  iteration_space_gt.run(out_gt);
+  iteration_space_naive.run(out_naive);
 
   ASSERT_TRUE(verif.verify(out_gt, out_naive));
 }
