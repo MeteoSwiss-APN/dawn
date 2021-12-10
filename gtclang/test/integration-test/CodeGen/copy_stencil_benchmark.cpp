@@ -46,7 +46,7 @@ TEST(copy_stencil, test) {
 
   verifier verif(dom);
 
-  meta_data_t meta_data(dom.isize(), dom.jsize(), dom.ksize());
+  meta_data_t meta_data(dom.isize(), dom.jsize(), dom.ksize() + 1);
   storage_t in(meta_data, "in"), out_gt(meta_data, "out-gt"), out_naive(meta_data, "out-naive");
 
   verif.fillMath(8.0, 2.0, 1.5, 1.5, 2.0, 4.0, in);
