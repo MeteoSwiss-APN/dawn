@@ -17,7 +17,7 @@
 #include "gtclang_dsl_defs/gtclang_dsl.hpp"
 using namespace gtclang::dsl;
 
-stencil iteration_space_stencil {
+stencil iteration_space_stencil_01 {
   storage out;  
 
   Do {

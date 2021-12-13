@@ -28,14 +28,14 @@
 #include "test/integration-test/CodeGen/Macros.hpp"
 #include "driver-includes/verify.hpp"
 #include "test/integration-test/CodeGen/Options.hpp"
-#include "test/integration-test/CodeGen/generated/iteration_space_stencil_c++-naive.cpp"
+#include "test/integration-test/CodeGen/generated/iteration_space_stencil_02_c++-naive.cpp"
 
 #ifndef OPTBACKEND
 #define OPTBACKEND gt
 #endif
 
 // clang-format off
-#include INCLUDE_FILE(test/integration-test/CodeGen/generated/iteration_space_stencil_,OPTBACKEND.cpp)
+#include INCLUDE_FILE(test/integration-test/CodeGen/generated/iteration_space_stencil_02_,OPTBACKEND.cpp)
 // clang-format on
 
 using namespace dawn;
@@ -46,13 +46,13 @@ TEST(iteration_space_stencil, test) {
 
   verifier verif(dom);
 
-  meta_data_t meta_data(dom.isize(), dom.jsize(), dom.ksize() + 1);
+  meta_data_t meta_data(dom.isize(), dom.jsize(), dom.ksize());
   storage_t out_gt(meta_data, "out-gt"), out_naive(meta_data, "out-naive");
   
   verif.fill(-1.0, out_gt, out_naive);
 
-  dawn_generated::OPTBACKEND::iteration_space_stencil iteration_space_gt(dom);
-  dawn_generated::cxxnaive::iteration_space_stencil iteration_space_naive(dom);
+  dawn_generated::OPTBACKEND::iteration_space_stencil_02 iteration_space_gt(dom);
+  dawn_generated::cxxnaive::iteration_space_stencil_02 iteration_space_naive(dom);
 
   iteration_space_gt.run(out_gt);
   iteration_space_naive.run(out_naive);

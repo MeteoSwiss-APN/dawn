@@ -1,1 +1,0 @@
-#include "iteration_space_stencil_benchmark.cpp"
