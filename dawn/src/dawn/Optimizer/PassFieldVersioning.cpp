@@ -137,6 +137,7 @@ bool PassFieldVersioning::run(
             newGraph = oldGraph;
             newGraph.insertStatement(stmt);
           }
+
           doMethod.update(iir::NodeUpdateType::level);
         }
         stage.update(iir::NodeUpdateType::level);
@@ -208,22 +209,6 @@ PassFieldVersioning::RCKind PassFieldVersioning::fixRaceCondition(
         }
       }
     }
-  }
-
-  // If we only have non-stencil SCCs and there are no input and output fields (i.e we don't have a
-  // DAG) we have to break (by renaming) one of the SCCs to get a DAG. For example:
-  //
-  //  field_a = field_b;
-  //  field_b = field_a;
-  //
-  // needs to be renamed to
-  //
-  //  field_a = field_b_0;
-  //  field_b = field_a;
-  //
-  // ... and then field_b_0 must be initialized from field_b.
-  if(stencilSCCs->empty() && !SCCs->empty() && !graph.isDAG()) {
-    stencilSCCs->emplace_back(std::move(SCCs->front()));
   }
 
   if(stencilSCCs->empty())
