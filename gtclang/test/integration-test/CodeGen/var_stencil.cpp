@@ -18,7 +18,7 @@
 using namespace gtclang::dsl;
 
 stencil var_stencil {
-  storage out;  
+  storage out, in;    
   var tmp;
 
   Do {
@@ -27,7 +27,7 @@ stencil var_stencil {
     }
 
     iteration_space(k_start, k_end) {
-      out = 1 + tmp;
+      out = in + tmp;
     }
   }
 };

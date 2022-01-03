@@ -41,12 +41,13 @@
 using namespace dawn;
 TEST(var_stencil, test) {
   domain dom(Options::getInstance().m_size[0], Options::getInstance().m_size[1],
-             Options::getInstance().m_size[2]);
-  dom.set_halos(halo::value, halo::value, halo::value, halo::value, 0, 0);
+             Options::getInstance().m_size[2]);  
+
+  dom.set_halos(halo::value, halo::value, halo::value, halo::value, 0, 0); 
 
   verifier verif(dom);
 
-  meta_data_t meta_data(dom.isize(), dom.jsize(), dom.ksize() + 1);
+  meta_data_t meta_data(dom.isize(), dom.jsize(), dom.ksize());
   storage_t in(meta_data, "in"), out_gt(meta_data, "out-gt"), out_naive(meta_data, "out-naive");
 
   verif.fillMath(8.0, 2.0, 1.5, 1.5, 2.0, 4.0, in);
@@ -55,8 +56,8 @@ TEST(var_stencil, test) {
   dawn_generated::OPTBACKEND::var_stencil copy_gt(dom);
   dawn_generated::cxxnaive::var_stencil copy_naive(dom);
 
-  copy_gt.run(out_gt);
-  copy_naive.run(out_naive);
-
+  copy_gt.run(out_gt, in);
+  copy_naive.run(out_naive, in);
+  
   ASSERT_TRUE(verif.verify(out_gt, out_naive));
 }
