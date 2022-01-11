@@ -350,97 +350,98 @@ void CudaIcoCodeGen::generateRunFun(
       std::string hOffsetString = "hoffset" + std::to_string(stage->getStageID());
       runFun.addStatement("int " + hSizeString + " = " +
                           numElementsString(*stage->getLocationType(), domain));
-      runFun.addBlockStatement("if (" + hSizeString + " == 0)",
-                               [&]() { runFun.addStatement("return"); });
-      if(domain.has_value()) {
-        runFun.addStatement("int " + hOffsetString + " = " +
-                            hOffsetSizeString(*stage->getLocationType(), *domain));
-      }
-      runFun.addStatement("dim3 dG" + std::to_string(stage->getStageID()) + " = grid(" +
-                          k_size.str() + ", " + hSizeString + "," + iskparallel + ")");
+      runFun.addBlockStatement("if (" + hSizeString + " != 0)",
+                               [&]() { 
+        if(domain.has_value()) {
+          runFun.addStatement("int " + hOffsetString + " = " +
+                              hOffsetSizeString(*stage->getLocationType(), *domain));
+        }
+        runFun.addStatement("dim3 dG" + std::to_string(stage->getStageID()) + " = grid(" +
+                            k_size.str() + ", " + hSizeString + "," + iskparallel + ")");
 
-      //--------------------------------------
-      // signature of kernel
-      //--------------------------------------
-      std::stringstream kernelCall;
-      std::string kName =
-          cuda::CodeGeneratorHelper::buildCudaKernelName(stencilInstantiation, ms, stage);
-      kernelCall << kName;
+        //--------------------------------------
+        // signature of kernel
+        //--------------------------------------
+        std::stringstream kernelCall;
+        std::string kName =
+            cuda::CodeGeneratorHelper::buildCudaKernelName(stencilInstantiation, ms, stage);
+        kernelCall << kName;
 
-      // which nbh tables need to be passed / which templates need to be defined?
-      CollectIterationSpaces chainStringCollector;
-      for(const auto& doMethod : stage->getChildren()) {
-        doMethod->getAST().accept(chainStringCollector);
-      }
-      auto chains = chainStringCollector.getSpaces();
+        // which nbh tables need to be passed / which templates need to be defined?
+        CollectIterationSpaces chainStringCollector;
+        for(const auto& doMethod : stage->getChildren()) {
+          doMethod->getAST().accept(chainStringCollector);
+        }
+        auto chains = chainStringCollector.getSpaces();
 
-      if(chains.size() != 0) {
-        kernelCall << "<";
-        bool first = true;
+        if(chains.size() != 0) {
+          kernelCall << "<";
+          bool first = true;
+          for(auto chain : chains) {
+            if(!first) {
+              kernelCall << ", ";
+            }
+            kernelCall << chainToSparseSizeString(chain);
+            first = false;
+          }
+          kernelCall << ">";
+        }
+
+        kernelCall << "<<<"
+                  << "dG" + std::to_string(stage->getStageID()) + ",dB,"
+                  << "0, stream_"
+                  << ">>>(";
+        if(!globalsMap.empty()) {
+          kernelCall << "m_globals, ";
+        }
+        kernelCall << numElString << ", ";
+
+        // which loc size args (int CellIdx, int EdgeIdx, int CellIdx) need to be passed
+        // additionally?
+        std::set<std::string> locArgs;
+        for(auto field : fields) {
+          if(field.second.getFieldDimensions().isVertical()) {
+            continue;
+          }
+          auto dims = ast::dimension_cast<ast::UnstructuredFieldDimension const&>(
+              field.second.getFieldDimensions().getHorizontalFieldDimension());
+          // dont add sizes twice
+          if(dims.getDenseLocationType() == *stage->getLocationType()) {
+            continue;
+          }
+          locArgs.insert(locToStrideString(dims.getDenseLocationType()));
+        }
+        for(auto arg : locArgs) {
+          kernelCall << "mesh_." + arg + ", ";
+        }
+
+        // we always need the k size
+        kernelCall << "kSize_, ";
+
+        // in case of horizontal iteration space we need the offset
+        if(domain.has_value()) {
+          kernelCall << hOffsetString << ", ";
+        }
+        kernelCall << hSizeString << ", ";
+
         for(auto chain : chains) {
+          kernelCall << "mesh_." + chainToTableString(chain) + ", ";
+        }
+
+        // field arguments (correct cv specifier)
+        bool first = true;
+        for(const auto& fieldPair : fields) {
           if(!first) {
             kernelCall << ", ";
           }
-          kernelCall << chainToSparseSizeString(chain);
+          kernelCall << stencilInstantiation->getMetaData().getFieldNameFromAccessID(
+                            fieldPair.second.getAccessID()) +
+                            "_";
           first = false;
         }
-        kernelCall << ">";
-      }
-
-      kernelCall << "<<<"
-                 << "dG" + std::to_string(stage->getStageID()) + ",dB,"
-                 << "0, stream_"
-                 << ">>>(";
-      if(!globalsMap.empty()) {
-        kernelCall << "m_globals, ";
-      }
-      kernelCall << numElString << ", ";
-
-      // which loc size args (int CellIdx, int EdgeIdx, int CellIdx) need to be passed
-      // additionally?
-      std::set<std::string> locArgs;
-      for(auto field : fields) {
-        if(field.second.getFieldDimensions().isVertical()) {
-          continue;
-        }
-        auto dims = ast::dimension_cast<ast::UnstructuredFieldDimension const&>(
-            field.second.getFieldDimensions().getHorizontalFieldDimension());
-        // dont add sizes twice
-        if(dims.getDenseLocationType() == *stage->getLocationType()) {
-          continue;
-        }
-        locArgs.insert(locToStrideString(dims.getDenseLocationType()));
-      }
-      for(auto arg : locArgs) {
-        kernelCall << "mesh_." + arg + ", ";
-      }
-
-      // we always need the k size
-      kernelCall << "kSize_, ";
-
-      // in case of horizontal iteration space we need the offset
-      if(domain.has_value()) {
-        kernelCall << hOffsetString << ", ";
-      }
-      kernelCall << hSizeString << ", ";
-
-      for(auto chain : chains) {
-        kernelCall << "mesh_." + chainToTableString(chain) + ", ";
-      }
-
-      // field arguments (correct cv specifier)
-      bool first = true;
-      for(const auto& fieldPair : fields) {
-        if(!first) {
-          kernelCall << ", ";
-        }
-        kernelCall << stencilInstantiation->getMetaData().getFieldNameFromAccessID(
-                          fieldPair.second.getAccessID()) +
-                          "_";
-        first = false;
-      }
-      kernelCall << ")";
-      runFun.addStatement(kernelCall.str());
+        kernelCall << ")";
+        runFun.addStatement(kernelCall.str());
+      });
       runFun.addPreprocessorDirective("ifndef NDEBUG\n");
       runFun.addStatement("gpuErrchk(cudaPeekAtLastError())");
       runFun.addStatement("gpuErrchk(cudaDeviceSynchronize())");
