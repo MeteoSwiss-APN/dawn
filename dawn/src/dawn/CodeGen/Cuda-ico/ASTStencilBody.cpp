@@ -164,8 +164,9 @@ std::string ASTStencilBody::makeIndexString(const std::shared_ptr<ast::FieldAcce
   if(isFullField && isSparse) {
     DAWN_ASSERT_MSG(parentIsForLoop_ || parentIsReduction_,
                     "Sparse Field Access not allowed in this context");
-    return nbhIterStr() + " * kSize * " + denseSize + " + " + kiterStr + "*" + denseSize + " + " +
-           pidxStr();
+    std::string sparseSize = chainToSparseSizeString(unstrDims.getIterSpace());
+    return kiterStr + " * " + sparseSize + " * " + denseSize + " + " + nbhIterStr() + " * " + denseSize 
+              + " + " + pidxStr();
   }
 
   // 2D
@@ -181,8 +182,7 @@ std::string ASTStencilBody::makeIndexString(const std::shared_ptr<ast::FieldAcce
 
   if(isHorizontal && isSparse) {
     DAWN_ASSERT_MSG(parentIsForLoop_ || parentIsReduction_,
-                    "Sparse Field Access not allowed in this context");
-    std::string sparseSize = chainToSparseSizeString(unstrDims.getIterSpace());
+                    "Sparse Field Access not allowed in this context");    
     return nbhIterStr() + " * " + denseSize + " + " + pidxStr();
   }
 
