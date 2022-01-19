@@ -165,9 +165,6 @@ std::string ASTStencilBody::makeIndexString(const std::shared_ptr<ast::FieldAcce
     DAWN_ASSERT_MSG(parentIsForLoop_ || parentIsReduction_,
                     "Sparse Field Access not allowed in this context");
     std::string sparseSize = chainToSparseSizeString(unstrDims.getIterSpace());
-
-    // return nbhIterStr() + " * kSize * " + denseSize + " + " + kiterStr + "*" + denseSize + " + " +
-    //        pidxStr();
     return kiterStr + " * " + sparseSize + " * " + denseSize + " + " + nbhIterStr() + " * " + denseSize 
               + " + " + pidxStr();
   }
