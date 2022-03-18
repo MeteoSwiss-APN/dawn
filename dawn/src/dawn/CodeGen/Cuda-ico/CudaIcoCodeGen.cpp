@@ -1704,7 +1704,8 @@ generateF90InterfaceSI(FortranInterfaceModuleGen& fimGen,
   runWrapper.addACCLine("host_data use_device( &");
   auto fieldArgs = getFieldArgs(/*includeSavedState*/ true);
   for(int i = 0; i < fieldArgs.size(); ++i) {
-    runWrapper.addACCLine(fortranIndent + fieldArgs[i] + (i == (fieldArgs.size() - 1) ? " &" : ", &"));
+    runWrapper.addACCLine(fortranIndent + fieldArgs[i] +
+                          (i == (fieldArgs.size() - 1) ? " &" : ", &"));
   }
   runWrapper.addACCLine(")");
   runWrapper.addBodyLine("#ifdef __DSL_VERIFY", /*withIndentation*/ false);
@@ -1722,7 +1723,7 @@ generateF90InterfaceSI(FortranInterfaceModuleGen& fimGen,
   for(auto fieldID : getUsedFields(stencil, {dawn::iir::Field::IntendKind::Output,
                                              dawn::iir::Field::IntendKind::InputOutput})) {
     verticalBoundNames.push_back(stencilInstantiation->getMetaData().getNameFromAccessID(fieldID) +
-                                  "_kvert_max");
+                                 "_kvert_max");
   }
 
   // memory management functions for production interface
@@ -1787,7 +1788,8 @@ generateF90InterfaceSI(FortranInterfaceModuleGen& fimGen,
     setupWrapper.addBodyLine(fortranIndent + verticalBoundNames[i] + ", &");
   }
 
-  setupWrapper.addBodyLine(fortranIndent + verticalBoundNames[verticalBoundNames.size() - 1] + " &");
+  setupWrapper.addBodyLine(fortranIndent + verticalBoundNames[verticalBoundNames.size() - 1] +
+                           " &");
 
   setupWrapper.addBodyLine(")");
 
