@@ -94,9 +94,11 @@ void CudaCodeGen::generateAPIRunFunctions(
 
   // generate the code for each of the stencils
   for(const auto& stencilPtr : stencils) {
-    const auto& stencil = *stencilPtr;
+    const auto& stencil = *stencilPtr;        
 
     std::string stencilName = "stencil_" + std::to_string(stencil.getStencilID());
+    auto stencilProperties =
+      codeGenProperties.getStencilProperties(StencilContext::SC_Stencil, stencilName);  
 
     std::string fullyQualitfiedName =
         "dawn_generated::cuda::" + stencilInstantiation->getName() + "::" + stencilName;
@@ -116,14 +118,16 @@ void CudaCodeGen::generateAPIRunFunctions(
     runFun.finishArgs();
 
     if(!onlyDecl) {
-      runFun.addStatement(fullyQualitfiedName + "::meta_data_t meta_data(" + fullyQualitfiedName +
-                          "::dom.isize(), " + fullyQualitfiedName + "::dom.jsize(), " +
-                          fullyQualitfiedName + "::dom.ksize())");
+      runFun.addStatement("meta_data_t meta_data_ijk(" + fullyQualitfiedName +
+                          "::m_dom.isize(), " + fullyQualitfiedName + "::m_dom.jsize(), " +
+                          fullyQualitfiedName + "::m_dom.ksize())");
+      runFun.addStatement("meta_data_ij_t meta_data_ij(" + fullyQualitfiedName +
+                          "::m_dom.isize(), " + fullyQualitfiedName + "::m_dom.jsize(), 0)");
+      runFun.addStatement("meta_data_k_t meta_data_k(0, 0, " + fullyQualitfiedName + "::m_dom.ksize())");                                                    
       for(auto field : nonTempFields) {
-        runFun.addStatement(fullyQualitfiedName + "::storage_t " + field.second.Name +
-                            "(meta_data, " + field.second.Name + "_ptr)");
+        runFun.addStatement(stencilProperties->paramNameToType_.at(field.second.Name) + " " + field.second.Name +
+                            "(meta_data_" + getStorageType(field.second.field.getFieldDimensions(), "", "") + ", " + field.second.Name + "_ptr)");
       }
-
       {
         std::string fields;
         std::string sep = "";
@@ -181,8 +185,6 @@ void CudaCodeGen::generateStaticMembersTrailer(
 
     ssSW << "gridtools::dawn::domain " + fullyQualitfiedName +
                 "::m_dom = gridtools::dawn::domain(-1, -1, -1);";
-    ssSW << fullyQualitfiedName + "::tmp_meta_data_t " + fullyQualitfiedName +
-                "::m_tmp_meta_data(-1, -1, -1, -1,-1);";
 
     if(stencil.isEmpty())
       continue;
@@ -196,9 +198,11 @@ void CudaCodeGen::generateStaticMembersTrailer(
         });
 
     if(!(tempFields.empty())) {
+      ssSW << fullyQualitfiedName + "::tmp_meta_data_t " + fullyQualitfiedName +
+                "::m_tmp_meta_data(-1, -1, -1, -1,-1);";
       for(const auto& fieldPair : tempFields) {
         ssSW << fullyQualitfiedName
-             << "::tmp_storage_t " + fullyQualitfiedName + "::" + fieldPair.second.Name + ";";
+             << "::tmp_storage_t " + fullyQualitfiedName + "::" + "m_" + fieldPair.second.Name + ";";
       }
     }
 
@@ -1130,6 +1134,7 @@ std::unique_ptr<TranslationUnit> CudaCodeGen::generateCode() {
   // [https://github.com/MeteoSwiss-APN/gtclang/issues/32]
   //==============------------------------------------------------------------------------------===
   CodeGen::addMplIfdefs(ppDefines, 30);
+  ppDefines.push_back("#include <driver-includes/timer_cuda.hpp>");
   ppDefines.push_back("#include <driver-includes/gridtools_includes.hpp>");
   ppDefines.push_back("using namespace gridtools::dawn;");
 
