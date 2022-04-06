@@ -43,16 +43,7 @@ implicit none
       integer(c_int), value :: iteration
     end subroutine
 
-    subroutine set_splitter_index_lower(mesh, loc, space, offset, index) bind(c)
-      use, intrinsic :: iso_c_binding
-      type(c_ptr), value, target :: mesh
-      integer(c_int), value :: loc
-      integer(c_int), value :: space
-      integer(c_int), value :: offset
-      integer(c_int), value :: index
-    end subroutine
-
-    subroutine set_splitter_index_upper(mesh, loc, space, offset, index) bind(c)
+    subroutine set_splitter_index(mesh, loc, space, offset, index) bind(c)
       use, intrinsic :: iso_c_binding
       type(c_ptr), value, target :: mesh
       integer(c_int), value :: loc

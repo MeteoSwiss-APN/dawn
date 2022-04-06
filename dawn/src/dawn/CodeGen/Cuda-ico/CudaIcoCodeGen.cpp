@@ -213,8 +213,7 @@ void CudaIcoCodeGen::generateGpuMesh(
   gpuMeshClass.addMember("int", "VertexStride");
   gpuMeshClass.addMember("int", "EdgeStride");
   gpuMeshClass.addMember("int", "CellStride");
-  gpuMeshClass.addMember("dawn::unstructured_domain", "DomainLower");
-  gpuMeshClass.addMember("dawn::unstructured_domain", "DomainUpper");
+  gpuMeshClass.addMember("dawn::unstructured_domain", "HorizontalDomain");  
 
   CollectIterationSpaces spaceCollector;
   std::unordered_set<ast::UnstructuredIterationSpace, CollectIterationSpaces::IterSpaceHash> spaces;
@@ -239,8 +238,7 @@ void CudaIcoCodeGen::generateGpuMesh(
     gpuMeshFromGlobalCtor.addStatement("VertexStride = mesh->VertexStride");
     gpuMeshFromGlobalCtor.addStatement("CellStride = mesh->CellStride");
     gpuMeshFromGlobalCtor.addStatement("EdgeStride = mesh->EdgeStride");
-    gpuMeshFromGlobalCtor.addStatement("DomainLower = mesh->DomainLower");
-    gpuMeshFromGlobalCtor.addStatement("DomainUpper = mesh->DomainUpper");
+    gpuMeshFromGlobalCtor.addStatement("HorizontalDomain = mesh->HorizontalDomain");    
     for(auto space : spaces) {
       gpuMeshFromGlobalCtor.addStatement(chainToTableString(space) + " = mesh->NeighborTables.at(" +
                                          "std::tuple<std::vector<dawn::LocationType>, bool>{" +
@@ -282,6 +280,9 @@ void CudaIcoCodeGen::generateRunFun(
   }
   runFun.addStatement("dim3 dB(BLOCK_SIZE, 1, 1)");
 
+  std::string stencilName = stencilInstantiation->getName();
+
+  int stage_iter = 0;
   for(const auto& ms : iterateIIROver<iir::MultiStage>(*(stencilInstantiation->getIIR()))) {
     for(const auto& stage : ms->getChildren()) {
 
@@ -327,19 +328,21 @@ void CudaIcoCodeGen::generateRunFun(
       auto numElementsString = [&](ast::LocationType loc,
                                    std::optional<iir::Interval> iterSpace) -> std::string {
         return iterSpace.has_value()
-                   ? "mesh_.DomainUpper({::dawn::LocationType::" + locToStringPlural(loc) + "," +
+                   ? "mesh_.HorizontalDomain({::dawn::LocationType::" + locToStringPlural(loc) + "," +
                          spaceMagicNumToEnum(iterSpace->upperLevel()) + "," +
                          std::to_string(iterSpace->upperOffset()) + "})" +
-                         "- mesh_.DomainLower({::dawn::LocationType::" + locToStringPlural(loc) +
+                         "- mesh_.HorizontalDomain({::dawn::LocationType::" + locToStringPlural(loc) +
                          "," + spaceMagicNumToEnum(iterSpace->lowerLevel()) + "," +
-                         std::to_string(iterSpace->lowerOffset()) + "}) + 1"
+                         std::to_string(iterSpace->lowerOffset()) + "})"
                    : "mesh_.Num" + locToStringPlural(loc);
       };
       auto hOffsetSizeString = [&](ast::LocationType loc, iir::Interval iterSpace) -> std::string {
-        return "mesh_.DomainLower({::dawn::LocationType::" + locToStringPlural(loc) + "," +
+        return "mesh_.HorizontalDomain({::dawn::LocationType::" + locToStringPlural(loc) + "," +
                spaceMagicNumToEnum(iterSpace.lowerLevel()) + "," +
                std::to_string(iterSpace.lowerOffset()) + "})";
       };
+
+
 
       std::string iskparallel =
           (ms->getLoopOrder() == iir::LoopOrderKind::Parallel) ? "true" : "false";
@@ -348,14 +351,39 @@ void CudaIcoCodeGen::generateRunFun(
       std::string hSizeString = "hsize" + std::to_string(stage->getStageID());
       std::string numElString = "mesh_." + locToStrideString(*stage->getLocationType());
       std::string hOffsetString = "hoffset" + std::to_string(stage->getStageID());
-      runFun.addStatement("int " + hSizeString + " = " +
-                          numElementsString(*stage->getLocationType(), domain));
-      runFun.addBlockStatement("if (" + hSizeString + " != 0)",
-                               [&]() { 
-        if(domain.has_value()) {
+      if(domain.has_value()) {
           runFun.addStatement("int " + hOffsetString + " = " +
                               hOffsetSizeString(*stage->getLocationType(), *domain));
-        }
+      } else {
+        runFun.addStatement("int " + hOffsetString + " = 0");
+      }
+      runFun.addStatement("int " + hSizeString + " = " +
+                          numElementsString(*stage->getLocationType(), domain));
+      {
+        runFun.addBlockStatement("", [&]() {
+          runFun.addStatement("std::string fname = \"" + stencilName + "_" + std::to_string(stage_iter) + "_\" + std::to_string(mesh_info_vtk.rank_id) + " +"\"_bounds.txt\"");
+          runFun.addStatement("FILE *fp = fopen(fname.c_str(), \"w+\")");
+          runFun.addStatement("fprintf(fp, \"%d %d\", " + hOffsetString + ", "  + hSizeString + ")");
+          runFun.addStatement("fclose(fp)");
+        });
+      } 
+      // {
+      //     runFun.addBlockStatement("", [&]() {
+      //     runFun.addStatement("FILE *fp = fopen(\"" + stencilName + "_" +std::to_string(stage_iter) +"_bounds.txt\", \"r\")");
+      //     runFun.addStatement("int hOffsetRef");
+      //     runFun.addStatement("int hSizeRef");
+      //     runFun.addStatement("fscanf(fp, \"%d %d\", &hOffsetRef, &hSizeRef)");
+      //     runFun.addBlockStatement("if (hOffsetRef != " + hOffsetString + ")", [&]() {
+      //       runFun.addStatement("printf(\"horizontal offset not matching int stencil " + stencilName+ ": %d vs %d \\n\", hOffsetRef, "+ hOffsetString +" )");
+      //     });
+      //     runFun.addBlockStatement("if (hSizeRef != " + hSizeString + ")", [&]() {
+      //       runFun.addStatement("printf(\"horizontal size not matching int stencil " + stencilName + " %d vs %d \\n\", hSizeRef, " + hSizeString +" )");
+      //     });
+      //     runFun.addStatement("fclose(fp)");
+      //   });
+      // }     
+      runFun.addBlockStatement("if (" + hSizeString + " != 0)",
+                               [&]() { 
         runFun.addStatement("dim3 dG" + std::to_string(stage->getStageID()) + " = grid(" +
                             k_size.str() + ", " + hSizeString + "," + iskparallel + ")");
 
@@ -446,6 +474,7 @@ void CudaIcoCodeGen::generateRunFun(
       runFun.addStatement("gpuErrchk(cudaPeekAtLastError())");
       runFun.addStatement("gpuErrchk(cudaDeviceSynchronize())");
       runFun.addPreprocessorDirective("endif\n");
+      stage_iter++;
     }
   }
 }

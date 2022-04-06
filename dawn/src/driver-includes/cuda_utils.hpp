@@ -41,8 +41,7 @@ inline void gpuAssert(cudaError_t code, const char* file, int line, bool abort =
 namespace dawn {
 
 struct GlobalGpuTriMesh {
-  dawn::unstructured_domain DomainLower;
-  dawn::unstructured_domain DomainUpper;
+  dawn::unstructured_domain HorizontalDomain;  
   int NumEdges;
   int NumCells;
   int NumVertices;
@@ -50,14 +49,10 @@ struct GlobalGpuTriMesh {
   int CellStride;
   int VertexStride;
   std::map<dawn::UnstructuredIterationSpace, int*> NeighborTables;
-  void set_splitter_index_lower(dawn::LocationType loc, dawn::UnstructuredSubdomain space,
+  void set_splitter_index(dawn::LocationType loc, dawn::UnstructuredSubdomain space,
                                 int offset, int index) {
-    DomainLower.set_splitter_index({loc, space, offset}, index);
-  }
-  void set_splitter_index_upper(dawn::LocationType loc, dawn::UnstructuredSubdomain space,
-                                int offset, int index) {
-    DomainUpper.set_splitter_index({loc, space, offset}, index);
-  }
+    HorizontalDomain.set_splitter_index({loc, space, offset}, index);
+  }  
 };
 
 // Tag for no library (raw pointers)
