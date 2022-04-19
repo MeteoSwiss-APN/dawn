@@ -282,7 +282,6 @@ void CudaIcoCodeGen::generateRunFun(
 
   std::string stencilName = stencilInstantiation->getName();
 
-  int stage_iter = 0;
   for(const auto& ms : iterateIIROver<iir::MultiStage>(*(stencilInstantiation->getIIR()))) {
     for(const auto& stage : ms->getChildren()) {
 
@@ -449,7 +448,6 @@ void CudaIcoCodeGen::generateRunFun(
       runFun.addStatement("gpuErrchk(cudaPeekAtLastError())");
       runFun.addStatement("gpuErrchk(cudaDeviceSynchronize())");
       runFun.addPreprocessorDirective("endif\n");
-      stage_iter++;
     }
   }
 }
