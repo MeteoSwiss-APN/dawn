@@ -118,15 +118,17 @@ void CudaCodeGen::generateAPIRunFunctions(
     runFun.finishArgs();
 
     if(!onlyDecl) {
-      runFun.addStatement("meta_data_t meta_data_ijk(" + fullyQualitfiedName +
-                          "::m_dom.isize(), " + fullyQualitfiedName + "::m_dom.jsize(), " +
-                          fullyQualitfiedName + "::m_dom.ksize())");
-      runFun.addStatement("meta_data_ij_t meta_data_ij(" + fullyQualitfiedName +
-                          "::m_dom.isize(), " + fullyQualitfiedName + "::m_dom.jsize(), 0)");
-      runFun.addStatement("meta_data_k_t meta_data_k(0, 0, " + fullyQualitfiedName + "::m_dom.ksize())");                                                    
+      runFun.addStatement("int ni = " + fullyQualitfiedName + "::m_dom.isize()");
+      runFun.addStatement("int nj = " + fullyQualitfiedName + "::m_dom.jsize()");
+      runFun.addStatement("int nk = " + fullyQualitfiedName + "::m_dom.ksize()");
+
+      runFun.addStatement("meta_data_t meta_data_ijk({ni, nj, nk}, {nj*nk, nk, 1})");
+      runFun.addStatement("meta_data_ij_t meta_data_ij({ni, nj, 1}, {nk, 1, 0})");
+      runFun.addStatement("meta_data_k_t meta_data_k({1, 1, nk}, {1, 0, 0})");
+      
       for(auto field : nonTempFields) {
         runFun.addStatement(stencilProperties->paramNameToType_.at(field.second.Name) + " " + field.second.Name +
-                            "(meta_data_" + getStorageType(field.second.field.getFieldDimensions(), "", "") + ", " + field.second.Name + "_ptr)");
+                            "(meta_data_" + getStorageType(field.second.field.getFieldDimensions(), "", "") + ", " + field.second.Name + "_ptr, gridtools::ownership::external_gpu)");
       }
       {
         std::string fields;
@@ -184,7 +186,7 @@ void CudaCodeGen::generateStaticMembersTrailer(
         "dawn_generated::cuda::" + stencilInstantiation->getName() + "::" + stencilName;
 
     ssSW << "gridtools::dawn::domain " + fullyQualitfiedName +
-                "::m_dom = gridtools::dawn::domain(-1, -1, -1);";
+                "::m_dom = gridtools::dawn::domain(1, 1, 1);";
 
     if(stencil.isEmpty())
       continue;
@@ -199,7 +201,7 @@ void CudaCodeGen::generateStaticMembersTrailer(
 
     if(!(tempFields.empty())) {
       ssSW << fullyQualitfiedName + "::tmp_meta_data_t " + fullyQualitfiedName +
-                "::m_tmp_meta_data(-1, -1, -1, -1,-1);";
+                "::m_tmp_meta_data(1, 1, 1, 1, 1);";
       for(const auto& fieldPair : tempFields) {
         ssSW << fullyQualitfiedName
              << "::tmp_storage_t " + fullyQualitfiedName + "::" + "m_" + fieldPair.second.Name + ";";
