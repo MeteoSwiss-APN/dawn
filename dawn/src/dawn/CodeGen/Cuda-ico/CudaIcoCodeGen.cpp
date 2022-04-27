@@ -213,8 +213,7 @@ void CudaIcoCodeGen::generateGpuMesh(
   gpuMeshClass.addMember("int", "VertexStride");
   gpuMeshClass.addMember("int", "EdgeStride");
   gpuMeshClass.addMember("int", "CellStride");
-  gpuMeshClass.addMember("dawn::unstructured_domain", "DomainLower");
-  gpuMeshClass.addMember("dawn::unstructured_domain", "DomainUpper");
+  gpuMeshClass.addMember("dawn::unstructured_domain", "HorizontalDomain");
 
   CollectIterationSpaces spaceCollector;
   std::unordered_set<ast::UnstructuredIterationSpace, CollectIterationSpaces::IterSpaceHash> spaces;
@@ -239,8 +238,7 @@ void CudaIcoCodeGen::generateGpuMesh(
     gpuMeshFromGlobalCtor.addStatement("VertexStride = mesh->VertexStride");
     gpuMeshFromGlobalCtor.addStatement("CellStride = mesh->CellStride");
     gpuMeshFromGlobalCtor.addStatement("EdgeStride = mesh->EdgeStride");
-    gpuMeshFromGlobalCtor.addStatement("DomainLower = mesh->DomainLower");
-    gpuMeshFromGlobalCtor.addStatement("DomainUpper = mesh->DomainUpper");
+    gpuMeshFromGlobalCtor.addStatement("HorizontalDomain = mesh->HorizontalDomain");
     for(auto space : spaces) {
       gpuMeshFromGlobalCtor.addStatement(chainToTableString(space) + " = mesh->NeighborTables.at(" +
                                          "std::tuple<std::vector<dawn::LocationType>, bool>{" +
@@ -281,6 +279,8 @@ void CudaIcoCodeGen::generateRunFun(
     }
   }
   runFun.addStatement("dim3 dB(BLOCK_SIZE, 1, 1)");
+
+  std::string stencilName = stencilInstantiation->getName();
 
   for(const auto& ms : iterateIIROver<iir::MultiStage>(*(stencilInstantiation->getIIR()))) {
     for(const auto& stage : ms->getChildren()) {
@@ -327,16 +327,17 @@ void CudaIcoCodeGen::generateRunFun(
       auto numElementsString = [&](ast::LocationType loc,
                                    std::optional<iir::Interval> iterSpace) -> std::string {
         return iterSpace.has_value()
-                   ? "mesh_.DomainUpper({::dawn::LocationType::" + locToStringPlural(loc) + "," +
-                         spaceMagicNumToEnum(iterSpace->upperLevel()) + "," +
+                   ? "mesh_.HorizontalDomain({::dawn::LocationType::" + locToStringPlural(loc) +
+                         "," + spaceMagicNumToEnum(iterSpace->upperLevel()) + "," +
                          std::to_string(iterSpace->upperOffset()) + "})" +
-                         "- mesh_.DomainLower({::dawn::LocationType::" + locToStringPlural(loc) +
-                         "," + spaceMagicNumToEnum(iterSpace->lowerLevel()) + "," +
-                         std::to_string(iterSpace->lowerOffset()) + "}) + 1"
+                         "- mesh_.HorizontalDomain({::dawn::LocationType::" +
+                         locToStringPlural(loc) + "," +
+                         spaceMagicNumToEnum(iterSpace->lowerLevel()) + "," +
+                         std::to_string(iterSpace->lowerOffset()) + "})"
                    : "mesh_.Num" + locToStringPlural(loc);
       };
       auto hOffsetSizeString = [&](ast::LocationType loc, iir::Interval iterSpace) -> std::string {
-        return "mesh_.DomainLower({::dawn::LocationType::" + locToStringPlural(loc) + "," +
+        return "mesh_.HorizontalDomain({::dawn::LocationType::" + locToStringPlural(loc) + "," +
                spaceMagicNumToEnum(iterSpace.lowerLevel()) + "," +
                std::to_string(iterSpace.lowerOffset()) + "})";
       };
@@ -348,14 +349,15 @@ void CudaIcoCodeGen::generateRunFun(
       std::string hSizeString = "hsize" + std::to_string(stage->getStageID());
       std::string numElString = "mesh_." + locToStrideString(*stage->getLocationType());
       std::string hOffsetString = "hoffset" + std::to_string(stage->getStageID());
+      if(domain.has_value()) {
+        runFun.addStatement("int " + hOffsetString + " = " +
+                            hOffsetSizeString(*stage->getLocationType(), *domain));
+      } else {
+        runFun.addStatement("int " + hOffsetString + " = 0");
+      }
       runFun.addStatement("int " + hSizeString + " = " +
                           numElementsString(*stage->getLocationType(), domain));
-      runFun.addBlockStatement("if (" + hSizeString + " != 0)",
-                               [&]() { 
-        if(domain.has_value()) {
-          runFun.addStatement("int " + hOffsetString + " = " +
-                              hOffsetSizeString(*stage->getLocationType(), *domain));
-        }
+      runFun.addBlockStatement("if (" + hSizeString + " != 0)", [&]() {
         runFun.addStatement("dim3 dG" + std::to_string(stage->getStageID()) + " = grid(" +
                             k_size.str() + ", " + hSizeString + "," + iskparallel + ")");
 
@@ -388,9 +390,9 @@ void CudaIcoCodeGen::generateRunFun(
         }
 
         kernelCall << "<<<"
-                  << "dG" + std::to_string(stage->getStageID()) + ",dB,"
-                  << "0, stream_"
-                  << ">>>(";
+                   << "dG" + std::to_string(stage->getStageID()) + ",dB,"
+                   << "0, stream_"
+                   << ">>>(";
         if(!globalsMap.empty()) {
           kernelCall << "m_globals, ";
         }
@@ -1705,7 +1707,8 @@ generateF90InterfaceSI(FortranInterfaceModuleGen& fimGen,
   runWrapper.addACCLine("host_data use_device( &");
   auto fieldArgs = getFieldArgs(/*includeSavedState*/ true);
   for(int i = 0; i < fieldArgs.size(); ++i) {
-    runWrapper.addACCLine(fortranIndent + fieldArgs[i] + (i == (fieldArgs.size() - 1) ? " &" : ", &"));
+    runWrapper.addACCLine(fortranIndent + fieldArgs[i] +
+                          (i == (fieldArgs.size() - 1) ? " &" : ", &"));
   }
   runWrapper.addACCLine(")");
   runWrapper.addBodyLine("#ifdef __DSL_VERIFY", /*withIndentation*/ false);
@@ -1723,7 +1726,7 @@ generateF90InterfaceSI(FortranInterfaceModuleGen& fimGen,
   for(auto fieldID : getUsedFields(stencil, {dawn::iir::Field::IntendKind::Output,
                                              dawn::iir::Field::IntendKind::InputOutput})) {
     verticalBoundNames.push_back(stencilInstantiation->getMetaData().getNameFromAccessID(fieldID) +
-                                  "_kvert_max");
+                                 "_kvert_max");
   }
 
   // memory management functions for production interface
@@ -1788,7 +1791,8 @@ generateF90InterfaceSI(FortranInterfaceModuleGen& fimGen,
     setupWrapper.addBodyLine(fortranIndent + verticalBoundNames[i] + ", &");
   }
 
-  setupWrapper.addBodyLine(fortranIndent + verticalBoundNames[verticalBoundNames.size() - 1] + " &");
+  setupWrapper.addBodyLine(fortranIndent + verticalBoundNames[verticalBoundNames.size() - 1] +
+                           " &");
 
   setupWrapper.addBodyLine(")");
 
