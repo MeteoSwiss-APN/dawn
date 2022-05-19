@@ -709,6 +709,12 @@ void CudaIcoCodeGen::generateStencilClasses(
     meshGetter.addStatement("return mesh_");
     meshGetter.commit();
 
+    auto streamGetter = stencilClass.addMemberFunction("static cudaStream_t", "getStream");
+    streamGetter.finishArgs();
+    streamGetter.startBody();
+    streamGetter.addStatement("return stream_");
+    streamGetter.commit();
+
     auto kSizeGetter = stencilClass.addMemberFunction("static int", "getKSize");
     kSizeGetter.finishArgs();
     kSizeGetter.startBody();
@@ -1016,6 +1022,7 @@ void CudaIcoCodeGen::generateAllAPIVerifyFunctions(
       verifyAPI.startBody();
       verifyAPI.addStatement("using namespace std::chrono");
       verifyAPI.addStatement("const auto &mesh = " + fullStencilName + "::" + "getMesh()");
+      verifyAPI.addStatement("cudaStream_t stream = " + fullStencilName + "::" + "getStream()");
       verifyAPI.addStatement("int kSize = " + fullStencilName + "::" + "getKSize()");
       verifyAPI.addStatement(
           "high_resolution_clock::time_point t_start = high_resolution_clock::now()");
@@ -1045,7 +1052,7 @@ void CudaIcoCodeGen::generateAllAPIVerifyFunctions(
                     "::" + chainToSparseSizeString(unstrDims.getIterSpace());
         }
 
-        verifyAPI.addStatement("isValid = ::dawn::verify_field(" + num_el + ", " + fieldInfo.Name +
+        verifyAPI.addStatement("isValid = ::dawn::verify_field(stream, " + num_el + ", " + fieldInfo.Name +
                                "_dsl" + "," + fieldInfo.Name + ", \"" + fieldInfo.Name + "\"" +
                                "," + fieldInfo.Name + "_rel_tol" + "," + fieldInfo.Name +
                                "_abs_tol" + ")");
