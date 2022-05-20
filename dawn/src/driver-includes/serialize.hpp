@@ -26,8 +26,8 @@ void serialize_gpu(const storage_type &field, std::string &&fname, int iter, int
   sprintf(buf, "_%02d.txt", iter);
   FILE *fp = fopen(("results/" + fname + buf).c_str(), "w+");
   for (int i = 0; i < isize; i++) {
-    for (int k = 0; k < ksize; k++) {
-      for (int j = 0; j < jsize; j++) {
+    for (int j = 0; j < jsize; j++) {
+      for (int k = 0; k < ksize; k++) {
         fprintf(fp, "%.14g\n", field_view(i,j,k));
       }
     }
