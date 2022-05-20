@@ -65,6 +65,34 @@ run(const std::map<std::string, std::shared_ptr<iir::StencilInstantiation>>&
   return CG.generateCode();
 }
 
+std::vector<int> getUsedFields(const dawn::iir::Stencil& stencil,
+                               std::unordered_set<dawn::iir::Field::IntendKind> intend = {
+                                   dawn::iir::Field::IntendKind::Output,
+                                   dawn::iir::Field::IntendKind::InputOutput,
+                                   dawn::iir::Field::IntendKind::Input}) {
+  const auto& APIFields = stencil.getMetadata().getAPIFields();
+  const auto& stenFields = stencil.getOrderedFields();
+  auto usedAPIFields =
+      dawn::makeRange(APIFields, [&stenFields](int f) { return stenFields.count(f); });
+
+  std::vector<int> res;
+  for(auto fieldID : usedAPIFields) {
+    auto field = stenFields.at(fieldID);
+    if(intend.count(field.field.getIntend())) {
+      res.push_back(fieldID);
+    }
+  }
+
+  return res;
+}
+std::vector<std::string> getGlobalsNames(const dawn::ast::GlobalVariableMap& globalsMap) {
+  std::vector<std::string> globalsNames;
+  for(const auto& global : globalsMap) {
+    globalsNames.push_back(global.first);
+  }
+  return globalsNames;
+}
+
 CudaCodeGen::CudaCodeGen(const StencilInstantiationContext& ctx, int maxHaloPoints, int nsms,
                          int maxBlocksPerSM, const Array3i& domainSize,
                          std::optional<std::string> outputCHeader,
@@ -91,6 +119,7 @@ void CudaCodeGen::generateAPIRunFunctions(
     std::stringstream& ssSW, const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation,
     CodeGenProperties& codeGenProperties, bool onlyDecl) const {
   const auto& stencils = stencilInstantiation->getStencils();
+  const auto& metadata = stencilInstantiation->getMetaData();
 
   // generate the code for each of the stencils
   for(const auto& stencilPtr : stencils) {
@@ -118,6 +147,7 @@ void CudaCodeGen::generateAPIRunFunctions(
     runFun.finishArgs();
 
     if(!onlyDecl) {
+      runFun.addStatement("static int iter = 0");
       runFun.addStatement("int ni = " + fullyQualitfiedName + "::m_dom.isize()");
       runFun.addStatement("int nj = " + fullyQualitfiedName + "::m_dom.jsize()");
       runFun.addStatement("int nk = " + fullyQualitfiedName + "::m_dom.ksize()");
@@ -138,6 +168,14 @@ void CudaCodeGen::generateAPIRunFunctions(
           sep = ", ";
         }
         runFun.addStatement(fullyQualitfiedName + "::run(" + fields + ")");
+        runFun.addPreprocessorDirective("ifdef __DSL_SERIALIZE");
+        auto outFields = getUsedFields(stencil, {dawn::iir::Field::IntendKind::Output, dawn::iir::Field::IntendKind::InputOutput});
+        for (auto outField : outFields) {
+          auto fname = metadata.getFieldNameFromAccessID(outField);
+          runFun.addStatement("serialize_gpu(" + fname + ", \"" + stencilName + "_" + fname + "\", iter, ni, nj, nk)");
+        }
+        runFun.addPreprocessorDirective("endif");
+        runFun.addStatement("iter++");
       }
     }
     runFun.commit();
@@ -947,34 +985,6 @@ std::string CudaCodeGen::generateCHeader() const {
   return ssSW.str();
 }
 
-std::vector<int> getUsedFields(const dawn::iir::Stencil& stencil,
-                               std::unordered_set<dawn::iir::Field::IntendKind> intend = {
-                                   dawn::iir::Field::IntendKind::Output,
-                                   dawn::iir::Field::IntendKind::InputOutput,
-                                   dawn::iir::Field::IntendKind::Input}) {
-  const auto& APIFields = stencil.getMetadata().getAPIFields();
-  const auto& stenFields = stencil.getOrderedFields();
-  auto usedAPIFields =
-      dawn::makeRange(APIFields, [&stenFields](int f) { return stenFields.count(f); });
-
-  std::vector<int> res;
-  for(auto fieldID : usedAPIFields) {
-    auto field = stenFields.at(fieldID);
-    if(intend.count(field.field.getIntend())) {
-      res.push_back(fieldID);
-    }
-  }
-
-  return res;
-}
-std::vector<std::string> getGlobalsNames(const dawn::ast::GlobalVariableMap& globalsMap) {
-  std::vector<std::string> globalsNames;
-  for(const auto& global : globalsMap) {
-    globalsNames.push_back(global.first);
-  }
-  return globalsNames;
-}
-
 static void
 generateF90InterfaceSI(FortranInterfaceModuleGen& fimGen,
                        const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation) {
@@ -1138,6 +1148,7 @@ std::unique_ptr<TranslationUnit> CudaCodeGen::generateCode() {
   CodeGen::addMplIfdefs(ppDefines, 30);
   ppDefines.push_back("#include <driver-includes/timer_cuda.hpp>");
   ppDefines.push_back("#include <driver-includes/gridtools_includes.hpp>");
+  ppDefines.push_back("#include <driver-includes/serialize.hpp>");
   ppDefines.push_back("using namespace gridtools::dawn;");
 
   generateBCHeaders(ppDefines);
