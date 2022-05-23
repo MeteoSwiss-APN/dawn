@@ -172,7 +172,7 @@ void CudaCodeGen::generateAPIRunFunctions(
         auto outFields = getUsedFields(stencil, {dawn::iir::Field::IntendKind::Output, dawn::iir::Field::IntendKind::InputOutput});
         for (auto outField : outFields) {
           auto fname = metadata.getFieldNameFromAccessID(outField);
-          runFun.addStatement("serialize_gpu(" + fname + ", \"" + stencilName + "_" + fname + "\", iter, ni, nj, nk)");
+          runFun.addStatement("serialize_gpu(" + fname + ", \"" + stencilInstantiation->getName() + "_" + fname + "\", iter, ni, nj, nk)");
         }
         runFun.addPreprocessorDirective("endif");
         runFun.addStatement("iter++");
