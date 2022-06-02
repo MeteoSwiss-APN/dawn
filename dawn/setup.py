@@ -46,7 +46,7 @@ with open(os.path.join(DAWN_DIR, "cmake", "FetchProtobuf.cmake"), "r") as f:
     protobuf_version = m.group("version")
 
 # Dependencies
-REQUIRED = ["attrs>=19", "black>=19.3b0", f"protobuf>={protobuf_version}", "pytest>=4.3.0"]
+REQUIRED = ["attrs>=19", "black>=19.3b0", f"protobuf>={protobuf_version},<3.20.0", "pytest>=4.3.0"]
 EXTRAS = {"dev": ["pytest"]}
 
 # Get the Dawn version string
