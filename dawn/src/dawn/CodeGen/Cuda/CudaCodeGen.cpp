@@ -152,9 +152,9 @@ void CudaCodeGen::generateAPIRunFunctions(
       runFun.addStatement("int nj = " + fullyQualitfiedName + "::m_dom.jsize()");
       runFun.addStatement("int nk = " + fullyQualitfiedName + "::m_dom.ksize()");
 
-      runFun.addStatement("meta_data_t meta_data_ijk({ni, nj, nk}, {1, ni, ni*nj})");
+      runFun.addStatement("meta_data_t meta_data_ijk({ni, nj, nk}, {1, ni, ni*nj});");
       runFun.addStatement("meta_data_ij_t meta_data_ij({ni, nj, 1}, {1, ni, 0})");
-      runFun.addStatement("meta_data_k_t meta_data_k({1, 1, nk}, {1, 0, 0})");
+      runFun.addStatement("meta_data_k_t meta_data_k({nk, 1, 1}, {1, 0, 0})");
       
       for(auto field : nonTempFields) {
         runFun.addStatement(stencilProperties->paramNameToType_.at(field.second.Name) + " " + field.second.Name +
