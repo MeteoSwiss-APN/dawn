@@ -19,6 +19,8 @@
 #include <cuda.h>
 #include <cuda_runtime.h>
 
+#include <stdio.h>
+
 #include "unstructured_domain.hpp"
 #include "unstructured_interface.hpp"
 
