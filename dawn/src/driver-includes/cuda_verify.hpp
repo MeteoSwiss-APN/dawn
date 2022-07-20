@@ -21,7 +21,7 @@ struct VerificationMetrics {
   double minRelErr;
   double maxAbsErr;
   double minAbsErr;
-}
+};
 
 template <typename error_type>
 struct compute_error {
