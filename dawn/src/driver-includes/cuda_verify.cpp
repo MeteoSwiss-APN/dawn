@@ -82,7 +82,7 @@ VerificationMetrics verify_field(cudaStream_t stream, const int num_el, const do
   bool_dev_ptr = thrust::device_pointer_cast(gpu_verify_bools);
   gpuErrchk(cudaPeekAtLastError());
 
-  bool metrics.isValid = thrust::all_of(thrust::cuda::par.on(stream), bool_dev_ptr, bool_dev_ptr + num_el, thrust::identity<bool>());
+  metrics.isValid = thrust::all_of(thrust::cuda::par.on(stream), bool_dev_ptr, bool_dev_ptr + num_el, thrust::identity<bool>());
 
   if(!metrics.isValid) {
     double min, max, avg;
