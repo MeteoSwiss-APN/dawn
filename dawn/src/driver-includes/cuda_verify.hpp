@@ -16,6 +16,7 @@ struct RelErrTag {};
 
 
 struct VerificationMetrics {
+  int iteration;
   bool isValid;
   double maxRelErr;
   double minRelErr;
@@ -64,6 +65,6 @@ __global__ void compare_kernel(const int num_el, const double* __restrict__ dsl,
 }
 
 VerificationMetrics verify_field(cudaStream_t stream, const int num_el, const double* dsl, const double* actual, std::string name,
-                  const double rel_tol, const double abs_tol);
+                  const double rel_tol, const double abs_tol, const int iteration);
 
 } // namespace dawn

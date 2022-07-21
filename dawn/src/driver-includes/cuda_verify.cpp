@@ -14,9 +14,11 @@ __global__ void isclose_kernel(const int num_el, const double* __restrict__ dsl,
 }
 
 VerificationMetrics verify_field(cudaStream_t stream, const int num_el, const double* dsl, const double* actual, std::string name,
-                  const double rel_tol, const double abs_tol) {
+                  const double rel_tol, const double abs_tol, const int iteration) {
   struct VerificationMetrics metrics;
   double* gpu_error;
+
+  metrics.iteration = iteration;
 
   const int blockSize = 16;
   dim3 dG((num_el + blockSize - 1) / blockSize);
@@ -121,7 +123,6 @@ VerificationMetrics verify_field(cudaStream_t stream, const int num_el, const do
 
   gpuErrchk(cudaFree(gpu_verify_bools));
   gpuErrchk(cudaPeekAtLastError());
-
   return metrics;
 }
 
