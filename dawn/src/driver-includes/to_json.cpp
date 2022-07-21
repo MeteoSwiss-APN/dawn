@@ -1,5 +1,6 @@
 #include "to_json.hpp"
 
+namespace dawn {
 
 void write_metrics(const std::string& file_name, const std::string& stencil_name, VerificationMetrics& data)
 {
@@ -15,3 +16,4 @@ void write_metrics(const std::string& file_name, const std::string& stencil_name
     outfile << "    " << "Iteration: " << data.iteration << std::endl;
     outfile << "    " << "Verified: "  << std::boolalpha << data.isValid << std::endl;
 };
+}
