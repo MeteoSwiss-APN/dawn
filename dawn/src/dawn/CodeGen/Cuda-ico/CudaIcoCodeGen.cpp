@@ -1025,7 +1025,8 @@ void CudaIcoCodeGen::generateAllAPIVerifyFunctions(
       verifyAPI.addStatement("cudaStream_t stream = " + fullStencilName + "::" + "getStream()");
       verifyAPI.addStatement("int kSize = " + fullStencilName + "::" + "getKSize()");
       verifyAPI.addStatement(
-          "high_resolution_clock::time_point t_start = high_resolution_clock::now()");  
+          "high_resolution_clock::time_point t_start = high_resolution_clock::now()");
+      verifyAPI.addStatement("struct VerificationMetrics stencilMetrics");  
 
       for(auto fieldID : getUsedFields(stencil, {dawn::iir::Field::IntendKind::Output,
                                                  dawn::iir::Field::IntendKind::InputOutput})) {
@@ -1051,7 +1052,6 @@ void CudaIcoCodeGen::generateAllAPIVerifyFunctions(
                     "::" + chainToSparseSizeString(unstrDims.getIterSpace());
         }
 
-        verifyAPI.addStatement("struct VerificationMetrics stencilMetrics");
         verifyAPI.addStatement("stencilMetrics = ::dawn::verify_field(stream, " + num_el + ", " + fieldInfo.Name +
                                "_dsl" + "," + fieldInfo.Name + ", \"" + fieldInfo.Name + "\"" +
                                "," + fieldInfo.Name + "_rel_tol" + "," + fieldInfo.Name +
