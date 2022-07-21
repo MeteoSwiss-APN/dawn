@@ -1055,7 +1055,7 @@ void CudaIcoCodeGen::generateAllAPIVerifyFunctions(
         verifyAPI.addStatement("stencilMetrics = ::dawn::verify_field(stream, " + num_el + ", " + fieldInfo.Name +
                                "_dsl" + "," + fieldInfo.Name + ", \"" + fieldInfo.Name + "\"" +
                                "," + fieldInfo.Name + "_rel_tol" + "," + fieldInfo.Name +
-                               "_abs_tol" + ")");
+                               "_abs_tol, " + "iteration" + ")");
 
         verifyAPI.addBlockStatement("if (!stencilMetrics.isValid)", [&]() {
           verifyAPI.addPreprocessorDirective("ifdef __SERIALIZE_ON_ERROR");
