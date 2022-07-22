@@ -1,10 +1,24 @@
 #pragma once
 
+#include <fstream>
+#include <nlohmann/json.hpp>
+#include <iostream>
 #include "verification_metrics.hpp"
 
-#include <fstream>
+using json = nlohmann::json;
 
 namespace dawn {
+    class MetricsSerialiser {
+    public:
+        std::string path;
+        std::string stencil;
+        json newJsonMetrics;
+        MetricsSerialiser(VerificationMetrics metricsStruct, std::string metricsPath, std::string stencilName);
+        void writeJson();
 
-void write_metrics(const std::string& file_name, const std::string& stencil_name, VerificationMetrics& data);
+    private:
+        void dumpJson(json j);
+        bool is_empty(std::string);
+        json generateJsonFromStruct(VerificationMetrics metrics);
+    };
 }
