@@ -6,7 +6,7 @@ void write_metrics(const std::string& file_name, const std::string& stencil_name
 {
     std::ofstream outfile;
 
-    if (std::filesystem::exists(file_name)) {
+    if (outfile.good()) {
         outfile.open(file_name, std::ios_base::app);
     } else {
         outfile.open(file_name, std::ios_base::out);
@@ -15,5 +15,5 @@ void write_metrics(const std::string& file_name, const std::string& stencil_name
     outfile << "Stencil: " << stencil_name << std::endl;
     outfile << "    " << "Iteration: " << data.iteration << std::endl;
     outfile << "    " << "Verified: "  << std::boolalpha << data.isValid << std::endl;
-};
+}
 }
