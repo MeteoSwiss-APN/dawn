@@ -1,5 +1,7 @@
 #pragma once
 
+#include "verification_metrics.hpp"
+
 #include <fstream>
 
 namespace dawn {

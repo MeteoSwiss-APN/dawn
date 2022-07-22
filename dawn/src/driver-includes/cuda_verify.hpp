@@ -1,6 +1,7 @@
 #pragma once
 
 #include "cuda_utils.hpp"
+#include "verification_metrics.hpp"
 
 #include <iostream>
 
@@ -9,20 +10,11 @@
 #include <thrust/logical.h>
 #include <thrust/reduce.h>
 
+
 namespace {
 
 struct AbsErrTag {};
 struct RelErrTag {};
-
-
-struct VerificationMetrics {
-  int iteration;
-  bool isValid;
-  double maxRelErr;
-  double minRelErr;
-  double maxAbsErr;
-  double minAbsErr;
-};
 
 template <typename error_type>
 struct compute_error {
