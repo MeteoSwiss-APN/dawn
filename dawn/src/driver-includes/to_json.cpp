@@ -13,7 +13,7 @@ void MetricsSerialiser::writeJson() {
             dumpJson(newJsonMetrics);
         } else {
             json oldJsonMetrics = json::parse(std::ifstream(path, std::ios_base::app));
-            bool stencilFound;
+            bool stencilFound = false;
 
             for (auto &[key, val]: oldJsonMetrics.items()) {
                 if (key == stencil) {
