@@ -1026,7 +1026,8 @@ void CudaIcoCodeGen::generateAllAPIVerifyFunctions(
       verifyAPI.addStatement("int kSize = " + fullStencilName + "::" + "getKSize()");
       verifyAPI.addStatement(
           "high_resolution_clock::time_point t_start = high_resolution_clock::now()");
-      verifyAPI.addStatement("struct VerificationMetrics stencilMetrics");  
+      verifyAPI.addStatement("struct VerificationMetrics stencilMetrics");
+      verifyAPI.addStatement("std::string metricsFileName = \"metrics.json\""); 
 
       for(auto fieldID : getUsedFields(stencil, {dawn::iir::Field::IntendKind::Output,
                                                  dawn::iir::Field::IntendKind::InputOutput})) {
@@ -1056,6 +1057,16 @@ void CudaIcoCodeGen::generateAllAPIVerifyFunctions(
                                "_dsl" + "," + fieldInfo.Name + ", \"" + fieldInfo.Name + "\"" +
                                "," + fieldInfo.Name + "_rel_tol" + "," + fieldInfo.Name +
                                "_abs_tol, " + "iteration" + ")");
+
+        verifyAPI.addPreprocessorDirective("ifdef __SERIALIZE_METRICS");
+
+        std::string serialiserVarName = "serialiser_" + fieldInfo.Name;
+        verifyAPI.addStatement("::dawn::MetricsSerialiser " + serialiserVarName + "(stencilMetrics, metricsFileName, \""
+                               + wrapperName + "\", \"" + fieldInfo.Name + "\")");
+
+        verifyAPI.addStatement(serialiserVarName + ".writeJson(iteration)");
+
+        verifyAPI.addPreprocessorDirective("endif");
 
         verifyAPI.addBlockStatement("if (!stencilMetrics.isValid)", [&]() {
           verifyAPI.addPreprocessorDirective("ifdef __SERIALIZE_ON_ERROR");
@@ -1869,6 +1880,7 @@ std::unique_ptr<TranslationUnit> CudaIcoCodeGen::generateCode() {
       "#include \"driver-includes/cuda_utils.hpp\"",
       "#include \"driver-includes/cuda_verify.hpp\"",
       "#include \"driver-includes/to_vtk.h\"",
+      "#include \"driver-includes/to_json.hpp\"",
       "#define GRIDTOOLS_DAWN_NO_INCLUDE", // Required to not include gridtools from math.hpp
       "#include \"driver-includes/math.hpp\"",
       "#include <chrono>",

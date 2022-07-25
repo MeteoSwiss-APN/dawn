@@ -10,11 +10,13 @@ using json = nlohmann::json;
 namespace dawn {
     class MetricsSerialiser {
     public:
+        std::string fieldId;
         std::string path;
         std::string stencil;
         json newJsonMetrics;
-        MetricsSerialiser(VerificationMetrics metricsStruct, std::string metricsPath, std::string stencilName);
-        void writeJson();
+        MetricsSerialiser(VerificationMetrics metricsStruct, std::string metricsPath, std::string stencilName,
+                          std::string fieldIdentifier);
+        void writeJson(int iteration);
 
     private:
         void dumpJson(json j);
