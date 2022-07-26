@@ -15,24 +15,23 @@ void MetricsSerialiser::writeJson(int iteration) {
             dumpJson(newJsonMetrics);
         } else {
             json oldJsonMetrics = json::parse(std::ifstream(path, std::ios_base::app));
+            json newMetrics = newJsonMetrics[stencil][0];
             bool stencilFound = false;
 
-            // Find stencil
-            for (auto &[key, val]: oldJsonMetrics.items()) {
-                if (key == stencil) {
-                    // check iteration exists, if it does we append to it, otherwise we need to insert a new iteration object
-                    int arr_length = val.size();
-                    if (arr_length < iteration + 1) {
-                        val.insert(val.end(), newJsonMetrics[stencil][0]);
+            for (auto &[stencilName, metricsArr]: oldJsonMetrics.items()) {
+                if (stencilName == stencil) {
+                    // handle case where iteration does not yet exist for a stencil
+                    if (metricsArr.size() < iteration + 1) {
+                        metricsArr.insert(metricsArr.end(), newMetrics);
                     } else {
-                        val[iteration].insert(newJsonMetrics[stencil][0].begin(), newJsonMetrics[stencil][0].end());
+                        metricsArr[iteration].insert(newMetrics.begin(), newMetrics.end());
                     }
                     stencilFound = true;
                 }
             }
 
             if (!stencilFound) {
-                // add new stencil metrics
+                // add new stencil metrics object
                 oldJsonMetrics.insert(newJsonMetrics.begin(), newJsonMetrics.end());
             }
             dumpJson(oldJsonMetrics);
