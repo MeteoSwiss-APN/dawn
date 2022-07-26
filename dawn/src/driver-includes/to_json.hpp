@@ -23,4 +23,7 @@ namespace dawn {
         bool is_empty(std::string);
         json generateJsonFromStruct(VerificationMetrics metrics);
     };
+
+    std::string getEnvVar( std::string const & key );
+
 }
