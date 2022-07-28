@@ -60,7 +60,7 @@ json MetricsSerialiser::generateJsonFromStruct(VerificationMetrics metrics) {
                                             {"min_relative_error", metrics.minRelErr},
                                             {"max_absolute_error", metrics.maxAbsErr},
                                             {"min_absolute_error", metrics.minAbsErr},
-                                            {"is_valid", metrics.isValid}
+                                            {"field_is_valid", metrics.isValid}
                                         }
                                     }
                             },
