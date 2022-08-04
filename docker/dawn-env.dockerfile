@@ -16,7 +16,7 @@ RUN mkdir -p /usr/src/eckit-1.4.7/build && cd /usr/src/eckit-1.4.7/build && \
     ${ECBUILD_BIN} \
     -DCMAKE_INSTALL_PREFIX=/usr/local/eckit \
     -DCMAKE_BUILD_TYPE=Release \
-    -GNinja -- ../ && \
+    -GNinja ../ && \
     cmake --build . -j $(nproc) --target install && rm -rf /usr/src/eckit-1.4.7/build
 # ---------------------- Atlas ----------------------
 RUN curl -L https://github.com/ecmwf/atlas/archive/0.19.0.tar.gz | \
@@ -27,7 +27,7 @@ RUN mkdir -p /usr/src/atlas-0.19.0/build && cd /usr/src/atlas-0.19.0/build && \
     -DCMAKE_BUILD_TYPE=Release \
     -DENABLE_ATLAS_RUN=OFF \
     -DECKIT_PATH=/usr/local/eckit \
-    -GNinja -- ../ && \
+    -GNinja ../ && \
     cmake --build . -j $(nproc) --target install && rm -rf /usr/src/atlas-0.19.0/build
 # ---------------------- Protobuf ----------------------
 RUN curl -L https://github.com/protocolbuffers/protobuf/releases/download/v3.10.1/protobuf-all-3.10.1.tar.gz | \
