@@ -22,7 +22,7 @@ fi
 
 git clone --depth 1 -b $CLANG_GRIDTOOLS_BRANCH $CLANG_GRIDTOOLS_REPOSITORY $(pwd)/clang-gridtools
 
-sarus pull $image
+srun --account=g110 -C gpu sarus pull $image
 
 srun --job-name=dawn_PR \
     --time=01:00:00 \
