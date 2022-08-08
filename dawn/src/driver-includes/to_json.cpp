@@ -3,12 +3,9 @@
 using namespace dawn;
 
 MetricsSerialiser::MetricsSerialiser(VerificationMetrics metricsStruct, std::string metricsPath,
-                                     std::string stencilName, std::string fieldIdentifier) {
-  fieldId = fieldIdentifier;
-  path = metricsPath;
-  stencil = stencilName;
-  newJsonMetrics = generateJsonFromStruct(metricsStruct);
-}
+                                     std::string stencilName, std::string fieldIdentifier)
+    : fieldId(fieldIdentifier), path(metricsPath), stencil(stencilName),
+      newJsonMetrics(generateJsonFromStruct(metricsStruct)) {}
 
 void MetricsSerialiser::writeJson(int iteration) {
   if(is_empty(path)) {
