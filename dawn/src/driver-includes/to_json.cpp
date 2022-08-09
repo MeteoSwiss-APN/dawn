@@ -59,7 +59,7 @@ json MetricsSerialiser::generateJsonFromStruct(VerificationMetrics metrics) {
 }
 
 std::string metricsNameFromEnvVar(std::string const& key) {
-  std::string fname = "METRICS.JSON";
+  std::string fname = "METRICS.json";
   char* val = getenv(key.c_str());
   if (val != nullptr) {
     fname.insert(0, std::string(val) + "_");
