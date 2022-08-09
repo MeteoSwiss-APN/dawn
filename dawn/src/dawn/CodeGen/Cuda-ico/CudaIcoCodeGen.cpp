@@ -1060,7 +1060,7 @@ void CudaIcoCodeGen::generateAllAPIVerifyFunctions(
         verifyAPI.addPreprocessorDirective("ifdef __SERIALIZE_METRICS");
 
         std::string serialiserVarName = "serialiser_" + fieldInfo.Name;
-        verifyAPI.addStatement("::dawn::MetricsSerialiser " + serialiserVarName + "(stencilMetrics, metricsNameFromEnvVar(\"SLURM_JOB_ID\"), \""
+        verifyAPI.addStatement("::dawn::MetricsSerialiser " + serialiserVarName + "(stencilMetrics, ::dawn::metricsNameFromEnvVar(\"SLURM_JOB_ID\"), \""
                                + wrapperName + "\", \"" + fieldInfo.Name + "\")");
 
         verifyAPI.addStatement(serialiserVarName + ".writeJson(iteration)");
