@@ -1,7 +1,5 @@
 #include "to_json.hpp"
 
-using namespace dawn;
-
 MetricsSerialiser::MetricsSerialiser(VerificationMetrics metricsStruct, std::string metricsPath,
                                      std::string stencilName, std::string fieldIdentifier)
     : fieldId(fieldIdentifier), path(metricsPath), stencil(stencilName),
