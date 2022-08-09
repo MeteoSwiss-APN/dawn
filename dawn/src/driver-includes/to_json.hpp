@@ -7,7 +7,6 @@
 
 using json = nlohmann::json;
 
-namespace dawn {
 class MetricsSerialiser {
 public:
   std::string fieldId;
@@ -25,5 +24,3 @@ private:
 };
 
 std::string metricsNameFromEnvVar(std::string const& key);
-
-} // namespace dawn
