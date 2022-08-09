@@ -64,7 +64,7 @@ std::string metricsNameFromEnvVar(std::string const& key) {
   std::string fname = "METRICS.JSON";
   char* val = getenv(key.c_str());
   if (val != nullptr) {
-    fname.insert(0, val + "_");
+    fname.insert(0, std::string(val) + "_");
   }
   return fname;
 }
