@@ -24,6 +24,6 @@ private:
   json generateJsonFromStruct(VerificationMetrics metrics);
 };
 
-std::string getEnvVar(std::string const& key);
+std::string getMetricsFilename(std::string const& key);
 
 } // namespace dawn

@@ -935,11 +935,6 @@ void CudaIcoCodeGen::generateAllAPIRunFunctions(
   }
 }
 
-std::string getEnvVar(const std::string key) {
-    char * val = std::getenv(key.c_str());
-    return val == NULL ? std::string("") : std::string(val);
-}
-
 void CudaIcoCodeGen::generateAllAPIVerifyFunctions(
     std::stringstream& ssSW, const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation,
     CodeGenProperties& codeGenProperties, bool onlyDecl) const {
@@ -1023,7 +1018,6 @@ void CudaIcoCodeGen::generateAllAPIVerifyFunctions(
 
     if(!onlyDecl) {
       const auto& fieldInfos = stencil.getOrderedFields();
-      std::string slurm_job_id = getEnvVar("SLURM_JOB_ID");
 
       verifyAPI.startBody();
       verifyAPI.addStatement("using namespace std::chrono");
@@ -1033,7 +1027,6 @@ void CudaIcoCodeGen::generateAllAPIVerifyFunctions(
       verifyAPI.addStatement(
           "high_resolution_clock::time_point t_start = high_resolution_clock::now()");
       verifyAPI.addStatement("struct VerificationMetrics stencilMetrics");
-      verifyAPI.addStatement("std::string metricsFileName = \"METRICS_" + slurm_job_id + ".json\"");
 
       for(auto fieldID : getUsedFields(stencil, {dawn::iir::Field::IntendKind::Output,
                                                  dawn::iir::Field::IntendKind::InputOutput})) {
@@ -1067,7 +1060,7 @@ void CudaIcoCodeGen::generateAllAPIVerifyFunctions(
         verifyAPI.addPreprocessorDirective("ifdef __SERIALIZE_METRICS");
 
         std::string serialiserVarName = "serialiser_" + fieldInfo.Name;
-        verifyAPI.addStatement("::dawn::MetricsSerialiser " + serialiserVarName + "(stencilMetrics, metricsFileName, \""
+        verifyAPI.addStatement("::dawn::MetricsSerialiser " + serialiserVarName + "(stencilMetrics, metricsNameFromEnvVar(\"SLURM_JOB_ID\"), \""
                                + wrapperName + "\", \"" + fieldInfo.Name + "\")");
 
         verifyAPI.addStatement(serialiserVarName + ".writeJson(iteration)");
