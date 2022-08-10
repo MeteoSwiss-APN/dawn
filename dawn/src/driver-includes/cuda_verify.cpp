@@ -13,11 +13,12 @@ __global__ void isclose_kernel(const int num_el, const double* __restrict__ dsl,
   verified[pidx] = (abs(dsl[pidx] - fortran[pidx]) <= (abs_tol + rel_tol * abs(fortran[pidx])));
 }
 
-bool verify_field(cudaStream_t stream, const int num_el, const double* dsl, const double* actual, std::string name,
-                  const double rel_tol, const double abs_tol) {
-  double maxRelErr, minRelErr;
-  double maxAbsErr, minAbsErr;
+VerificationMetrics verify_field(cudaStream_t stream, const int num_el, const double* dsl, const double* actual, std::string name,
+                  const double rel_tol, const double abs_tol, const int iteration) {
+  struct VerificationMetrics metrics;
   double* gpu_error;
+
+  metrics.iteration = iteration;
 
   const int blockSize = 16;
   dim3 dG((num_el + blockSize - 1) / blockSize);
@@ -33,18 +34,18 @@ bool verify_field(cudaStream_t stream, const int num_el, const double* dsl, cons
   thrust::device_ptr<double> dev_ptr;
   dev_ptr = thrust::device_pointer_cast(gpu_error);
 
-  maxRelErr = thrust::reduce(thrust::cuda::par.on(stream), dev_ptr, dev_ptr + num_el, 0., thrust::maximum<double>());
+  metrics.maxRelErr = thrust::reduce(thrust::cuda::par.on(stream), dev_ptr, dev_ptr + num_el, 0., thrust::maximum<double>());
   gpuErrchk(cudaPeekAtLastError());
 
-  std::cout << "[DSL] " << name << " maximum relative error: " << std::scientific << maxRelErr
+  std::cout << "[DSL] " << name << " maximum relative error: " << std::scientific << metrics.maxRelErr
             << "\n"
             << std::flush;
 
-  minRelErr = thrust::reduce(thrust::cuda::par.on(stream), dev_ptr, dev_ptr + num_el, std::numeric_limits<double>::infinity(),
+  metrics.minRelErr = thrust::reduce(thrust::cuda::par.on(stream), dev_ptr, dev_ptr + num_el, std::numeric_limits<double>::infinity(),
                              thrust::minimum<double>());
   gpuErrchk(cudaPeekAtLastError());
 
-  std::cout << "[DSL] " << name << " minimum relative error: " << std::scientific << minRelErr
+  std::cout << "[DSL] " << name << " minimum relative error: " << std::scientific << metrics.minRelErr
             << "\n"
             << std::flush;
 
@@ -52,18 +53,18 @@ bool verify_field(cudaStream_t stream, const int num_el, const double* dsl, cons
   gpuErrchk(cudaPeekAtLastError());
 
   dev_ptr = thrust::device_pointer_cast(gpu_error);
-  maxAbsErr = thrust::reduce(thrust::cuda::par.on(stream), dev_ptr, dev_ptr + num_el, 0., thrust::maximum<double>());
+  metrics.maxAbsErr = thrust::reduce(thrust::cuda::par.on(stream), dev_ptr, dev_ptr + num_el, 0., thrust::maximum<double>());
   gpuErrchk(cudaPeekAtLastError());
 
-  std::cout << "[DSL] " << name << " maximum absolute error: " << std::scientific << maxAbsErr
+  std::cout << "[DSL] " << name << " maximum absolute error: " << std::scientific << metrics.maxAbsErr
             << "\n"
             << std::flush;
 
-  minAbsErr = thrust::reduce(thrust::cuda::par.on(stream), dev_ptr, dev_ptr + num_el, std::numeric_limits<double>::infinity(),
+  metrics.minAbsErr = thrust::reduce(thrust::cuda::par.on(stream), dev_ptr, dev_ptr + num_el, std::numeric_limits<double>::infinity(),
                              thrust::minimum<double>());
   gpuErrchk(cudaPeekAtLastError());
 
-  std::cout << "[DSL] " << name << " minimum absolute error: " << std::scientific << minAbsErr
+  std::cout << "[DSL] " << name << " minimum absolute error: " << std::scientific << metrics.minAbsErr
             << "\n"
             << std::flush;
 
@@ -83,9 +84,9 @@ bool verify_field(cudaStream_t stream, const int num_el, const double* dsl, cons
   bool_dev_ptr = thrust::device_pointer_cast(gpu_verify_bools);
   gpuErrchk(cudaPeekAtLastError());
 
-  bool result = thrust::all_of(thrust::cuda::par.on(stream), bool_dev_ptr, bool_dev_ptr + num_el, thrust::identity<bool>());
+  metrics.isValid = thrust::all_of(thrust::cuda::par.on(stream), bool_dev_ptr, bool_dev_ptr + num_el, thrust::identity<bool>());
 
-  if(!result) {
+  if(!metrics.isValid) {
     double min, max, avg;
     thrust::device_ptr<const double> dev_cptr;
 
@@ -122,8 +123,7 @@ bool verify_field(cudaStream_t stream, const int num_el, const double* dsl, cons
 
   gpuErrchk(cudaFree(gpu_verify_bools));
   gpuErrchk(cudaPeekAtLastError());
-
-  return result;
+  return metrics;
 }
 
 } // namespace dawn

@@ -1026,7 +1026,7 @@ void CudaIcoCodeGen::generateAllAPIVerifyFunctions(
       verifyAPI.addStatement("int kSize = " + fullStencilName + "::" + "getKSize()");
       verifyAPI.addStatement(
           "high_resolution_clock::time_point t_start = high_resolution_clock::now()");
-      verifyAPI.addStatement("bool isValid");
+      verifyAPI.addStatement("struct VerificationMetrics stencilMetrics");
 
       for(auto fieldID : getUsedFields(stencil, {dawn::iir::Field::IntendKind::Output,
                                                  dawn::iir::Field::IntendKind::InputOutput})) {
@@ -1052,12 +1052,22 @@ void CudaIcoCodeGen::generateAllAPIVerifyFunctions(
                     "::" + chainToSparseSizeString(unstrDims.getIterSpace());
         }
 
-        verifyAPI.addStatement("isValid = ::dawn::verify_field(stream, " + num_el + ", " + fieldInfo.Name +
+        verifyAPI.addStatement("stencilMetrics = ::dawn::verify_field(stream, " + num_el + ", " + fieldInfo.Name +
                                "_dsl" + "," + fieldInfo.Name + ", \"" + fieldInfo.Name + "\"" +
                                "," + fieldInfo.Name + "_rel_tol" + "," + fieldInfo.Name +
-                               "_abs_tol" + ")");
+                               "_abs_tol, " + "iteration" + ")");
 
-        verifyAPI.addBlockStatement("if (!isValid)", [&]() {
+        verifyAPI.addPreprocessorDirective("ifdef __SERIALIZE_METRICS");
+
+        std::string serialiserVarName = "serialiser_" + fieldInfo.Name;
+        verifyAPI.addStatement("MetricsSerialiser " + serialiserVarName + "(stencilMetrics, metricsNameFromEnvVar(\"SLURM_JOB_ID\"), \""
+                               + wrapperName + "\", \"" + fieldInfo.Name + "\")");
+
+        verifyAPI.addStatement(serialiserVarName + ".writeJson(iteration)");
+
+        verifyAPI.addPreprocessorDirective("endif");
+
+        verifyAPI.addBlockStatement("if (!stencilMetrics.isValid)", [&]() {
           verifyAPI.addPreprocessorDirective("ifdef __SERIALIZE_ON_ERROR");
           if(!unstrDims.isSparse()) {
             // serialize actual field
@@ -1091,7 +1101,7 @@ void CudaIcoCodeGen::generateAllAPIVerifyFunctions(
           "duration<double> timing = duration_cast<duration<double>>(t_end - t_start)");
       verifyAPI.addStatement("std::cout << \"[DSL] Verification took \" << timing.count() << \" "
                              "seconds.\\n\" << std::flush");
-      verifyAPI.addStatement("return isValid");
+      verifyAPI.addStatement("return stencilMetrics.isValid");
 
       // TODO runAndVerifyAPI body
       runAndVerifyAPI.addStatement("static int iteration = 0");
@@ -1869,6 +1879,7 @@ std::unique_ptr<TranslationUnit> CudaIcoCodeGen::generateCode() {
       "#include \"driver-includes/cuda_utils.hpp\"",
       "#include \"driver-includes/cuda_verify.hpp\"",
       "#include \"driver-includes/to_vtk.h\"",
+      "#include \"driver-includes/to_json.hpp\"",
       "#define GRIDTOOLS_DAWN_NO_INCLUDE", // Required to not include gridtools from math.hpp
       "#include \"driver-includes/math.hpp\"",
       "#include <chrono>",
