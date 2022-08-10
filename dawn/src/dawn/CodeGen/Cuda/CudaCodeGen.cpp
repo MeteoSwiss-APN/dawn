@@ -120,14 +120,15 @@ void CudaCodeGen::generateAPIRunFunctions(
     CodeGenProperties& codeGenProperties, bool onlyDecl) const {
   const auto& stencils = stencilInstantiation->getStencils();
   const auto& metadata = stencilInstantiation->getMetaData();
+  const auto& globalsMap = stencilInstantiation->getIIR()->getGlobalVariableMap();
 
   // generate the code for each of the stencils
   for(const auto& stencilPtr : stencils) {
-    const auto& stencil = *stencilPtr;        
+    const auto& stencil = *stencilPtr;
 
     std::string stencilName = "stencil_" + std::to_string(stencil.getStencilID());
     auto stencilProperties =
-      codeGenProperties.getStencilProperties(StencilContext::SC_Stencil, stencilName);  
+        codeGenProperties.getStencilProperties(StencilContext::SC_Stencil, stencilName);
 
     std::string fullyQualitfiedName =
         "dawn_generated::cuda::" + stencilInstantiation->getName() + "::" + stencilName;
@@ -141,6 +142,11 @@ void CudaCodeGen::generateAPIRunFunctions(
           return !p.second.IsTemporary;
         });
 
+    for(const auto& globalProp : globalsMap) {
+      const auto& globalValue = globalProp.second;
+      runFun.addArg(std::string(ast::Value::typeToString(globalValue.getType())) + " " +
+              globalProp.first);
+    }
     for(auto field : nonTempFields) {
       runFun.addArg("double *" + field.second.Name + "_ptr");
     }
@@ -155,10 +161,17 @@ void CudaCodeGen::generateAPIRunFunctions(
       runFun.addStatement("meta_data_t meta_data_ijk({ni, nj, nk}, {1, ni, ni*nj});");
       runFun.addStatement("meta_data_ij_t meta_data_ij({ni, nj, 1}, {1, ni, 0})");
       runFun.addStatement("meta_data_k_t meta_data_k({nk, 1, 1}, {1, 0, 0})");
-      
+
+      for(const auto& globalProp : globalsMap) {
+        const auto& globalValue = globalProp.second;
+        runFun.addStatement(fullyQualitfiedName + "::m_globals." + globalProp.first + " = " + globalProp.first);
+      }
+
       for(auto field : nonTempFields) {
-        runFun.addStatement(stencilProperties->paramNameToType_.at(field.second.Name) + " " + field.second.Name +
-                            "(meta_data_" + getStorageType(field.second.field.getFieldDimensions(), "", "") + ", " + field.second.Name + "_ptr, gridtools::ownership::external_gpu)");
+        runFun.addStatement(stencilProperties->paramNameToType_.at(field.second.Name) + " " +
+                            field.second.Name + "(meta_data_" +
+                            getStorageType(field.second.field.getFieldDimensions(), "", "") + ", " +
+                            field.second.Name + "_ptr, gridtools::ownership::external_gpu)");
       }
       {
         std::string fields;
@@ -169,10 +182,12 @@ void CudaCodeGen::generateAPIRunFunctions(
         }
         runFun.addStatement(fullyQualitfiedName + "::run(" + fields + ")");
         runFun.addPreprocessorDirective("ifdef __DSL_SERIALIZE");
-        auto outFields = getUsedFields(stencil, {dawn::iir::Field::IntendKind::Output, dawn::iir::Field::IntendKind::InputOutput});
-        for (auto outField : outFields) {
+        auto outFields = getUsedFields(stencil, {dawn::iir::Field::IntendKind::Output,
+                                                 dawn::iir::Field::IntendKind::InputOutput});
+        for(auto outField : outFields) {
           auto fname = metadata.getFieldNameFromAccessID(outField);
-          runFun.addStatement("serialize_gpu(" + fname + ", \"" + stencilInstantiation->getName() + "_" + fname + "\", iter, ni, nj, nk)");
+          runFun.addStatement("serialize_gpu(" + fname + ", \"" + stencilInstantiation->getName() +
+                              "_" + fname + "\", iter, ni, nj, nk)");
         }
         runFun.addPreprocessorDirective("endif");
         runFun.addStatement("iter++");
@@ -186,6 +201,7 @@ void CudaCodeGen::generateSetupFunctions(
     std::stringstream& ssSW, const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation,
     CodeGenProperties& codeGenProperties, bool onlyDecl) const {
   const auto& stencils = stencilInstantiation->getStencils();
+  const auto& globalsMap = stencilInstantiation->getIIR()->getGlobalVariableMap();
 
   // generate the code for each of the stencils
   for(const auto& stencilPtr : stencils) {
@@ -193,7 +209,7 @@ void CudaCodeGen::generateSetupFunctions(
 
     std::string stencilName = "stencil_" + std::to_string(stencil.getStencilID());
 
-    std::string fullyQualitfiedName =
+    std::string fullyQualifiedName =
         "dawn_generated::cuda::" + stencilInstantiation->getName() + "::" + stencilName;
     MemberFunction setupFun("void", "setup_" + stencilInstantiation->getName(), ssSW, 0, onlyDecl);
     setupFun.addArg("int i");
@@ -201,8 +217,8 @@ void CudaCodeGen::generateSetupFunctions(
     setupFun.addArg("int k");
     setupFun.finishArgs();
     if(!onlyDecl) {
-      setupFun.addStatement(fullyQualitfiedName +
-                            "::setup(gridtools::dawn::domain(i, j, k), 1, 1, 1)");
+      setupFun.addStatement(fullyQualifiedName +
+                            "::setup(gridtools::dawn::domain(i, j, k), " + (!globalsMap.empty() ? fullyQualifiedName + "::m_globals, " : "") + "1, 1, 1)");
     }
     setupFun.commit();
   }
@@ -225,6 +241,8 @@ void CudaCodeGen::generateStaticMembersTrailer(
 
     ssSW << "gridtools::dawn::domain " + fullyQualitfiedName +
                 "::m_dom = gridtools::dawn::domain(1, 1, 1);";
+    ssSW << "dawn_generated::cuda::globals " + fullyQualitfiedName +
+                "::m_globals;";                
 
     if(stencil.isEmpty())
       continue;
@@ -239,10 +257,11 @@ void CudaCodeGen::generateStaticMembersTrailer(
 
     if(!(tempFields.empty())) {
       ssSW << fullyQualitfiedName + "::tmp_meta_data_t " + fullyQualitfiedName +
-                "::m_tmp_meta_data(1, 1, 1, 1, 1);";
+                  "::m_tmp_meta_data(1, 1, 1, 1, 1);";
       for(const auto& fieldPair : tempFields) {
         ssSW << fullyQualitfiedName
-             << "::tmp_storage_t " + fullyQualitfiedName + "::" + "m_" + fieldPair.second.Name + ";";
+             << "::tmp_storage_t " + fullyQualitfiedName + "::" + "m_" + fieldPair.second.Name +
+                    ";";
       }
     }
 
@@ -448,7 +467,7 @@ void CudaCodeGen::generateStencilClassMembers(
   addTempStorageTypedef(stencilClass, stencil);
 
   if(!globalsMap.empty()) {
-    stencilClass.addMember("globals&", "m_globals");
+    stencilClass.addMember("static globals", "m_globals");
   }
 
   stencilClass.addMember("static " + c_dgt + "domain", "m_dom");
