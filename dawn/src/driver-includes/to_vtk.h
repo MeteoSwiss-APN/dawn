@@ -30,16 +30,17 @@ struct MeshInfoVtk {
 
 extern MeshInfoVtk mesh_info_vtk;
 
-extern "C" {
-
+template <typename FieldType>
 void serialize_dense_cells(int start_idx, int end_idx, int num_k, int dense_stride,
-                           const double* field, const char stencil_name[50],
+                           const FieldType* field, const char stencil_name[50],
                            const char field_name[50], int iter);
+template <typename FieldType>
 void serialize_dense_verts(int start_idx, int end_idx, int num_k, int dense_stride,
-                           const double* field, const char stencil_name[50],
+                           const FieldType* field, const char stencil_name[50],
                            const char field_name[50], int iter);
+template <typename FieldType>
 void serialize_dense_edges(int start_idx, int end_idx, int num_k, int dense_stride,
-                           const double* field, const char stencil_name[50],
+                           const FieldType* field, const char stencil_name[50],
                            const char field_name[50], int iter);
+
 void serialize_flush_iter(const char stencil_name[50], int iter);
-}
