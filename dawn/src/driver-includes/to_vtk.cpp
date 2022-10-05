@@ -316,8 +316,6 @@ void dense_edges_to_vtk(int start_idx, int end_idx, int num_k, int dense_stride,
 
 } // namespace
 
-// extern "C" {
-
 template <typename FieldType>
 void serialize_dense_cells(int start_idx, int end_idx, int num_k, int dense_stride,
                            const FieldType* field_gpu, const char stencil_name[50],
@@ -380,4 +378,3 @@ template void serialize_dense_edges<int>(int start_idx, int end_idx, int num_k, 
 void serialize_flush_iter(const char stencil_name[50], int iter) {
   flushAtIter(std::string(stencil_name), iter);
 }
-// }

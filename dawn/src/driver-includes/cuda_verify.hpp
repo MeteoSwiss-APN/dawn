@@ -38,7 +38,7 @@ struct compute_error<RelErrTag, FieldType> {
   static double __device__ impl(const FieldType expected, const FieldType actual) {
     double error = 0.;
     if(expected != actual) {
-      error = fabs((expected - actual) / expected);
+      error = fabs(((double)expected - actual) / expected);
     }
     return error;
   }
