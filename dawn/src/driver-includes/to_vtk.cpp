@@ -112,12 +112,14 @@ public:
 std::map<std::pair<std::string, int>, StencilFieldsVtkOutput> stencil_to_output_map;
 
 // wrapper type so we can overload `std::ostream <<` and get vtk compatible formatting for NaNs
+template <typename FieldType>
 struct formatNaNs {
-  double value;
-  formatNaNs(double value): value(value) {}
+  FieldType value;
+  formatNaNs(FieldType value): value(value) {}
 };
 
-std::ostream& operator<<(std::ostream& os, const formatNaNs& wrapper)
+template <typename FieldType>
+std::ostream& operator<<(std::ostream& os, const formatNaNs<FieldType>& wrapper)
 {
   if(std::isnan(wrapper.value)) {
     os << "nan";
@@ -141,14 +143,16 @@ void flushAtIter(std::string stencil_name, int iter) {
   stencil_to_output_map.erase(std::make_pair(stencil_name, iter));
 }
 
-double* fieldFromGpu(const double* field_gpu, const int size) {
-  double* field_cpu = new double[size];
-  gpuErrchk(cudaMemcpy(field_cpu, field_gpu, sizeof(double) * size, cudaMemcpyDeviceToHost));
+template<typename FieldType>
+FieldType* fieldFromGpu(const FieldType* field_gpu, const int size) {
+  FieldType* field_cpu = new FieldType[size];
+  gpuErrchk(cudaMemcpy(field_cpu, field_gpu, sizeof(FieldType) * size, cudaMemcpyDeviceToHost));
   return field_cpu;
 }
 
+template<typename FieldType>
 void dense_cells_to_csv(int start_idx, int end_idx, int num_k, int dense_stride,
-                        const double* field, const char stencil_name[50], const char field_name[50],
+                        const FieldType* field, const char stencil_name[50], const char field_name[50],
                         int iter) {
   std::fstream fs;
   fs.open(std::string(stencil_name) + "_rank" + std::to_string(mesh_info_vtk.rank_id) + "_" +
@@ -174,8 +178,9 @@ void dense_cells_to_csv(int start_idx, int end_idx, int num_k, int dense_stride,
   fs.close();
 }
 
+template<typename FieldType>
 void dense_cells_to_vtk(int start_idx, int end_idx, int num_k, int dense_stride,
-                        const double* field, const char stencil_name[50], const char field_name[50],
+                        const FieldType* field, const char stencil_name[50], const char field_name[50],
                         int iter) {
 
   auto& output = getStencilFieldsVtkOutput(num_k, std::string(stencil_name), iter);
@@ -195,8 +200,9 @@ void dense_cells_to_vtk(int start_idx, int end_idx, int num_k, int dense_stride,
   }
 }
 
+template<typename FieldType>
 void dense_verts_to_csv(int start_idx, int end_idx, int num_k, int dense_stride,
-                        const double* field, const char stencil_name[50], const char field_name[50],
+                        const FieldType* field, const char stencil_name[50], const char field_name[50],
                         int iter) {
   std::fstream fs;
   fs.open(std::string(stencil_name) + "_rank" + std::to_string(mesh_info_vtk.rank_id) + "_" +
@@ -222,8 +228,9 @@ void dense_verts_to_csv(int start_idx, int end_idx, int num_k, int dense_stride,
   fs.close();
 }
 
+template<typename FieldType>
 void dense_verts_to_vtk(int start_idx, int end_idx, int num_k, int dense_stride,
-                        const double* field, const char stencil_name[50], const char field_name[50],
+                        const FieldType* field, const char stencil_name[50], const char field_name[50],
                         int iter) {
 
   auto& output = getStencilFieldsVtkOutput(num_k, std::string(stencil_name), iter);
@@ -243,8 +250,9 @@ void dense_verts_to_vtk(int start_idx, int end_idx, int num_k, int dense_stride,
   }
 }
 
+template<typename FieldType>
 void dense_edges_to_csv(int start_idx, int end_idx, int num_k, int dense_stride,
-                        const double* field, const char stencil_name[50], const char field_name[50],
+                        const FieldType* field, const char stencil_name[50], const char field_name[50],
                         int iter) {
   std::fstream fs;
   fs.open(std::string(stencil_name) + "_rank" + std::to_string(mesh_info_vtk.rank_id) + "_" +
@@ -277,8 +285,9 @@ void dense_edges_to_csv(int start_idx, int end_idx, int num_k, int dense_stride,
   fs.close();
 }
 
+template<typename FieldType>
 void dense_edges_to_vtk(int start_idx, int end_idx, int num_k, int dense_stride,
-                        const double* field, const char stencil_name[50], const char field_name[50],
+                        const FieldType* field, const char stencil_name[50], const char field_name[50],
                         int iter) {
 
   auto& output = getStencilFieldsVtkOutput(num_k, std::string(stencil_name), iter);
@@ -307,12 +316,11 @@ void dense_edges_to_vtk(int start_idx, int end_idx, int num_k, int dense_stride,
 
 } // namespace
 
-extern "C" {
-
+template <typename FieldType>
 void serialize_dense_cells(int start_idx, int end_idx, int num_k, int dense_stride,
-                           const double* field_gpu, const char stencil_name[50],
+                           const FieldType* field_gpu, const char stencil_name[50],
                            const char field_name[50], int iter) {
-  const double* field = fieldFromGpu(field_gpu, dense_stride * num_k);
+  const FieldType* field = fieldFromGpu(field_gpu, dense_stride * num_k);
 
   dense_cells_to_csv(start_idx, end_idx, num_k, dense_stride, field, stencil_name, field_name,
                      iter);
@@ -321,10 +329,11 @@ void serialize_dense_cells(int start_idx, int end_idx, int num_k, int dense_stri
                      iter);
 }
 
+template <typename FieldType>
 void serialize_dense_verts(int start_idx, int end_idx, int num_k, int dense_stride,
-                           const double* field_gpu, const char stencil_name[50],
+                           const FieldType* field_gpu, const char stencil_name[50],
                            const char field_name[50], int iter) {
-  const double* field = fieldFromGpu(field_gpu, dense_stride * num_k);
+  const FieldType* field = fieldFromGpu(field_gpu, dense_stride * num_k);
 
   dense_verts_to_csv(start_idx, end_idx, num_k, dense_stride, field, stencil_name, field_name,
                      iter);
@@ -333,10 +342,11 @@ void serialize_dense_verts(int start_idx, int end_idx, int num_k, int dense_stri
                      iter);
 }
 
+template <typename FieldType>
 void serialize_dense_edges(int start_idx, int end_idx, int num_k, int dense_stride,
-                           const double* field_gpu, const char stencil_name[50],
+                           const FieldType* field_gpu, const char stencil_name[50],
                            const char field_name[50], int iter) {
-  const double* field = fieldFromGpu(field_gpu, dense_stride * num_k);
+  const FieldType* field = fieldFromGpu(field_gpu, dense_stride * num_k);
 
   dense_edges_to_csv(start_idx, end_idx, num_k, dense_stride, field, stencil_name, field_name,
                      iter);
@@ -345,7 +355,26 @@ void serialize_dense_edges(int start_idx, int end_idx, int num_k, int dense_stri
                      iter);
 }
 
+
+template void serialize_dense_cells<double>(int start_idx, int end_idx, int num_k, int dense_stride,
+                           const double* field_gpu, const char stencil_name[50],
+                           const char field_name[50], int iter);
+template void serialize_dense_verts<double>(int start_idx, int end_idx, int num_k, int dense_stride,
+                           const double* field_gpu, const char stencil_name[50],
+                           const char field_name[50], int iter);
+template void serialize_dense_edges<double>(int start_idx, int end_idx, int num_k, int dense_stride,
+                           const double* field_gpu, const char stencil_name[50],
+                           const char field_name[50], int iter);
+template void serialize_dense_cells<int>(int start_idx, int end_idx, int num_k, int dense_stride,
+                           const int* field_gpu, const char stencil_name[50],
+                           const char field_name[50], int iter);
+template void serialize_dense_verts<int>(int start_idx, int end_idx, int num_k, int dense_stride,
+                           const int* field_gpu, const char stencil_name[50],
+                           const char field_name[50], int iter);
+template void serialize_dense_edges<int>(int start_idx, int end_idx, int num_k, int dense_stride,
+                           const int* field_gpu, const char stencil_name[50],
+                           const char field_name[50], int iter);
+
 void serialize_flush_iter(const char stencil_name[50], int iter) {
   flushAtIter(std::string(stencil_name), iter);
-}
 }
