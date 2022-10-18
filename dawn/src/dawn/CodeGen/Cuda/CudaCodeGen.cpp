@@ -241,8 +241,12 @@ void CudaCodeGen::generateStaticMembersTrailer(
 
     ssSW << "gridtools::dawn::domain " + fullyQualitfiedName +
                 "::m_dom = gridtools::dawn::domain(1, 1, 1);";
-    ssSW << "dawn_generated::cuda::globals " + fullyQualitfiedName +
-                "::m_globals;";                
+
+    const auto& globalsMap = stencilInstantiation->getIIR()->getGlobalVariableMap();
+    if (!globalsMap.empty()) {
+      ssSW << "dawn_generated::cuda::globals " + fullyQualitfiedName +
+                  "::m_globals;";
+    }
 
     if(stencil.isEmpty())
       continue;
