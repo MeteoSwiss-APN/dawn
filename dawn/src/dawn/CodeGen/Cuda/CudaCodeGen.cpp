@@ -186,7 +186,7 @@ void CudaCodeGen::generateAPIRunFunctions(
                                                  dawn::iir::Field::IntendKind::InputOutput});
         for(auto outField : outFields) {
           auto fname = metadata.getFieldNameFromAccessID(outField);
-          runFun.addStatement("serialize_gpu(" + fname + ", \"" + stencilInstantiation->getName() +
+          runFun.addStatement("serialize_gpu(" + fname + ", \"gtc_" + stencilInstantiation->getName() +
                               "_" + fname + "\", iter, ni, nj, nk)");
         }
         runFun.addPreprocessorDirective("endif");
