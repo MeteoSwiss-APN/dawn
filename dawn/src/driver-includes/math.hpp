@@ -18,6 +18,8 @@
 #include "storage.hpp"
 #include <algorithm>
 #include <cmath>
+#include <utility>
+#include <type_traits>
 
 #ifndef GT_FUNCTION
 #define GT_FUNCTION
@@ -122,24 +124,38 @@ GT_FUNCTION T sqrt(const T x) {
   return ::sqrt(x);
 }
 
-/**
- * @brief Returns the smaller value of @c x and @c y
- *
- * @see http://en.cppreference.com/w/cpp/algorithm/min
- */
-template <typename T, typename U>
-GT_FUNCTION auto min(const T x, const U y) -> decltype(x + y) {
-  return x < y ? x : y;
+template<typename T>
+GT_FUNCTION T min(T&&t)
+{
+  return std::forward<T>(t);
 }
 
-/**
- * @brief Returns the greater value of @c x and @c y
- *
- * @see http://en.cppreference.com/w/cpp/algorithm/max
- */
-template <typename T, typename U>
-GT_FUNCTION auto max(const T x, const U y) -> decltype(x + y) {
-  return x > y ? x : y;
+template<typename T0, typename T1, typename... Ts>
+GT_FUNCTION typename std::common_type<
+  T0, T1, Ts...
+>::type min(T0&& val1, T1&& val2, Ts&&... vs)
+{
+  if (val2 < val1)
+    return min(val2, std::forward<Ts>(vs)...);
+  else
+    return min(val1, std::forward<Ts>(vs)...);
+}
+
+template<typename T>
+GT_FUNCTION T max(T&&t)
+{
+  return std::forward<T>(t);
+}
+
+template<typename T0, typename T1, typename... Ts>
+GT_FUNCTION typename std::common_type<
+  T0, T1, Ts...
+>::type max(T0&& val1, T1&& val2, Ts&&... vs)
+{
+  if (val2 < val1)
+    return max(val2, std::forward<Ts>(vs)...);
+  else
+    return max(val1, std::forward<Ts>(vs)...);
 }
 
 /**
