@@ -99,7 +99,50 @@ std::vector<std::string> CodeGeneratorHelper::generateStrideArguments(
       }
     }
   }
-  if(!tempFields.empty()) {
+  if(!tempFields.empty() && nonTempFields.empty()) {
+    const auto& firstTmpField = *(tempFields.begin());
+    std::string fieldName = metadata.getFieldNameFromAccessID(firstTmpField.second.getAccessID());
+    if(funArg == CodeGeneratorHelper::FunctionArgType::FT_Caller) {
+      strides.push_back("m_" + fieldName + ".strides()[3]," + "m_" + fieldName + ".strides()[4]," +  "m_" + fieldName + ".get_storage_info_ptr()->template begin<0>()," + "m_" +
+                        fieldName + ".get_storage_info_ptr()->template begin<1>()," + "m_" +
+                        fieldName + ".get_storage_info_ptr()->template stride<1>()," + "m_" +
+                        fieldName + ".get_storage_info_ptr()->template stride<4>()");
+    }
+
+    Array3i dims{-1, -1, -1};
+    for(const auto& fieldInfo : ms->getParent()->getFields()) {
+      if(fieldInfo.second.field.getAccessID() == firstTmpField.second.getAccessID()) {
+        DAWN_ASSERT_MSG(
+            dawn::ast::dimension_isa<dawn::ast::CartesianFieldDimension>(
+                fieldInfo.second.field.getFieldDimensions().getHorizontalFieldDimension()),
+            "Field has non cartesian horizontal dimension");
+        auto const& dimCartesian =
+            dawn::ast::dimension_cast<dawn::ast::CartesianFieldDimension const&>(
+                fieldInfo.second.field.getFieldDimensions().getHorizontalFieldDimension());
+        dims[0] = dimCartesian.I() == 1;
+        dims[1] = dimCartesian.J() == 1;
+        dims[2] = fieldInfo.second.field.getFieldDimensions().K() == 1;
+        break;
+      }
+    }
+
+    int usedDim = 0;
+    for(int i = 0; i < dims.size(); ++i) {
+      if(!dims[i])
+        continue;
+      if(!(usedDim++))
+        continue;
+      if(funArg == CodeGeneratorHelper::FunctionArgType::FT_Callee) {        
+        strides.push_back("const int stride_" + CodeGeneratorHelper::indexIteratorName(dims) + "_" +
+                          std::to_string(i));
+      }
+    }
+    if(funArg == CodeGeneratorHelper::FunctionArgType::FT_Callee) {        
+          strides.push_back("const int tmpBeginIIndex, const int tmpBeginJIndex, const int "
+                        "jstride_tmp, const int kstride_tmp");
+    }
+  }
+  else if(!tempFields.empty()) {
     const auto& firstTmpField = *(tempFields.begin());
     std::string fieldName = metadata.getFieldNameFromAccessID(firstTmpField.second.getAccessID());
     if(funArg == CodeGeneratorHelper::FunctionArgType::FT_Caller) {

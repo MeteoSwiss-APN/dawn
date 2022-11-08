@@ -298,7 +298,7 @@ void CodeGen::generateStencilWrapperSyncMethod(Class& stencilWrapperClass) const
   syncStoragesMethod.commit();
 }
 
-std::string CodeGen::getStorageType(const ast::FieldDimensions& dimensions) {
+std::string CodeGen::getStorageType(const ast::FieldDimensions& dimensions, std::string prefix, std::string suffix) {
   DAWN_ASSERT_MSG(
       ast::dimension_isa<ast::CartesianFieldDimension>(dimensions.getHorizontalFieldDimension()),
       "Storage type requested for a non cartesian horizontal dimension");
@@ -306,11 +306,11 @@ std::string CodeGen::getStorageType(const ast::FieldDimensions& dimensions) {
       dawn::ast::dimension_cast<dawn::ast::CartesianFieldDimension const&>(
           dimensions.getHorizontalFieldDimension());
 
-  std::string storageType = "storage_";
+  std::string storageType = prefix == "" ? "" : prefix + "_";
   storageType += cartesianDimensions.I() ? "i" : "";
   storageType += cartesianDimensions.J() ? "j" : "";
   storageType += dimensions.K() ? "k" : "";
-  storageType += "_t";
+  storageType += suffix;
   return storageType;
 }
 
@@ -338,10 +338,10 @@ void CodeGen::addTmpStorageDeclaration(
     Structure& stencilClass,
     IndexRange<const std::map<int, iir::Stencil::FieldInfo>>& tempFields) const {
   if(!(tempFields.empty())) {
-    stencilClass.addMember(tmpMetadataTypename_, tmpMetadataName_);
+    stencilClass.addMember("static " + tmpMetadataTypename_, tmpMetadataName_);
 
     for(const auto& field : tempFields) {
-      stencilClass.addMember(tmpStorageTypename_, "m_" + field.second.Name);
+      stencilClass.addMember("static " + tmpStorageTypename_, "m_" + field.second.Name);
     }
   }
 }
@@ -448,16 +448,16 @@ void CodeGen::generateGlobalIndices(const iir::Stencil& stencil, Structure& sten
                                     bool genCheckOffset) const {
   for(auto& stage : iterateIIROver<iir::Stage>(stencil)) {
     if(stage->getIterationSpace()[0].has_value()) {
-      stencilClass.addMember("std::array<int, 2>",
+      stencilClass.addMember("static std::array<int, 2>",
                              "stage" + std::to_string(stage->getStageID()) + "GlobalIIndices");
     }
     if(stage->getIterationSpace()[1].has_value()) {
-      stencilClass.addMember("std::array<int, 2>",
+      stencilClass.addMember("static std::array<int, 2>",
                              "stage" + std::to_string(stage->getStageID()) + "GlobalJIndices");
     }
   }
 
-  stencilClass.addMember("std::array<unsigned int, 2>", "globalOffsets");
+  stencilClass.addMember("static std::array<unsigned int, 2>", "globalOffsets");
   auto globalOffsetFunc =
       stencilClass.addMemberFunction("static std::array<unsigned int, 2>", "computeGlobalOffsets");
   globalOffsetFunc.addArg("int rank, const " + c_dgt + "domain& dom, int xcols, int ycols");

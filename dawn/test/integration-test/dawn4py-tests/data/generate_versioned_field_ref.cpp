@@ -19,7 +19,6 @@ private:
     ::dawn::edge_field_t<LibTag, ::dawn::float_type>& m_c;
     ::dawn::edge_field_t<LibTag, ::dawn::float_type>& m_d;
     ::dawn::edge_field_t<LibTag, ::dawn::float_type>& m_e;
-    ::dawn::edge_field_t<LibTag, ::dawn::float_type>& m_c_0;
     ::dawn::unstructured_domain m_unstructured_domain;
 
   public:
@@ -28,9 +27,8 @@ private:
                ::dawn::edge_field_t<LibTag, ::dawn::float_type>& b,
                ::dawn::edge_field_t<LibTag, ::dawn::float_type>& c,
                ::dawn::edge_field_t<LibTag, ::dawn::float_type>& d,
-               ::dawn::edge_field_t<LibTag, ::dawn::float_type>& e,
-               ::dawn::edge_field_t<LibTag, ::dawn::float_type>& c_0)
-        : m_mesh(mesh), m_k_size(k_size), m_a(a), m_b(b), m_c(c), m_d(d), m_e(e), m_c_0(c_0) {}
+               ::dawn::edge_field_t<LibTag, ::dawn::float_type>& e)
+        : m_mesh(mesh), m_k_size(k_size), m_a(a), m_b(b), m_c(c), m_d(d), m_e(e) {}
 
     ~stencil_37() {}
 
@@ -40,23 +38,17 @@ private:
     static constexpr ::dawn::driver::unstructured_extent c_extent = {false, 0, 0};
     static constexpr ::dawn::driver::unstructured_extent d_extent = {false, 0, 0};
     static constexpr ::dawn::driver::unstructured_extent e_extent = {false, 0, 0};
-    static constexpr ::dawn::driver::unstructured_extent c_0_extent = {false, 0, 0};
 
     void run() {
       using ::dawn::deref;
       {
         for(int k = 0 + 0; k <= (m_k_size == 0 ? 0 : (m_k_size)) + 0 - 1 + 0; ++k) {
           for(auto const& loc : getEdges(LibTag{}, m_mesh)) {
-            m_c_0(deref(LibTag{}, loc), (k + 0)) = m_c(deref(LibTag{}, loc), (k + 0));
-          }
-        }
-      }
-      {
-        for(int k = 0 + 0; k <= (m_k_size == 0 ? 0 : (m_k_size)) + 0 - 1 + 0; ++k) {
-          for(auto const& loc : getEdges(LibTag{}, m_mesh)) {
             m_a(deref(LibTag{}, loc), (k + 0)) =
-                ((m_b(deref(LibTag{}, loc), (k + 0)) / m_c_0(deref(LibTag{}, loc), (k + 0))) +
+                ((m_b(deref(LibTag{}, loc), (k + 0)) / m_c(deref(LibTag{}, loc), (k + 0))) +
                  (::dawn::float_type)5);
+          }
+          for(auto const& loc : getEdges(LibTag{}, m_mesh)) {
             if(m_d(deref(LibTag{}, loc), (k + 0))) {
               m_a(deref(LibTag{}, loc), (k + 0)) = m_b(deref(LibTag{}, loc), (k + 0));
             } else {
@@ -78,7 +70,6 @@ public:
   generate_versioned_field(const generate_versioned_field&) = delete;
 
   // Members
-  ::dawn::edge_field_t<LibTag, ::dawn::float_type> m_c_0;
 
   void set_splitter_index(::dawn::LocationType loc, ::dawn::UnstructuredSubdomain subdomain,
                           int offset, int index) {
@@ -91,8 +82,7 @@ public:
                            ::dawn::edge_field_t<LibTag, ::dawn::float_type>& c,
                            ::dawn::edge_field_t<LibTag, ::dawn::float_type>& d,
                            ::dawn::edge_field_t<LibTag, ::dawn::float_type>& e)
-      : m_stencil_37(mesh, k_size, a, b, c, d, e, m_c_0),
-        m_c_0(allocateField(LibTag{}, numEdges(LibTag{}, mesh), k_size)) {}
+      : m_stencil_37(mesh, k_size, a, b, c, d, e) {}
 
   void run() {
     m_stencil_37.run();

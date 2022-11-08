@@ -134,6 +134,9 @@ T exp(const T arg);
 template <typename T>
 T log(const T x);
 
+template <typename T>
+T sign(const T x);
+
 /** @} */
 } // namespace math
 } // namespace dsl

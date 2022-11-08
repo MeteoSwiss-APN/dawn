@@ -41,7 +41,7 @@ namespace dawn_generated {
 namespace cuda {
 __constant__ int stage14GlobalJIndices_[2];
 __constant__ unsigned globalOffsets_[2];
-__device__ bool checkOffset(unsigned int min, unsigned int max, unsigned int val) {
+__device__ static bool checkOffset(unsigned int min, unsigned int max, unsigned int val) {
   return (min <= val && val < max);
 }
 __global__ void __launch_bounds__(128)
@@ -108,7 +108,7 @@ __global__ void __launch_bounds__(128)
     if(iblock >= 0 && iblock <= block_size_i - 1 + 0 && jblock >= 0 &&
        jblock <= block_size_j - 1 + 0 &&
        checkOffset(stage14GlobalJIndices_[0], stage14GlobalJIndices_[1],
-                   globalOffsets_[1] + jblock)) {
+                   globalOffsets_[1] + (blockIdx.y * 4 + jblock))) {
       {
         out_field[idx111] = (int)10;
       }
