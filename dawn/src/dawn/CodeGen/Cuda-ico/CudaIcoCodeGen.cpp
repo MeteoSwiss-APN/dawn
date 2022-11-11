@@ -501,6 +501,7 @@ void CudaIcoCodeGen::generateStencilSetup(MemberFunction& stencilSetup,
   stencilSetup.addStatement("kSize_ = kSize");
   stencilSetup.addStatement("is_setup_ = true");
   stencilSetup.addStatement("stream_ = stream");
+  stencilSetup.addStatement("jsonRecord_ = jsonRecord");
   for(const auto& fieldName :
       getUsedFieldsNames(stencil, {dawn::iir::Field::IntendKind::Output,
                                    dawn::iir::Field::IntendKind::InputOutput})) {
@@ -694,6 +695,7 @@ void CudaIcoCodeGen::generateStencilClasses(
     stencilClass.addMember("static GpuTriMesh", "mesh_");
     stencilClass.addMember("static bool", "is_setup_");
     stencilClass.addMember("static cudaStream_t", "stream_");
+    stencilClass.addMember("static json*", "jsonRecord_");
 
     for(auto fieldID : getUsedFields(stencil, {dawn::iir::Field::IntendKind::Output,
                                                dawn::iir::Field::IntendKind::InputOutput})) {
@@ -721,6 +723,13 @@ void CudaIcoCodeGen::generateStencilClasses(
     kSizeGetter.addStatement("return kSize_");
     kSizeGetter.commit();
 
+    auto jsonGetter = stencilClass.addMemberFunction(
+            "static json *", "getJsonRecord");
+    jsonGetter.finishArgs();
+    jsonGetter.startBody();
+    jsonGetter.addStatement("return jsonRecord_");
+    jsonGetter.commit();
+
     for(auto fieldID : getUsedFields(stencil, {dawn::iir::Field::IntendKind::Output,
                                                dawn::iir::Field::IntendKind::InputOutput})) {
       auto kSizeFieldGetter = stencilClass.addMemberFunction(
@@ -746,6 +755,7 @@ void CudaIcoCodeGen::generateStencilClasses(
     stencilClassSetup.addArg("const dawn::GlobalGpuTriMesh *mesh");
     stencilClassSetup.addArg("int kSize");
     stencilClassSetup.addArg("cudaStream_t stream");
+    stencilClassSetup.addArg("json *jsonRecord");
     for(auto fieldID : getUsedFields(stencil, {dawn::iir::Field::IntendKind::Output,
                                                dawn::iir::Field::IntendKind::InputOutput})) {
       stencilClassSetup.addArg("const int " +
@@ -831,6 +841,7 @@ void CudaIcoCodeGen::generateAllAPIRunFunctions(
       for(auto& apiRunFun : apiRunFuns) {
         apiRunFun->addArg("dawn::GlobalGpuTriMesh *mesh");
         apiRunFun->addArg("int k_size");
+        apiRunFun->addArg("json *json_record");
         addGlobalsArgs(globalsMap, *apiRunFun);
       }
     } else {
@@ -890,7 +901,7 @@ void CudaIcoCodeGen::generateAllAPIRunFunctions(
                                              dawn::iir::Field::IntendKind::InputOutput})) {
               k_size_concat_string += ", k_size";
             }
-            apiRunFun->addStatement(fullStencilName + "::setup(mesh, k_size, 0" +
+            apiRunFun->addStatement(fullStencilName + "::setup(mesh, k_size, 0, json_record" +
                                     k_size_concat_string + ")");
           }
           // depending if we are calling from c or from fortran, we need to transpose the data or
@@ -1060,7 +1071,8 @@ void CudaIcoCodeGen::generateAllAPIVerifyFunctions(
         verifyAPI.addPreprocessorDirective("ifdef __SERIALIZE_METRICS");
 
         std::string serialiserVarName = "serialiser_" + fieldInfo.Name;
-        verifyAPI.addStatement("MetricsSerialiser " + serialiserVarName + "(stencilMetrics, metricsNameFromEnvVar(\"SLURM_JOB_ID\"), \""
+        verifyAPI.addStatement("MetricsSerialiser " + serialiserVarName
+                               + "(" + fullStencilName + "::" + "getJsonRecord()" + ", stencilMetrics, \""
                                + wrapperName + "\", \"" + fieldInfo.Name + "\")");
 
         verifyAPI.addStatement(serialiserVarName + ".writeJson(iteration)");
@@ -1187,6 +1199,7 @@ void CudaIcoCodeGen::generateMemMgmtFunctions(
   setupFun.addArg("dawn::GlobalGpuTriMesh *mesh");
   setupFun.addArg("int k_size");
   setupFun.addArg("cudaStream_t stream");
+  setupFun.addArg("json *json_record");
   for(const auto& fieldName :
       getUsedFieldsNames(stencil, {dawn::iir::Field::IntendKind::Output,
                                    dawn::iir::Field::IntendKind::InputOutput})) {
@@ -1200,7 +1213,7 @@ void CudaIcoCodeGen::generateMemMgmtFunctions(
                                      dawn::iir::Field::IntendKind::InputOutput})) {
       k_size_concat_string += ", " + fieldName + "_k_size";
     }
-    setupFun.addStatement(fullStencilName + "::setup(mesh, k_size, stream" + k_size_concat_string +
+    setupFun.addStatement(fullStencilName + "::setup(mesh, k_size, stream, json_record" + k_size_concat_string +
                           ")");
   }
   setupFun.commit();
@@ -1246,6 +1259,8 @@ void CudaIcoCodeGen::generateStaticMembersTrailer(
        << "is_setup_ = false;\n";
   ssSW << "dawn_generated::cuda_ico::" + wrapperName << "::GpuTriMesh " << fullStencilName << "::"
        << "mesh_;\n";
+  ssSW << "json *" << fullStencilName << "::"
+       << "jsonRecord_;\n";
 }
 
 std::string CudaIcoCodeGen::intervalBoundToString(const iir::Interval& interval,
@@ -1752,6 +1767,7 @@ generateF90InterfaceSI(FortranInterfaceModuleGen& fimGen,
   setup.addArg("mesh", FortranAPI::InterfaceType::OBJ);
   setup.addArg("k_size", FortranAPI::InterfaceType::INTEGER);
   setup.addArg("stream", FortranAPI::InterfaceType::CUDA_STREAM_T);
+  setup.addArg("json_record", dawn::codegen::FortranAPI::InterfaceType::OBJ);
   for(auto fieldID : getUsedFields(stencil, {dawn::iir::Field::IntendKind::Output,
                                              dawn::iir::Field::IntendKind::InputOutput})) {
     setup.addArg(stencilInstantiation->getMetaData().getNameFromAccessID(fieldID) + "_kmax",
@@ -1765,6 +1781,7 @@ generateF90InterfaceSI(FortranInterfaceModuleGen& fimGen,
   setupWrapper.addArg("mesh", FortranAPI::InterfaceType::OBJ);
   setupWrapper.addArg("k_size", FortranAPI::InterfaceType::INTEGER);
   setupWrapper.addArg("stream", FortranAPI::InterfaceType::CUDA_STREAM_T);
+  setupWrapper.addArg("json_record", dawn::codegen::FortranAPI::InterfaceType::OBJ);
 
   for(auto fieldID : getUsedFields(stencil, {dawn::iir::Field::IntendKind::Output,
                                              dawn::iir::Field::IntendKind::InputOutput})) {
@@ -1803,6 +1820,7 @@ generateF90InterfaceSI(FortranInterfaceModuleGen& fimGen,
   setupWrapper.addBodyLine(fortranIndent + "mesh, &");
   setupWrapper.addBodyLine(fortranIndent + "k_size, &");
   setupWrapper.addBodyLine(fortranIndent + "stream, &");
+  setupWrapper.addBodyLine(fortranIndent + "json_record, &");
 
   for(int i = 0; i < verticalBoundNames.size() - 1; i++) {
     setupWrapper.addBodyLine(fortranIndent + verticalBoundNames[i] + ", &");
