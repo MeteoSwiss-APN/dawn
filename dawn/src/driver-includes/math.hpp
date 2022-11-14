@@ -152,7 +152,7 @@ GT_FUNCTION typename std::common_type<
   T0, T1, Ts...
 >::type max(T0&& val1, T1&& val2, Ts&&... vs)
 {
-  if (val2 < val1)
+  if (val2 > val1)
     return max(val2, std::forward<Ts>(vs)...);
   else
     return max(val1, std::forward<Ts>(vs)...);
