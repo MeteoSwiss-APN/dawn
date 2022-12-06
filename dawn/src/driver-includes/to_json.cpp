@@ -9,11 +9,10 @@ void MetricsSerialiser::writeJson(int iteration) {
   if((*jsonRecord).is_null()) {
     *jsonRecord = newJsonMetrics;
   } else {
-    json oldJsonMetrics = *jsonRecord;
     json newMetrics = newJsonMetrics[stencil][0];
     bool stencilFound = false;
 
-    for(auto& [stencilName, metricsArr] : oldJsonMetrics.items()) {
+    for(auto& [stencilName, metricsArr] : (*jsonRecord).items()) {
       if(stencilName == stencil) {
         // handle case where iteration does not yet exist for a stencil
         if(metricsArr.size() < iteration + 1) {
@@ -27,7 +26,7 @@ void MetricsSerialiser::writeJson(int iteration) {
 
     if(!stencilFound) {
       // add new stencil metrics object
-      oldJsonMetrics.insert(newJsonMetrics.begin(), newJsonMetrics.end());
+      (*jsonRecord).insert(newJsonMetrics.begin(), newJsonMetrics.end());
     }
   }
 }
