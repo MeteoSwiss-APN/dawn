@@ -42,6 +42,7 @@ namespace dawn {
 
 struct GlobalGpuTriMesh {
   dawn::unstructured_domain HorizontalDomain;  
+  int Nproma;
   int NumEdges;
   int NumCells;
   int NumVertices;
