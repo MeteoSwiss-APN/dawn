@@ -6,6 +6,7 @@
 #include "dawn/Support/NonCopyable.h"
 #include "dawn/Support/Type.h"
 #include <variant>
+#include <optional>
 
 namespace dawn {
 namespace ast {

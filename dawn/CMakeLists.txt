@@ -121,6 +121,7 @@ find_package(Python3 COMPONENTS Interpreter)
 if (Python3_EXECUTABLE AND NOT PYBIND11_PYTHON_VERSION)
   set(PYBIND11_PYTHON_VERSION ${Python3_VERSION})
 endif()
+set(PYBIND11_CPP_STANDARD "-std=c++17")
 
 # Add cxx standard, include directories, and properties
 function(target_add_dawn_standard_props target)
