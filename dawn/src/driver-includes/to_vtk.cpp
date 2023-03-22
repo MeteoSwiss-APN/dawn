@@ -10,6 +10,7 @@
 #include <map>
 #include <sstream>
 #include <utility>
+#include <limits>
 
 MeshInfoVtk mesh_info_vtk;
 

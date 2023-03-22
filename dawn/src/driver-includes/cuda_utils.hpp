@@ -25,6 +25,7 @@
 #include <assert.h>
 #include <map>
 #include <vector>
+#include <cstdio>
 
 #define DEVICE_MISSING_VALUE -1
 
