@@ -1,0 +1,1 @@
+#include "var_stencil_benchmark.cpp"

@@ -68,7 +68,9 @@ public:
   };
 
 protected:
+  // map of Value (i.e. normally accessID to Vertex object
   std::unordered_map<int, Vertex> vertices_;
+  // adjacencyList for each vertex where the position within the vector is the vertexID
   std::vector<EdgeList> adjacencyList_;
 
 public:
@@ -96,8 +98,8 @@ public:
   DependencyGraph() = default;
 
   /// @brief Insert a new node
-  Vertex& insertNode(int ID) {
-    auto [iter, inserted] = vertices_.emplace(ID, Vertex{adjacencyList_.size(), ID});
+  Vertex& insertNode(int Value) {
+    auto [iter, inserted] = vertices_.emplace(Value, Vertex{adjacencyList_.size(), Value});
     if(inserted)
       adjacencyList_.push_back(EdgeList());
     return iter->second;

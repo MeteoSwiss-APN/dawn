@@ -19,11 +19,13 @@
 #include "dawn/CodeGen/Cuda/CacheProperties.h"
 #include "dawn/CodeGen/Cuda/CodeGeneratorHelper.h"
 #include "dawn/CodeGen/Cuda/MSCodeGen.h"
+#include "dawn/CodeGen/F90Util.h"
 #include "dawn/IIR/IIRNodeIterator.h"
 #include "dawn/IIR/StencilInstantiation.h"
 #include "dawn/SIR/SIR.h"
 #include "dawn/Support/Array.h"
 #include "dawn/Support/Assert.h"
+#include "dawn/Support/FileSystem.h"
 #include "dawn/Support/Iterator.h"
 #include "dawn/Support/Logger.h"
 #include "dawn/Support/StringUtil.h"
@@ -57,14 +59,47 @@ run(const std::map<std::string, std::shared_ptr<iir::StencilInstantiation>>&
     const Options& options) {
   const Array3i domain_size{options.DomainSizeI, options.DomainSizeJ, options.DomainSizeK};
   CudaCodeGen CG(stencilInstantiationMap, options.MaxHaloSize, options.nsms, options.MaxBlocksPerSM,
-                 domain_size, options.RunWithSync);
+                 domain_size, options.OutputCHeader, options.OutputFortranInterface,
+                 options.RunWithSync);
 
   return CG.generateCode();
 }
 
+std::vector<int> getUsedFields(const dawn::iir::Stencil& stencil,
+                               std::unordered_set<dawn::iir::Field::IntendKind> intend = {
+                                   dawn::iir::Field::IntendKind::Output,
+                                   dawn::iir::Field::IntendKind::InputOutput,
+                                   dawn::iir::Field::IntendKind::Input}) {
+  const auto& APIFields = stencil.getMetadata().getAPIFields();
+  const auto& stenFields = stencil.getOrderedFields();
+  auto usedAPIFields =
+      dawn::makeRange(APIFields, [&stenFields](int f) { return stenFields.count(f); });
+
+  std::vector<int> res;
+  for(auto fieldID : usedAPIFields) {
+    auto field = stenFields.at(fieldID);
+    if(intend.count(field.field.getIntend())) {
+      res.push_back(fieldID);
+    }
+  }
+
+  return res;
+}
+std::vector<std::string> getGlobalsNames(const dawn::ast::GlobalVariableMap& globalsMap) {
+  std::vector<std::string> globalsNames;
+  for(const auto& global : globalsMap) {
+    globalsNames.push_back(global.first);
+  }
+  return globalsNames;
+}
+
 CudaCodeGen::CudaCodeGen(const StencilInstantiationContext& ctx, int maxHaloPoints, int nsms,
-                         int maxBlocksPerSM, const Array3i& domainSize, bool runWithSync)
-    : CodeGen(ctx, maxHaloPoints), codeGenOptions_{nsms, maxBlocksPerSM, domainSize, runWithSync} {}
+                         int maxBlocksPerSM, const Array3i& domainSize,
+                         std::optional<std::string> outputCHeader,
+                         std::optional<std::string> outputFortranInterface, bool runWithSync)
+    : CodeGen(ctx, maxHaloPoints), codeGenOptions_{nsms,          maxBlocksPerSM,
+                                                   domainSize,    runWithSync,
+                                                   outputCHeader, outputFortranInterface} {}
 
 CudaCodeGen::~CudaCodeGen() {}
 
@@ -77,6 +112,180 @@ void CudaCodeGen::generateAllCudaKernels(
     MSCodeGen msCodeGen(ssSW, ms, stencilInstantiation, cachePropertyMap_.at(ms->getID()),
                         codeGenOptions_, hasGlobalIndices(stencilInstantiation));
     msCodeGen.generateCudaKernelCode();
+  }
+}
+
+void CudaCodeGen::generateAPIRunFunctions(
+    std::stringstream& ssSW, const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation,
+    CodeGenProperties& codeGenProperties, bool onlyDecl) const {
+  const auto& stencils = stencilInstantiation->getStencils();
+  const auto& metadata = stencilInstantiation->getMetaData();
+  const auto& globalsMap = stencilInstantiation->getIIR()->getGlobalVariableMap();
+
+  // generate the code for each of the stencils
+  for(const auto& stencilPtr : stencils) {
+    const auto& stencil = *stencilPtr;
+
+    std::string stencilName = "stencil_" + std::to_string(stencil.getStencilID());
+    auto stencilProperties =
+        codeGenProperties.getStencilProperties(StencilContext::SC_Stencil, stencilName);
+
+    std::string fullyQualitfiedName =
+        "dawn_generated::cuda::" + stencilInstantiation->getName() + "::" + stencilName;
+
+    MemberFunction runFun("void", "run_" + stencilInstantiation->getName(), ssSW, 0, onlyDecl);
+
+    const auto stencilFields = stencil.getOrderedFields();
+
+    auto nonTempFields =
+        makeRange(stencilFields, [](std::pair<int, iir::Stencil::FieldInfo> const& p) {
+          return !p.second.IsTemporary;
+        });
+
+    for(const auto& globalProp : globalsMap) {
+      const auto& globalValue = globalProp.second;
+      runFun.addArg(std::string(ast::Value::typeToString(globalValue.getType())) + " " +
+              globalProp.first);
+    }
+    for(auto field : nonTempFields) {
+      runFun.addArg("double *" + field.second.Name + "_ptr");
+    }
+    runFun.finishArgs();
+
+    if(!onlyDecl) {
+      runFun.addStatement("static int iter = 0");
+      runFun.addStatement("int ni = " + fullyQualitfiedName + "::m_dom.isize()");
+      runFun.addStatement("int nj = " + fullyQualitfiedName + "::m_dom.jsize()");
+      runFun.addStatement("int nk = " + fullyQualitfiedName + "::m_dom.ksize()");
+
+      runFun.addStatement("meta_data_t meta_data_ijk({ni, nj, nk}, {1, ni, ni*nj});");
+      runFun.addStatement("meta_data_ij_t meta_data_ij({ni, nj, 1}, {1, ni, 0})");
+      runFun.addStatement("meta_data_k_t meta_data_k({nk, 1, 1}, {1, 0, 0})");
+
+      for(const auto& globalProp : globalsMap) {
+        const auto& globalValue = globalProp.second;
+        runFun.addStatement(fullyQualitfiedName + "::m_globals." + globalProp.first + " = " + globalProp.first);
+      }
+
+      for(auto field : nonTempFields) {
+        runFun.addStatement(stencilProperties->paramNameToType_.at(field.second.Name) + " " +
+                            field.second.Name + "(meta_data_" +
+                            getStorageType(field.second.field.getFieldDimensions(), "", "") + ", " +
+                            field.second.Name + "_ptr, gridtools::ownership::external_gpu)");
+      }
+      {
+        std::string fields;
+        std::string sep = "";
+        for(auto field : nonTempFields) {
+          fields += sep + field.second.Name;
+          sep = ", ";
+        }
+        runFun.addStatement(fullyQualitfiedName + "::run(" + fields + ")");
+        runFun.addPreprocessorDirective("ifdef __DSL_SERIALIZE");
+        auto outFields = getUsedFields(stencil, {dawn::iir::Field::IntendKind::Output,
+                                                 dawn::iir::Field::IntendKind::InputOutput});
+        for(auto outField : outFields) {
+          auto fname = metadata.getFieldNameFromAccessID(outField);
+          runFun.addStatement("serialize_gpu(" + fname + ", \"gtc_" + stencilInstantiation->getName() +
+                              "_" + fname + "\", iter, ni, nj, nk)");
+        }
+        runFun.addPreprocessorDirective("endif");
+        runFun.addStatement("iter++");
+      }
+    }
+    runFun.commit();
+  }
+}
+
+void CudaCodeGen::generateSetupFunctions(
+    std::stringstream& ssSW, const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation,
+    CodeGenProperties& codeGenProperties, bool onlyDecl) const {
+  const auto& stencils = stencilInstantiation->getStencils();
+  const auto& globalsMap = stencilInstantiation->getIIR()->getGlobalVariableMap();
+
+  // generate the code for each of the stencils
+  for(const auto& stencilPtr : stencils) {
+    const auto& stencil = *stencilPtr;
+
+    std::string stencilName = "stencil_" + std::to_string(stencil.getStencilID());
+
+    std::string fullyQualifiedName =
+        "dawn_generated::cuda::" + stencilInstantiation->getName() + "::" + stencilName;
+    MemberFunction setupFun("void", "setup_" + stencilInstantiation->getName(), ssSW, 0, onlyDecl);
+    setupFun.addArg("int i");
+    setupFun.addArg("int j");
+    setupFun.addArg("int k");
+    setupFun.finishArgs();
+    if(!onlyDecl) {
+      setupFun.addStatement(fullyQualifiedName +
+                            "::setup(gridtools::dawn::domain(i, j, k), " + (!globalsMap.empty() ? fullyQualifiedName + "::m_globals, " : "") + "1, 1, 1)");
+    }
+    setupFun.commit();
+  }
+}
+
+void CudaCodeGen::generateStaticMembersTrailer(
+    std::stringstream& ssSW, const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation,
+    CodeGenProperties& codeGenProperties) const {
+
+  const auto& stencils = stencilInstantiation->getStencils();
+
+  // generate the code for each of the stencils
+  for(const auto& stencilPtr : stencils) {
+    const auto& stencil = *stencilPtr;
+
+    std::string stencilName = "stencil_" + std::to_string(stencil.getStencilID());
+
+    std::string fullyQualitfiedName =
+        "dawn_generated::cuda::" + stencilInstantiation->getName() + "::" + stencilName;
+
+    ssSW << "gridtools::dawn::domain " + fullyQualitfiedName +
+                "::m_dom = gridtools::dawn::domain(1, 1, 1);";
+
+    const auto& globalsMap = stencilInstantiation->getIIR()->getGlobalVariableMap();
+    if (!globalsMap.empty()) {
+      ssSW << "dawn_generated::cuda::globals " + fullyQualitfiedName +
+                  "::m_globals;";
+    }
+
+    if(stencil.isEmpty())
+      continue;
+
+    // fields used in the stencil
+    const auto stencilFields = stencil.getOrderedFields();
+
+    auto tempFields =
+        makeRange(stencilFields, [](std::pair<int, iir::Stencil::FieldInfo> const& p) {
+          return p.second.IsTemporary;
+        });
+
+    if(!(tempFields.empty())) {
+      ssSW << fullyQualitfiedName + "::tmp_meta_data_t " + fullyQualitfiedName +
+                  "::m_tmp_meta_data(1, 1, 1, 1, 1);";
+      for(const auto& fieldPair : tempFields) {
+        ssSW << fullyQualitfiedName
+             << "::tmp_storage_t " + fullyQualitfiedName + "::" + "m_" + fieldPair.second.Name +
+                    ";";
+      }
+    }
+
+    std::string iterators = "ij";
+    for(auto& stage : iterateIIROver<iir::Stage>(stencil)) {
+      int index = 0;
+      for(const auto& interval : stage->getIterationSpace()) {
+        if(interval.has_value()) {
+          std::string iterator = iterators.substr(index, 1);
+          std::string arrName = "stage" + std::to_string(stage->getStageID()) + "Global" +
+                                (char)std::toupper(iterator.at(0)) + "Indices";
+          ssSW << "std::array<int, 2> " << fullyQualitfiedName + "::" + arrName + ";";
+          index += 1;
+        }
+      }
+    }
+
+    if(iterationSpaceSet_) {
+      ssSW << "std::array<unsigned int, 2> " << fullyQualitfiedName + "::globalOffsets;";
+    }
   }
 }
 
@@ -137,6 +346,12 @@ std::string CudaCodeGen::generateStencilInstantiation(
 
   cudaNamespace.commit();
   dawnNamespace.commit();
+
+  ssSW << "extern \"C\" {\n";
+  generateAPIRunFunctions(ssSW, stencilInstantiation, codeGenProperties);
+  generateSetupFunctions(ssSW, stencilInstantiation, codeGenProperties);
+  ssSW << "}\n";
+  generateStaticMembersTrailer(ssSW, stencilInstantiation, codeGenProperties);
 
   return ssSW.str();
 }
@@ -227,6 +442,9 @@ void CudaCodeGen::generateStencilClasses(
     generateStencilClassCtr(stencilClass, stencil, globalsMap, nonTempFields, tempFields,
                             stencilProperties);
 
+    generateStencilSetupMethod(stencilClass, stencil, globalsMap, nonTempFields, tempFields,
+                               stencilProperties);
+
     // accumulated extents of API fields
     generateFieldExtentsInfo(stencilClass, nonTempFields, ast::GridType::Cartesian);
 
@@ -253,10 +471,10 @@ void CudaCodeGen::generateStencilClassMembers(
   addTempStorageTypedef(stencilClass, stencil);
 
   if(!globalsMap.empty()) {
-    stencilClass.addMember("globals&", "m_globals");
+    stencilClass.addMember("static globals", "m_globals");
   }
 
-  stencilClass.addMember("const " + c_dgt + "domain", "m_dom");
+  stencilClass.addMember("static " + c_dgt + "domain", "m_dom");
 
   if(!tempFields.empty()) {
     stencilClass.addComment("temporary storage declarations");
@@ -281,10 +499,10 @@ void CudaCodeGen::generateStencilClassCtr(
   stencilClassCtr.addArg("int ycols");
 
   stencilClassCtr.addInit("sbase(\"" + stencilClass.getName() + "\")");
-  stencilClassCtr.addInit("m_dom(dom_)");
+  stencilClassCtr.addStatement("m_dom =dom_");
 
   if(!globalsMap.empty()) {
-    stencilClassCtr.addInit("m_globals(globals_)");
+    stencilClassCtr.addStatement("m_globals = globals_");
   }
 
   std::string iterators = "ij";
@@ -295,20 +513,34 @@ void CudaCodeGen::generateStencilClassCtr(
         std::string iterator = iterators.substr(index, 1);
         std::string arrName = "stage" + std::to_string(stage->getStageID()) + "Global" +
                               (char)std::toupper(iterator.at(0)) + "Indices";
-        stencilClassCtr.addInit(arrName + "({" +
-                                makeIntervalBoundExplicit(iterator, interval.value(),
-                                                          iir::Interval::Bound::lower, "dom_") +
-                                " , " +
-                                makeIntervalBoundExplicit(iterator, interval.value(),
-                                                          iir::Interval::Bound::upper, "dom_") +
-                                "})");
+        stencilClassCtr.addStatement(
+            arrName + " = {" +
+            makeIntervalBoundExplicit(iterator, interval.value(), iir::Interval::Bound::lower,
+                                      "dom_") +
+            " , " +
+            makeIntervalBoundExplicit(iterator, interval.value(), iir::Interval::Bound::upper,
+                                      "dom_") +
+            "}");
       }
       index += 1;
     }
   }
 
   if(iterationSpaceSet_) {
-    stencilClassCtr.addInit("globalOffsets({computeGlobalOffsets(rank, m_dom, xcols, ycols)})");
+    stencilClassCtr.addStatement(
+        "globalOffsets = {computeGlobalOffsets(rank, m_dom, xcols, ycols)}");
+
+    std::string iterators = "IJ";
+    for(auto& stage : iterateIIROver<iir::Stage>(stencil)) {
+      for(auto [index, interval] : enumerate(stage->getIterationSpace())) {
+        if(interval.has_value()) {
+          std::string hostName = "stage" + std::to_string(stage->getStageID()) + "Global" +
+                                 iterators.at(index) + "Indices";
+          addCudaCopySymbol(stencilClassCtr, hostName, "int");
+        }
+      }
+    }
+    addCudaCopySymbol(stencilClassCtr, "globalOffsets", "unsigned");
   }
 
   addTmpStorageInit(stencilClassCtr, stencil, tempFields);
@@ -457,13 +689,82 @@ void CudaCodeGen::addCudaCopySymbol(MemberFunction& runMethod, const std::string
                          dataType + ") * " + arrName + ".size())");
 }
 
+void CudaCodeGen::generateStencilSetupMethod(
+    Structure& stencilClass, const iir::Stencil& stencil, const ast::GlobalVariableMap& globalsMap,
+    IndexRange<const std::map<int, iir::Stencil::FieldInfo>>& nonTempFields,
+    IndexRange<const std::map<int, iir::Stencil::FieldInfo>>& tempFields,
+    std::shared_ptr<StencilProperties> stencilProperties) const {
+
+  auto stencilClassSetup = stencilClass.addMemberFunction("static void", "setup");
+
+  stencilClassSetup.addArg("const " + c_dgt + "domain& dom_");
+  if(!globalsMap.empty()) {
+    stencilClassSetup.addArg("globals& globals_");
+  }
+  stencilClassSetup.addArg("int rank");
+  stencilClassSetup.addArg("int xcols");
+  stencilClassSetup.addArg("int ycols");
+
+  stencilClassSetup.addStatement("m_dom =dom_");
+
+  if(!globalsMap.empty()) {
+    stencilClassSetup.addStatement("m_globals = globals_");
+  }
+
+  std::string iterators = "ij";
+  for(auto& stage : iterateIIROver<iir::Stage>(stencil)) {
+    int index = 0;
+    for(const auto& interval : stage->getIterationSpace()) {
+      if(interval.has_value()) {
+        std::string iterator = iterators.substr(index, 1);
+        std::string arrName = "stage" + std::to_string(stage->getStageID()) + "Global" +
+                              (char)std::toupper(iterator.at(0)) + "Indices";
+        stencilClassSetup.addStatement(
+            arrName + " = {" +
+            makeIntervalBoundExplicit(iterator, interval.value(), iir::Interval::Bound::lower,
+                                      "dom_") +
+            " , " +
+            makeIntervalBoundExplicit(iterator, interval.value(), iir::Interval::Bound::upper,
+                                      "dom_") +
+            "}");
+      }
+      index += 1;
+    }
+  }
+
+  if(iterationSpaceSet_) {
+    stencilClassSetup.addStatement(
+        "globalOffsets = {computeGlobalOffsets(rank, m_dom, xcols, ycols)}");
+  }
+
+  if(iterationSpaceSet_) {
+    stencilClassSetup.addStatement(
+        "globalOffsets = {computeGlobalOffsets(rank, m_dom, xcols, ycols)}");
+
+    std::string iterators = "IJ";
+    for(auto& stage : iterateIIROver<iir::Stage>(stencil)) {
+      for(auto [index, interval] : enumerate(stage->getIterationSpace())) {
+        if(interval.has_value()) {
+          std::string hostName = "stage" + std::to_string(stage->getStageID()) + "Global" +
+                                 iterators.at(index) + "Indices";
+          addCudaCopySymbol(stencilClassSetup, hostName, "int");
+        }
+      }
+    }
+    addCudaCopySymbol(stencilClassSetup, "globalOffsets", "unsigned");
+  }
+
+  addTmpStorageInit(stencilClassSetup, stencil, tempFields);
+  stencilClassSetup.commit();
+}
+
 void CudaCodeGen::generateStencilRunMethod(
     Structure& stencilClass, const iir::Stencil& stencil,
     const std::shared_ptr<StencilProperties>& stencilProperties,
     const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation,
     const std::unordered_map<std::string, std::string>& paramNameToType,
     const ast::GlobalVariableMap& globalsMap) const {
-  MemberFunction stencilRunMethod = stencilClass.addMemberFunction("void", "run", "");
+  MemberFunction stencilRunMethod = stencilClass.addMemberFunction("static void", "run", "");
   const auto& metadata = stencilInstantiation->getMetaData();
 
   // fields used in the stencil
@@ -482,7 +783,7 @@ void CudaCodeGen::generateStencilRunMethod(
   stencilRunMethod.startBody();
 
   stencilRunMethod.addComment("starting timers");
-  stencilRunMethod.addStatement("start()");
+  stencilRunMethod.addComment("start()");
 
   for(const auto& multiStagePtr : stencil.getChildren()) {
     const iir::MultiStage& multiStage = *multiStagePtr;
@@ -564,20 +865,6 @@ void CudaCodeGen::generateStencilRunMethod(
       stencilRunMethod.addStatement("const unsigned int nbz = 1");
     }
 
-    if(iterationSpaceSet_) {
-      std::string iterators = "IJ";
-      for(auto& stage : iterateIIROver<iir::Stage>(stencil)) {
-        for(auto [index, interval] : enumerate(stage->getIterationSpace())) {
-          if(interval.has_value()) {
-            std::string hostName = "stage" + std::to_string(stage->getStageID()) + "Global" +
-                                   iterators.at(index) + "Indices";
-            addCudaCopySymbol(stencilRunMethod, hostName, "int");
-          }
-        }
-      }
-      addCudaCopySymbol(stencilRunMethod, "globalOffsets", "unsigned");
-    }
-
     stencilRunMethod.addStatement("dim3 blocks(nbx, nby, nbz)");
     std::string kernelCall =
         CodeGeneratorHelper::buildCudaKernelName(stencilInstantiation, multiStagePtr) +
@@ -614,8 +901,8 @@ void CudaCodeGen::generateStencilRunMethod(
     idx = 0;
     for(const auto& fieldPair : tempMSFieldsNonLocalCached) {
       // in some cases (where there are no horizontal extents) we dont use the special tmp index
-      // iterator, but rather a normal 3d field index iterator. In that case we pass temporaries in
-      // the same manner as normal fields
+      // iterator, but rather a normal 3d field index iterator. In that case we pass temporaries
+      // in the same manner as normal fields
       if(idx > 0)
         args += ",";
       if(!CodeGeneratorHelper::useTemporaries(multiStagePtr->getParent(), metadata)) {
@@ -645,7 +932,7 @@ void CudaCodeGen::generateStencilRunMethod(
   }
 
   stencilRunMethod.addComment("stopping timers");
-  stencilRunMethod.addStatement("pause()");
+  stencilRunMethod.addComment("pause()");
 
   stencilRunMethod.commit();
 }
@@ -679,22 +966,176 @@ void CudaCodeGen::addTmpStorageInit(
   if(!(tempFields.empty())) {
     auto const& hMaxExtents =
         iir::extent_cast<iir::CartesianExtent const&>(maxExtents.horizontalExtent());
-    ctr.addInit(tmpMetadataName_ + "(" + std::to_string(blockSize[0]) + "+" +
-                std::to_string(-hMaxExtents.iMinus() + hMaxExtents.iPlus()) + ", " +
-                std::to_string(blockSize[1]) + "+" +
-                std::to_string(-hMaxExtents.jMinus() + hMaxExtents.jPlus()) + ", (dom_.isize()+ " +
-                std::to_string(blockSize[0]) + " - 1) / " + std::to_string(blockSize[0]) +
-                ", (dom_.jsize()+ " + std::to_string(blockSize[1]) + " - 1) / " +
-                std::to_string(blockSize[1]) + ", dom_.ksize() + 2 * " +
-                std::to_string(getVerticalTmpHaloSize(stencil)) + ")");
+    ctr.addStatement(tmpMetadataName_ + " = tmp_meta_data_t(" + std::to_string(blockSize[0]) + "+" +
+                     std::to_string(-hMaxExtents.iMinus() + hMaxExtents.iPlus()) + ", " +
+                     std::to_string(blockSize[1]) + "+" +
+                     std::to_string(-hMaxExtents.jMinus() + hMaxExtents.jPlus()) +
+                     ", (dom_.isize()+ " + std::to_string(blockSize[0]) + " - 1) / " +
+                     std::to_string(blockSize[0]) + ", (dom_.jsize()+ " +
+                     std::to_string(blockSize[1]) + " - 1) / " + std::to_string(blockSize[1]) +
+                     ", dom_.ksize() + 2 * " + std::to_string(getVerticalTmpHaloSize(stencil)) +
+                     ")");
     for(const auto& fieldPair : tempFields) {
-      ctr.addInit("m_" + fieldPair.second.Name + "(" + tmpMetadataName_ + ")");
+      ctr.addStatement("m_" + fieldPair.second.Name + " = tmp_storage_t(" + tmpMetadataName_ + ")");
     }
   }
 }
 
+void CudaCodeGen::generateCHeaderSI(
+    std::stringstream& ssSW,
+    const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation) const {
+  using namespace codegen;
+
+  CodeGenProperties codeGenProperties = computeCodeGenProperties(stencilInstantiation.get());
+
+  ssSW << "extern \"C\" {\n";
+  generateAPIRunFunctions(ssSW, stencilInstantiation, codeGenProperties, /*onlyDecl=*/true);
+  generateSetupFunctions(ssSW, stencilInstantiation, codeGenProperties, /*onlyDecl=*/true);
+  ssSW << "}\n";
+}
+
+std::string CudaCodeGen::generateCHeader() const {
+  std::stringstream ssSW;
+  ssSW << "#pragma once\n";
+  ssSW << "#include \"driver-includes/defs.hpp\"\n";
+  ssSW << "#include \"driver-includes/cuda_utils.hpp\"\n";
+
+  for(const auto& nameStencilCtxPair : context_) {
+    std::shared_ptr<iir::StencilInstantiation> stencilInstantiation = nameStencilCtxPair.second;
+    generateCHeaderSI(ssSW, stencilInstantiation);
+  }
+
+  return ssSW.str();
+}
+
+static void
+generateF90InterfaceSI(FortranInterfaceModuleGen& fimGen,
+                       const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation) {
+  const auto& stencils = stencilInstantiation->getStencils();
+  const auto& globalsMap = stencilInstantiation->getIIR()->getGlobalVariableMap();
+  auto globalTypeToFortType = [](const ast::Global& global) {
+    switch(global.getType()) {
+    case ast::Value::Kind::Boolean:
+      return FortranAPI::InterfaceType::BOOLEAN;
+    case ast::Value::Kind::Double:
+      return FortranAPI::InterfaceType::DOUBLE;
+    case ast::Value::Kind::Float:
+      return FortranAPI::InterfaceType::FLOAT;
+    case ast::Value::Kind::Integer:
+      return FortranAPI::InterfaceType::INTEGER;
+    case ast::Value::Kind::String:
+    default:
+      throw std::runtime_error("string globals not supported in cuda ico backend");
+    }
+  };
+
+  // The following assert is needed because we have only one (user-defined) name for a stencil
+  // instantiation (stencilInstantiation->getName()). We could compute a per-stencil name (
+  // codeGenProperties.getStencilName(StencilContext::SC_Stencil, stencil.getStencilID()) )
+  // however the interface would not be very useful if the name is generated.
+  DAWN_ASSERT_MSG(stencils.size() <= 1,
+                  "Unable to generate interface. More than one stencil in stencil instantiation.");
+  const auto& stencil = *stencils[0];
+
+  std::vector<FortranInterfaceAPI> interfaces = {
+      FortranInterfaceAPI("run_" + stencilInstantiation->getName())};
+
+  auto addArgsToAPI = [&](FortranAPI& api, bool includeSavedState, bool optThresholds) {
+    for(const auto& global : globalsMap) {
+      api.addArg(global.first, globalTypeToFortType(global.second));
+    }
+    for(auto fieldID : stencilInstantiation->getMetaData().getAPIFields()) {
+      api.addArg(
+          stencilInstantiation->getMetaData().getNameFromAccessID(fieldID),
+          FortranAPI::InterfaceType::DOUBLE /* Unfortunately we need to know at codegen
+                                                        time whether we have fields in SP/DP */
+          ,
+          stencilInstantiation->getMetaData().getFieldDimensions(fieldID).rank());
+    }
+    if(includeSavedState) {
+      for(auto fieldID : getUsedFields(stencil, {dawn::iir::Field::IntendKind::Output,
+                                                 dawn::iir::Field::IntendKind::InputOutput})) {
+        api.addArg(
+            stencilInstantiation->getMetaData().getNameFromAccessID(fieldID) + "_before",
+            FortranAPI::InterfaceType::DOUBLE /* Unfortunately we need to know at codegen
+                                                          time whether we have fields in SP/DP */
+            ,
+            stencilInstantiation->getMetaData().getFieldDimensions(fieldID).rank());
+      }
+
+      for(auto fieldID : getUsedFields(stencil, {dawn::iir::Field::IntendKind::Output,
+                                                 dawn::iir::Field::IntendKind::InputOutput})) {
+        if(optThresholds) {
+          api.addOptArg(stencilInstantiation->getMetaData().getNameFromAccessID(fieldID) +
+                            "_rel_tol",
+                        FortranAPI::InterfaceType::DOUBLE);
+          api.addOptArg(stencilInstantiation->getMetaData().getNameFromAccessID(fieldID) +
+                            "_abs_tol",
+                        FortranAPI::InterfaceType::DOUBLE);
+        } else {
+          api.addArg(stencilInstantiation->getMetaData().getNameFromAccessID(fieldID) + "_rel_tol",
+                     FortranAPI::InterfaceType::DOUBLE);
+          api.addArg(stencilInstantiation->getMetaData().getNameFromAccessID(fieldID) + "_abs_tol",
+                     FortranAPI::InterfaceType::DOUBLE);
+        }
+      }
+    }
+  };
+
+  addArgsToAPI(interfaces[0], /*includeSavedState*/ false, false);
+  fimGen.addInterfaceAPI(std::move(interfaces[0]));
+  std::string fortranIndent = "   ";
+
+  // memory management functions for production interface
+  FortranInterfaceAPI setup("setup_" + stencilInstantiation->getName());
+  setup.addArg("i", FortranAPI::InterfaceType::INTEGER);
+  setup.addArg("j", FortranAPI::InterfaceType::INTEGER);
+  setup.addArg("k", FortranAPI::InterfaceType::INTEGER);
+  fimGen.addInterfaceAPI(std::move(setup));
+}
+
+std::string CudaCodeGen::generateF90Interface(std::string moduleName) const {
+  std::stringstream ss;
+  IndentedStringStream iss(ss);
+
+  FortranInterfaceModuleGen fimGen(iss, moduleName);
+
+  for(const auto& nameStencilCtxPair : context_) {
+    std::shared_ptr<iir::StencilInstantiation> stencilInstantiation = nameStencilCtxPair.second;
+    generateF90InterfaceSI(fimGen, stencilInstantiation);
+  }
+
+  fimGen.commit();
+
+  return iss.str();
+}
+
 std::unique_ptr<TranslationUnit> CudaCodeGen::generateCode() {
   DAWN_LOG(INFO) << "Starting code generation for GTClang ...";
+
+  if(codeGenOptions_.OutputCHeader) {
+    fs::path filePath = *codeGenOptions_.OutputCHeader;
+    std::ofstream headerFile;
+    headerFile.open(filePath);
+    if(headerFile) {
+      headerFile << generateCHeader();
+      headerFile.close();
+    } else {
+      throw std::runtime_error("Error writing to " + filePath.string() + ": " + strerror(errno));
+    }
+  }
+  if(codeGenOptions_.OutputFortranInterface) {
+    fs::path filePath = *codeGenOptions_.OutputFortranInterface;
+    std::string moduleName = filePath.filename().replace_extension("").string();
+    std::ofstream interfaceFile;
+    interfaceFile.open(filePath);
+    if(interfaceFile) {
+      interfaceFile << generateF90Interface(moduleName);
+      interfaceFile.close();
+    } else {
+      throw std::runtime_error("Error writing to " + filePath.string() + ": " + strerror(errno));
+    }
+  }
 
   // Generate code for StencilInstantiations
   std::map<std::string, std::string> stencils;
@@ -728,7 +1169,9 @@ std::unique_ptr<TranslationUnit> CudaCodeGen::generateCode() {
   // [https://github.com/MeteoSwiss-APN/gtclang/issues/32]
   //==============------------------------------------------------------------------------------===
   CodeGen::addMplIfdefs(ppDefines, 30);
+  ppDefines.push_back("#include <driver-includes/timer_cuda.hpp>");
   ppDefines.push_back("#include <driver-includes/gridtools_includes.hpp>");
+  ppDefines.push_back("#include <driver-includes/serialize.hpp>");
   ppDefines.push_back("using namespace gridtools::dawn;");
 
   generateBCHeaders(ppDefines);

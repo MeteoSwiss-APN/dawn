@@ -245,6 +245,32 @@ bool DependencyGraphAccesses::isDAG() const {
   return true;
 }
 
+bool DependencyGraphAccesses::hasZeroOutdegreeNodes() const {
+  auto partitions = partitionInSubGraphs();
+  std::vector<std::size_t> vertices;
+
+  for(std::set<std::size_t>& partition : partitions) {
+    getOutputVertexIDsImpl(
+        *this, partition, [](std::size_t VertexID) { return VertexID; }, vertices);
+    if(vertices.empty())
+      return false;
+  }
+  return true;
+}
+
+bool DependencyGraphAccesses::hasZeroIndegreeNodes() const {
+  auto partitions = partitionInSubGraphs();
+  std::vector<std::size_t> vertices;
+  
+  for(std::set<std::size_t>& partition : partitions) {
+    getInputVertexIDsImpl(
+        *this, partition, [](std::size_t VertexID) { return VertexID; }, vertices);
+    if(vertices.empty())
+      return false;
+  }
+  return true;
+}
+
 std::vector<std::size_t> DependencyGraphAccesses::getOutputVertexIDs() const {
   std::vector<std::size_t> outputVertexIDs;
   getOutputVertexIDsImpl(

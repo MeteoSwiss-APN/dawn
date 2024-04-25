@@ -44,7 +44,9 @@ class CudaCodeGen : public CodeGen {
 public:
   ///@brief constructor
   CudaCodeGen(const StencilInstantiationContext& ctx, int maxHaloPoints, int nsms,
-              int maxBlocksPerSM, const Array3i& domainSize, bool runWithSync = true);
+              int maxBlocksPerSM, const Array3i& domainSize,
+              std::optional<std::string> outputCHeader,
+              std::optional<std::string> OutputFortranInterface, bool runWithSync = true);
   virtual ~CudaCodeGen();
   virtual std::unique_ptr<TranslationUnit> generateCode() override;
 
@@ -53,6 +55,8 @@ public:
     int maxBlocksPerSM;
     Array3i domainSize;
     bool runWithSync;
+    std::optional<std::string> OutputCHeader;
+    std::optional<std::string> OutputFortranInterface;
   };
 
 private:
@@ -113,6 +117,13 @@ private:
                           IndexRange<const std::map<int, iir::Stencil::FieldInfo>>& tempFields,
                           std::shared_ptr<StencilProperties> stencilProperties) const;
 
+  void generateStencilSetupMethod(
+      Structure& stencilClass, const iir::Stencil& stencil,
+      const ast::GlobalVariableMap& globalsMap,
+      IndexRange<const std::map<int, iir::Stencil::FieldInfo>>& nonTempFields,
+      IndexRange<const std::map<int, iir::Stencil::FieldInfo>>& tempFields,
+      std::shared_ptr<StencilProperties> stencilProperties) const;
+
   void generateStencilClassMembers(
       Structure& stencilClass, const iir::Stencil& stencil,
       const ast::GlobalVariableMap& globalsMap,
@@ -122,6 +133,27 @@ private:
 
   std::string generateStencilInstantiation(
       const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation);
+
+  void
+  generateCHeaderSI(std::stringstream& ssSW,
+                    const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation) const;
+
+  std::string generateCHeader() const;
+  std::string generateF90Interface(std::string moduleName) const;
+
+  void
+  generateAPIRunFunctions(std::stringstream& ssSW,
+                          const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation,
+                          CodeGenProperties& codeGenProperties, bool onlyDecl = false) const;
+  void
+  generateSetupFunctions(std::stringstream& ssSW,
+                         const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation,
+                         CodeGenProperties& codeGenProperties, bool onlyDecl = false) const;
+
+  void generateStaticMembersTrailer(
+      std::stringstream& ssSW,
+      const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation,
+      CodeGenProperties& codeGenProperties) const;
 
   CudaCodeGenOptions codeGenOptions_;
   bool iterationSpaceSet_;

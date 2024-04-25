@@ -42,6 +42,10 @@ public:
   ReadBeforeWriteConflict check() const {
 
     std::vector<std::size_t> nodesToVisit = graph_.getOutputVertexIDs();
+    // if the graph does not have nodes with outdegree=0, there is no seed to start the algorithm
+    // in this case, there is at least one SCC, which means we can start from any node of the graph
+    if(nodesToVisit.empty() ) nodesToVisit.push_back(0);
+ 
     DAWN_ASSERT_MSG(!nodesToVisit.empty(), "invalid graph (probably contains cycles!)");
 
     ReadBeforeWriteConflict conflict;
@@ -76,6 +80,9 @@ private:
         continue;
       else
         visitedNodes.insert(curNode);
+
+      DAWN_ASSERT_MSG((adjacencyList.size() > curNode), "out of bounds access to adjacency list of graph");
+
 
       // Follow edges of the current node
       if(!adjacencyList[curNode].empty()) {
